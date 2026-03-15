@@ -2,8 +2,9 @@ import { createRedisEventTarget as createYogaRedisEventTarget } from "@graphql-y
 import { Redis } from "ioredis";
 
 export function createRedisEventTarget(): EventTarget {
-  const publishClient = new Redis(process.env.REDIS_URL!);
-  const subscribeClient = new Redis(process.env.REDIS_URL!);
+  const redisUrl = process.env.REDIS_URL ?? "";
+  const publishClient = new Redis(redisUrl);
+  const subscribeClient = new Redis(redisUrl);
   return createYogaRedisEventTarget({
     publishClient,
     subscribeClient,
