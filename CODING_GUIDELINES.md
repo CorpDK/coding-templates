@@ -445,6 +445,121 @@ function MyComponent({ onSave }: Props) {
 3. **Keep README.md updated** with architectural decisions
 4. **Update CLAUDE.md** when changing project structure or patterns
 
+## GraphQL Schema Documentation
+
+Every element of a GraphQL schema **must** have a `"""docstring"""`. The schema is the public API contract — Altair, GraphQL IDE explorers, and generated SDK consumers all rely on these descriptions.
+
+### Required Coverage
+
+| Element | Requirement |
+|---------|-------------|
+| Root types (`Query`, `Mutation`, `Subscription`) | One-line description of the operation category |
+| Object types | One-line description of what the type represents |
+| Every field | What the field returns and when it's useful |
+| Every argument | What the argument controls or filters |
+| Enum values | What each value means |
+
+### Example
+
+❌ **Bad** — no descriptions, blank in Altair Docs:
+
+```graphql
+type Query {
+  hello(name: String): String!
+  status: ServerStatus!
+}
+
+type ServerStatus {
+  ok: Boolean!
+  timestamp: String!
+}
+```
+
+✅ **Good** — fully documented:
+
+```graphql
+"""Entry points for read-only data fetching."""
+type Query {
+  """Returns a personalised greeting. Omit name to receive the default."""
+  hello(
+    """Optional name to include in the greeting."""
+    name: String
+  ): String!
+
+  """Returns the current server health status and a server-side timestamp."""
+  status: ServerStatus!
+}
+
+"""Current health state of the server."""
+type ServerStatus {
+  """True when the server is operating normally."""
+  ok: Boolean!
+
+  """ISO-8601 timestamp of when this status was generated."""
+  timestamp: String!
+}
+```
+
+### Rules
+
+1. **No bare types** — every `type`, `input`, `enum`, `interface`, `union`, and `scalar` needs a description
+2. **No bare fields** — every field needs a description, even if it seems obvious (`id`, `createdAt`)
+3. **No bare arguments** — every argument needs a description explaining what it filters or controls
+4. **Use ISO-8601 in timestamp descriptions** — e.g. `"ISO-8601 timestamp of when..."`
+5. **Mutations describe their side effect** — include what gets published/triggered, not just what gets returned
+6. **Subscriptions describe their trigger** — explain what mutation or event fires the subscription
+
+## GraphQL Subscription Resolvers
+
+Leverage Yoga's default field-name resolver — no explicit `resolve` function needed.
+
+### How Yoga's Default Works
+
+Yoga maps each subscription event to `event[fieldName]`. For a field named `pingSent`, it evaluates `event.pingSent`. Wrap the payload under the field name when publishing and Yoga handles the rest.
+
+### Required Pattern
+
+**`PubSubTopics`** — wrap payload under the field name:
+
+```typescript
+export type PubSubTopics = {
+  PING_SENT: [{ pingSent: { message: string; timestamp: string } }];
+};
+```
+
+**Mutation** — publish with the wrapper:
+
+```typescript
+pubsub.publish("PING_SENT", { pingSent: result });
+```
+
+**Subscription resolver** — `subscribe` only, no `resolve`:
+
+```typescript
+pingSent: {
+  subscribe: () => pubsub.subscribe("PING_SENT"),
+},
+```
+
+❌ **Bad** — publishing the payload directly causes `Cannot return null for non-nullable field`:
+
+```typescript
+// PubSubTopics
+PING_SENT: [{ message: string; timestamp: string }];
+
+// Mutation
+pubsub.publish("PING_SENT", result); // event.pingSent → undefined → null error
+
+// Resolver
+pingSent: {
+  subscribe: () => pubsub.subscribe("PING_SENT"),
+},
+```
+
+### Rule
+
+Always publish as `{ fieldName: payload }`. The topic payload type in `PubSubTopics` must mirror this shape. Never add a custom `resolve` just to pass the event through — fix the publish shape instead.
+
 ## Code Review Checklist
 
 Before committing, verify:
@@ -460,6 +575,8 @@ Before committing, verify:
 - [ ] Event handlers properly typed
 - [ ] No `any` types used
 - [ ] Imports organized (external, internal, types)
+- [ ] All GraphQL types, fields, and arguments have `"""docstrings"""`
+- [ ] GraphQL subscription publish payload is wrapped as `{ fieldName: payload }`
 - [ ] Component exported as default
 - [ ] File name matches component name
 

@@ -6,13 +6,16 @@ import { createMemoryEventTarget } from "./memory.js";
 /**
  * Type-safe pub/sub topics.
  * Add an entry for each subscription topic:
- *   TOPIC_NAME: [PayloadType]
+ *   TOPIC_NAME: [{ fieldName: PayloadType }]
+ *
+ * The payload must be wrapped under the subscription field name so that
+ * Yoga's default resolver (event[fieldName]) can map it automatically.
  *
  * Example:
- *   PING_SENT: [{ message: string; timestamp: string }]
+ *   PING_SENT: [{ pingSent: { message: string; timestamp: string } }]
  */
 export type PubSubTopics = {
-  PING_SENT: [{ message: string; timestamp: string }];
+  PING_SENT: [{ pingSent: { message: string; timestamp: string } }];
 };
 
 const eventTarget = createMemoryEventTarget();
