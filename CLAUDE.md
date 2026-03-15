@@ -45,7 +45,8 @@ coding-templates/
 - **HTTP via Next.js proxy, WS direct** — `rewrites()` handles queries/mutations; WebSocket connects directly via `NEXT_PUBLIC_DS_WS_URL` (avoids Next.js WS proxy limitations)
 - **SDK as workspace dependency** — `ui` depends on `@corpdk/ds-sdk: "workspace:*"`; Turbo ensures codegen runs before build
 - **All ports from env, no defaults** — prevents port collision surprises; each package has `.env.example`
-- **`.js` extension on imports in DS packages** — required by NodeNext ESM resolution even for `.ts` source files
+- **`.js` extension on imports in DS server packages** — `ds`, `ds-hprt`, `ds-cdb` use `module: NodeNext` (pure ESM Node.js runtime); explicit `.js` is required even for `.ts` source files. SDK packages (`ds-sdk`, `ds-sdk-hprt`, `ds-sdk-cdb`) use `module: ESNext / moduleResolution: bundler` (consumed by Next.js bundler) and must omit the `.js` extension.
+- **`dev` depends on `^build`** — Turbo's `dev` task declares `dependsOn: ["^build"]` so codegen and upstream builds complete before Next.js starts, preventing missing-type errors on first launch.
 
 ## Coding Standards
 
