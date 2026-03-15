@@ -27,11 +27,13 @@ let db: Db | null = null;
  *   DS_CDB_BUCKET             bucket name
  */
 export async function connectDb(): Promise<void> {
-  const cluster = await connect(process.env.DS_CDB_CONNECTION_STRING!, {
+  const connStr = process.env.DS_CDB_CONNECTION_STRING ?? "";
+  const bucketName = process.env.DS_CDB_BUCKET ?? "";
+  const cluster = await connect(connStr, {
     username: process.env.DS_CDB_USERNAME!,
     password: process.env.DS_CDB_PASSWORD!,
   });
-  const bucket = cluster.bucket(process.env.DS_CDB_BUCKET!);
+  const bucket = cluster.bucket(bucketName);
   const scope = bucket.defaultScope();
   db = {
     cluster,

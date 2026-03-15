@@ -1,7 +1,6 @@
 import { createPubSub } from "graphql-yoga";
 import { createMemoryEventTarget } from "./memory.js";
-// To switch to Redis/Valkey: see redis.ts, then swap the line below
-// import { createRedisEventTarget } from "./redis.js";
+import { createRedisEventTarget } from "./redis.js";
 
 /**
  * Type-safe pub/sub topics.
@@ -18,7 +17,8 @@ export type PubSubTopics = {
   PING_SENT: [{ pingSent: { message: string; timestamp: string } }];
 };
 
-const eventTarget = createMemoryEventTarget();
-// const eventTarget = createRedisEventTarget(); // ← swap here for Redis/Valkey
+const eventTarget = process.env.REDIS_URL
+  ? createRedisEventTarget()
+  : createMemoryEventTarget();
 
 export const pubsub = createPubSub<PubSubTopics>({ eventTarget });
