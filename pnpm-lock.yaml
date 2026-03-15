@@ -17,6 +17,9 @@ importers:
 
   packages/ds:
     dependencies:
+      '@graphql-yoga/redis-event-target':
+        specifier: ^3.0.0
+        version: 3.0.3(ioredis@5.10.0)
       '@prisma/client':
         specifier: ^7.5.0
         version: 7.5.0(prisma@7.5.0(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3))(typescript@5.9.3)
@@ -29,6 +32,9 @@ importers:
       graphql-yoga:
         specifier: ^5.13.4
         version: 5.18.1(graphql@16.13.1)
+      ioredis:
+        specifier: ^5.0.0
+        version: 5.10.0
       ws:
         specifier: ^8.18.2
         version: 8.19.0
@@ -45,9 +51,6 @@ importers:
       '@graphql-codegen/typescript-resolvers':
         specifier: ^4.5.1
         version: 4.5.2(graphql@16.13.1)
-      '@graphql-yoga/redis-event-target':
-        specifier: ^3.0.0
-        version: 3.0.3(ioredis@5.10.0)
       '@types/node':
         specifier: ^20.19.37
         version: 20.19.37
@@ -66,6 +69,9 @@ importers:
 
   packages/ds-cdb:
     dependencies:
+      '@graphql-yoga/redis-event-target':
+        specifier: ^3.0.0
+        version: 3.0.3(ioredis@5.10.0)
       couchbase:
         specifier: ^4.4.5
         version: 4.6.1
@@ -78,6 +84,9 @@ importers:
       graphql-yoga:
         specifier: ^5.13.4
         version: 5.18.1(graphql@16.13.1)
+      ioredis:
+        specifier: ^5.0.0
+        version: 5.10.0
       ws:
         specifier: ^8.18.2
         version: 8.19.0
@@ -97,9 +106,6 @@ importers:
       '@graphql-codegen/typescript-resolvers':
         specifier: ^4.5.1
         version: 4.5.2(graphql@16.13.1)
-      '@graphql-yoga/redis-event-target':
-        specifier: ^3.0.0
-        version: 3.0.3(ioredis@5.10.0)
       '@types/node':
         specifier: ^20.19.37
         version: 20.19.37
@@ -115,6 +121,9 @@ importers:
 
   packages/ds-hprt:
     dependencies:
+      '@graphql-yoga/redis-event-target':
+        specifier: ^3.0.0
+        version: 3.0.3(ioredis@5.10.0)
       drizzle-orm:
         specifier: ^0.44.2
         version: 0.44.7(@electric-sql/pglite@0.3.15)(@prisma/client@7.5.0(prisma@7.5.0(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3))(typescript@5.9.3))(@types/pg@8.18.0)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.5.0(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3))
@@ -127,6 +136,9 @@ importers:
       graphql-yoga:
         specifier: ^5.13.4
         version: 5.18.1(graphql@16.13.1)
+      ioredis:
+        specifier: ^5.0.0
+        version: 5.10.0
       pg:
         specifier: ^8.16.3
         version: 8.20.0
@@ -146,9 +158,6 @@ importers:
       '@graphql-codegen/typescript-resolvers':
         specifier: ^4.5.1
         version: 4.5.2(graphql@16.13.1)
-      '@graphql-yoga/redis-event-target':
-        specifier: ^3.0.0
-        version: 3.0.3(ioredis@5.10.0)
       '@types/node':
         specifier: ^20.19.37
         version: 20.19.37
@@ -245,7 +254,7 @@ importers:
         version: 9.39.4(jiti@2.6.1)
       eslint-config-next:
         specifier: 16.1.6
-        version: 16.1.6(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3)
+        version: 16.1.6(@typescript-eslint/parser@8.57.0(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3)
       tailwindcss:
         specifier: ^4.2.1
         version: 4.2.1
@@ -297,7 +306,7 @@ importers:
         version: 9.39.4(jiti@2.6.1)
       eslint-config-next:
         specifier: 16.1.6
-        version: 16.1.6(@typescript-eslint/parser@8.57.0(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3)
+        version: 16.1.6(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3)
       tailwindcss:
         specifier: ^4.2.1
         version: 4.2.1
