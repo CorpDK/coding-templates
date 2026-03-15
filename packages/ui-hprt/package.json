@@ -1,0 +1,32 @@
+{
+  "name": "@corpdk/ui-hprt",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "clean": "rm -rf .next node_modules .turbo *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@corpdk/ds-sdk-hprt": "workspace:*",
+    "@urql/exchange-graphcache": "^9.0.0",
+    "graphql": "^16.11.0",
+    "graphql-ws": "^5.16.0",
+    "next": "16.1.6",
+    "react": "19.2.3",
+    "react-dom": "19.2.3",
+    "urql": "^5.0.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4.2.1",
+    "@types/node": "^20.19.37",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "16.1.6",
+    "tailwindcss": "^4.2.1",
+    "typescript": "^5.9.3"
+  }
+}

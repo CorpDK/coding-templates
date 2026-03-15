@@ -1,0 +1,27 @@
+{
+  "recommendations": [
+    // Code Quality & Linting
+    "esbenp.prettier-vscode",
+
+    // Tailwind CSS
+    "bradlc.vscode-tailwindcss",
+
+    // Path & Import Management
+    "christian-kohler.path-intellisense",
+
+    // Git
+    "eamodio.gitlens",
+
+    // Shell scripting (for collect-deps.sh)
+    "trunk.io",
+
+    // Code Helpers
+    // "usernamehw.errorlens",
+    "yoavbls.pretty-ts-errors"
+  ],
+  "unwantedRecommendations": [
+    // Avoid conflicting formatters
+    "hookyqr.beautify",
+    "ms-vscode.vscode-typescript-tslint-plugin"
+  ]
+}

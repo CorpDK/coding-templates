@@ -1,0 +1,26 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "ui": "tui",
+  "tasks": {
+    "codegen": {
+      "inputs": ["src/**/*.ts", "prisma/schema.prisma", "drizzle/schema.ts"],
+      "outputs": ["../ds-sdk/src/generated/**", "../ds-sdk-hprt/src/generated/**"],
+      "cache": true
+    },
+    "build": {
+      "dependsOn": ["^build", "codegen"],
+      "outputs": [".next/**", "!.next/cache/**", "dist/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "start": {
+      "cache": false,
+      "persistent": true,
+      "dependsOn": ["build"]
+    },
+    "lint": { "outputs": [] },
+    "clean": { "cache": false }
+  }
+}

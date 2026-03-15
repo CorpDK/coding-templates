@@ -1,0 +1,22 @@
+{
+  "name": "@corpdk/ds-sdk-hprt",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist node_modules .turbo *.tsbuildinfo"
+  },
+  "peerDependencies": {
+    "graphql": "^16.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.37",
+    "graphql": "^16.11.0",
+    "typescript": "^5.9.3"
+  }
+}

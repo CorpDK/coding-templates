@@ -1,0 +1,23 @@
+# Dependencies
+node_modules
+pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+# Build outputs
+.next
+out
+build
+dist
+
+# Generated files
+*.tsbuildinfo
+packages/ds-sdk/src/generated/
+packages/ds-sdk-hprt/src/generated/
+packages/ds/src/types/resolvers.generated.ts
+packages/ds-hprt/src/types/resolvers.generated.ts
+
+# Environment
+.env
+.env.local
+.env.*.local
