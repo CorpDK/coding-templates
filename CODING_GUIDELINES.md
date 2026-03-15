@@ -509,6 +509,26 @@ type ServerStatus {
 5. **Mutations describe their side effect** — include what gets published/triggered, not just what gets returned
 6. **Subscriptions describe their trigger** — explain what mutation or event fires the subscription
 
+## GraphQL Mutations and Subscriptions
+
+**Every mutation must be accompanied by a corresponding subscription.** Mutations publish a PubSub event; clients subscribe for real-time feedback without polling. This is a hard requirement — do not add a mutation without its subscription counterpart.
+
+### Required Pattern
+
+Add a `Subscription` type entry for every mutation:
+
+```graphql
+type Mutation {
+  """Creates a new document record. Publishes documentCreated."""
+  createDocument(input: CreateDocumentInput!): Document!
+}
+
+type Subscription {
+  """Fires when a document is created via the createDocument mutation."""
+  documentCreated: Document!
+}
+```
+
 ## GraphQL Subscription Resolvers
 
 Leverage Yoga's default field-name resolver — no explicit `resolve` function needed.
@@ -576,6 +596,7 @@ Before committing, verify:
 - [ ] No `any` types used
 - [ ] Imports organized (external, internal, types)
 - [ ] All GraphQL types, fields, and arguments have `"""docstrings"""`
+- [ ] Every mutation has a corresponding subscription that publishes the result
 - [ ] GraphQL subscription publish payload is wrapped as `{ fieldName: payload }`
 - [ ] Component exported as default
 - [ ] File name matches component name
