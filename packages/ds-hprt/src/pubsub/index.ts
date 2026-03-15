@@ -22,3 +22,4 @@ const eventTarget = process.env.REDIS_URL
   : createMemoryEventTarget();
 
 export const pubsub = createPubSub<PubSubTopics>({ eventTarget });
+export type PubSub = typeof pubsub;
