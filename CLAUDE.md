@@ -11,11 +11,13 @@ This is a **pnpm + Turborepo monorepo** under the `@corpdk` org — a production
 ```
 coding-templates/
 ├── package.json                    ← workspace root: turbo scripts + devDeps only
-├── pnpm-workspace.yaml             ← packages: ["packages/*"]
+├── pnpm-workspace.yaml             ← packages: ["templates/*", "engines/*"]
 ├── turbo.json                      ← task pipeline (codegen → build → dev/start)
 ├── CLAUDE.md                       ← this file
 ├── CODING_GUIDELINES.md            ← coding standards
-└── packages/
+├── engines/
+│   └── create-app/  (@corpdk/create-app)   Interactive CLI scaffolding tool
+└── templates/
     ├── ui/          (@corpdk/ui)           Next.js + Apollo Client
     ├── ui-hprt/     (@corpdk/ui-hprt)      Next.js + urql + Graphcache
     ├── ds/          (@corpdk/ds)           GraphQL Yoga + Prisma + PostgreSQL
@@ -77,6 +79,7 @@ pnpm build                # Build all packages (codegen → build)
 pnpm --filter @corpdk/ds dev        # Start only ds
 pnpm --filter @corpdk/ui dev        # Start only ui
 pnpm --filter @corpdk/ds codegen    # Run graphql-codegen for ds
+pnpm create-app                     # Run the interactive scaffolding CLI
 ```
 
 Each package requires its own `.env` file — copy from `.env.example` in the package directory.
@@ -100,9 +103,9 @@ Each package requires its own `.env` file — copy from `.env.example` in the pa
 
 Files that are commonly modified together:
 
-- `packages/<pkg>/app/layout.tsx` + `packages/<pkg>/app/globals.css` (styling)
-- `packages/ds/src/schema.ts` + `packages/ds/src/pubsub/index.ts` (schema changes)
-- `packages/ds/package.json` + `packages/ds-sdk/package.json` (SDK dependency updates)
+- `templates/<pkg>/app/layout.tsx` + `templates/<pkg>/app/globals.css` (styling)
+- `templates/ds/src/schema.ts` + `templates/ds/src/pubsub/index.ts` (schema changes)
+- `templates/ds/package.json` + `templates/ds-sdk/package.json` (SDK dependency updates)
 - Root `package.json` + `turbo.json` (task pipeline changes)
 
 ### Common Operations
