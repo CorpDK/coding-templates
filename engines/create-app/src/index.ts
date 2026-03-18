@@ -3,13 +3,22 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { runPrompts } from "./prompts.js";
 import { scaffold } from "./scaffold.js";
+import { isNonInteractive, parseCliArgs, buildConfig, printHelp } from "./args.js";
 
 // engines/create-app/dist/index.js → engines/create-app → engines → repo root
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const TEMPLATE_ROOT = path.resolve(__dirname, "..", "..", "..");
 
 async function main(): Promise<void> {
-  const config = await runPrompts();
+  if (process.argv.includes("--help") || process.argv.includes("-h")) {
+    printHelp();
+    process.exit(0);
+  }
+
+  const config = isNonInteractive()
+    ? await buildConfig(parseCliArgs())
+    : await runPrompts();
+
   await scaffold(config, TEMPLATE_ROOT);
 
   const nextSteps: string[] = [
@@ -18,12 +27,12 @@ async function main(): Promise<void> {
   ];
 
   if (config.selectedPackages.size > 0) {
-    if (!config.generateEnv) {
+    if (config.generateEnv) {
+      nextSteps.push("  # Edit .env files in each package with your credentials");
+    } else {
       nextSteps.push(
         "  # Copy .env.example → .env in each package and fill in values"
       );
-    } else {
-      nextSteps.push("  # Edit .env files in each package with your credentials");
     }
 
     if (config.projectType === "monorepo") {
@@ -40,7 +49,9 @@ async function main(): Promise<void> {
   );
 }
 
-main().catch((err: unknown) => {
+try {
+  await main();
+} catch (err: unknown) {
   console.error(err);
   process.exit(1);
-});
+}
