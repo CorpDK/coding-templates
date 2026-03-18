@@ -221,7 +221,7 @@ export function transformUiSdkDep(
   newSdkPkg: string
 ): string {
   return content.replace(
-    new RegExp(`"${escapeRegex(oldSdkPkg)}":\\s*"workspace:\\*"`),
+    new RegExp(String.raw`"${escapeRegex(oldSdkPkg)}":\s*"workspace:\*"`),
     `"${newSdkPkg}": "workspace:*"`
   );
 }
@@ -247,13 +247,13 @@ export function transformExternalSdk(
   externalVersion: string
 ): string {
   return content.replace(
-    new RegExp(`"${escapeRegex(oldSdkPkg)}":\\s*"workspace:\\*"`),
+    new RegExp(String.raw`"${escapeRegex(oldSdkPkg)}":\s*"workspace:\*"`),
     `"${externalPkg}": "${externalVersion}"`
   );
 }
 
 function escapeRegex(str: string): string {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return str.replaceAll(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 }
 
 // ---------------------------------------------------------------------------
@@ -273,6 +273,30 @@ export interface TransformContext {
   projectName: string;
 }
 
+function applyPrismaTransforms(result: string, relPath: string, db: DbChoice): string {
+  if (relPath.endsWith("schema.prisma")) {
+    result = transformPrismaSchema(result, db);
+  }
+  if (relPath === ".env" || relPath === ".env.example") {
+    result = transformPrismaDotEnv(result, db);
+  }
+  return result;
+}
+
+function applyDrizzleTransforms(result: string, relPath: string, db: DbChoice): string {
+  if (relPath.endsWith("drizzle.config.ts")) {
+    result = transformDrizzleConfig(result, db);
+  }
+  if (relPath.endsWith("drizzle/schema.ts") || relPath.includes("drizzle" + "/" + "schema.ts")) {
+    result = transformDrizzleSchema(result, db);
+  }
+  if (relPath === ".env" || relPath === ".env.example") {
+    result = transformDrizzleDotEnv(result, db);
+  }
+  // package.json driver swap handled separately in scaffold.ts after full JSON transform
+  return result;
+}
+
 export function transformFileContent(
   content: string,
   relPath: string,
@@ -290,26 +314,12 @@ export function transformFileContent(
 
   // 3. Prisma transformations
   if (ctx.ds === "standard" && ctx.db) {
-    if (relPath.endsWith("schema.prisma")) {
-      result = transformPrismaSchema(result, ctx.db);
-    }
-    if (relPath === ".env" || relPath === ".env.example") {
-      result = transformPrismaDotEnv(result, ctx.db);
-    }
+    result = applyPrismaTransforms(result, relPath, ctx.db);
   }
 
   // 4. Drizzle transformations
   if (ctx.ds === "hprt" && ctx.db) {
-    if (relPath.endsWith("drizzle.config.ts")) {
-      result = transformDrizzleConfig(result, ctx.db);
-    }
-    if (relPath.endsWith("drizzle/schema.ts") || relPath.includes("drizzle" + "/" + "schema.ts")) {
-      result = transformDrizzleSchema(result, ctx.db);
-    }
-    if (relPath === ".env" || relPath === ".env.example") {
-      result = transformDrizzleDotEnv(result, ctx.db);
-    }
-    // package.json driver swap handled separately in scaffold.ts after full JSON transform
+    result = applyDrizzleTransforms(result, relPath, ctx.db);
   }
 
   // 5. SDK remapping (CDB + UI)

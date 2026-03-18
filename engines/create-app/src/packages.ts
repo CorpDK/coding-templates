@@ -101,7 +101,7 @@ export function getBuiltDeps(selected: Set<PackageId>): string[] {
       all.add(dep);
     }
   }
-  return [...all].sort();
+  return [...all].sort((a, b) => a.localeCompare(b));
 }
 
 /** Which SDK package the UI depends on, given DS and UI choices */

@@ -2,7 +2,7 @@ import { parseArgs } from "node:util";
 import path from "node:path";
 import { spinner } from "@clack/prompts";
 import type { DbChoice, DsChoice, ScaffoldConfig, UiChoice } from "./types.js";
-import { resolvePackages, resolveUiSdkDep, DRIZZLE_DB_OPTIONS } from "./packages.js";
+import { resolvePackages, DRIZZLE_DB_OPTIONS } from "./packages.js";
 import { execAsync, pathExists } from "./utils.js";
 
 // ---------------------------------------------------------------------------
@@ -85,15 +85,49 @@ function fail(msg: string): never {
 // Build ScaffoldConfig from parsed flags
 // ---------------------------------------------------------------------------
 
+function resolveDb(ds: DsChoice, args: ParsedArgs): DbChoice | null {
+  if (ds !== "standard" && ds !== "hprt") return null;
+  const rawDb = (args.db as DbChoice | undefined) ?? "postgresql";
+  if (!VALID_DB_ALL.includes(rawDb)) {
+    fail(`--db must be one of: ${VALID_DB_ALL.join(", ")}`);
+  }
+  if (ds === "hprt" && !VALID_DB_DRIZZLE.includes(rawDb)) {
+    fail(`MongoDB is not supported by Drizzle (--ds hprt). Choose one of: ${VALID_DB_DRIZZLE.join(", ")}`);
+  }
+  return rawDb;
+}
+
+async function resolveExternalSdkPackage(
+  ui: UiChoice,
+  ds: DsChoice,
+  sdk: string | undefined
+): Promise<string | null> {
+  if (ui === "none" || ds !== "none") return null;
+  if (!sdk) fail("--sdk is required when --ui is set and --ds is none (standalone UI mode)");
+  if (!sdk.startsWith("@")) fail('--sdk must be a scoped package name like "@acme/ds-sdk"');
+  const s = spinner();
+  s.start(`Checking if ${sdk} is reachable`);
+  try {
+    await execAsync(`pnpm info ${sdk} version`);
+    s.stop(`${sdk} found`);
+  } catch {
+    s.stop(`${sdk} not found`);
+    console.error(
+      `\nError: Package "${sdk}" is not reachable via pnpm.\n` +
+        "Publish it to Artifactory (or your npm registry) first, then re-run create-app.\n"
+    );
+    process.exit(1);
+  }
+  return sdk;
+}
+
 export async function buildConfig(args: ParsedArgs): Promise<ScaffoldConfig> {
-  // Required fields
   const name = args.name;
   const scope = args.scope;
 
   if (!name) fail("--name is required");
   if (!scope) fail("--scope is required");
 
-  // Validate formats
   if (!/^[a-z][a-z0-9-]*$/.test(name)) {
     fail("--name must use lowercase letters, numbers, and hyphens only (must start with a letter)");
   }
@@ -101,32 +135,18 @@ export async function buildConfig(args: ParsedArgs): Promise<ScaffoldConfig> {
     fail("--scope must use lowercase letters, numbers, and hyphens only");
   }
 
-  // DS
   const ds: DsChoice = (args.ds as DsChoice | undefined) ?? "none";
   if (!VALID_DS.includes(ds)) {
     fail(`--ds must be one of: ${VALID_DS.join(", ")}`);
   }
 
-  // DB
-  let db: DbChoice | null = null;
-  if (ds === "standard" || ds === "hprt") {
-    const rawDb = (args.db as DbChoice | undefined) ?? "postgresql";
-    if (!VALID_DB_ALL.includes(rawDb)) {
-      fail(`--db must be one of: ${VALID_DB_ALL.join(", ")}`);
-    }
-    if (ds === "hprt" && !VALID_DB_DRIZZLE.includes(rawDb)) {
-      fail(`MongoDB is not supported by Drizzle (--ds hprt). Choose one of: ${VALID_DB_DRIZZLE.join(", ")}`);
-    }
-    db = rawDb;
-  }
+  const db = resolveDb(ds, args);
 
-  // UI
   const ui: UiChoice = (args.ui as UiChoice | undefined) ?? "none";
   if (!VALID_UI.includes(ui)) {
     fail(`--ui must be one of: ${VALID_UI.join(", ")}`);
   }
 
-  // DS/UI compatibility
   if (ds === "standard" && ui === "hprt") {
     fail("--ui hprt is not compatible with --ds standard (incompatible schemas). Use --ui standard or --ds hprt.");
   }
@@ -134,7 +154,6 @@ export async function buildConfig(args: ParsedArgs): Promise<ScaffoldConfig> {
     fail("--ui standard is not compatible with --ds hprt (incompatible schemas). Use --ui hprt or --ds standard.");
   }
 
-  // Output directory
   const rawOutput = args.output ?? `./${name}`;
   const outputDir = path.resolve(rawOutput);
 
@@ -142,34 +161,7 @@ export async function buildConfig(args: ParsedArgs): Promise<ScaffoldConfig> {
     // In non-interactive mode we proceed silently for non-empty dirs (CI use case)
   }
 
-  // External SDK (UI-only standalone mode)
-  let externalSdkPackage: string | null = null;
-  if (ui !== "none" && ds === "none") {
-    const sdkPkg = args.sdk;
-    if (!sdkPkg) {
-      fail("--sdk is required when --ui is set and --ds is none (standalone UI mode)");
-    }
-    if (!sdkPkg.startsWith("@")) {
-      fail('--sdk must be a scoped package name like "@acme/ds-sdk"');
-    }
-
-    const s = spinner();
-    s.start(`Checking if ${sdkPkg} is reachable`);
-    try {
-      await execAsync(`pnpm info ${sdkPkg} version`);
-      s.stop(`${sdkPkg} found`);
-    } catch {
-      s.stop(`${sdkPkg} not found`);
-      console.error(
-        `\nError: Package "${sdkPkg}" is not reachable via pnpm.\n` +
-          "Publish it to Artifactory (or your npm registry) first, then re-run create-app.\n"
-      );
-      process.exit(1);
-    }
-
-    externalSdkPackage = sdkPkg;
-  }
-
+  const externalSdkPackage = await resolveExternalSdkPackage(ui, ds, args.sdk);
   const selectedPackages = resolvePackages(ds, ui);
   const projectType = ds === "none" && ui !== "none" ? "standalone" : "monorepo";
 
