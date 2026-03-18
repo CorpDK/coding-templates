@@ -4,7 +4,6 @@ import {
   intro,
   isCancel,
   note,
-  outro,
   select,
   spinner,
   text,
@@ -26,6 +25,56 @@ function bail(msg = "Scaffolding cancelled."): never {
 function checkCancel<T>(value: T | symbol): T {
   if (isCancel(value)) bail();
   return value as T;
+}
+
+async function checkOutputDir(outputDir: string): Promise<void> {
+  if (await pathExists(outputDir)) {
+    const empty = await isDirEmpty(outputDir);
+    if (!empty) {
+      const proceed = checkCancel(
+        await confirm({
+          message: `Directory ${outputDir} already exists and is not empty. Continue anyway?`,
+          initialValue: false,
+        })
+      );
+      if (!proceed) bail("Aborted — choose an empty directory.");
+    }
+  }
+}
+
+async function promptExternalSdk(ui: UiChoice, ds: DsChoice): Promise<string | null> {
+  if (ui === "none" || ds !== "none") return null;
+  note(
+    "The UI package requires an SDK package.\n" +
+      "Since no DS is included, provide the published npm package name\n" +
+      "for the TypedDocumentNode SDK (e.g. @acme/ds-sdk).",
+    "External SDK required"
+  );
+  const sdkPkg = checkCancel(
+    await text({
+      message: "Published SDK package name",
+      placeholder: "@acme/ds-sdk",
+      validate: (v) => {
+        if (!v) return "SDK package name is required";
+        if (!v.startsWith("@"))
+          return 'Expected a scoped package name like "@acme/ds-sdk"';
+      },
+    })
+  );
+  const s = spinner();
+  s.start(`Checking if ${sdkPkg} is reachable`);
+  try {
+    await execAsync(`pnpm info ${sdkPkg} version`);
+    s.stop(`${sdkPkg} found`);
+  } catch {
+    s.stop(`${sdkPkg} not found`);
+    cancel(
+      `Package "${sdkPkg}" is not reachable via pnpm.\n` +
+        "Publish it to Artifactory (or your npm registry) first, then re-run create-app."
+    );
+    process.exit(1);
+  }
+  return sdkPkg;
 }
 
 export async function runPrompts(): Promise<ScaffoldConfig> {
@@ -62,7 +111,7 @@ export async function runPrompts(): Promise<ScaffoldConfig> {
     await text({
       message: "Output directory",
       initialValue: `./${projectName}`,
-      validate: async (v) => {
+      validate: (v) => {
         if (!v) return "Output directory is required";
       },
     })
@@ -70,18 +119,7 @@ export async function runPrompts(): Promise<ScaffoldConfig> {
 
   const outputDir = path.resolve(rawOutputDir);
 
-  if (await pathExists(outputDir)) {
-    const empty = await isDirEmpty(outputDir);
-    if (!empty) {
-      const proceed = checkCancel(
-        await confirm({
-          message: `Directory ${outputDir} already exists and is not empty. Continue anyway?`,
-          initialValue: false,
-        })
-      );
-      if (!proceed) bail("Aborted — choose an empty directory.");
-    }
-  }
+  await checkOutputDir(outputDir);
 
   // 4. DS selection
   const ds = checkCancel(
@@ -161,45 +199,7 @@ export async function runPrompts(): Promise<ScaffoldConfig> {
   );
 
   // 7. External SDK (UI-only mode, DS = none)
-  let externalSdkPackage: string | null = null;
-
-  if (ui !== "none" && ds === "none") {
-    note(
-      "The UI package requires an SDK package.\n" +
-        "Since no DS is included, provide the published npm package name\n" +
-        "for the TypedDocumentNode SDK (e.g. @acme/ds-sdk).",
-      "External SDK required"
-    );
-
-    const sdkPkg = checkCancel(
-      await text({
-        message: "Published SDK package name",
-        placeholder: "@acme/ds-sdk",
-        validate: (v) => {
-          if (!v) return "SDK package name is required";
-          if (!v.startsWith("@"))
-            return 'Expected a scoped package name like "@acme/ds-sdk"';
-        },
-      })
-    );
-
-    // Verify package reachability
-    const s = spinner();
-    s.start(`Checking if ${sdkPkg} is reachable`);
-    try {
-      await execAsync(`pnpm info ${sdkPkg} version`);
-      s.stop(`${sdkPkg} found`);
-    } catch {
-      s.stop(`${sdkPkg} not found`);
-      cancel(
-        `Package "${sdkPkg}" is not reachable via pnpm.\n` +
-          "Publish it to Artifactory (or your npm registry) first, then re-run create-app."
-      );
-      process.exit(1);
-    }
-
-    externalSdkPackage = sdkPkg;
-  }
+  const externalSdkPackage = await promptExternalSdk(ui, ds);
 
   // 8 & 9. Env + git
   const generateEnv = checkCancel(
@@ -250,4 +250,3 @@ export async function runPrompts(): Promise<ScaffoldConfig> {
   };
 }
 
-export { outro, cancel };
