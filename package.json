@@ -1,5 +1,5 @@
 {
-  "name": "coding-templates",
+  "name": "@corpdk/coding-templates",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -8,7 +8,8 @@
     "start": "turbo run start",
     "lint": "turbo run lint",
     "codegen": "turbo run codegen",
-    "clean": "turbo run clean"
+    "clean": "turbo run clean",
+    "create-app": "node engines/create-app/dist/index.js"
   },
   "devDependencies": {
     "turbo": "^2.5.4",
