@@ -226,8 +226,7 @@ export async function runPrompts(): Promise<ScaffoldConfig> {
           { value: "standard", label: "Standard  —  Prisma ORM (uses MongoDB connector)" },
           {
             value: "hprt",
-            label: "HPRT  —  Native SDK, no ORM overhead  (coming soon)",
-            hint: "template in a future release",
+            label: "HPRT  —  Native SDK, no ORM overhead",
           },
         ],
       })
@@ -272,26 +271,18 @@ export async function runPrompts(): Promise<ScaffoldConfig> {
   // Standard UI: available with none, standard (prisma), cdb, mongo, ddb, file
   // Not available with hprt (Drizzle — uses urql-based schema)
   if (ds !== "hprt") {
-    const hint = ds === "cdb" || ds === "mongo" || ds === "ddb" || ds === "file"
-      ? `SDK remapped to ds-sdk-${ds}`
-      : undefined;
     uiOptions.push({
       value: "standard",
       label: "Standard UI  —  Next.js + Apollo Client",
-      hint,
     });
   }
 
   // HPRT UI: available with none, hprt (drizzle), cdb, mongo, ddb, file
   // Not available with standard (Prisma — uses Apollo-based schema)
   if (ds !== "standard") {
-    const hint = ds === "cdb" || ds === "mongo" || ds === "ddb" || ds === "file"
-      ? `SDK remapped to ds-sdk-${ds}`
-      : undefined;
     uiOptions.push({
       value: "hprt",
       label: "HPRT UI  —  Next.js + urql + Graphcache",
-      hint,
     });
   }
 

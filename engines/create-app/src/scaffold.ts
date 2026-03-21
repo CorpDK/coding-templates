@@ -42,11 +42,7 @@ export async function scaffold(
     const { dirName, label } = PACKAGE_DEFS[pkgId];
     const srcDir = path.join(templateRoot, "templates", dirName);
     if (!(await pathExists(srcDir))) {
-      cancel(
-        `The '${label}' template is not yet available.\n` +
-          `It will be added in a future release.\n` +
-          `Currently available: Relational DB (Prisma/Drizzle), Couchbase.`
-      );
+      cancel(`The '${label}' template directory was not found at: ${srcDir}`);
       process.exit(1);
     }
   }
