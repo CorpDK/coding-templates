@@ -7,7 +7,7 @@
     "build": "turbo run build",
     "start": "turbo run start",
     "lint": "turbo run lint",
-    "codegen": "turbo run codegen",
+    "codegen": "pnpm --filter @corpdk/ds codegen",
     "clean": "turbo run clean",
     "create-app": "node engines/create-app/dist/index.js"
   },
