@@ -1,4 +1,4 @@
-import type { PackageId, DsChoice, UiChoice, DbChoice } from "./types.js";
+import type { PackageId, DsChoice, UiChoice, RelationalDbChoice } from "./types.js";
 
 export interface PackageDef {
   id: PackageId;
@@ -53,6 +53,48 @@ export const PACKAGE_DEFS: Record<PackageId, PackageDef> = {
     requires: [],
     builtDeps: [],
   },
+  "ds-mongo": {
+    id: "ds-mongo",
+    dirName: "ds-mongo",
+    label: "ds-mongo (GraphQL Yoga + MongoDB native SDK + Zod)",
+    requires: ["ds-sdk-mongo"],
+    builtDeps: [],
+  },
+  "ds-sdk-mongo": {
+    id: "ds-sdk-mongo",
+    dirName: "ds-sdk-mongo",
+    label: "ds-sdk-mongo (TypedDocumentNode SDK for ds-mongo)",
+    requires: [],
+    builtDeps: [],
+  },
+  "ds-ddb": {
+    id: "ds-ddb",
+    dirName: "ds-ddb",
+    label: "ds-ddb (GraphQL Yoga + DocumentDB native SDK + Zod)",
+    requires: ["ds-sdk-ddb"],
+    builtDeps: [],
+  },
+  "ds-sdk-ddb": {
+    id: "ds-sdk-ddb",
+    dirName: "ds-sdk-ddb",
+    label: "ds-sdk-ddb (TypedDocumentNode SDK for ds-ddb)",
+    requires: [],
+    builtDeps: [],
+  },
+  "ds-file": {
+    id: "ds-file",
+    dirName: "ds-file",
+    label: "ds-file (GraphQL Yoga + JSON/YAML file storage + Zod)",
+    requires: ["ds-sdk-file"],
+    builtDeps: [],
+  },
+  "ds-sdk-file": {
+    id: "ds-sdk-file",
+    dirName: "ds-sdk-file",
+    label: "ds-sdk-file (TypedDocumentNode SDK for ds-file)",
+    requires: [],
+    builtDeps: [],
+  },
   ui: {
     id: "ui",
     dirName: "ui",
@@ -82,6 +124,15 @@ export function resolvePackages(ds: DsChoice, ui: UiChoice): Set<PackageId> {
   } else if (ds === "cdb") {
     selected.add("ds-cdb");
     selected.add("ds-sdk-cdb");
+  } else if (ds === "mongo") {
+    selected.add("ds-mongo");
+    selected.add("ds-sdk-mongo");
+  } else if (ds === "ddb") {
+    selected.add("ds-ddb");
+    selected.add("ds-sdk-ddb");
+  } else if (ds === "file") {
+    selected.add("ds-file");
+    selected.add("ds-sdk-file");
   }
 
   if (ui === "standard") {
@@ -111,10 +162,19 @@ export function resolveUiSdkDep(
 ): { oldPkg: string; newPkg: PackageId } | null {
   if (ui === "none") return null;
 
-  if (ds === "cdb") {
-    // CDB pairs with either UI, but SDK is always ds-sdk-cdb
+  // For any DS that doesn't follow the standard/hprt SDK pairing,
+  // remap the UI's SDK dependency to the correct SDK package.
+  const sdkRemap: Partial<Record<DsChoice, PackageId>> = {
+    cdb: "ds-sdk-cdb",
+    mongo: "ds-sdk-mongo",
+    ddb: "ds-sdk-ddb",
+    file: "ds-sdk-file",
+  };
+
+  const newPkg = sdkRemap[ds];
+  if (newPkg) {
     const oldPkg = ui === "standard" ? "@corpdk/ds-sdk" : "@corpdk/ds-sdk-hprt";
-    return { oldPkg, newPkg: "ds-sdk-cdb" };
+    return { oldPkg, newPkg };
   }
 
   // Standard DS + Standard UI → ds-sdk (normal, no remapping needed)
@@ -122,16 +182,16 @@ export function resolveUiSdkDep(
   return null;
 }
 
-/** DB options per DS variant */
-export const PRISMA_DB_OPTIONS: { value: DbChoice; label: string }[] = [
+/** Relational DB options for Prisma (no MongoDB — belongs in Document DB) */
+export const PRISMA_DB_OPTIONS: { value: RelationalDbChoice; label: string }[] = [
   { value: "postgresql", label: "PostgreSQL" },
   { value: "mysql", label: "MySQL" },
   { value: "sqlite", label: "SQLite" },
   { value: "cockroachdb", label: "CockroachDB" },
-  { value: "mongodb", label: "MongoDB" },
 ];
 
-export const DRIZZLE_DB_OPTIONS: { value: DbChoice; label: string }[] = [
+/** Relational DB options for Drizzle */
+export const DRIZZLE_DB_OPTIONS: { value: RelationalDbChoice; label: string }[] = [
   { value: "postgresql", label: "PostgreSQL" },
   { value: "mysql", label: "MySQL" },
   { value: "sqlite", label: "SQLite" },

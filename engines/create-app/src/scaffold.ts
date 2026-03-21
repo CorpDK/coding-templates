@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { spinner } from "@clack/prompts";
+import { cancel, spinner } from "@clack/prompts";
 import type { ScaffoldConfig } from "./types.js";
 import { PACKAGE_DEFS, resolveUiSdkDep } from "./packages.js";
 import {
@@ -36,6 +36,20 @@ export async function scaffold(
   const s = spinner();
   const templatesDir = path.join(templateRoot, "templates");
   const outDir = config.outputDir;
+
+  // 0. Validate all template directories exist before starting
+  for (const pkgId of config.selectedPackages) {
+    const { dirName, label } = PACKAGE_DEFS[pkgId];
+    const srcDir = path.join(templateRoot, "templates", dirName);
+    if (!(await pathExists(srcDir))) {
+      cancel(
+        `The '${label}' template is not yet available.\n` +
+          `It will be added in a future release.\n` +
+          `Currently available: Relational DB (Prisma/Drizzle), Couchbase.`
+      );
+      process.exit(1);
+    }
+  }
 
   // 1. Create output directory
   s.start("Creating output directory");
