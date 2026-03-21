@@ -606,12 +606,17 @@ Before committing, verify:
 Follow conventional commits format:
 
 ```
-<type>: <description>
+<target>: <description>
 
 [optional body]
 
 [optional footer]
 ```
+Target:
+
+`<type>[(<component>)]:`
+
+The Component section is optional.
 
 Types:
 
@@ -623,10 +628,21 @@ Types:
 - `test:` - Adding or updating tests
 - `chore:` - Maintenance tasks
 
-Example:
+Example 1:
 
 ```
 refactor: Extract header components into reusable modules
+
+- Created SystemInfo component for metadata display
+- Split Legend into separate component
+- Reduced page.tsx size by 45%
+
+Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
+```
+Example 2:
+
+```
+refactor(ui): Extract header components into reusable modules
 
 - Created SystemInfo component for metadata display
 - Split Legend into separate component
