@@ -11,12 +11,11 @@ generator client {
   output   = "../generated/prisma"
 }
 
-// Add your models here.
-// Example:
-//
-// model User {
-//   id        Int      @id @default(autoincrement())
-//   email     String   @unique
-//   name      String?
-//   createdAt DateTime @default(now())
-// }
+model Item {
+  id          String   @id @default(uuid())
+  name        String   @db.VarChar(255)
+  description String?
+  active      Boolean  @default(true)
+  /// ISO-8601 timestamp stored as a string for cross-template consistency.
+  createdAt   String
+}

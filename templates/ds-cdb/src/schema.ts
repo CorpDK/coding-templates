@@ -1,8 +1,7 @@
 import { createSchema } from "graphql-yoga";
 import { randomUUID } from "node:crypto";
-import { DocumentNotFoundError } from "couchbase";
 import { pubsub } from "./pubsub/index.js";
-import { getDb } from "./db/index.js";
+import { itemRepository } from "./db/repository.js";
 import { CreateItemInputSchema, ItemSchema, type Item } from "./db/schemas.js";
 
 export const schema = createSchema({
@@ -18,12 +17,12 @@ export const schema = createSchema({
       """Returns the current server health status and a server-side timestamp."""
       status: ServerStatus!
 
-      """Returns all items stored in Couchbase."""
+      """Returns all items."""
       items: [Item!]!
 
-      """Returns a single item by its document key. Returns null if not found."""
+      """Returns a single item by its ID. Returns null if not found."""
       item(
-        """The UUID document key of the item to fetch."""
+        """The UUID of the item to fetch."""
         id: ID!
       ): Item
     }
@@ -40,7 +39,7 @@ export const schema = createSchema({
       ): PingResult!
 
       """
-      Creates a new Item document in Couchbase after validating the input with Zod.
+      Creates a new item and persists it to the data service.
       Broadcasts the created item to all itemCreated subscribers.
       """
       createItem(
@@ -82,9 +81,9 @@ export const schema = createSchema({
       timestamp: String!
     }
 
-    """A document stored in Couchbase, validated with Zod on write."""
+    """A data item."""
     type Item {
-      """Unique document key (UUID), stored inside the document for convenience."""
+      """Unique identifier (UUID)."""
       id: ID!
       """Display name of the item."""
       name: String!
@@ -106,24 +105,10 @@ export const schema = createSchema({
         timestamp: new Date().toISOString(),
       }),
 
-      items: async (): Promise<Item[]> => {
-        const { cluster } = getDb();
-        const bucket = process.env.DS_CDB_BUCKET!;
-        const result = await cluster.query<Item>(
-          `SELECT META().id AS id, t.* FROM \`${bucket}\`.\`_default\`.\`items\` AS t`,
-        );
-        return result.rows.map((row) => ItemSchema.parse(row));
-      },
+      items: (): Promise<Item[]> => itemRepository.findAll(),
 
-      item: async (_: unknown, args: { id: string }): Promise<Item | null> => {
-        try {
-          const result = await getDb().items.get(args.id);
-          return ItemSchema.parse({ ...result.content, id: args.id });
-        } catch (err) {
-          if (err instanceof DocumentNotFoundError) return null;
-          throw err;
-        }
-      },
+      item: (_: unknown, args: { id: string }): Promise<Item | null> =>
+        itemRepository.findOne(args.id),
     },
 
     Mutation: {
@@ -140,18 +125,17 @@ export const schema = createSchema({
         _: unknown,
         args: { name: string; description?: string },
       ): Promise<Item> => {
-        // Validate input at the mutation boundary with Zod
         const input = CreateItemInputSchema.parse(args);
-        const doc: Item = ItemSchema.parse({
+        const item: Item = ItemSchema.parse({
           id: randomUUID(),
           name: input.name,
           description: input.description,
           active: true,
           createdAt: new Date().toISOString(),
         });
-        await getDb().items.insert(doc.id, doc);
-        pubsub.publish("ITEM_CREATED", { itemCreated: doc });
-        return doc;
+        const created = await itemRepository.create(item);
+        pubsub.publish("ITEM_CREATED", { itemCreated: created });
+        return created;
       },
     },
 

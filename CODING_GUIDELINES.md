@@ -445,6 +445,122 @@ function MyComponent({ onSave }: Props) {
 3. **Keep README.md updated** with architectural decisions
 4. **Update CLAUDE.md** when changing project structure or patterns
 
+## Data Access / Repository Pattern
+
+All DS packages use a **Repository Pattern** to keep GraphQL resolvers decoupled from the storage backend.
+
+### Required Structure
+
+Every DS package must maintain this layout in `src/db/`:
+
+```text
+src/
+  db/
+    schemas.ts      ← Zod schemas: one per entity (e.g. ItemSchema, OrderSchema)
+    repository.ts   ← IRepository interfaces + this package's implementations
+```
+
+### Adding a New Entity
+
+When adding a new table or document type (e.g. `Order`), follow all four steps:
+
+#### 1. Add the Zod schema to `src/db/schemas.ts`
+
+```typescript
+export const OrderSchema = z.object({
+  id: z.string().uuid(),
+  itemId: z.string().uuid(),
+  quantity: z.number().int().positive(),
+  createdAt: z.string().datetime(),
+});
+
+export type Order = z.infer<typeof OrderSchema>;
+
+export const CreateOrderInputSchema = z.object({
+  itemId: z.string().uuid(),
+  quantity: z.number().int().positive(),
+});
+
+export type CreateOrderInput = z.infer<typeof CreateOrderInputSchema>;
+```
+
+#### 2. Extend the storage layer
+
+- **Prisma (`ds`)**: add the model to `prisma/schema.prisma`, run `pnpm db:migrate`
+- **Drizzle (`ds-hprt`)**: add the table to `drizzle/schema.ts`, run `pnpm db:generate && pnpm db:migrate`
+- **MongoDB / DocumentDB**: add a typed collection to `src/db/index.ts`
+- **Couchbase**: use the existing cluster/scope, add a collection if needed
+- **File (`ds-file`)**: add a `getOrders()`/`saveOrders()` pair to `src/storage/index.ts`
+
+#### 3. Add the repository to `src/db/repository.ts`
+
+Define the interface and implement it with the package's native storage API:
+
+```typescript
+export interface IOrderRepository {
+  findAll(): Promise<Order[]>;
+  findOne(id: string): Promise<Order | null>;
+  create(order: Order): Promise<Order>;
+}
+
+export const orderRepository: IOrderRepository = {
+  findAll: async () => { /* storage-specific implementation */ },
+  findOne: async (id) => { /* storage-specific implementation */ },
+  create: async (order) => { /* storage-specific implementation */ },
+};
+```
+
+#### 4. Use the repository in `schema.ts`
+
+Import from `./db/repository.js` — never from `./db/index.js` or `../storage/index.js` directly:
+
+```typescript
+import { orderRepository } from "./db/repository.js";
+import { CreateOrderInputSchema, OrderSchema, type Order } from "./db/schemas.js";
+
+// In resolvers:
+orders: () => orderRepository.findAll(),
+order: (_, { id }) => orderRepository.findOne(id),
+createOrder: async (_, args) => {
+  const input = CreateOrderInputSchema.parse(args);
+  const order: Order = OrderSchema.parse({ id: randomUUID(), ...input, createdAt: new Date().toISOString() });
+  const created = await orderRepository.create(order);
+  pubsub.publish("ORDER_CREATED", { orderCreated: created });
+  return created;
+},
+```
+
+### Anti-Pattern: Direct DB Calls in Resolvers
+
+❌ **Bad** — resolver depends on the MongoDB driver directly:
+
+```typescript
+// schema.ts
+import { getDb } from "./db/index.js";
+
+orders: async () => {
+  const docs = await getDb().orders.find({}).toArray();
+  return docs.map(({ _id, ...rest }) => ({ id: _id, ...rest }));
+},
+```
+
+✅ **Good** — resolver calls only the repository interface:
+
+```typescript
+// schema.ts
+import { orderRepository } from "./db/repository.js";
+
+orders: () => orderRepository.findAll(),
+```
+
+### Repository Rules
+
+1. **Resolvers must not import from `./db/index.js` or `../storage/index.js`** — use `./db/repository.js` only
+2. **All Zod schemas live in `src/db/schemas.ts`** — no inline schema definitions in resolvers
+3. **Input validation happens in resolvers**, not in repository methods — parse with Zod before calling `repository.create()`
+4. **Repository methods return the application `Item`/`Order` type**, not raw ORM/driver types — map and validate with `ItemSchema.parse()` on the way out
+5. **One interface per entity** — `IItemRepository`, `IOrderRepository`, etc. — grouped in the same `repository.ts` file
+
 ## GraphQL Schema Documentation
 
 Every element of a GraphQL schema **must** have a `"""docstring"""`. The schema is the public API contract — Altair, GraphQL IDE explorers, and generated SDK consumers all rely on these descriptions.
@@ -598,6 +714,9 @@ Before committing, verify:
 - [ ] All GraphQL types, fields, and arguments have `"""docstrings"""`
 - [ ] Every mutation has a corresponding subscription that publishes the result
 - [ ] GraphQL subscription publish payload is wrapped as `{ fieldName: payload }`
+- [ ] New entities have a Zod schema in `src/db/schemas.ts`
+- [ ] New entities have a repository interface + implementation in `src/db/repository.ts`
+- [ ] Resolvers import from `./db/repository.js`, not `./db/index.js` or `../storage/index.js`
 - [ ] Component exported as default
 - [ ] File name matches component name
 

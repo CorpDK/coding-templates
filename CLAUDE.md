@@ -52,6 +52,7 @@ coding-templates/
 - **`.js` extension on imports in DS server packages** — all DS packages (`ds`, `ds-hprt`, `ds-cdb`, `ds-mongo`, `ds-ddb`, `ds-file`) use `module: NodeNext` (pure ESM Node.js runtime); explicit `.js` is required even for `.ts` source files. `ds-sdk` uses `module: ESNext / moduleResolution: bundler` (consumed by Next.js bundler) and must omit the `.js` extension.
 - **Single shared SDK** — all DS variants codegen into `@corpdk/ds-sdk` (one package, schema-identical output); the consolidated SDK replaced the former per-variant `ds-sdk-hprt` and `ds-sdk-cdb` packages.
 - **`dev` depends on `^build`** — Turbo's `dev` task declares `dependsOn: ["^build"]` so codegen and upstream builds complete before Next.js starts, preventing missing-type errors on first launch.
+- **Repository Pattern in all DS packages** — every DS package exposes `src/db/repository.ts` with an `IItemRepository` interface. GraphQL resolvers in `schema.ts` call only `itemRepository.*` — never DB-specific APIs directly.
 
 ## Coding Standards
 

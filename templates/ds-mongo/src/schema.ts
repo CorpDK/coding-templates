@@ -1,7 +1,7 @@
 import { createSchema } from "graphql-yoga";
 import { randomUUID } from "node:crypto";
 import { pubsub } from "./pubsub/index.js";
-import { getDb } from "./db/index.js";
+import { itemRepository } from "./db/repository.js";
 import { CreateItemInputSchema, ItemSchema, type Item } from "./db/schemas.js";
 
 export const schema = createSchema({
@@ -17,7 +17,7 @@ export const schema = createSchema({
       """Returns the current server health status and a server-side timestamp."""
       status: ServerStatus!
 
-      """Returns all items stored in MongoDB."""
+      """Returns all items."""
       items: [Item!]!
 
       """Returns a single item by its ID. Returns null if not found."""
@@ -39,7 +39,7 @@ export const schema = createSchema({
       ): PingResult!
 
       """
-      Creates a new Item document in MongoDB after validating the input with Zod.
+      Creates a new item and persists it to the data service.
       Broadcasts the created item to all itemCreated subscribers.
       """
       createItem(
@@ -81,9 +81,9 @@ export const schema = createSchema({
       timestamp: String!
     }
 
-    """A document stored in MongoDB, validated with Zod on write."""
+    """A data item."""
     type Item {
-      """Unique identifier (UUID), stored as _id in MongoDB."""
+      """Unique identifier (UUID)."""
       id: ID!
       """Display name of the item."""
       name: String!
@@ -105,17 +105,10 @@ export const schema = createSchema({
         timestamp: new Date().toISOString(),
       }),
 
-      items: async (): Promise<Item[]> => {
-        const docs = await getDb().items.find({}).toArray();
-        return docs.map(({ _id, ...rest }) => ItemSchema.parse({ id: _id, ...rest }));
-      },
+      items: (): Promise<Item[]> => itemRepository.findAll(),
 
-      item: async (_: unknown, args: { id: string }): Promise<Item | null> => {
-        const doc = await getDb().items.findOne({ _id: args.id });
-        if (!doc) return null;
-        const { _id, ...rest } = doc;
-        return ItemSchema.parse({ id: _id, ...rest });
-      },
+      item: (_: unknown, args: { id: string }): Promise<Item | null> =>
+        itemRepository.findOne(args.id),
     },
 
     Mutation: {
@@ -132,18 +125,17 @@ export const schema = createSchema({
         _: unknown,
         args: { name: string; description?: string },
       ): Promise<Item> => {
-        // Validate input at the mutation boundary with Zod
         const input = CreateItemInputSchema.parse(args);
-        const doc: Item = ItemSchema.parse({
+        const item: Item = ItemSchema.parse({
           id: randomUUID(),
           name: input.name,
           description: input.description,
           active: true,
           createdAt: new Date().toISOString(),
         });
-        await getDb().items.insertOne({ _id: doc.id, name: doc.name, description: doc.description, active: doc.active, createdAt: doc.createdAt });
-        pubsub.publish("ITEM_CREATED", { itemCreated: doc });
-        return doc;
+        const created = await itemRepository.create(item);
+        pubsub.publish("ITEM_CREATED", { itemCreated: created });
+        return created;
       },
     },
 
