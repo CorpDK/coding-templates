@@ -22,10 +22,11 @@ coding-templates/
     ├── ui-hprt/     (@corpdk/ui-hprt)      Next.js + urql + Graphcache
     ├── ds/          (@corpdk/ds)           GraphQL Yoga + Prisma + PostgreSQL
     ├── ds-hprt/     (@corpdk/ds-hprt)      GraphQL Yoga + Drizzle + PostgreSQL
-    ├── ds-cdb/      (@corpdk/ds-cdb)        GraphQL Yoga + Couchbase SDK + Zod
-    ├── ds-sdk/      (@corpdk/ds-sdk)       TypedDocumentNode SDK (from ds)
-    ├── ds-sdk-hprt/ (@corpdk/ds-sdk-hprt)  TypedDocumentNode SDK (from ds-hprt)
-    └── ds-sdk-cdb/  (@corpdk/ds-sdk-cdb)   TypedDocumentNode SDK (from ds-cdb)
+    ├── ds-cdb/      (@corpdk/ds-cdb)       GraphQL Yoga + Couchbase SDK + Zod
+    ├── ds-mongo/    (@corpdk/ds-mongo)     GraphQL Yoga + MongoDB native driver + Zod
+    ├── ds-ddb/      (@corpdk/ds-ddb)       GraphQL Yoga + DocumentDB (documentdb.io) + Zod
+    ├── ds-file/     (@corpdk/ds-file)      GraphQL Yoga + JSON/YAML file storage + Zod
+    └── ds-sdk/      (@corpdk/ds-sdk)       TypedDocumentNode SDK (shared by all DS variants)
 ```
 
 ### Package Purpose
@@ -34,12 +35,13 @@ coding-templates/
 |---------|-------|-------------|
 | `ui` | `@corpdk/ui` | Standard Next.js UI using Apollo Client for GraphQL |
 | `ui-hprt` | `@corpdk/ui-hprt` | High-performance real-time UI using urql + Graphcache |
-| `ds` | `@corpdk/ds` | GraphQL Yoga server with Prisma ORM (PostgreSQL) |
-| `ds-hprt` | `@corpdk/ds-hprt` | GraphQL Yoga server with Drizzle ORM (PostgreSQL), optimized for real-time |
+| `ds` | `@corpdk/ds` | GraphQL Yoga server with Prisma ORM (PostgreSQL/MySQL/SQLite/CockroachDB/MongoDB) |
+| `ds-hprt` | `@corpdk/ds-hprt` | GraphQL Yoga server with Drizzle ORM (PostgreSQL/MySQL/SQLite/CockroachDB), optimized for real-time |
 | `ds-cdb` | `@corpdk/ds-cdb` | GraphQL Yoga server with Couchbase SDK + Zod (cloud-agnostic NoSQL) |
-| `ds-sdk` | `@corpdk/ds-sdk` | Auto-generated TypedDocumentNode SDK from `ds` schema |
-| `ds-sdk-hprt` | `@corpdk/ds-sdk-hprt` | Auto-generated TypedDocumentNode SDK from `ds-hprt` schema |
-| `ds-sdk-cdb` | `@corpdk/ds-sdk-cdb` | Auto-generated TypedDocumentNode SDK from `ds-cdb` schema |
+| `ds-mongo` | `@corpdk/ds-mongo` | GraphQL Yoga server with MongoDB native driver + Zod (Atlas or self-hosted) |
+| `ds-ddb` | `@corpdk/ds-ddb` | GraphQL Yoga server with DocumentDB (documentdb.io) + Zod (MongoDB-compatible wire protocol) |
+| `ds-file` | `@corpdk/ds-file` | GraphQL Yoga server with JSON/YAML file storage + Zod (zero external dependencies) |
+| `ds-sdk` | `@corpdk/ds-sdk` | Auto-generated TypedDocumentNode SDK shared by all DS variants |
 
 ### Key Design Decisions
 
@@ -47,7 +49,8 @@ coding-templates/
 - **HTTP via Next.js proxy, WS direct** — `rewrites()` handles queries/mutations; WebSocket connects directly via `NEXT_PUBLIC_DS_WS_URL` (avoids Next.js WS proxy limitations)
 - **SDK as workspace dependency** — `ui` depends on `@corpdk/ds-sdk: "workspace:*"`; Turbo ensures codegen runs before build
 - **All ports from env, no defaults** — prevents port collision surprises; each package has `.env.example`
-- **`.js` extension on imports in DS server packages** — `ds`, `ds-hprt`, `ds-cdb` use `module: NodeNext` (pure ESM Node.js runtime); explicit `.js` is required even for `.ts` source files. SDK packages (`ds-sdk`, `ds-sdk-hprt`, `ds-sdk-cdb`) use `module: ESNext / moduleResolution: bundler` (consumed by Next.js bundler) and must omit the `.js` extension.
+- **`.js` extension on imports in DS server packages** — all DS packages (`ds`, `ds-hprt`, `ds-cdb`, `ds-mongo`, `ds-ddb`, `ds-file`) use `module: NodeNext` (pure ESM Node.js runtime); explicit `.js` is required even for `.ts` source files. `ds-sdk` uses `module: ESNext / moduleResolution: bundler` (consumed by Next.js bundler) and must omit the `.js` extension.
+- **Single shared SDK** — all DS variants codegen into `@corpdk/ds-sdk` (one package, schema-identical output); the consolidated SDK replaced the former per-variant `ds-sdk-hprt` and `ds-sdk-cdb` packages.
 - **`dev` depends on `^build`** — Turbo's `dev` task declares `dependsOn: ["^build"]` so codegen and upstream builds complete before Next.js starts, preventing missing-type errors on first launch.
 
 ## Coding Standards
