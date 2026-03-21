@@ -21,7 +21,7 @@ export const PACKAGE_DEFS: Record<PackageId, PackageDef> = {
   "ds-sdk": {
     id: "ds-sdk",
     dirName: "ds-sdk",
-    label: "ds-sdk (TypedDocumentNode SDK for ds)",
+    label: "ds-sdk (TypedDocumentNode SDK)",
     requires: [],
     builtDeps: [],
   },
@@ -29,70 +29,35 @@ export const PACKAGE_DEFS: Record<PackageId, PackageDef> = {
     id: "ds-hprt",
     dirName: "ds-hprt",
     label: "ds-hprt (GraphQL Yoga + Drizzle)",
-    requires: ["ds-sdk-hprt"],
-    builtDeps: [],
-  },
-  "ds-sdk-hprt": {
-    id: "ds-sdk-hprt",
-    dirName: "ds-sdk-hprt",
-    label: "ds-sdk-hprt (TypedDocumentNode SDK for ds-hprt)",
-    requires: [],
+    requires: ["ds-sdk"],
     builtDeps: [],
   },
   "ds-cdb": {
     id: "ds-cdb",
     dirName: "ds-cdb",
     label: "ds-cdb (GraphQL Yoga + Couchbase + Zod)",
-    requires: ["ds-sdk-cdb"],
+    requires: ["ds-sdk"],
     builtDeps: ["couchbase"],
-  },
-  "ds-sdk-cdb": {
-    id: "ds-sdk-cdb",
-    dirName: "ds-sdk-cdb",
-    label: "ds-sdk-cdb (TypedDocumentNode SDK for ds-cdb)",
-    requires: [],
-    builtDeps: [],
   },
   "ds-mongo": {
     id: "ds-mongo",
     dirName: "ds-mongo",
     label: "ds-mongo (GraphQL Yoga + MongoDB native SDK + Zod)",
-    requires: ["ds-sdk-mongo"],
-    builtDeps: [],
-  },
-  "ds-sdk-mongo": {
-    id: "ds-sdk-mongo",
-    dirName: "ds-sdk-mongo",
-    label: "ds-sdk-mongo (TypedDocumentNode SDK for ds-mongo)",
-    requires: [],
+    requires: ["ds-sdk"],
     builtDeps: [],
   },
   "ds-ddb": {
     id: "ds-ddb",
     dirName: "ds-ddb",
     label: "ds-ddb (GraphQL Yoga + DocumentDB native SDK + Zod)",
-    requires: ["ds-sdk-ddb"],
-    builtDeps: [],
-  },
-  "ds-sdk-ddb": {
-    id: "ds-sdk-ddb",
-    dirName: "ds-sdk-ddb",
-    label: "ds-sdk-ddb (TypedDocumentNode SDK for ds-ddb)",
-    requires: [],
+    requires: ["ds-sdk"],
     builtDeps: [],
   },
   "ds-file": {
     id: "ds-file",
     dirName: "ds-file",
     label: "ds-file (GraphQL Yoga + JSON/YAML file storage + Zod)",
-    requires: ["ds-sdk-file"],
-    builtDeps: [],
-  },
-  "ds-sdk-file": {
-    id: "ds-sdk-file",
-    dirName: "ds-sdk-file",
-    label: "ds-sdk-file (TypedDocumentNode SDK for ds-file)",
-    requires: [],
+    requires: ["ds-sdk"],
     builtDeps: [],
   },
   ui: {
@@ -120,19 +85,19 @@ export function resolvePackages(ds: DsChoice, ui: UiChoice): Set<PackageId> {
     selected.add("ds-sdk");
   } else if (ds === "hprt") {
     selected.add("ds-hprt");
-    selected.add("ds-sdk-hprt");
+    selected.add("ds-sdk");
   } else if (ds === "cdb") {
     selected.add("ds-cdb");
-    selected.add("ds-sdk-cdb");
+    selected.add("ds-sdk");
   } else if (ds === "mongo") {
     selected.add("ds-mongo");
-    selected.add("ds-sdk-mongo");
+    selected.add("ds-sdk");
   } else if (ds === "ddb") {
     selected.add("ds-ddb");
-    selected.add("ds-sdk-ddb");
+    selected.add("ds-sdk");
   } else if (ds === "file") {
     selected.add("ds-file");
-    selected.add("ds-sdk-file");
+    selected.add("ds-sdk");
   }
 
   if (ui === "standard") {
@@ -153,33 +118,6 @@ export function getBuiltDeps(selected: Set<PackageId>): string[] {
     }
   }
   return [...all].sort((a, b) => a.localeCompare(b));
-}
-
-/** Which SDK package the UI depends on, given DS and UI choices */
-export function resolveUiSdkDep(
-  ds: DsChoice,
-  ui: UiChoice
-): { oldPkg: string; newPkg: PackageId } | null {
-  if (ui === "none") return null;
-
-  // For any DS that doesn't follow the standard/hprt SDK pairing,
-  // remap the UI's SDK dependency to the correct SDK package.
-  const sdkRemap: Partial<Record<DsChoice, PackageId>> = {
-    cdb: "ds-sdk-cdb",
-    mongo: "ds-sdk-mongo",
-    ddb: "ds-sdk-ddb",
-    file: "ds-sdk-file",
-  };
-
-  const newPkg = sdkRemap[ds];
-  if (newPkg) {
-    const oldPkg = ui === "standard" ? "@corpdk/ds-sdk" : "@corpdk/ds-sdk-hprt";
-    return { oldPkg, newPkg };
-  }
-
-  // Standard DS + Standard UI → ds-sdk (normal, no remapping needed)
-  // HPRT DS + HPRT UI → ds-sdk-hprt (normal, no remapping needed)
-  return null;
 }
 
 /** Relational DB options for Prisma (no MongoDB — belongs in Document DB) */

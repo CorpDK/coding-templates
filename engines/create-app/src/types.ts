@@ -2,15 +2,10 @@ export type PackageId =
   | "ds"
   | "ds-sdk"
   | "ds-hprt"
-  | "ds-sdk-hprt"
   | "ds-cdb"
-  | "ds-sdk-cdb"
   | "ds-mongo"
-  | "ds-sdk-mongo"
   | "ds-ddb"
-  | "ds-sdk-ddb"
   | "ds-file"
-  | "ds-sdk-file"
   | "ui"
   | "ui-hprt";
 

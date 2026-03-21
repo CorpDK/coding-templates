@@ -227,26 +227,11 @@ export function transformDrizzleDotEnv(content: string, db: DbChoice): string {
 }
 
 // ---------------------------------------------------------------------------
-// SDK remapping for CDB + UI combos
+// SDK remapping for standalone UI-only mode
 // ---------------------------------------------------------------------------
 
 /**
- * Remap SDK dependency in UI package.json when CDB DS is selected.
- * Replaces the old SDK package name with ds-sdk-cdb (scoped to user's org).
- */
-export function transformUiSdkDep(
-  content: string,
-  oldSdkPkg: string,
-  newSdkPkg: string
-): string {
-  return content.replace(
-    new RegExp(String.raw`"${escapeRegex(oldSdkPkg)}":\s*"workspace:\*"`),
-    `"${newSdkPkg}": "workspace:*"`
-  );
-}
-
-/**
- * Remap SDK imports in UI source files when CDB DS is selected.
+ * Remap SDK imports in UI source files when an external SDK is substituted.
  */
 export function transformUiSdkImport(
   content: string,
@@ -284,8 +269,6 @@ export interface TransformContext {
   ds: DsChoice;
   ui: UiChoice;
   db: DbChoice | null;
-  /** For CDB+UI: the old SDK pkg name → new SDK pkg name */
-  sdkRemap: { oldPkg: string; newPkg: string } | null;
   /** For standalone UI-only: external SDK package info */
   externalSdk: { oldPkg: string; externalPkg: string; version: string } | null;
   isRootPackageJson: boolean;
@@ -341,19 +324,7 @@ export function transformFileContent(
     result = applyDrizzleTransforms(result, relPath, ctx.db);
   }
 
-  // 5. SDK remapping (CDB + UI)
-  if (ctx.sdkRemap) {
-    const newSdkPkg = `@${ctx.orgScope}/${ctx.sdkRemap.newPkg}`;
-    // In package.json: remap workspace:* dep key (scope already renamed, so match renamed old)
-    const renamedOldPkg = ctx.sdkRemap.oldPkg.replace("@corpdk/", `@${ctx.orgScope}/`);
-    if (relPath === "package.json") {
-      result = transformUiSdkDep(result, renamedOldPkg, newSdkPkg);
-    } else {
-      result = transformUiSdkImport(result, renamedOldPkg, newSdkPkg);
-    }
-  }
-
-  // 6. External SDK (standalone UI-only)
+  // 5. External SDK (standalone UI-only)
   if (ctx.externalSdk) {
     const renamedOldPkg = ctx.externalSdk.oldPkg.replace("@corpdk/", `@${ctx.orgScope}/`);
     if (relPath === "package.json") {

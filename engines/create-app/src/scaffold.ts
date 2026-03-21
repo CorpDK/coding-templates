@@ -2,7 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import { cancel, spinner } from "@clack/prompts";
 import type { ScaffoldConfig } from "./types.js";
-import { PACKAGE_DEFS, resolveUiSdkDep } from "./packages.js";
+import { PACKAGE_DEFS } from "./packages.js";
 import {
   copyDir,
   execAsync,
@@ -92,7 +92,6 @@ async function scaffoldMonorepo(
   s: ReturnType<typeof spinner>
 ): Promise<void> {
   const outDir = config.outputDir;
-  const sdkRemap = resolveUiSdkDep(config.ds, config.ui);
 
   // 3. Generate root workspace files
   s.start("Generating workspace files");
@@ -126,10 +125,6 @@ async function scaffoldMonorepo(
       ds: config.ds,
       ui: config.ui,
       db: config.db,
-      sdkRemap:
-        sdkRemap && (pkgId === "ui" || pkgId === "ui-hprt")
-          ? { oldPkg: sdkRemap.oldPkg, newPkg: sdkRemap.newPkg }
-          : null,
       externalSdk: null,
       isRootPackageJson: false,
       projectName: config.projectName,
@@ -166,8 +161,7 @@ async function scaffoldStandalone(
 ): Promise<void> {
   const outDir = config.outputDir;
   const uiDirName = config.ui === "standard" ? "ui" : "ui-hprt";
-  const oldSdkPkg =
-    config.ui === "standard" ? "@corpdk/ds-sdk" : "@corpdk/ds-sdk-hprt";
+  const oldSdkPkg = "@corpdk/ds-sdk";
 
   s.start("Scaffolding standalone Next.js project");
   const srcDir = path.join(templatesDir, uiDirName);
@@ -177,7 +171,6 @@ async function scaffoldStandalone(
     ds: config.ds,
     ui: config.ui,
     db: null,
-    sdkRemap: null,
     externalSdk: config.externalSdkPackage
       ? {
           oldPkg: oldSdkPkg,
