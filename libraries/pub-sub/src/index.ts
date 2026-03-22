@@ -22,4 +22,5 @@ export function createAppPubSub<T extends Record<string, [unknown]>>() {
   return createPubSub<T>({ eventTarget });
 }
 
-export { createMemoryEventTarget, createRedisEventTarget };
+export { createMemoryEventTarget } from "./memory.js";
+export { createRedisEventTarget } from "./redis.js";
