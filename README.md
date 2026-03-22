@@ -165,7 +165,7 @@ pnpm codegen      # Regenerate TypedDocumentNode SDKs
 **HTTP traffic** is proxied through Next.js rewrites (`/api/graphql → DS_HTTP_URL`).
 **WebSocket subscriptions** connect directly via `NEXT_PUBLIC_DS_WS_URL`.
 
-All DS packages share the same GraphQL schema (defined in `src/schema.graphqls`) and generate their SDK into `@corpdk/ds-sdk`.
+All DS packages share the same GraphQL schema (defined as multiple `.graphqls` files in `src/schema/`) and generate their SDK into `@corpdk/ds-sdk`.
 
 ## Real-Time Subscriptions
 

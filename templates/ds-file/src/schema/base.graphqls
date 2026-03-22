@@ -1,0 +1,8 @@
+"""Entry points for read-only data fetching."""
+type Query
+
+"""Entry points for data mutations that trigger side effects."""
+type Mutation
+
+"""Real-time event streams delivered over WebSocket."""
+type Subscription

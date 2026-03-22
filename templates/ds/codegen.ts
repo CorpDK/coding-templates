@@ -1,7 +1,7 @@
 import type { CodegenConfig } from "@graphql-codegen/cli";
 
 const config: CodegenConfig = {
-  schema: "./src/schema.graphqls",
+  schema: "./src/schema/**/*.graphqls",
   generates: {
     // Client SDK — TypedDocumentNode works with Apollo Client and urql
     "../ds-sdk/src/generated/": {

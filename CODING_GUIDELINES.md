@@ -563,7 +563,41 @@ orders: () => orderRepository.findAll(),
 
 ## GraphQL Schema Documentation
 
-The GraphQL schema lives in `src/schema.graphqls` — a standalone SDL file, not inline TypeScript. `schema.ts` loads it at runtime via `readFileSync`. The codegen config (`codegen.ts`) points directly at `schema.graphqls`.
+The GraphQL schema lives in `src/schema/` — a directory of `.graphqls` files, not inline TypeScript. `schema.ts` scans the directory at runtime, sorts files alphabetically, and merges them into a single SDL string. The codegen config (`codegen.ts`) uses the glob `./src/schema/**/*.graphqls`.
+
+### Schema Directory Layout
+
+```text
+src/schema/
+├── base.graphqls      ← declares empty root types: type Query / Mutation / Subscription
+├── server.graphqls    ← server health types + extend type Query/Mutation/Subscription
+└── item.graphqls      ← Item type + extend type Query/Mutation/Subscription
+```
+
+**Adding a new entity** = create one new file (e.g. `src/schema/order.graphqls`) with the type definition and `extend type` blocks for its operations. No other files need editing.
+
+```graphql
+"""An order."""
+type Order {
+  """..."""
+  id: ID!
+}
+
+extend type Query {
+  """Returns all orders."""
+  orders: [Order!]!
+}
+
+extend type Mutation {
+  """Creates a new order. Publishes orderCreated."""
+  createOrder(itemId: ID!): Order!
+}
+
+extend type Subscription {
+  """Fires when an order is created via createOrder."""
+  orderCreated: Order!
+}
+```
 
 Every element of a GraphQL schema **must** have a `"""docstring"""`. The schema is the public API contract — Altair, GraphQL IDE explorers, and generated SDK consumers all rely on these descriptions.
 
