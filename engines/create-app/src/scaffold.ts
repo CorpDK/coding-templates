@@ -1,8 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import { spinner } from "@clack/prompts";
+import { cancel, spinner } from "@clack/prompts";
 import type { ScaffoldConfig } from "./types.js";
-import { PACKAGE_DEFS, resolveUiSdkDep } from "./packages.js";
+import { PACKAGE_DEFS } from "./packages.js";
 import {
   copyDir,
   execAsync,
@@ -36,6 +36,16 @@ export async function scaffold(
   const s = spinner();
   const templatesDir = path.join(templateRoot, "templates");
   const outDir = config.outputDir;
+
+  // 0. Validate all template directories exist before starting
+  for (const pkgId of config.selectedPackages) {
+    const { dirName, label } = PACKAGE_DEFS[pkgId];
+    const srcDir = path.join(templateRoot, "templates", dirName);
+    if (!(await pathExists(srcDir))) {
+      cancel(`The '${label}' template directory was not found at: ${srcDir}`);
+      process.exit(1);
+    }
+  }
 
   // 1. Create output directory
   s.start("Creating output directory");
@@ -78,7 +88,6 @@ async function scaffoldMonorepo(
   s: ReturnType<typeof spinner>
 ): Promise<void> {
   const outDir = config.outputDir;
-  const sdkRemap = resolveUiSdkDep(config.ds, config.ui);
 
   // 3. Generate root workspace files
   s.start("Generating workspace files");
@@ -112,10 +121,6 @@ async function scaffoldMonorepo(
       ds: config.ds,
       ui: config.ui,
       db: config.db,
-      sdkRemap:
-        sdkRemap && (pkgId === "ui" || pkgId === "ui-hprt")
-          ? { oldPkg: sdkRemap.oldPkg, newPkg: sdkRemap.newPkg }
-          : null,
       externalSdk: null,
       isRootPackageJson: false,
       projectName: config.projectName,
@@ -152,8 +157,7 @@ async function scaffoldStandalone(
 ): Promise<void> {
   const outDir = config.outputDir;
   const uiDirName = config.ui === "standard" ? "ui" : "ui-hprt";
-  const oldSdkPkg =
-    config.ui === "standard" ? "@corpdk/ds-sdk" : "@corpdk/ds-sdk-hprt";
+  const oldSdkPkg = "@corpdk/ds-sdk";
 
   s.start("Scaffolding standalone Next.js project");
   const srcDir = path.join(templatesDir, uiDirName);
@@ -163,7 +167,6 @@ async function scaffoldStandalone(
     ds: config.ds,
     ui: config.ui,
     db: null,
-    sdkRemap: null,
     externalSdk: config.externalSdkPackage
       ? {
           oldPkg: oldSdkPkg,

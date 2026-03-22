@@ -1,5 +1,12 @@
 import type { DbChoice, DsChoice, UiChoice } from "./types.js";
 
+// ---------------------------------------------------------------------------
+// Note on DocumentDbChoice values ("mongodb", "documentdb"):
+// These reach Prisma transforms only when Document DB + Standard (Prisma) is
+// selected — deriveDsChoice sets ds="standard" with db="mongodb"|"documentdb".
+// Drizzle transforms never receive these values.
+// ---------------------------------------------------------------------------
+
 /** Replace @corpdk/ scope with the user's org scope in all text content */
 export function transformScope(content: string, orgScope: string): string {
   return content.replaceAll("@corpdk/", `@${orgScope}/`);
@@ -27,6 +34,7 @@ const PRISMA_PROVIDER: Record<DbChoice, string> = {
   sqlite: "sqlite",
   cockroachdb: "cockroachdb",
   mongodb: "mongodb",
+  documentdb: "mongodb", // DocumentDB uses MongoDB connector
 };
 
 const PRISMA_DATABASE_URL: Record<DbChoice, string> = {
@@ -35,6 +43,7 @@ const PRISMA_DATABASE_URL: Record<DbChoice, string> = {
   sqlite: "file:./dev.db",
   cockroachdb: "postgresql://user:pass@localhost:26257/defaultdb",
   mongodb: "mongodb://user:pass@localhost:27017/dbname",
+  documentdb: "mongodb://user:pass@localhost:27017/dbname?tls=true&tlsCAFile=/path/to/ca.pem",
 };
 
 export function transformPrismaSchema(content: string, db: DbChoice): string {
@@ -62,7 +71,8 @@ const DRIZZLE_DIALECT: Record<DbChoice, DrizzleDialect> = {
   mysql: "mysql",
   sqlite: "sqlite",
   cockroachdb: "postgresql",
-  mongodb: "postgresql", // should not happen for drizzle
+  mongodb: "postgresql",    // should not happen for drizzle
+  documentdb: "postgresql", // should not happen for drizzle
 };
 
 const DRIZZLE_DATABASE_URL: Record<DbChoice, string> = {
@@ -70,7 +80,8 @@ const DRIZZLE_DATABASE_URL: Record<DbChoice, string> = {
   mysql: "mysql://user:pass@localhost:3306/dbname",
   sqlite: "file:./dev.db",
   cockroachdb: "postgresql://user:pass@localhost:26257/defaultdb",
-  mongodb: "postgresql://user:pass@localhost:5432/dbname",
+  mongodb: "postgresql://user:pass@localhost:5432/dbname",    // should not happen
+  documentdb: "postgresql://user:pass@localhost:5432/dbname", // should not happen
 };
 
 // Map: db → { schemaImport, tableFunc, driver }
@@ -98,7 +109,13 @@ const DRIZZLE_SCHEMA_MAP: Record<
     tableFunc: "pgTable",
     importedNames: ["boolean", "integer", "pgTable", "text", "varchar"],
   },
+  // Should not happen for drizzle — included for exhaustive Record typing
   mongodb: {
+    module: "drizzle-orm/pg-core",
+    tableFunc: "pgTable",
+    importedNames: ["boolean", "integer", "pgTable", "text", "varchar"],
+  },
+  documentdb: {
     module: "drizzle-orm/pg-core",
     tableFunc: "pgTable",
     importedNames: ["boolean", "integer", "pgTable", "text", "varchar"],
@@ -111,7 +128,8 @@ const DRIZZLE_DRIVER_DEP: Record<DbChoice, string> = {
   mysql: "mysql2",
   sqlite: "better-sqlite3",
   cockroachdb: "pg",
-  mongodb: "pg",
+  mongodb: "pg",    // should not happen for drizzle
+  documentdb: "pg", // should not happen for drizzle
 };
 
 const DRIZZLE_DRIVER_TYPE_DEP: Record<DbChoice, string | null> = {
@@ -119,7 +137,8 @@ const DRIZZLE_DRIVER_TYPE_DEP: Record<DbChoice, string | null> = {
   mysql: null,
   sqlite: "@types/better-sqlite3",
   cockroachdb: "@types/pg",
-  mongodb: "@types/pg",
+  mongodb: "@types/pg",    // should not happen for drizzle
+  documentdb: "@types/pg", // should not happen for drizzle
 };
 
 export function transformDrizzleConfig(content: string, db: DbChoice): string {
@@ -208,26 +227,11 @@ export function transformDrizzleDotEnv(content: string, db: DbChoice): string {
 }
 
 // ---------------------------------------------------------------------------
-// SDK remapping for CDB + UI combos
+// SDK remapping for standalone UI-only mode
 // ---------------------------------------------------------------------------
 
 /**
- * Remap SDK dependency in UI package.json when CDB DS is selected.
- * Replaces the old SDK package name with ds-sdk-cdb (scoped to user's org).
- */
-export function transformUiSdkDep(
-  content: string,
-  oldSdkPkg: string,
-  newSdkPkg: string
-): string {
-  return content.replace(
-    new RegExp(String.raw`"${escapeRegex(oldSdkPkg)}":\s*"workspace:\*"`),
-    `"${newSdkPkg}": "workspace:*"`
-  );
-}
-
-/**
- * Remap SDK imports in UI source files when CDB DS is selected.
+ * Remap SDK imports in UI source files when an external SDK is substituted.
  */
 export function transformUiSdkImport(
   content: string,
@@ -265,8 +269,6 @@ export interface TransformContext {
   ds: DsChoice;
   ui: UiChoice;
   db: DbChoice | null;
-  /** For CDB+UI: the old SDK pkg name → new SDK pkg name */
-  sdkRemap: { oldPkg: string; newPkg: string } | null;
   /** For standalone UI-only: external SDK package info */
   externalSdk: { oldPkg: string; externalPkg: string; version: string } | null;
   isRootPackageJson: boolean;
@@ -322,19 +324,7 @@ export function transformFileContent(
     result = applyDrizzleTransforms(result, relPath, ctx.db);
   }
 
-  // 5. SDK remapping (CDB + UI)
-  if (ctx.sdkRemap) {
-    const newSdkPkg = `@${ctx.orgScope}/${ctx.sdkRemap.newPkg}`;
-    // In package.json: remap workspace:* dep key (scope already renamed, so match renamed old)
-    const renamedOldPkg = ctx.sdkRemap.oldPkg.replace("@corpdk/", `@${ctx.orgScope}/`);
-    if (relPath === "package.json") {
-      result = transformUiSdkDep(result, renamedOldPkg, newSdkPkg);
-    } else {
-      result = transformUiSdkImport(result, renamedOldPkg, newSdkPkg);
-    }
-  }
-
-  // 6. External SDK (standalone UI-only)
+  // 5. External SDK (standalone UI-only)
   if (ctx.externalSdk) {
     const renamedOldPkg = ctx.externalSdk.oldPkg.replace("@corpdk/", `@${ctx.orgScope}/`);
     if (relPath === "package.json") {

@@ -1,4 +1,4 @@
 // Auto-generated — do not edit generated/ directly
-// Re-run codegen in @corpdk/ds to regenerate
+// Re-run codegen in the ds package (any variant) to regenerate
 
-export * from "./generated/index";
+export * from "./generated/graphql";

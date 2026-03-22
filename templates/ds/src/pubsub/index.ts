@@ -1,6 +1,7 @@
 import { createPubSub } from "graphql-yoga";
 import { createMemoryEventTarget } from "./memory.js";
 import { createRedisEventTarget } from "./redis.js";
+import type { Item } from "../db/schemas.js";
 
 /**
  * Type-safe pub/sub topics.
@@ -15,6 +16,7 @@ import { createRedisEventTarget } from "./redis.js";
  */
 export type PubSubTopics = {
   PING_SENT: [{ pingSent: { message: string; timestamp: string } }];
+  ITEM_CREATED: [{ itemCreated: Item }];
 };
 
 const eventTarget = process.env.REDIS_URL

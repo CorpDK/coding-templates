@@ -4,11 +4,11 @@
   "tasks": {
     "codegen": {
       "inputs": ["src/**/*.ts", "prisma/schema.prisma", "drizzle/schema.ts"],
-      "outputs": ["../ds-sdk/src/generated/**", "../ds-sdk-hprt/src/generated/**", "../ds-sdk-cdb/src/generated/**"],
+      "outputs": ["../ds-sdk/src/generated/**"],
       "cache": true
     },
     "build": {
-      "dependsOn": ["^build", "codegen"],
+      "dependsOn": ["^build"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
     "dev": {

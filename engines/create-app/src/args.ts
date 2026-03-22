@@ -1,7 +1,17 @@
 import { parseArgs } from "node:util";
 import path from "node:path";
 import { spinner } from "@clack/prompts";
-import type { DbChoice, DsChoice, ScaffoldConfig, UiChoice } from "./types.js";
+import type {
+  DbChoice,
+  DsChoice,
+  DocumentImpl,
+  DocumentProvider,
+  OrmChoice,
+  RelationalDbChoice,
+  ScaffoldConfig,
+  StorageType,
+  UiChoice,
+} from "./types.js";
 import { resolvePackages, DRIZZLE_DB_OPTIONS } from "./packages.js";
 import { execAsync, pathExists } from "./utils.js";
 
@@ -17,7 +27,10 @@ interface ParsedArgs {
   name: string | undefined;
   scope: string | undefined;
   output: string | undefined;
-  ds: string | undefined;
+  storageType: string | undefined;
+  orm: string | undefined;
+  documentProvider: string | undefined;
+  documentImpl: string | undefined;
   db: string | undefined;
   ui: string | undefined;
   sdk: string | undefined;
@@ -34,7 +47,10 @@ export function parseCliArgs(): ParsedArgs {
       name: { type: "string", short: "n" },
       scope: { type: "string", short: "s" },
       output: { type: "string", short: "o" },
-      ds: { type: "string" },
+      "storage-type": { type: "string" },
+      orm: { type: "string" },
+      "document-provider": { type: "string" },
+      "document-impl": { type: "string" },
       db: { type: "string" },
       ui: { type: "string" },
       sdk: { type: "string" },
@@ -55,7 +71,10 @@ export function parseCliArgs(): ParsedArgs {
     name: values.name as string | undefined,
     scope: values.scope as string | undefined,
     output: values.output as string | undefined,
-    ds: values.ds as string | undefined,
+    storageType: values["storage-type"] as string | undefined,
+    orm: values.orm as string | undefined,
+    documentProvider: values["document-provider"] as string | undefined,
+    documentImpl: values["document-impl"] as string | undefined,
     db: values.db as string | undefined,
     ui: values.ui as string | undefined,
     sdk: values.sdk as string | undefined,
@@ -70,9 +89,12 @@ export function parseCliArgs(): ParsedArgs {
 // Validation helpers
 // ---------------------------------------------------------------------------
 
-const VALID_DS: DsChoice[] = ["none", "standard", "hprt", "cdb"];
+const VALID_STORAGE_TYPES: StorageType[] = ["relational", "document", "filebased"];
+const VALID_ORMS: OrmChoice[] = ["prisma", "drizzle"];
+const VALID_DOC_PROVIDERS: DocumentProvider[] = ["couchbase", "mongodb", "documentdb"];
+const VALID_DOC_IMPLS: DocumentImpl[] = ["standard", "hprt"];
 const VALID_UI: UiChoice[] = ["none", "standard", "hprt"];
-const VALID_DB_ALL: DbChoice[] = ["postgresql", "mysql", "sqlite", "cockroachdb", "mongodb"];
+const VALID_RELATIONAL_DBS: RelationalDbChoice[] = ["postgresql", "mysql", "sqlite", "cockroachdb"];
 const VALID_DB_DRIZZLE = DRIZZLE_DB_OPTIONS.map((o) => o.value);
 
 function fail(msg: string): never {
@@ -82,19 +104,55 @@ function fail(msg: string): never {
 }
 
 // ---------------------------------------------------------------------------
-// Build ScaffoldConfig from parsed flags
+// Storage hierarchy resolution
 // ---------------------------------------------------------------------------
 
-function resolveDb(ds: DsChoice, args: ParsedArgs): DbChoice | null {
-  if (ds !== "standard" && ds !== "hprt") return null;
-  const rawDb = (args.db as DbChoice | undefined) ?? "postgresql";
-  if (!VALID_DB_ALL.includes(rawDb)) {
-    fail(`--db must be one of: ${VALID_DB_ALL.join(", ")}`);
+function resolveDocumentDs(args: ParsedArgs): { ds: DsChoice; db: DbChoice | null } {
+  const provider = (args.documentProvider as DocumentProvider | undefined) ?? "couchbase";
+  if (!VALID_DOC_PROVIDERS.includes(provider)) {
+    fail(`--document-provider must be one of: ${VALID_DOC_PROVIDERS.join(", ")}`);
   }
-  if (ds === "hprt" && !VALID_DB_DRIZZLE.includes(rawDb)) {
-    fail(`MongoDB is not supported by Drizzle (--ds hprt). Choose one of: ${VALID_DB_DRIZZLE.join(", ")}`);
+  if (provider === "couchbase") return { ds: "cdb", db: null };
+
+  const impl = (args.documentImpl as DocumentImpl | undefined) ?? "standard";
+  if (!VALID_DOC_IMPLS.includes(impl)) {
+    fail(`--document-impl must be one of: ${VALID_DOC_IMPLS.join(", ")}`);
   }
-  return rawDb;
+  if (impl === "hprt") {
+    return { ds: provider === "documentdb" ? "ddb" : "mongo", db: null };
+  }
+  // Standard (Prisma): reuse "standard" ds with mongodb/documentdb as db
+  const db: DbChoice = provider === "documentdb" ? "documentdb" : "mongodb";
+  return { ds: "standard", db };
+}
+
+function resolveRelationalDs(args: ParsedArgs): { ds: DsChoice; db: DbChoice | null } {
+  const orm = (args.orm as OrmChoice | undefined) ?? "prisma";
+  if (!VALID_ORMS.includes(orm)) {
+    fail(`--orm must be one of: ${VALID_ORMS.join(", ")}`);
+  }
+
+  const rawDb = (args.db as RelationalDbChoice | undefined) ?? "postgresql";
+  if (!VALID_RELATIONAL_DBS.includes(rawDb)) {
+    fail(`--db must be one of: ${VALID_RELATIONAL_DBS.join(", ")}`);
+  }
+  if (orm === "drizzle" && !VALID_DB_DRIZZLE.includes(rawDb)) {
+    fail(`Drizzle does not support ${rawDb}. Choose one of: ${VALID_DB_DRIZZLE.join(", ")}`);
+  }
+
+  return { ds: orm === "drizzle" ? "hprt" : "standard", db: rawDb };
+}
+
+function resolveDsChoice(args: ParsedArgs): { ds: DsChoice; db: DbChoice | null } {
+  const st = args.storageType as StorageType | undefined;
+
+  if (!st) return { ds: "none", db: null };
+  if (!VALID_STORAGE_TYPES.includes(st)) {
+    fail(`--storage-type must be one of: ${VALID_STORAGE_TYPES.join(", ")}`);
+  }
+  if (st === "filebased") return { ds: "file", db: null };
+  if (st === "document") return resolveDocumentDs(args);
+  return resolveRelationalDs(args);
 }
 
 async function resolveExternalSdkPackage(
@@ -103,7 +161,7 @@ async function resolveExternalSdkPackage(
   sdk: string | undefined
 ): Promise<string | null> {
   if (ui === "none" || ds !== "none") return null;
-  if (!sdk) fail("--sdk is required when --ui is set and --ds is none (standalone UI mode)");
+  if (!sdk) fail("--sdk is required when --ui is set and --storage-type is omitted (standalone UI mode)");
   if (!sdk.startsWith("@")) fail('--sdk must be a scoped package name like "@acme/ds-sdk"');
   const s = spinner();
   s.start(`Checking if ${sdk} is reachable`);
@@ -135,23 +193,19 @@ export async function buildConfig(args: ParsedArgs): Promise<ScaffoldConfig> {
     fail("--scope must use lowercase letters, numbers, and hyphens only");
   }
 
-  const ds: DsChoice = (args.ds as DsChoice | undefined) ?? "none";
-  if (!VALID_DS.includes(ds)) {
-    fail(`--ds must be one of: ${VALID_DS.join(", ")}`);
-  }
-
-  const db = resolveDb(ds, args);
+  const { ds, db } = resolveDsChoice(args);
 
   const ui: UiChoice = (args.ui as UiChoice | undefined) ?? "none";
   if (!VALID_UI.includes(ui)) {
     fail(`--ui must be one of: ${VALID_UI.join(", ")}`);
   }
 
+  // UI / DS compatibility (applies to standard/hprt only — other DS types support both UIs)
   if (ds === "standard" && ui === "hprt") {
-    fail("--ui hprt is not compatible with --ds standard (incompatible schemas). Use --ui standard or --ds hprt.");
+    fail("--ui hprt requires --storage-type relational --orm drizzle (standard Prisma DS uses Apollo-based schema)");
   }
   if (ds === "hprt" && ui === "standard") {
-    fail("--ui standard is not compatible with --ds hprt (incompatible schemas). Use --ui hprt or --ds standard.");
+    fail("--ui standard requires --storage-type relational --orm prisma (HPRT Drizzle DS uses urql-based schema)");
   }
 
   const rawOutput = args.output ?? `./${name}`;
@@ -186,23 +240,36 @@ export async function buildConfig(args: ParsedArgs): Promise<ScaffoldConfig> {
 
 export function printHelp(): void {
   console.log(`
-create-app — scaffold from coding-templates
+create-app — scaffold from coding-templates  (v0.1.0-alpha.1)
 
 Usage:
   pnpm create-app                         Interactive mode (default)
   pnpm create-app --name <n> --scope <s> [options]
 
-Options:
+Required:
   -n, --name     <name>    Project name (lowercase, hyphens)
   -s, --scope    <scope>   Org scope without @ (e.g. myorg)
+
+Storage hierarchy:
+      --storage-type  <type>      relational | document | filebased
+
+  Relational DB (SQL):
+      --orm           <orm>       prisma | drizzle  (default: prisma)
+      --db            <db>        postgresql | mysql | sqlite | cockroachdb  (default: postgresql)
+                                  Drizzle supports all four; Prisma supports all four.
+
+  Document DB (NoSQL):
+      --document-provider <p>     couchbase | mongodb | documentdb  (default: couchbase)
+      --document-impl     <impl>  standard | hprt  (Prisma vs native SDK, default: standard)
+                                  Not applicable for couchbase (SDK only).
+
+  File-Based DB:
+      (no further flags — format configured via DS_FILE_FORMAT=json|yaml in .env)
+
+Other options:
   -o, --output   <dir>     Output directory (default: ./<name>)
-      --ds       <choice>  Data service: none | standard | hprt | cdb  (default: none)
-      --db       <choice>  Database: postgresql | mysql | sqlite | cockroachdb | mongodb
-                           Prisma (standard ds): all five.
-                           Drizzle (hprt ds): postgresql | mysql | sqlite | cockroachdb.
-                           (default: postgresql)
       --ui       <choice>  UI: none | standard | hprt  (default: none)
-      --sdk      <pkg>     Published SDK package (required when --ui != none and --ds none)
+      --sdk      <pkg>     Published SDK package (required when --ui != none and no --storage-type)
       --env                Generate .env from .env.example (default: on)
       --no-env             Skip .env generation
       --git                Init git repository (default: on)
@@ -210,23 +277,29 @@ Options:
   -y, --yes                Accept all defaults (still requires --name and --scope)
   -h, --help               Show this help
 
-DS / UI compatibility:
-  standard ds  →  standard ui only
-  hprt ds      →  hprt ui only
-  cdb ds       →  standard ui or hprt ui (SDK remapped to ds-sdk-cdb)
-  none ds      →  standard ui or hprt ui (requires --sdk)
+Storage / UI compatibility:
+  relational + prisma  →  standard ui only (Apollo-based schema)
+  relational + drizzle →  hprt ui only (urql-based schema)
+  document (any)       →  standard ui or hprt ui
+  filebased            →  standard ui or hprt ui
 
 Examples:
-  # Full monorepo: HPRT stack + MySQL
-  pnpm create-app --name my-app --scope myorg --ds hprt --db mysql --ui hprt
+  # Relational DB, Drizzle ORM, PostgreSQL, HPRT UI
+  pnpm create-app --name my-app --scope myorg --storage-type relational --orm drizzle --db postgresql --ui hprt
 
-  # DS only (no UI), Standard stack with SQLite
-  pnpm create-app --name my-api --scope myorg --ds standard --db sqlite
+  # Relational DB, Prisma ORM, MySQL, standard UI
+  pnpm create-app --name my-api --scope myorg --storage-type relational --orm prisma --db mysql --ui standard
 
-  # CDB stack, HPRT UI
-  pnpm create-app --name my-app --scope myorg --ds cdb --ui hprt
+  # Document DB, Couchbase
+  pnpm create-app --name my-app --scope myorg --storage-type document --document-provider couchbase --ui hprt
 
-  # Standalone UI with external SDK
+  # Document DB, MongoDB, Prisma, standard UI
+  pnpm create-app --name my-app --scope myorg --storage-type document --document-provider mongodb --document-impl standard --ui standard
+
+  # File-Based DB, standard UI
+  pnpm create-app --name my-app --scope myorg --storage-type filebased --ui standard
+
+  # Standalone UI with external SDK (no DS)
   pnpm create-app --name my-ui --scope myorg --ui standard --sdk @acme/ds-sdk
 
   # Minimal — bare project, no DS, no UI

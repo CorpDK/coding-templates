@@ -4,7 +4,7 @@ const config: CodegenConfig = {
   schema: "./src/schema.ts",
   generates: {
     // Client SDK — TypedDocumentNode works with Apollo Client and urql
-    "../ds-sdk-hprt/src/generated/": {
+    "../ds-sdk/src/generated/": {
       preset: "client",
       presetConfig: { fragmentMasking: false },
     },

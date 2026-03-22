@@ -1,4 +1,4 @@
-import type { PackageId, DsChoice, UiChoice, DbChoice } from "./types.js";
+import type { PackageId, DsChoice, UiChoice, RelationalDbChoice } from "./types.js";
 
 export interface PackageDef {
   id: PackageId;
@@ -21,7 +21,7 @@ export const PACKAGE_DEFS: Record<PackageId, PackageDef> = {
   "ds-sdk": {
     id: "ds-sdk",
     dirName: "ds-sdk",
-    label: "ds-sdk (TypedDocumentNode SDK for ds)",
+    label: "ds-sdk (TypedDocumentNode SDK)",
     requires: [],
     builtDeps: [],
   },
@@ -29,28 +29,35 @@ export const PACKAGE_DEFS: Record<PackageId, PackageDef> = {
     id: "ds-hprt",
     dirName: "ds-hprt",
     label: "ds-hprt (GraphQL Yoga + Drizzle)",
-    requires: ["ds-sdk-hprt"],
-    builtDeps: [],
-  },
-  "ds-sdk-hprt": {
-    id: "ds-sdk-hprt",
-    dirName: "ds-sdk-hprt",
-    label: "ds-sdk-hprt (TypedDocumentNode SDK for ds-hprt)",
-    requires: [],
+    requires: ["ds-sdk"],
     builtDeps: [],
   },
   "ds-cdb": {
     id: "ds-cdb",
     dirName: "ds-cdb",
     label: "ds-cdb (GraphQL Yoga + Couchbase + Zod)",
-    requires: ["ds-sdk-cdb"],
+    requires: ["ds-sdk"],
     builtDeps: ["couchbase"],
   },
-  "ds-sdk-cdb": {
-    id: "ds-sdk-cdb",
-    dirName: "ds-sdk-cdb",
-    label: "ds-sdk-cdb (TypedDocumentNode SDK for ds-cdb)",
-    requires: [],
+  "ds-mongo": {
+    id: "ds-mongo",
+    dirName: "ds-mongo",
+    label: "ds-mongo (GraphQL Yoga + MongoDB native SDK + Zod)",
+    requires: ["ds-sdk"],
+    builtDeps: [],
+  },
+  "ds-ddb": {
+    id: "ds-ddb",
+    dirName: "ds-ddb",
+    label: "ds-ddb (GraphQL Yoga + DocumentDB native SDK + Zod)",
+    requires: ["ds-sdk"],
+    builtDeps: [],
+  },
+  "ds-file": {
+    id: "ds-file",
+    dirName: "ds-file",
+    label: "ds-file (GraphQL Yoga + JSON/YAML file storage + Zod)",
+    requires: ["ds-sdk"],
     builtDeps: [],
   },
   ui: {
@@ -78,10 +85,19 @@ export function resolvePackages(ds: DsChoice, ui: UiChoice): Set<PackageId> {
     selected.add("ds-sdk");
   } else if (ds === "hprt") {
     selected.add("ds-hprt");
-    selected.add("ds-sdk-hprt");
+    selected.add("ds-sdk");
   } else if (ds === "cdb") {
     selected.add("ds-cdb");
-    selected.add("ds-sdk-cdb");
+    selected.add("ds-sdk");
+  } else if (ds === "mongo") {
+    selected.add("ds-mongo");
+    selected.add("ds-sdk");
+  } else if (ds === "ddb") {
+    selected.add("ds-ddb");
+    selected.add("ds-sdk");
+  } else if (ds === "file") {
+    selected.add("ds-file");
+    selected.add("ds-sdk");
   }
 
   if (ui === "standard") {
@@ -104,34 +120,16 @@ export function getBuiltDeps(selected: Set<PackageId>): string[] {
   return [...all].sort((a, b) => a.localeCompare(b));
 }
 
-/** Which SDK package the UI depends on, given DS and UI choices */
-export function resolveUiSdkDep(
-  ds: DsChoice,
-  ui: UiChoice
-): { oldPkg: string; newPkg: PackageId } | null {
-  if (ui === "none") return null;
-
-  if (ds === "cdb") {
-    // CDB pairs with either UI, but SDK is always ds-sdk-cdb
-    const oldPkg = ui === "standard" ? "@corpdk/ds-sdk" : "@corpdk/ds-sdk-hprt";
-    return { oldPkg, newPkg: "ds-sdk-cdb" };
-  }
-
-  // Standard DS + Standard UI → ds-sdk (normal, no remapping needed)
-  // HPRT DS + HPRT UI → ds-sdk-hprt (normal, no remapping needed)
-  return null;
-}
-
-/** DB options per DS variant */
-export const PRISMA_DB_OPTIONS: { value: DbChoice; label: string }[] = [
+/** Relational DB options for Prisma (no MongoDB — belongs in Document DB) */
+export const PRISMA_DB_OPTIONS: { value: RelationalDbChoice; label: string }[] = [
   { value: "postgresql", label: "PostgreSQL" },
   { value: "mysql", label: "MySQL" },
   { value: "sqlite", label: "SQLite" },
   { value: "cockroachdb", label: "CockroachDB" },
-  { value: "mongodb", label: "MongoDB" },
 ];
 
-export const DRIZZLE_DB_OPTIONS: { value: DbChoice; label: string }[] = [
+/** Relational DB options for Drizzle */
+export const DRIZZLE_DB_OPTIONS: { value: RelationalDbChoice; label: string }[] = [
   { value: "postgresql", label: "PostgreSQL" },
   { value: "mysql", label: "MySQL" },
   { value: "sqlite", label: "SQLite" },

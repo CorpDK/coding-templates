@@ -9,7 +9,17 @@ import {
   text,
 } from "@clack/prompts";
 import path from "node:path";
-import type { DbChoice, DsChoice, ScaffoldConfig, UiChoice } from "./types.js";
+import type {
+  DbChoice,
+  DocumentImpl,
+  DocumentProvider,
+  DsChoice,
+  OrmChoice,
+  RelationalDbChoice,
+  ScaffoldConfig,
+  StorageType,
+  UiChoice,
+} from "./types.js";
 import {
   DRIZZLE_DB_OPTIONS,
   PRISMA_DB_OPTIONS,
@@ -46,7 +56,7 @@ async function promptExternalSdk(ui: UiChoice, ds: DsChoice): Promise<string | n
   if (ui === "none" || ds !== "none") return null;
   note(
     "The UI package requires an SDK package.\n" +
-      "Since no DS is included, provide the published npm package name\n" +
+      "Since no storage is included, provide the published npm package name\n" +
       "for the TypedDocumentNode SDK (e.g. @acme/ds-sdk).",
     "External SDK required"
   );
@@ -77,8 +87,35 @@ async function promptExternalSdk(ui: UiChoice, ds: DsChoice): Promise<string | n
   return sdkPkg;
 }
 
+/**
+ * Derive DsChoice and db from the storage hierarchy selections.
+ * For relational, db is null here and set separately by the DB prompt.
+ * For document (MongoDB/DocumentDB + Prisma), db is derived automatically.
+ */
+function deriveDsChoice(
+  storageType: StorageType,
+  orm: OrmChoice | null,
+  docProvider: DocumentProvider | null,
+  docImpl: DocumentImpl | null
+): { ds: DsChoice; db: DbChoice | null } {
+  if (storageType === "filebased") return { ds: "file", db: null };
+
+  if (storageType === "document") {
+    if (docProvider === "couchbase" || !docProvider) return { ds: "cdb", db: null };
+    if (docImpl === "hprt") {
+      return { ds: docProvider === "documentdb" ? "ddb" : "mongo", db: null };
+    }
+    // Standard (Prisma): reuse "standard" ds with mongodb/documentdb as db
+    const db: DbChoice = docProvider === "documentdb" ? "documentdb" : "mongodb";
+    return { ds: "standard", db };
+  }
+
+  // relational
+  return { ds: orm === "drizzle" ? "hprt" : "standard", db: null };
+}
+
 export async function runPrompts(): Promise<ScaffoldConfig> {
-  intro("create-app  —  scaffold from coding-templates");
+  intro("create-app  —  scaffold from coding-templates  (v0.1.0-alpha.1)");
 
   // 1. Project name
   const projectName = checkCancel(
@@ -118,37 +155,93 @@ export async function runPrompts(): Promise<ScaffoldConfig> {
   );
 
   const outputDir = path.resolve(rawOutputDir);
-
   await checkOutputDir(outputDir);
 
-  // 4. DS selection
-  const ds = checkCancel(
-    await select<DsChoice>({
-      message: "Data service (DS)",
+  // 4a. Storage type
+  const storageType = checkCancel(
+    await select<StorageType>({
+      message: "Storage type",
       options: [
-        { value: "none", label: "None" },
         {
-          value: "standard",
-          label: "Standard  —  GraphQL Yoga + Prisma (PostgreSQL / MySQL / SQLite / CockroachDB / MongoDB)",
+          value: "relational",
+          label: "Relational DB (SQL)  —  PostgreSQL · MySQL · SQLite · CockroachDB",
         },
         {
-          value: "hprt",
-          label: "High-Performance Real-Time  —  GraphQL Yoga + Drizzle (PostgreSQL / MySQL / SQLite / CockroachDB)",
+          value: "document",
+          label: "Document DB (NoSQL)  —  Couchbase · MongoDB · DocumentDB",
         },
         {
-          value: "cdb",
-          label: "Couchbase  —  GraphQL Yoga + Couchbase + Zod",
+          value: "filebased",
+          label: "File-Based DB  —  JSON/YAML, zero dependencies, compatible abstraction with Document DB",
         },
       ],
     })
   );
 
-  // 5. DB selection (only for Standard or HPRT)
-  let db: DbChoice | null = null;
+  // 4b. ORM (Relational only)
+  let orm: OrmChoice | null = null;
+  if (storageType === "relational") {
+    orm = checkCancel(
+      await select<OrmChoice>({
+        message: "ORM",
+        options: [
+          {
+            value: "prisma",
+            label: "Prisma  —  standard, all 4 relational databases",
+          },
+          {
+            value: "drizzle",
+            label: "Drizzle  —  high-performance real-time, all 4 relational databases",
+          },
+        ],
+      })
+    );
+  }
 
-  if (ds === "standard") {
+  // 4c. Document DB provider (Document only)
+  let docProvider: DocumentProvider | null = null;
+  if (storageType === "document") {
+    docProvider = checkCancel(
+      await select<DocumentProvider>({
+        message: "Document DB provider",
+        options: [
+          { value: "couchbase", label: "Couchbase  —  Capella cloud or self-hosted" },
+          { value: "mongodb", label: "MongoDB  —  Atlas or self-hosted" },
+          {
+            value: "documentdb",
+            label: "DocumentDB  —  documentdb.io open-source (MongoDB-compatible)",
+          },
+        ],
+      })
+    );
+  }
+
+  // 4d. Implementation (MongoDB / DocumentDB only)
+  let docImpl: DocumentImpl | null = null;
+  if (docProvider === "mongodb" || docProvider === "documentdb") {
+    docImpl = checkCancel(
+      await select<DocumentImpl>({
+        message: "Implementation",
+        options: [
+          { value: "standard", label: "Standard  —  Prisma ORM (uses MongoDB connector)" },
+          {
+            value: "hprt",
+            label: "HPRT  —  Native SDK, no ORM overhead",
+          },
+        ],
+      })
+    );
+  }
+
+  // Derive ds and initial db from the storage hierarchy
+  const { ds, db: derivedDb } = deriveDsChoice(storageType, orm, docProvider, docImpl);
+
+  // 5. DB selection (Relational only — db is derived for Document paths)
+  let db: DbChoice | null = derivedDb;
+
+  if (storageType === "relational" && orm === "prisma") {
     db = checkCancel(
-      await select<DbChoice>({
+      await select<RelationalDbChoice>({
         message: "Database (Prisma)",
         options: PRISMA_DB_OPTIONS.map((o) => ({
           value: o.value,
@@ -157,9 +250,9 @@ export async function runPrompts(): Promise<ScaffoldConfig> {
         })),
       })
     );
-  } else if (ds === "hprt") {
+  } else if (storageType === "relational" && orm === "drizzle") {
     db = checkCancel(
-      await select<DbChoice>({
+      await select<RelationalDbChoice>({
         message: "Database (Drizzle)",
         options: DRIZZLE_DB_OPTIONS.map((o) => ({
           value: o.value,
@@ -175,19 +268,21 @@ export async function runPrompts(): Promise<ScaffoldConfig> {
     { value: "none", label: "None" },
   ];
 
-  if (ds === "none" || ds === "standard" || ds === "cdb") {
+  // Standard UI: available with none, standard (prisma), cdb, mongo, ddb, file
+  // Not available with hprt (Drizzle — uses urql-based schema)
+  if (ds !== "hprt") {
     uiOptions.push({
       value: "standard",
       label: "Standard UI  —  Next.js + Apollo Client",
-      hint: ds === "cdb" ? "SDK remapped to ds-sdk-cdb" : undefined,
     });
   }
 
-  if (ds === "none" || ds === "hprt" || ds === "cdb") {
+  // HPRT UI: available with none, hprt (drizzle), cdb, mongo, ddb, file
+  // Not available with standard (Prisma — uses Apollo-based schema)
+  if (ds !== "standard") {
     uiOptions.push({
       value: "hprt",
       label: "HPRT UI  —  Next.js + urql + Graphcache",
-      hint: ds === "cdb" ? "SDK remapped to ds-sdk-cdb" : undefined,
     });
   }
 
@@ -198,7 +293,7 @@ export async function runPrompts(): Promise<ScaffoldConfig> {
     })
   );
 
-  // 7. External SDK (UI-only mode, DS = none)
+  // 7. External SDK (UI-only mode, no storage)
   const externalSdkPackage = await promptExternalSdk(ui, ds);
 
   // 8 & 9. Env + git
@@ -218,8 +313,7 @@ export async function runPrompts(): Promise<ScaffoldConfig> {
 
   // Resolve final package set
   const selectedPackages = resolvePackages(ds, ui);
-  const projectType =
-    ds === "none" && ui !== "none" ? "standalone" : "monorepo";
+  const projectType = ds === "none" && ui !== "none" ? "standalone" : "monorepo";
 
   // Summary
   const pkgList =
@@ -249,4 +343,3 @@ export async function runPrompts(): Promise<ScaffoldConfig> {
     initGit,
   };
 }
-
