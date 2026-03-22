@@ -107,37 +107,26 @@ function fail(msg: string): never {
 // Storage hierarchy resolution
 // ---------------------------------------------------------------------------
 
-function resolveDsChoice(args: ParsedArgs): { ds: DsChoice; db: DbChoice | null } {
-  const st = args.storageType as StorageType | undefined;
-
-  if (!st) return { ds: "none", db: null };
-
-  if (!VALID_STORAGE_TYPES.includes(st)) {
-    fail(`--storage-type must be one of: ${VALID_STORAGE_TYPES.join(", ")}`);
+function resolveDocumentDs(args: ParsedArgs): { ds: DsChoice; db: DbChoice | null } {
+  const provider = (args.documentProvider as DocumentProvider | undefined) ?? "couchbase";
+  if (!VALID_DOC_PROVIDERS.includes(provider)) {
+    fail(`--document-provider must be one of: ${VALID_DOC_PROVIDERS.join(", ")}`);
   }
+  if (provider === "couchbase") return { ds: "cdb", db: null };
 
-  if (st === "filebased") return { ds: "file", db: null };
-
-  if (st === "document") {
-    const provider = (args.documentProvider as DocumentProvider | undefined) ?? "couchbase";
-    if (!VALID_DOC_PROVIDERS.includes(provider)) {
-      fail(`--document-provider must be one of: ${VALID_DOC_PROVIDERS.join(", ")}`);
-    }
-    if (provider === "couchbase") return { ds: "cdb", db: null };
-
-    const impl = (args.documentImpl as DocumentImpl | undefined) ?? "standard";
-    if (!VALID_DOC_IMPLS.includes(impl)) {
-      fail(`--document-impl must be one of: ${VALID_DOC_IMPLS.join(", ")}`);
-    }
-    if (impl === "hprt") {
-      return { ds: provider === "documentdb" ? "ddb" : "mongo", db: null };
-    }
-    // Standard (Prisma): reuse "standard" ds with mongodb/documentdb as db
-    const db: DbChoice = provider === "documentdb" ? "documentdb" : "mongodb";
-    return { ds: "standard", db };
+  const impl = (args.documentImpl as DocumentImpl | undefined) ?? "standard";
+  if (!VALID_DOC_IMPLS.includes(impl)) {
+    fail(`--document-impl must be one of: ${VALID_DOC_IMPLS.join(", ")}`);
   }
+  if (impl === "hprt") {
+    return { ds: provider === "documentdb" ? "ddb" : "mongo", db: null };
+  }
+  // Standard (Prisma): reuse "standard" ds with mongodb/documentdb as db
+  const db: DbChoice = provider === "documentdb" ? "documentdb" : "mongodb";
+  return { ds: "standard", db };
+}
 
-  // relational
+function resolveRelationalDs(args: ParsedArgs): { ds: DsChoice; db: DbChoice | null } {
   const orm = (args.orm as OrmChoice | undefined) ?? "prisma";
   if (!VALID_ORMS.includes(orm)) {
     fail(`--orm must be one of: ${VALID_ORMS.join(", ")}`);
@@ -152,6 +141,18 @@ function resolveDsChoice(args: ParsedArgs): { ds: DsChoice; db: DbChoice | null 
   }
 
   return { ds: orm === "drizzle" ? "hprt" : "standard", db: rawDb };
+}
+
+function resolveDsChoice(args: ParsedArgs): { ds: DsChoice; db: DbChoice | null } {
+  const st = args.storageType as StorageType | undefined;
+
+  if (!st) return { ds: "none", db: null };
+  if (!VALID_STORAGE_TYPES.includes(st)) {
+    fail(`--storage-type must be one of: ${VALID_STORAGE_TYPES.join(", ")}`);
+  }
+  if (st === "filebased") return { ds: "file", db: null };
+  if (st === "document") return resolveDocumentDs(args);
+  return resolveRelationalDs(args);
 }
 
 async function resolveExternalSdkPackage(
