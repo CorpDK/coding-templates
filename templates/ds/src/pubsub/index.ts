@@ -1,6 +1,4 @@
-import { createPubSub } from "graphql-yoga";
-import { createMemoryEventTarget } from "./memory.js";
-import { createRedisEventTarget } from "./redis.js";
+import { createAppPubSub } from "@corpdk/pub-sub";
 import type { Item } from "../db/schemas.js";
 
 /**
@@ -19,9 +17,5 @@ export type PubSubTopics = {
   ITEM_CREATED: [{ itemCreated: Item }];
 };
 
-const eventTarget = process.env.REDIS_URL
-  ? createRedisEventTarget()
-  : createMemoryEventTarget();
-
-export const pubsub = createPubSub<PubSubTopics>({ eventTarget });
+export const pubsub = createAppPubSub<PubSubTopics>();
 export type PubSub = typeof pubsub;
