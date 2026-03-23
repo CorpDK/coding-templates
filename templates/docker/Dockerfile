@@ -21,7 +21,12 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 FROM deps AS build
 WORKDIR /app
 
-COPY --exclude=.env --exclude=.env.local --exclude=.env.*.local . .
+COPY next.config.ts tsconfig.json postcss.config.mjs ./
+COPY app ./app
+COPY public ./public
+COPY components ./components
+COPY lib ./lib
+COPY types ./types
 
 # Public env vars must be available at build time
 ARG NEXT_PUBLIC_DS_URL
