@@ -41,5 +41,6 @@ COPY --from=build /app/packages/DS_DIR/package.json ./packages/DS_DIR/package.js
 COPY --from=build /app/packages/DS_DIR/dist ./packages/DS_DIR/dist
 COPY --from=build /app/packages/DS_DIR/node_modules ./packages/DS_DIR/node_modules
 
+USER node
 EXPOSE 4000
 CMD ["node", "packages/DS_DIR/dist/index.js"]

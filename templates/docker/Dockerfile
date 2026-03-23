@@ -21,7 +21,12 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 FROM deps AS build
 WORKDIR /app
 
-COPY . .
+COPY next.config.ts tsconfig.json postcss.config.mjs ./
+COPY app ./app
+COPY public ./public
+COPY components ./components
+COPY lib ./lib
+COPY types ./types
 
 # Public env vars must be available at build time
 ARG NEXT_PUBLIC_DS_URL
@@ -42,5 +47,6 @@ COPY --from=build /app/.next/standalone ./
 COPY --from=build /app/.next/static ./.next/static
 COPY --from=build /app/public ./public
 
+USER node
 EXPOSE 3000
 CMD ["node", "server.js"]

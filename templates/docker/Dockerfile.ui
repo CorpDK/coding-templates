@@ -45,5 +45,6 @@ COPY --from=build /app/packages/UI_DIR/.next/standalone ./
 COPY --from=build /app/packages/UI_DIR/.next/static ./packages/UI_DIR/.next/static
 COPY --from=build /app/packages/UI_DIR/public ./packages/UI_DIR/public
 
+USER node
 EXPOSE 3000
 CMD ["node", "packages/UI_DIR/server.js"]
