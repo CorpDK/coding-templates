@@ -15,6 +15,7 @@ A pnpm + Turborepo monorepo template for full-stack GraphQL applications under t
 | `@corpdk/ds-ddb` | GraphQL Yoga + DocumentDB (documentdb.io) + Zod (NoSQL data service) |
 | `@corpdk/ds-file` | GraphQL Yoga + JSON/YAML file storage + Zod (zero-dependency data service) |
 | `@corpdk/ds-sdk` | Auto-generated TypedDocumentNode SDK (shared by all DS variants) |
+| `@corpdk/pub-sub` | Plugin-style pub/sub factory — `createAppPubSub<T>()` wires memory or Redis; topics defined per app |
 
 ## Scaffolding a New Project
 
@@ -164,21 +165,25 @@ pnpm codegen      # Regenerate TypedDocumentNode SDKs
 **HTTP traffic** is proxied through Next.js rewrites (`/api/graphql → DS_HTTP_URL`).
 **WebSocket subscriptions** connect directly via `NEXT_PUBLIC_DS_WS_URL`.
 
-All DS packages share the same GraphQL schema and generate their SDK into `@corpdk/ds-sdk`.
+All DS packages share the same GraphQL schema (defined as multiple `.graphqls` files in `src/schema/`) and generate their SDK into `@corpdk/ds-sdk`.
 
 ## Real-Time Subscriptions
 
 Every mutation publishes a PubSub event. Clients subscribed via WebSocket receive updates automatically — no polling required.
 
-The PubSub layer auto-selects based on `REDIS_URL`: Redis/Valkey when the variable is set, in-memory (`EventTarget`) otherwise:
+The PubSub layer auto-selects based on `REDIS_URL`: Redis/Valkey when the variable is set, in-memory (`EventTarget`) otherwise. The wiring is handled by `@corpdk/pub-sub`; each DS package defines only its own topics:
 
 ```typescript
 // src/pubsub/index.ts (all DS packages)
-const eventTarget = process.env.REDIS_URL
-  ? createRedisEventTarget()
-  : createMemoryEventTarget();
+import { createAppPubSub } from "@corpdk/pub-sub";
 
-export const pubsub = createPubSub<PubSubTopics>({ eventTarget });
+export type PubSubTopics = {
+  PING_SENT: [{ pingSent: { message: string; timestamp: string } }];
+  ITEM_CREATED: [{ itemCreated: Item }];
+  // add more topics here as your schema grows
+};
+
+export const pubsub = createAppPubSub<PubSubTopics>();
 ```
 
 To enable Redis, add `REDIS_URL=redis://localhost:6379` to the package's `.env`. No code changes required.

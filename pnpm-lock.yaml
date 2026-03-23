@@ -31,8 +31,30 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
 
+  libraries/pub-sub:
+    dependencies:
+      '@graphql-yoga/redis-event-target':
+        specifier: ^3.0.0
+        version: 3.0.3(ioredis@5.10.0)
+      graphql-yoga:
+        specifier: ^5.13.4
+        version: 5.18.1(graphql@16.13.1)
+      ioredis:
+        specifier: ^5.0.0
+        version: 5.10.0
+    devDependencies:
+      '@types/node':
+        specifier: ^20.19.37
+        version: 20.19.37
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
+
   templates/ds:
     dependencies:
+      '@corpdk/pub-sub':
+        specifier: workspace:*
+        version: link:../../libraries/pub-sub
       '@graphql-yoga/redis-event-target':
         specifier: ^3.0.0
         version: 3.0.3(ioredis@5.10.0)
@@ -88,6 +110,9 @@ importers:
 
   templates/ds-cdb:
     dependencies:
+      '@corpdk/pub-sub':
+        specifier: workspace:*
+        version: link:../../libraries/pub-sub
       '@graphql-yoga/redis-event-target':
         specifier: ^3.0.0
         version: 3.0.3(ioredis@5.10.0)
@@ -140,6 +165,9 @@ importers:
 
   templates/ds-ddb:
     dependencies:
+      '@corpdk/pub-sub':
+        specifier: workspace:*
+        version: link:../../libraries/pub-sub
       '@graphql-yoga/redis-event-target':
         specifier: ^3.0.0
         version: 3.0.3(ioredis@5.10.0)
@@ -192,6 +220,9 @@ importers:
 
   templates/ds-file:
     dependencies:
+      '@corpdk/pub-sub':
+        specifier: workspace:*
+        version: link:../../libraries/pub-sub
       '@graphql-yoga/redis-event-target':
         specifier: ^3.0.0
         version: 3.0.3(ioredis@5.10.0)
@@ -247,6 +278,9 @@ importers:
 
   templates/ds-hprt:
     dependencies:
+      '@corpdk/pub-sub':
+        specifier: workspace:*
+        version: link:../../libraries/pub-sub
       '@graphql-yoga/redis-event-target':
         specifier: ^3.0.0
         version: 3.0.3(ioredis@5.10.0)
@@ -308,6 +342,9 @@ importers:
 
   templates/ds-mongo:
     dependencies:
+      '@corpdk/pub-sub':
+        specifier: workspace:*
+        version: link:../../libraries/pub-sub
       '@graphql-yoga/redis-event-target':
         specifier: ^3.0.0
         version: 3.0.3(ioredis@5.10.0)
@@ -411,7 +448,7 @@ importers:
         version: 9.39.4(jiti@2.6.1)
       eslint-config-next:
         specifier: 16.1.6
-        version: 16.1.6(@typescript-eslint/parser@8.57.0(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3)
+        version: 16.1.6(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3)
       tailwindcss:
         specifier: ^4.2.1
         version: 4.2.1
@@ -463,7 +500,7 @@ importers:
         version: 9.39.4(jiti@2.6.1)
       eslint-config-next:
         specifier: 16.1.6
-        version: 16.1.6(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3)
+        version: 16.1.6(@typescript-eslint/parser@8.57.0(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3)
       tailwindcss:
         specifier: ^4.2.1
         version: 4.2.1

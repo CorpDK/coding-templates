@@ -11,12 +11,14 @@ This is a **pnpm + Turborepo monorepo** under the `@corpdk` org — a production
 ```
 coding-templates/
 ├── package.json                    ← workspace root: turbo scripts + devDeps only
-├── pnpm-workspace.yaml             ← packages: ["templates/*", "engines/*"]
+├── pnpm-workspace.yaml             ← packages: ["templates/*", "engines/*", "libraries/*"]
 ├── turbo.json                      ← task pipeline (codegen → build → dev/start)
 ├── CLAUDE.md                       ← this file
 ├── CODING_GUIDELINES.md            ← coding standards
 ├── engines/
 │   └── create-app/  (@corpdk/create-app)   Interactive CLI scaffolding tool
+├── libraries/
+│   └── pub-sub/     (@corpdk/pub-sub)       Plugin-style GraphQL pub/sub factory (memory + Redis)
 └── templates/
     ├── ui/          (@corpdk/ui)           Next.js + Apollo Client
     ├── ui-hprt/     (@corpdk/ui-hprt)      Next.js + urql + Graphcache
@@ -42,6 +44,7 @@ coding-templates/
 | `ds-ddb` | `@corpdk/ds-ddb` | GraphQL Yoga server with DocumentDB (documentdb.io) + Zod (MongoDB-compatible wire protocol) |
 | `ds-file` | `@corpdk/ds-file` | GraphQL Yoga server with JSON/YAML file storage + Zod (zero external dependencies) |
 | `ds-sdk` | `@corpdk/ds-sdk` | Auto-generated TypedDocumentNode SDK shared by all DS variants |
+| `pub-sub` | `@corpdk/pub-sub` | Plugin-style pub/sub factory: `createAppPubSub<T>()` selects Redis or in-memory; topics defined per app |
 
 ### Key Design Decisions
 
@@ -53,6 +56,8 @@ coding-templates/
 - **Single shared SDK** — all DS variants codegen into `@corpdk/ds-sdk` (one package, schema-identical output); the consolidated SDK replaced the former per-variant `ds-sdk-hprt` and `ds-sdk-cdb` packages.
 - **`dev` depends on `^build`** — Turbo's `dev` task declares `dependsOn: ["^build"]` so codegen and upstream builds complete before Next.js starts, preventing missing-type errors on first launch.
 - **Repository Pattern in all DS packages** — every DS package exposes `src/db/repository.ts` with an `IItemRepository` interface. GraphQL resolvers in `schema.ts` call only `itemRepository.*` — never DB-specific APIs directly.
+- **GraphQL SDL in `src/schema/`** — DS packages define the schema as multiple `.graphqls` files in `src/schema/` (not inline in TypeScript). `base.graphqls` declares empty root types; feature files use `extend type` to add fields. Loaded at runtime by scanning the directory with `readdirSync`. Codegen uses `./src/schema/**/*.graphqls`. The directory is copied to `dist/` as part of the build script (`cp -r src/schema dist/`).
+- **Plugin-style pub/sub via `@corpdk/pub-sub`** — all DS packages use `createAppPubSub<T>()` from the shared library to wire up memory or Redis event targets. Topics (`PubSubTopics`) are defined locally in each package's `src/pubsub/index.ts`.
 
 ## Coding Standards
 

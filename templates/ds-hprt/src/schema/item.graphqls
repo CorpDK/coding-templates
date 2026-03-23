@@ -1,0 +1,45 @@
+"""A data item."""
+type Item {
+  """Unique identifier (UUID)."""
+  id: ID!
+  """Display name of the item."""
+  name: String!
+  """Optional longer description of the item."""
+  description: String
+  """Whether the item is currently active."""
+  active: Boolean!
+  """ISO-8601 timestamp of when the item was created."""
+  createdAt: String!
+}
+
+extend type Query {
+  """Returns all items."""
+  items: [Item!]!
+
+  """Returns a single item by its ID. Returns null if not found."""
+  item(
+    """The UUID of the item to fetch."""
+    id: ID!
+  ): Item
+}
+
+extend type Mutation {
+  """
+  Creates a new item and persists it to the data service.
+  Broadcasts the created item to all itemCreated subscribers.
+  """
+  createItem(
+    """Display name of the item. Must be between 1 and 255 characters."""
+    name: String!
+    """Optional longer description of the item."""
+    description: String
+  ): Item!
+}
+
+extend type Subscription {
+  """
+  Fires whenever a new item is created via the createItem mutation.
+  Subscribe to receive real-time item creation events.
+  """
+  itemCreated: Item!
+}

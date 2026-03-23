@@ -563,6 +563,42 @@ orders: () => orderRepository.findAll(),
 
 ## GraphQL Schema Documentation
 
+The GraphQL schema lives in `src/schema/` — a directory of `.graphqls` files, not inline TypeScript. `schema.ts` scans the directory at runtime, sorts files alphabetically, and merges them into a single SDL string. The codegen config (`codegen.ts`) uses the glob `./src/schema/**/*.graphqls`.
+
+### Schema Directory Layout
+
+```text
+src/schema/
+├── base.graphqls      ← declares empty root types: type Query / Mutation / Subscription
+├── server.graphqls    ← server health types + extend type Query/Mutation/Subscription
+└── item.graphqls      ← Item type + extend type Query/Mutation/Subscription
+```
+
+**Adding a new entity** = create one new file (e.g. `src/schema/order.graphqls`) with the type definition and `extend type` blocks for its operations. No other files need editing.
+
+```graphql
+"""An order."""
+type Order {
+  """..."""
+  id: ID!
+}
+
+extend type Query {
+  """Returns all orders."""
+  orders: [Order!]!
+}
+
+extend type Mutation {
+  """Creates a new order. Publishes orderCreated."""
+  createOrder(itemId: ID!): Order!
+}
+
+extend type Subscription {
+  """Fires when an order is created via createOrder."""
+  orderCreated: Order!
+}
+```
+
 Every element of a GraphQL schema **must** have a `"""docstring"""`. The schema is the public API contract — Altair, GraphQL IDE explorers, and generated SDK consumers all rely on these descriptions.
 
 ### Required Coverage
@@ -655,13 +691,23 @@ Yoga maps each subscription event to `event[fieldName]`. For a field named `ping
 
 ### Required Pattern
 
-**`PubSubTopics`** — wrap payload under the field name:
+Create the pub/sub instance using `@corpdk/pub-sub` and define topics locally in `src/pubsub/index.ts`:
 
 ```typescript
+import { createAppPubSub } from "@corpdk/pub-sub";
+
 export type PubSubTopics = {
   PING_SENT: [{ pingSent: { message: string; timestamp: string } }];
+  // add a topic for each subscription field
 };
+
+export const pubsub = createAppPubSub<PubSubTopics>();
+export type PubSub = typeof pubsub;
 ```
+
+`createAppPubSub<T>()` automatically selects Redis (when `REDIS_URL` is set) or in-memory. Never import `createMemoryEventTarget` or `createRedisEventTarget` directly in DS packages — use the factory.
+
+**`PubSubTopics`** — wrap payload under the field name:
 
 **Mutation** — publish with the wrapper:
 
@@ -712,8 +758,10 @@ Before committing, verify:
 - [ ] No `any` types used
 - [ ] Imports organized (external, internal, types)
 - [ ] All GraphQL types, fields, and arguments have `"""docstrings"""`
+- [ ] GraphQL SDL is in `src/schema.graphqls`, not inline in TypeScript
 - [ ] Every mutation has a corresponding subscription that publishes the result
 - [ ] GraphQL subscription publish payload is wrapped as `{ fieldName: payload }`
+- [ ] `PubSubTopics` defined in `src/pubsub/index.ts`; pub/sub instance created via `createAppPubSub<PubSubTopics>()` from `@corpdk/pub-sub`
 - [ ] New entities have a Zod schema in `src/db/schemas.ts`
 - [ ] New entities have a repository interface + implementation in `src/db/repository.ts`
 - [ ] Resolvers import from `./db/repository.js`, not `./db/index.js` or `../storage/index.js`

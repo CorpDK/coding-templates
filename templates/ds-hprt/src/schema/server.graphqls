@@ -1,0 +1,45 @@
+"""Current health state of the server."""
+type ServerStatus {
+  """True when the server is operating normally."""
+  ok: Boolean!
+  """ISO-8601 timestamp of when this status was generated."""
+  timestamp: String!
+}
+
+"""Result returned by the ping mutation and emitted on the pingSent subscription."""
+type PingResult {
+  """The message that was sent with the ping."""
+  message: String!
+  """ISO-8601 timestamp of when the ping was processed."""
+  timestamp: String!
+}
+
+extend type Query {
+  """Returns a personalised greeting. Omit name to receive the default greeting."""
+  hello(
+    """Optional name to include in the greeting."""
+    name: String
+  ): String!
+
+  """Returns the current server health status and a server-side timestamp."""
+  status: ServerStatus!
+}
+
+extend type Mutation {
+  """
+  Sends a ping with a custom message and broadcasts it to all pingSent subscribers.
+  Use this to verify end-to-end real-time connectivity.
+  """
+  ping(
+    """The message payload to broadcast to all active subscribers."""
+    message: String!
+  ): PingResult!
+}
+
+extend type Subscription {
+  """
+  Fires whenever the ping mutation is called.
+  Subscribe to receive real-time updates from mutations.
+  """
+  pingSent: PingResult!
+}
