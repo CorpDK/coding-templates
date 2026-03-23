@@ -1,6 +1,18 @@
 import type { DbChoice, DsChoice, UiChoice } from "./types.js";
 
 // ---------------------------------------------------------------------------
+// Docker placeholder helpers
+// ---------------------------------------------------------------------------
+
+function dsDirName(ds: DsChoice): string {
+  return ds === "standard" ? "ds" : `ds-${ds}`;
+}
+
+function uiDirName(ui: UiChoice): string {
+  return ui === "standard" ? "ui" : `ui-${ui}`;
+}
+
+// ---------------------------------------------------------------------------
 // Note on DocumentDbChoice values ("mongodb", "documentdb"):
 // These reach Prisma transforms only when Document DB + Standard (Prisma) is
 // selected — deriveDsChoice sets ds="standard" with db="mongodb"|"documentdb".
@@ -337,6 +349,14 @@ export function transformFileContent(
     } else {
       result = transformUiSdkImport(result, renamedOldPkg, ctx.externalSdk.externalPkg);
     }
+  }
+
+  // 6. Docker placeholder replacement (Dockerfile.ds / Dockerfile.ui only)
+  if (relPath.endsWith("Dockerfile.ds") && ctx.ds !== "none") {
+    result = result.replaceAll("DS_DIR", dsDirName(ctx.ds));
+  }
+  if (relPath.endsWith("Dockerfile.ui") && ctx.ui !== "none") {
+    result = result.replaceAll("UI_DIR", uiDirName(ctx.ui));
   }
 
   return result;

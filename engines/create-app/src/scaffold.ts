@@ -65,10 +65,10 @@ export async function scaffold(
   if (config.projectType === "monorepo") {
     await scaffoldMonorepo(config, templateRoot, templatesDir, s);
   } else {
-    await scaffoldStandalone(config, templatesDir, s);
+    await scaffoldStandalone(config, templateRoot, templatesDir, s);
   }
 
-  // 5. Git init
+  // 6. Git init
   if (config.initGit) {
     s.start("Initialising git repository");
     await execAsync("git init", { cwd: outDir });
@@ -148,10 +148,47 @@ async function scaffoldMonorepo(
     }
   }
   s.stop("Packages copied");
+
+  // 5. Copy Dockerfiles into package directories
+  s.start("Copying Dockerfiles");
+  const dockerTemplateDir = path.join(templateRoot, "templates", "docker");
+  const dockerCtx: TransformContext = {
+    orgScope: config.orgScope,
+    ds: config.ds,
+    ui: config.ui,
+    db: config.db,
+    externalSdk: null,
+    isRootPackageJson: false,
+    projectName: config.projectName,
+  };
+
+  if (config.ds !== "none") {
+    const dir = config.ds === "standard" ? "ds" : `ds-${config.ds}`;
+    const src = path.join(dockerTemplateDir, "Dockerfile.ds");
+    const content = await fs.readFile(src, "utf8");
+    await fs.writeFile(
+      path.join(outDir, "packages", dir, "Dockerfile"),
+      transformFileContent(content, "Dockerfile.ds", dockerCtx),
+      "utf8"
+    );
+  }
+
+  if (config.ui !== "none") {
+    const dir = config.ui === "standard" ? "ui" : `ui-${config.ui}`;
+    const src = path.join(dockerTemplateDir, "Dockerfile.ui");
+    const content = await fs.readFile(src, "utf8");
+    await fs.writeFile(
+      path.join(outDir, "packages", dir, "Dockerfile"),
+      transformFileContent(content, "Dockerfile.ui", dockerCtx),
+      "utf8"
+    );
+  }
+  s.stop("Dockerfiles copied");
 }
 
 async function scaffoldStandalone(
   config: ScaffoldConfig,
+  templateRoot: string,
   templatesDir: string,
   s: ReturnType<typeof spinner>
 ): Promise<void> {
@@ -201,4 +238,12 @@ async function scaffoldStandalone(
     }
     s.stop(".env file generated");
   }
+
+  // Copy standalone Dockerfile
+  s.start("Copying Dockerfile");
+  const standaloneDockerSrc = path.join(templateRoot, "templates", "docker", "Dockerfile");
+  if (await pathExists(standaloneDockerSrc)) {
+    await fs.copyFile(standaloneDockerSrc, path.join(outDir, "Dockerfile"));
+  }
+  s.stop("Dockerfile copied");
 }
