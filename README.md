@@ -32,23 +32,35 @@ Run `pnpm create-app` with no flags. You will be guided through these steps:
 
 1. **Project name** — lowercase letters, numbers, and hyphens; must start with a letter (e.g. `my-app`)
 2. **Org scope** — your npm organisation scope without `@` (e.g. `myorg`)
-3. **Output directory** — where to write the project (default: `./<name>`)
-4. **Storage type** — choose the top-level backend category:
+3. **What are you scaffolding?** — choose the project shape:
+   - `Full-stack` — UI + DS (GraphQL Yoga + chosen storage)
+   - `DS only` — GraphQL Yoga backend only
+   - `UI only` — Next.js frontend that connects to an external DS
+4. **Output directory** — where to write the project (default: `./<name>`)
+5. **Storage type** _(Full-stack / DS only)_ — top-level backend category:
    - `relational` — SQL databases via Prisma or Drizzle ORM
    - `document` — NoSQL: Couchbase, MongoDB, or DocumentDB
    - `filebased` — JSON/YAML file storage, zero external dependencies
-5. **ORM** _(relational only)_ — `prisma` (all 4 SQL DBs) or `drizzle` (all 4 SQL DBs, high-performance real-time)
-6. **Document DB provider** _(document only)_ — `couchbase`, `mongodb`, or `documentdb`
-7. **Implementation** _(MongoDB/DocumentDB only)_ — `standard` (Prisma ORM) or `hprt` (native SDK, no ORM overhead)
-8. **Database** _(relational only)_ — `postgresql` (default), `mysql`, `sqlite`, or `cockroachdb`
-9. **UI** — `none`, `standard` (Apollo Client), or `hprt` (urql + Graphcache); options filtered by DS choice
-10. **External SDK** — only prompted when UI is set and no storage is selected; must be a published scoped package (e.g. `@acme/ds-sdk`)
-11. **Generate `.env` files** — copy `.env.example` → `.env` in each package (default: yes)
-12. **Init git repository** — run `git init` and create an initial commit (default: yes)
+6. **ORM** _(relational only)_ — `prisma` (all 4 SQL DBs) or `drizzle` (all 4 SQL DBs, high-performance real-time)
+7. **Document DB provider** _(document only)_ — `couchbase`, `mongodb`, or `documentdb`
+8. **Implementation** _(MongoDB/DocumentDB only)_ — `standard` (Prisma ORM) or `hprt` (native SDK, no ORM overhead)
+9. **Database** _(relational only)_ — `postgresql` (default), `mysql`, `sqlite`, or `cockroachdb`
+10. **UI variant** _(Full-stack / UI only)_ — `standard` (Apollo Client) or `hprt` (urql + Graphcache); filtered by DS choice in Full-stack mode
+11. **External SDK** _(UI only)_ — must be a published scoped package (e.g. `@acme/ds-sdk`)
+12. **Generate `.env` files** — copy `.env.example` → `.env` in each package (default: yes)
+13. **Init git repository** — run `git init` and create an initial commit (default: yes)
 
 ### Non-Interactive Mode
 
-Pass `--name` (or `-n`) to enter non-interactive mode. All prompts are replaced by flags:
+Pass `--name` (or `-n`) to enter non-interactive mode. The scaffold type is inferred from the flags you provide:
+
+| Scaffold type | Flags |
+|---------------|-------|
+| **Full-stack** | `--storage-type` + `--ui` |
+| **DS only** | `--storage-type` (no `--ui`) |
+| **UI only** | `--ui` + `--sdk` (no `--storage-type`) |
+
+All available flags:
 
 | Flag | Short | Default | Description |
 |------|-------|---------|-------------|
@@ -60,8 +72,8 @@ Pass `--name` (or `-n`) to enter non-interactive mode. All prompts are replaced 
 | `--db` | — | `postgresql` | `postgresql \| mysql \| sqlite \| cockroachdb` _(relational only)_ |
 | `--document-provider` | — | `couchbase` | `couchbase \| mongodb \| documentdb` _(document only)_ |
 | `--document-impl` | — | `standard` | `standard \| hprt` _(mongodb/documentdb only)_ |
-| `--ui` | — | `none` | `none \| standard \| hprt` |
-| `--sdk` | — | — | External SDK package (required when `--ui` ≠ `none` and no `--storage-type`) |
+| `--ui` | — | _(none)_ | `standard \| hprt` |
+| `--sdk` | — | — | External SDK package (required for UI only mode) |
 | `--no-env` | — | — | Skip `.env` generation |
 | `--no-git` | — | — | Skip git init |
 | `--yes` | `-y` | — | Accept all defaults (still requires `--name` and `--scope`) |
@@ -83,32 +95,26 @@ Pass `--name` (or `-n`) to enter non-interactive mode. All prompts are replaced 
 ### Examples
 
 ```bash
-# Relational DB, Drizzle ORM, PostgreSQL, HPRT UI
+# Full-stack — Relational, Drizzle, PostgreSQL, HPRT UI
 pnpm create-app --name my-app --scope myorg --storage-type relational --orm drizzle --db postgresql --ui hprt
 
-# Relational DB, Prisma ORM, MySQL, standard UI
-pnpm create-app --name my-api --scope myorg --storage-type relational --orm prisma --db mysql --ui standard
+# Full-stack — Relational, Prisma, MySQL, standard UI
+pnpm create-app --name my-app --scope myorg --storage-type relational --orm prisma --db mysql --ui standard
 
-# Document DB, Couchbase, HPRT UI
-pnpm create-app --name my-app --scope myorg --storage-type document --document-provider couchbase --ui hprt
-
-# Document DB, MongoDB, native SDK (HPRT), standard UI
+# Full-stack — Document DB, MongoDB, native SDK, standard UI
 pnpm create-app --name my-app --scope myorg --storage-type document --document-provider mongodb --document-impl hprt --ui standard
 
-# Document DB, DocumentDB (documentdb.io), native SDK, HPRT UI
-pnpm create-app --name my-app --scope myorg --storage-type document --document-provider documentdb --document-impl hprt --ui hprt
-
-# File-based DB, HPRT UI
+# Full-stack — File-based DB, HPRT UI
 pnpm create-app --name my-app --scope myorg --storage-type filebased --ui hprt
 
-# DS only — Drizzle + SQLite, no UI
+# DS only — Drizzle + SQLite
 pnpm create-app --name my-api --scope myorg --storage-type relational --orm drizzle --db sqlite
 
-# Standalone UI with an externally published SDK
-pnpm create-app --name my-ui --scope myorg --ui standard --sdk @acme/ds-sdk
+# DS only — Couchbase
+pnpm create-app --name my-api --scope myorg --storage-type document --document-provider couchbase
 
-# Bare project — no DS, no UI
-pnpm create-app --name my-app --scope myorg
+# UI only — standalone Next.js with external published SDK
+pnpm create-app --name my-ui --scope myorg --ui standard --sdk @acme/ds-sdk
 ```
 
 ### After Scaffolding
@@ -119,6 +125,28 @@ pnpm install
 # Edit .env files in each package with your credentials
 pnpm codegen   # monorepo only — generate TypedDocumentNode SDK types
 pnpm dev       # start all selected packages
+```
+
+### Docker
+
+Every scaffolded project includes production-ready Dockerfiles co-located with each package:
+
+| Scaffold type | Dockerfile location | Build command |
+|---------------|--------------------|----|
+| DS (monorepo) | `packages/<ds>/Dockerfile` | `docker build -f packages/ds/Dockerfile -t my-app-ds .` |
+| UI (monorepo) | `packages/<ui>/Dockerfile` | `docker build -f packages/ui/Dockerfile -t my-app-ui .` |
+| UI only (standalone) | `Dockerfile` | `docker build -t my-app .` |
+
+All monorepo Dockerfiles use the **repo root as build context** (needed for `pnpm-lock.yaml` and workspace manifests).
+
+The UI Dockerfile uses Next.js [standalone output](https://nextjs.org/docs/app/api-reference/next-config-js/output). Add `output: 'standalone'` to the UI package's `next.config.ts` before building:
+
+```typescript
+// packages/ui/next.config.ts
+const nextConfig: NextConfig = {
+  output: 'standalone',
+  // ...
+};
 ```
 
 ---

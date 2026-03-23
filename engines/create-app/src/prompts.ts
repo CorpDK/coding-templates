@@ -17,6 +17,7 @@ import type {
   OrmChoice,
   RelationalDbChoice,
   ScaffoldConfig,
+  ScaffoldTarget,
   StorageType,
   UiChoice,
 } from "./types.js";
@@ -114,51 +115,11 @@ function deriveDsChoice(
   return { ds: orm === "drizzle" ? "hprt" : "standard", db: null };
 }
 
-export async function runPrompts(): Promise<ScaffoldConfig> {
-  intro("create-app  —  scaffold from coding-templates  (v0.1.0-alpha.1)");
-
-  // 1. Project name
-  const projectName = checkCancel(
-    await text({
-      message: "Project name",
-      placeholder: "my-app",
-      validate: (v) => {
-        if (!v) return "Project name is required";
-        if (!/^[a-z][a-z0-9-]*$/.test(v))
-          return "Use lowercase letters, numbers, and hyphens only (must start with a letter)";
-      },
-    })
-  );
-
-  // 2. Org scope
-  const orgScope = checkCancel(
-    await text({
-      message: "Organisation scope (without @)",
-      placeholder: "myorg",
-      validate: (v) => {
-        if (!v) return "Scope is required";
-        if (!/^[a-z][a-z0-9-]*$/.test(v))
-          return "Use lowercase letters, numbers, and hyphens only";
-      },
-    })
-  );
-
-  // 3. Output directory
-  const rawOutputDir = checkCancel(
-    await text({
-      message: "Output directory",
-      initialValue: `./${projectName}`,
-      validate: (v) => {
-        if (!v) return "Output directory is required";
-      },
-    })
-  );
-
-  const outputDir = path.resolve(rawOutputDir);
-  await checkOutputDir(outputDir);
-
+async function promptStorageAndDb(
+  storageType?: StorageType
+): Promise<{ ds: DsChoice; db: DbChoice | null }> {
   // 4a. Storage type
-  const storageType = checkCancel(
+  const selectedStorageType = storageType ?? checkCancel(
     await select<StorageType>({
       message: "Storage type",
       options: [
@@ -180,7 +141,7 @@ export async function runPrompts(): Promise<ScaffoldConfig> {
 
   // 4b. ORM (Relational only)
   let orm: OrmChoice | null = null;
-  if (storageType === "relational") {
+  if (selectedStorageType === "relational") {
     orm = checkCancel(
       await select<OrmChoice>({
         message: "ORM",
@@ -200,7 +161,7 @@ export async function runPrompts(): Promise<ScaffoldConfig> {
 
   // 4c. Document DB provider (Document only)
   let docProvider: DocumentProvider | null = null;
-  if (storageType === "document") {
+  if (selectedStorageType === "document") {
     docProvider = checkCancel(
       await select<DocumentProvider>({
         message: "Document DB provider",
@@ -234,12 +195,12 @@ export async function runPrompts(): Promise<ScaffoldConfig> {
   }
 
   // Derive ds and initial db from the storage hierarchy
-  const { ds, db: derivedDb } = deriveDsChoice(storageType, orm, docProvider, docImpl);
+  const { ds, db: derivedDb } = deriveDsChoice(selectedStorageType, orm, docProvider, docImpl);
 
   // 5. DB selection (Relational only — db is derived for Document paths)
   let db: DbChoice | null = derivedDb;
 
-  if (storageType === "relational" && orm === "prisma") {
+  if (selectedStorageType === "relational" && orm === "prisma") {
     db = checkCancel(
       await select<RelationalDbChoice>({
         message: "Database (Prisma)",
@@ -250,7 +211,7 @@ export async function runPrompts(): Promise<ScaffoldConfig> {
         })),
       })
     );
-  } else if (storageType === "relational" && orm === "drizzle") {
+  } else if (selectedStorageType === "relational" && orm === "drizzle") {
     db = checkCancel(
       await select<RelationalDbChoice>({
         message: "Database (Drizzle)",
@@ -263,35 +224,106 @@ export async function runPrompts(): Promise<ScaffoldConfig> {
     );
   }
 
-  // 6. UI selection (options filtered by DS)
-  const uiOptions: { value: UiChoice; label: string; hint?: string }[] = [
-    { value: "none", label: "None" },
-  ];
+  return { ds, db };
+}
 
-  // Standard UI: available with none, standard (prisma), cdb, mongo, ddb, file
-  // Not available with hprt (Drizzle — uses urql-based schema)
-  if (ds !== "hprt") {
-    uiOptions.push({
-      value: "standard",
-      label: "Standard UI  —  Next.js + Apollo Client",
-    });
-  }
+export async function runPrompts(): Promise<ScaffoldConfig> {
+  intro("create-app  —  scaffold from coding-templates  (v0.1.0-alpha.1)");
 
-  // HPRT UI: available with none, hprt (drizzle), cdb, mongo, ddb, file
-  // Not available with standard (Prisma — uses Apollo-based schema)
-  if (ds !== "standard") {
-    uiOptions.push({
-      value: "hprt",
-      label: "HPRT UI  —  Next.js + urql + Graphcache",
-    });
-  }
-
-  const ui = checkCancel(
-    await select<UiChoice>({
-      message: "UI",
-      options: uiOptions,
+  // 1. Project name
+  const projectName = checkCancel(
+    await text({
+      message: "Project name",
+      placeholder: "my-app",
+      validate: (v) => {
+        if (!v) return "Project name is required";
+        if (!/^[a-z][a-z0-9-]*$/.test(v))
+          return "Use lowercase letters, numbers, and hyphens only (must start with a letter)";
+      },
     })
   );
+
+  // 2. Org scope
+  const orgScope = checkCancel(
+    await text({
+      message: "Organisation scope (without @)",
+      placeholder: "myorg",
+      validate: (v) => {
+        if (!v) return "Scope is required";
+        if (!/^[a-z][a-z0-9-]*$/.test(v))
+          return "Use lowercase letters, numbers, and hyphens only";
+      },
+    })
+  );
+
+  // 3. Scaffold target
+  const scaffoldTarget = checkCancel(
+    await select<ScaffoldTarget>({
+      message: "What are you scaffolding?",
+      options: [
+        { value: "ui-ds",   label: "Full-stack  —  UI + DS (GraphQL Yoga + chosen storage)" },
+        { value: "ds-only", label: "DS only  —  GraphQL Yoga backend" },
+        { value: "ui-only", label: "UI only  —  Next.js frontend (connects to an external DS)" },
+      ],
+    })
+  );
+
+  // 4. Output directory
+  const rawOutputDir = checkCancel(
+    await text({
+      message: "Output directory",
+      initialValue: `./${projectName}`,
+      validate: (v) => {
+        if (!v) return "Output directory is required";
+      },
+    })
+  );
+
+  const outputDir = path.resolve(rawOutputDir);
+  await checkOutputDir(outputDir);
+
+  // 5. Storage + DB (DS only / Full-stack)
+  let ds: DsChoice = "none";
+  let db: DbChoice | null = null;
+  let ui: UiChoice = "none";
+
+  if (scaffoldTarget !== "ui-only") {
+    ({ ds, db } = await promptStorageAndDb());
+  }
+
+  // 6. UI selection
+  if (scaffoldTarget === "ui-only") {
+    // Both variants available — no DS compatibility filtering needed
+    ui = checkCancel(
+      await select<UiChoice>({
+        message: "UI",
+        options: [
+          { value: "standard", label: "Standard UI  —  Next.js + Apollo Client" },
+          { value: "hprt",     label: "HPRT UI  —  Next.js + urql + Graphcache" },
+        ],
+      })
+    );
+  } else if (scaffoldTarget === "ui-ds") {
+    // Filter UI options by DS compatibility
+    const uiOptions: { value: UiChoice; label: string }[] = [];
+
+    // Standard UI: available with none, standard (prisma), cdb, mongo, ddb, file
+    if (ds !== "hprt") {
+      uiOptions.push({ value: "standard", label: "Standard UI  —  Next.js + Apollo Client" });
+    }
+    // HPRT UI: available with none, hprt (drizzle), cdb, mongo, ddb, file
+    if (ds !== "standard") {
+      uiOptions.push({ value: "hprt", label: "HPRT UI  —  Next.js + urql + Graphcache" });
+    }
+
+    ui = checkCancel(
+      await select<UiChoice>({
+        message: "UI",
+        options: uiOptions,
+      })
+    );
+  }
+  // ds-only: ui stays "none"
 
   // 7. External SDK (UI-only mode, no storage)
   const externalSdkPackage = await promptExternalSdk(ui, ds);

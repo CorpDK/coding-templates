@@ -250,59 +250,65 @@ Required:
   -n, --name     <name>    Project name (lowercase, hyphens)
   -s, --scope    <scope>   Org scope without @ (e.g. myorg)
 
-Storage hierarchy:
-      --storage-type  <type>      relational | document | filebased
+─── Full-stack (UI + DS) ────────────────────────────────────────────────────
+  --storage-type <type>  relational | document | filebased
+  --ui           <ui>    standard | hprt
 
-  Relational DB (SQL):
-      --orm           <orm>       prisma | drizzle  (default: prisma)
-      --db            <db>        postgresql | mysql | sqlite | cockroachdb  (default: postgresql)
-                                  Drizzle supports all four; Prisma supports all four.
+  Relational DB:
+    --orm           <orm>    prisma | drizzle  (default: prisma)
+    --db            <db>     postgresql | mysql | sqlite | cockroachdb  (default: postgresql)
 
-  Document DB (NoSQL):
-      --document-provider <p>     couchbase | mongodb | documentdb  (default: couchbase)
-      --document-impl     <impl>  standard | hprt  (Prisma vs native SDK, default: standard)
-                                  Not applicable for couchbase (SDK only).
+  Document DB:
+    --document-provider <p>     couchbase | mongodb | documentdb  (default: couchbase)
+    --document-impl     <impl>  standard | hprt  (Prisma vs native SDK, default: standard)
+                                Not applicable for couchbase (SDK only).
 
   File-Based DB:
-      (no further flags — format configured via DS_FILE_FORMAT=json|yaml in .env)
+    (no further flags — format configured via DS_FILE_FORMAT=json|yaml in .env)
 
-Other options:
-  -o, --output   <dir>     Output directory (default: ./<name>)
-      --ui       <choice>  UI: none | standard | hprt  (default: none)
-      --sdk      <pkg>     Published SDK package (required when --ui != none and no --storage-type)
-      --env                Generate .env from .env.example (default: on)
-      --no-env             Skip .env generation
-      --git                Init git repository (default: on)
-      --no-git             Skip git init
-  -y, --yes                Accept all defaults (still requires --name and --scope)
-  -h, --help               Show this help
+─── DS only ─────────────────────────────────────────────────────────────────
+  --storage-type <type>   relational | document | filebased
+  (same storage flags as above; omit --ui)
+
+─── UI only (standalone Next.js) ────────────────────────────────────────────
+  --ui   <ui>    standard | hprt
+  --sdk  <pkg>   Published TypedDocumentNode SDK package (e.g. @acme/ds-sdk)
+
+─── Common options ───────────────────────────────────────────────────────────
+  -o, --output   <dir>   Output directory (default: ./<name>)
+      --env              Generate .env from .env.example (default: on)
+      --no-env           Skip .env generation
+      --git              Init git repository (default: on)
+      --no-git           Skip git init
+  -y, --yes              Accept all defaults (still requires --name and --scope)
+  -h, --help             Show this help
 
 Storage / UI compatibility:
-  relational + prisma  →  standard ui only (Apollo-based schema)
-  relational + drizzle →  hprt ui only (urql-based schema)
-  document (any)       →  standard ui or hprt ui
-  filebased            →  standard ui or hprt ui
+  relational + prisma  →  standard UI only (Apollo-based schema)
+  relational + drizzle →  hprt UI only (urql-based schema)
+  document (any)       →  standard UI or hprt UI
+  filebased            →  standard UI or hprt UI
 
 Examples:
-  # Relational DB, Drizzle ORM, PostgreSQL, HPRT UI
+  # Full-stack — Relational, Drizzle, PostgreSQL, HPRT UI
   pnpm create-app --name my-app --scope myorg --storage-type relational --orm drizzle --db postgresql --ui hprt
 
-  # Relational DB, Prisma ORM, MySQL, standard UI
-  pnpm create-app --name my-api --scope myorg --storage-type relational --orm prisma --db mysql --ui standard
+  # Full-stack — Relational, Prisma, MySQL, standard UI
+  pnpm create-app --name my-app --scope myorg --storage-type relational --orm prisma --db mysql --ui standard
 
-  # Document DB, Couchbase
-  pnpm create-app --name my-app --scope myorg --storage-type document --document-provider couchbase --ui hprt
-
-  # Document DB, MongoDB, Prisma, standard UI
+  # Full-stack — Document DB, MongoDB, Prisma, standard UI
   pnpm create-app --name my-app --scope myorg --storage-type document --document-provider mongodb --document-impl standard --ui standard
 
-  # File-Based DB, standard UI
+  # Full-stack — File-Based DB, standard UI
   pnpm create-app --name my-app --scope myorg --storage-type filebased --ui standard
 
-  # Standalone UI with external SDK (no DS)
-  pnpm create-app --name my-ui --scope myorg --ui standard --sdk @acme/ds-sdk
+  # DS only — Couchbase
+  pnpm create-app --name my-api --scope myorg --storage-type document --document-provider couchbase
 
-  # Minimal — bare project, no DS, no UI
-  pnpm create-app --name my-app --scope myorg
+  # DS only — Relational, Drizzle, SQLite
+  pnpm create-app --name my-api --scope myorg --storage-type relational --orm drizzle --db sqlite
+
+  # UI only — standalone Next.js with external published SDK
+  pnpm create-app --name my-ui --scope myorg --ui standard --sdk @acme/ds-sdk
 `);
 }

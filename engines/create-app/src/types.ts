@@ -29,6 +29,7 @@ export type DocumentProvider = "couchbase" | "mongodb" | "documentdb";
 export type DocumentImpl = "standard" | "hprt";
 
 export type ProjectType = "monorepo" | "standalone";
+export type ScaffoldTarget = "ui-only" | "ds-only" | "ui-ds";
 
 export interface ScaffoldConfig {
   projectName: string;
