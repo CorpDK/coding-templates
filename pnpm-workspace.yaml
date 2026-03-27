@@ -2,6 +2,7 @@ packages:
   - templates/*
   - engines/*
   - libraries/*
+  - packages/*
 
 ignoredBuiltDependencies:
   - sharp

@@ -21,6 +21,10 @@
       "persistent": true,
       "dependsOn": ["build"]
     },
+    "typecheck": {
+      "dependsOn": ["^typecheck"],
+      "outputs": []
+    },
     "lint": { "outputs": [] },
     "clean": { "cache": false }
   }

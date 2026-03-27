@@ -11,6 +11,13 @@
   },
   "dependencies": {
     "@corpdk/ds-sdk": "workspace:*",
+    "@corpdk/ui-auth": "workspace:*",
+    "@corpdk/ui-charts": "workspace:*",
+    "@corpdk/ui-core": "workspace:*",
+    "@corpdk/ui-datagrid": "workspace:*",
+    "@corpdk/ui-feedback": "workspace:*",
+    "@corpdk/ui-forms": "workspace:*",
+    "@tanstack/react-query": "^5.95.2",
     "@urql/exchange-graphcache": "^9.0.0",
     "graphql": "^16.11.0",
     "graphql-ws": "^5.16.0",

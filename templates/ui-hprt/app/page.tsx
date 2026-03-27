@@ -1,6 +1,4 @@
-import EmptyState from "@/components/ui/EmptyState";
-import ErrorState from "@/components/ui/ErrorState";
-import LoadingState from "@/components/ui/LoadingState";
+import { EmptyState, ErrorState, LoadingState } from "@corpdk/ui-core";
 import PrimitivesDemo from "@/components/PrimitivesDemo";
 
 const FEATURES = [

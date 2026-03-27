@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import FilterButton from "@/components/ui/FilterButton";
-import SearchInput from "@/components/ui/SearchInput";
+import { FilterButton, SearchInput } from "@corpdk/ui-core";
 
 type FilterValue = "all" | "active" | "archived";
 

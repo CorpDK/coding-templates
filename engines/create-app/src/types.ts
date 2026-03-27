@@ -7,7 +7,13 @@ export type PackageId =
   | "ds-ddb"
   | "ds-file"
   | "ui"
-  | "ui-hprt";
+  | "ui-hprt"
+  | "ui-core"
+  | "ui-feedback"
+  | "ui-forms"
+  | "ui-datagrid"
+  | "ui-charts"
+  | "ui-auth";
 
 export type DsChoice = "none" | "standard" | "hprt" | "cdb" | "mongo" | "ddb" | "file";
 export type UiChoice = "none" | "standard" | "hprt";
@@ -38,6 +44,7 @@ export interface ScaffoldConfig {
   ds: DsChoice;
   db: DbChoice | null;
   ui: UiChoice;
+  optionalUiPackages: PackageId[];
   externalSdkPackage: string | null;
   projectType: ProjectType;
   selectedPackages: Set<PackageId>;

@@ -4,8 +4,10 @@ import { cancel, spinner } from "@clack/prompts";
 import type { ScaffoldConfig } from "./types.js";
 import { PACKAGE_DEFS } from "./packages.js";
 import {
+  appendToFile,
   copyDir,
   execAsync,
+  mergeDir,
   pathExists,
   readJson,
 } from "./utils.js";
@@ -29,18 +31,26 @@ const ROOT_FILES_TO_COPY = [
   "README.md",
 ];
 
+/** Resolve the source directory for a package based on its sourceBase */
+function getSrcDir(pkgId: string, templateRoot: string): string {
+  const def = PACKAGE_DEFS[pkgId as keyof typeof PACKAGE_DEFS];
+  const base = def.sourceBase === "packages"
+    ? path.join(templateRoot, "packages")
+    : path.join(templateRoot, "templates");
+  return path.join(base, def.dirName);
+}
+
 export async function scaffold(
   config: ScaffoldConfig,
   templateRoot: string
 ): Promise<void> {
   const s = spinner();
-  const templatesDir = path.join(templateRoot, "templates");
   const outDir = config.outputDir;
 
   // 0. Validate all template directories exist before starting
   for (const pkgId of config.selectedPackages) {
-    const { dirName, label } = PACKAGE_DEFS[pkgId];
-    const srcDir = path.join(templateRoot, "templates", dirName);
+    const { label } = PACKAGE_DEFS[pkgId];
+    const srcDir = getSrcDir(pkgId, templateRoot);
     if (!(await pathExists(srcDir))) {
       cancel(`The '${label}' template directory was not found at: ${srcDir}`);
       process.exit(1);
@@ -63,9 +73,9 @@ export async function scaffold(
   s.stop("Root config files copied");
 
   if (config.projectType === "monorepo") {
-    await scaffoldMonorepo(config, templateRoot, templatesDir, s);
+    await scaffoldMonorepo(config, templateRoot, s);
   } else {
-    await scaffoldStandalone(config, templateRoot, templatesDir, s);
+    await scaffoldStandalone(config, templateRoot, s);
   }
 
   // 6. Git init
@@ -81,10 +91,59 @@ export async function scaffold(
   }
 }
 
+async function copyPackage(
+  pkgId: string,
+  srcDir: string,
+  destDir: string,
+  config: ScaffoldConfig
+): Promise<void> {
+  const ctx: TransformContext = {
+    orgScope: config.orgScope,
+    ds: config.ds,
+    ui: config.ui,
+    db: config.db,
+    externalSdk: null,
+    isRootPackageJson: false,
+    projectName: config.projectName,
+  };
+
+  // For ui-auth, exclude scaffold/ directory (it gets merged separately)
+  const excludeScaffold = pkgId === "ui-auth";
+
+  await copyDir(srcDir, destDir, (content, relPath) => {
+    if (excludeScaffold && relPath.startsWith("scaffold")) return "";
+    return transformFileContent(content, relPath, ctx);
+  });
+
+  // Remove any empty scaffold stub written above
+  if (excludeScaffold) {
+    const scaffoldDest = path.join(destDir, "scaffold");
+    if (await pathExists(scaffoldDest)) {
+      await fs.rm(scaffoldDest, { recursive: true, force: true });
+    }
+  }
+
+  // Post-copy: Drizzle driver swap
+  if (pkgId === "ds-hprt" && config.db && config.db !== "postgresql" && config.db !== "cockroachdb") {
+    const pkgJsonPath = path.join(destDir, "package.json");
+    const pkgJsonContent = await fs.readFile(pkgJsonPath, "utf8");
+    const updated = transformDrizzlePackageJson(pkgJsonContent, config.db);
+    await fs.writeFile(pkgJsonPath, updated, "utf8");
+  }
+
+  // Copy .env.example → .env if requested
+  if (config.generateEnv) {
+    const envExamplePath = path.join(destDir, ".env.example");
+    const envPath = path.join(destDir, ".env");
+    if (await pathExists(envExamplePath)) {
+      await fs.copyFile(envExamplePath, envPath);
+    }
+  }
+}
+
 async function scaffoldMonorepo(
   config: ScaffoldConfig,
   templateRoot: string,
-  templatesDir: string,
   s: ReturnType<typeof spinner>
 ): Promise<void> {
   const outDir = config.outputDir;
@@ -102,52 +161,38 @@ async function scaffoldMonorepo(
   );
   await fs.writeFile(path.join(outDir, "package.json"), rootPkgContent, "utf8");
   const workspaceYaml = generateWorkspaceYaml(config.selectedPackages);
-  await fs.writeFile(
-    path.join(outDir, "pnpm-workspace.yaml"),
-    workspaceYaml,
-    "utf8"
-  );
+  await fs.writeFile(path.join(outDir, "pnpm-workspace.yaml"), workspaceYaml, "utf8");
   s.stop("Workspace files generated");
 
   // 4. Copy selected packages
   s.start(`Copying ${config.selectedPackages.size} packages`);
+
+  let uiDestDir: string | null = null;
+
   for (const pkgId of config.selectedPackages) {
     const { dirName } = PACKAGE_DEFS[pkgId];
-    const srcDir = path.join(templatesDir, dirName);
+    const srcDir = getSrcDir(pkgId, templateRoot);
     const destDir = path.join(outDir, "packages", dirName);
 
-    const ctx: TransformContext = {
-      orgScope: config.orgScope,
-      ds: config.ds,
-      ui: config.ui,
-      db: config.db,
-      externalSdk: null,
-      isRootPackageJson: false,
-      projectName: config.projectName,
-    };
+    await copyPackage(pkgId, srcDir, destDir, config);
 
-    await copyDir(srcDir, destDir, (content, relPath) =>
-      transformFileContent(content, relPath, ctx)
-    );
-
-    // Post-copy: Drizzle driver swap (applied to already-transformed package.json)
-    if (pkgId === "ds-hprt" && config.db && config.db !== "postgresql" && config.db !== "cockroachdb") {
-      const pkgJsonPath = path.join(destDir, "package.json");
-      const pkgJsonContent = await fs.readFile(pkgJsonPath, "utf8");
-      const updated = transformDrizzlePackageJson(pkgJsonContent, config.db);
-      await fs.writeFile(pkgJsonPath, updated, "utf8");
-    }
-
-    // Copy .env.example → .env if requested
-    if (config.generateEnv) {
-      const envExamplePath = path.join(destDir, ".env.example");
-      const envPath = path.join(destDir, ".env");
-      if (await pathExists(envExamplePath)) {
-        await fs.copyFile(envExamplePath, envPath);
-      }
+    if (pkgId === "ui" || pkgId === "ui-hprt") {
+      uiDestDir = destDir;
     }
   }
   s.stop("Packages copied");
+
+  // 4b. Merge BFF scaffold into UI app dir if ui-auth is selected
+  if (config.selectedPackages.has("ui-auth") && uiDestDir) {
+    s.start("Merging Auth.js BFF scaffold into UI app");
+    const authScaffoldDir = path.join(templateRoot, "packages", "ui-auth", "scaffold");
+    await mergeDir(authScaffoldDir, uiDestDir, [".env.example.append"]);
+    await appendToFile(
+      path.join(authScaffoldDir, ".env.example.append"),
+      path.join(uiDestDir, ".env.example")
+    );
+    s.stop("BFF scaffold merged");
+  }
 
   // 5. Copy Dockerfiles into package directories
   s.start("Copying Dockerfiles");
@@ -189,61 +234,111 @@ async function scaffoldMonorepo(
 async function scaffoldStandalone(
   config: ScaffoldConfig,
   templateRoot: string,
-  templatesDir: string,
   s: ReturnType<typeof spinner>
 ): Promise<void> {
   const outDir = config.outputDir;
-  const uiDirName = config.ui === "standard" ? "ui" : "ui-hprt";
-  const oldSdkPkg = "@corpdk/ds-sdk";
 
-  s.start("Scaffolding standalone Next.js project");
-  const srcDir = path.join(templatesDir, uiDirName);
-
-  const ctx: TransformContext = {
-    orgScope: config.orgScope,
-    ds: config.ds,
-    ui: config.ui,
-    db: null,
-    externalSdk: config.externalSdkPackage
-      ? {
-          oldPkg: oldSdkPkg,
-          externalPkg: config.externalSdkPackage,
-          version: "latest",
-        }
-      : null,
-    isRootPackageJson: false,
-    projectName: config.projectName,
-  };
-
-  // Copy UI files directly into outDir (not inside packages/)
-  await copyDir(srcDir, outDir, (content, relPath) =>
-    transformFileContent(content, relPath, ctx)
+  // 3. Generate root workspace files (standalone = UI-only monorepo)
+  s.start("Generating workspace files");
+  const sourceRootPkg = await readJson<{
+    devDependencies: Record<string, string>;
+    packageManager: string;
+  }>(path.join(templateRoot, "package.json"));
+  const rootPkgContent = generateRootPackageJson(
+    config.projectName,
+    config.orgScope,
+    sourceRootPkg
   );
+  await fs.writeFile(path.join(outDir, "package.json"), rootPkgContent, "utf8");
+  const workspaceYaml = generateWorkspaceYaml(config.selectedPackages);
+  await fs.writeFile(path.join(outDir, "pnpm-workspace.yaml"), workspaceYaml, "utf8");
+  s.stop("Workspace files generated");
 
-  // Override package.json name + remove workspaces field
-  const pkgJsonPath = path.join(outDir, "package.json");
-  const pkgJson = await readJson<Record<string, unknown>>(pkgJsonPath);
-  pkgJson["name"] = `@${config.orgScope}/${config.projectName}`;
-  delete pkgJson["workspaces"];
-  await fs.writeFile(pkgJsonPath, JSON.stringify(pkgJson, null, 2) + "\n", "utf8");
+  // 4. Copy selected packages into packages/
+  s.start(`Copying ${config.selectedPackages.size} packages`);
 
-  s.stop("Standalone project scaffolded");
+  const oldSdkPkg = "@corpdk/ds-sdk";
+  let uiDestDir: string | null = null;
 
-  if (config.generateEnv) {
-    s.start("Generating .env file");
-    const envExamplePath = path.join(outDir, ".env.example");
-    const envPath = path.join(outDir, ".env");
-    if (await pathExists(envExamplePath)) {
-      await fs.copyFile(envExamplePath, envPath);
+  for (const pkgId of config.selectedPackages) {
+    const { dirName } = PACKAGE_DEFS[pkgId];
+    const srcDir = getSrcDir(pkgId, templateRoot);
+    const destDir = path.join(outDir, "packages", dirName);
+
+    const ctx: TransformContext = {
+      orgScope: config.orgScope,
+      ds: config.ds,
+      ui: config.ui,
+      db: null,
+      externalSdk: config.externalSdkPackage
+        ? { oldPkg: oldSdkPkg, externalPkg: config.externalSdkPackage, version: "latest" }
+        : null,
+      isRootPackageJson: false,
+      projectName: config.projectName,
+    };
+
+    const excludeScaffold = pkgId === "ui-auth";
+
+    await copyDir(srcDir, destDir, (content, relPath) => {
+      if (excludeScaffold && relPath.startsWith("scaffold")) return "";
+      return transformFileContent(content, relPath, ctx);
+    });
+
+    if (excludeScaffold) {
+      const scaffoldDest = path.join(destDir, "scaffold");
+      if (await pathExists(scaffoldDest)) {
+        await fs.rm(scaffoldDest, { recursive: true, force: true });
+      }
     }
-    s.stop(".env file generated");
+
+    if (config.generateEnv) {
+      const envExamplePath = path.join(destDir, ".env.example");
+      const envPath = path.join(destDir, ".env");
+      if (await pathExists(envExamplePath)) {
+        await fs.copyFile(envExamplePath, envPath);
+      }
+    }
+
+    if (pkgId === "ui" || pkgId === "ui-hprt") {
+      uiDestDir = destDir;
+    }
+  }
+  s.stop("Packages copied");
+
+  // 4b. Merge BFF scaffold if ui-auth is selected
+  if (config.selectedPackages.has("ui-auth") && uiDestDir) {
+    s.start("Merging Auth.js BFF scaffold into UI app");
+    const authScaffoldDir = path.join(templateRoot, "packages", "ui-auth", "scaffold");
+    await mergeDir(authScaffoldDir, uiDestDir, [".env.example.append"]);
+    await appendToFile(
+      path.join(authScaffoldDir, ".env.example.append"),
+      path.join(uiDestDir, ".env.example")
+    );
+    s.stop("BFF scaffold merged");
   }
 
-  // Copy standalone Dockerfile
-  s.start("Copying Dockerfile");
-  const standaloneDockerSrc = path.join(templateRoot, "templates", "docker", "Dockerfile");
-  if (await pathExists(standaloneDockerSrc)) {
-    await fs.copyFile(standaloneDockerSrc, path.join(outDir, "Dockerfile"));
+  // 5. Copy Dockerfile.ui into the UI package directory
+  if (config.ui !== "none" && uiDestDir) {
+    s.start("Copying Dockerfile");
+    const dockerTemplateDir = path.join(templateRoot, "templates", "docker");
+    const dockerCtx: TransformContext = {
+      orgScope: config.orgScope,
+      ds: config.ds,
+      ui: config.ui,
+      db: null,
+      externalSdk: null,
+      isRootPackageJson: false,
+      projectName: config.projectName,
+    };
+    const src = path.join(dockerTemplateDir, "Dockerfile.ui");
+    if (await pathExists(src)) {
+      const content = await fs.readFile(src, "utf8");
+      await fs.writeFile(
+        path.join(uiDestDir, "Dockerfile"),
+        transformFileContent(content, "Dockerfile.ui", dockerCtx),
+        "utf8"
+      );
+    }
+    s.stop("Dockerfile copied");
   }
-  s.stop("Dockerfile copied");
 }

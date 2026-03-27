@@ -19,9 +19,16 @@ function uiDirName(ui: UiChoice): string {
 // Drizzle transforms never receive these values.
 // ---------------------------------------------------------------------------
 
-/** Replace @corpdk/ scope with the user's org scope in all text content */
+/** Published packages that keep the @corpdk scope even in scaffolded output */
+const PUBLISHED_CORPDK_PACKAGES = new Set([
+  "ui-core", "ui-feedback", "ui-forms", "ui-datagrid", "ui-charts", "ui-auth", "pub-sub",
+]);
+
+/** Replace @corpdk/ scope with the user's org scope, preserving published package names */
 export function transformScope(content: string, orgScope: string): string {
-  return content.replaceAll("@corpdk/", `@${orgScope}/`);
+  return content.replace(/@corpdk\/([a-z][a-z0-9-]*)/g, (match, pkgName) =>
+    PUBLISHED_CORPDK_PACKAGES.has(pkgName) ? match : `@${orgScope}/${pkgName}`
+  );
 }
 
 /** Replace the root package name in root package.json */

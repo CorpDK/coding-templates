@@ -3,6 +3,7 @@ import {
   confirm,
   intro,
   isCancel,
+  multiselect,
   note,
   select,
   spinner,
@@ -15,6 +16,7 @@ import type {
   DocumentProvider,
   DsChoice,
   OrmChoice,
+  PackageId,
   RelationalDbChoice,
   ScaffoldConfig,
   ScaffoldTarget,
@@ -325,10 +327,26 @@ export async function runPrompts(): Promise<ScaffoldConfig> {
   }
   // ds-only: ui stays "none"
 
-  // 7. External SDK (UI-only mode, no storage)
+  // 7. Optional UI packages
+  let optionalUiPackages: PackageId[] = [];
+  if (ui !== "none") {
+    const selection = await multiselect({
+      message: "Optional UI packages (space to toggle, enter to confirm):",
+      options: [
+        { value: "ui-forms",    label: "ui-forms    — React Hook Form + Zod" },
+        { value: "ui-datagrid", label: "ui-datagrid — TanStack Table + virtualization" },
+        { value: "ui-charts",   label: "ui-charts   — D3.js charts" },
+        { value: "ui-auth",     label: "ui-auth     — Auth UI components + BFF OAuth2/OIDC scaffold" },
+      ],
+      required: false,
+    });
+    if (!isCancel(selection)) optionalUiPackages = selection as PackageId[];
+  }
+
+  // 8. External SDK (UI-only mode, no storage)
   const externalSdkPackage = await promptExternalSdk(ui, ds);
 
-  // 8 & 9. Env + git
+  // 9 & 10. Env + git
   const generateEnv = checkCancel(
     await confirm({
       message: "Generate .env files from .env.example?",
@@ -344,7 +362,7 @@ export async function runPrompts(): Promise<ScaffoldConfig> {
   );
 
   // Resolve final package set
-  const selectedPackages = resolvePackages(ds, ui);
+  const selectedPackages = resolvePackages(ds, ui, optionalUiPackages);
   const projectType = ds === "none" && ui !== "none" ? "standalone" : "monorepo";
 
   // Summary
@@ -368,6 +386,7 @@ export async function runPrompts(): Promise<ScaffoldConfig> {
     ds,
     db,
     ui,
+    optionalUiPackages,
     externalSdkPackage,
     projectType,
     selectedPackages,
