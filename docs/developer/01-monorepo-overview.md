@@ -33,7 +33,8 @@ coding-templates/
     ├── ds-mongo/    (@corpdk/ds-mongo)     GraphQL Yoga + MongoDB native driver + Zod
     ├── ds-ddb/      (@corpdk/ds-ddb)       GraphQL Yoga + DocumentDB + Zod
     ├── ds-file/     (@corpdk/ds-file)      GraphQL Yoga + JSON/YAML file storage + Zod
-    └── ds-sdk/      (@corpdk/ds-sdk)       Auto-generated TypedDocumentNode SDK
+    ├── ds-sdk/      (@corpdk/ds-sdk)       Auto-generated TypedDocumentNode SDK
+    └── ds-cli/      (@corpdk/ds-cli)       Auto-generated CLI for LLM/automation access
 ```
 
 ---
@@ -54,6 +55,7 @@ coding-templates/
 | `ds-ddb` | `@corpdk/ds-ddb` | GraphQL Yoga + DocumentDB + Zod |
 | `ds-file` | `@corpdk/ds-file` | GraphQL Yoga + JSON/YAML file storage + Zod (zero external dependencies) |
 | `ds-sdk` | `@corpdk/ds-sdk` | Auto-generated TypedDocumentNode SDK shared by all DS variants |
+| `ds-cli` | `@corpdk/ds-cli` | Auto-generated CLI (queries, mutations, subscriptions) for LLM/automation access; ships with a man page and GNU info page |
 
 ### Shared packages
 

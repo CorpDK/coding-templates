@@ -72,7 +72,7 @@ Turbo's `dev` task declares `dependsOn: ["^build"]`. This ensures shared package
 
 | Category | Scheme | Example | Reason |
 |----------|--------|---------|--------|
-| Shared packages (`packages/ui-*`), engines, libraries | CalVer `YYYY.0M.MICRO[-pre.N]` | `2026.03.0-alpha.1` | Published to npm — calendar versioning communicates when a release was cut |
+| Shared packages (`packages/ui-*`), engines, libraries | CalVer `YYYY.MM.MICRO[-pre.N]` | `2026.3.0-alpha.1` | Published to npm — calendar versioning communicates when a release was cut |
 | Template apps (`templates/ui`, `templates/ui-hprt`, `templates/ui-showcase`) | Semver | `0.1.0` | Not published to npm — scaffolded into user projects; semver communicates API stability |
 
 Template apps are not versioned for consumers — they are scaffolded once and then owned by the user. Semver `0.1.0` signals pre-stable without imposing CalVer semantics on code that will never be published.

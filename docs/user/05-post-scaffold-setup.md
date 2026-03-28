@@ -19,13 +19,17 @@ See [Environment Variables](../admin/01-environment-variables.md) for a full ref
 
 ## 2. Run codegen _(full-stack / DS only)_
 
-Generate the TypedDocumentNode SDK from your GraphQL schema:
+Generate the TypedDocumentNode SDK and CLI from your GraphQL schema:
 
 ```bash
 pnpm codegen
 ```
 
-This runs `graphql-codegen` against the DS package and writes types into `packages/ds-sdk`. Turbo runs this automatically before every build, but run it manually the first time so your UI picks up the types.
+This runs `graphql-codegen` against the DS package and writes into two places:
+- `packages/ds-sdk/src/generated/` — TypedDocumentNode types for the UI
+- `packages/ds-cli/src/generated/` — executable CLI + man page + GNU info page
+
+Turbo runs this automatically before every build, but run it manually the first time so your UI picks up the types.
 
 ---
 
@@ -52,13 +56,54 @@ pnpm build      # runs codegen → build for all packages
 
 ---
 
+## Using the CLI _(full-stack / DS only)_
+
+After codegen, the project CLI is available at `packages/ds-cli/src/generated/index.js`. Set the environment variables and run:
+
+```bash
+export DS_HTTP_URL=http://localhost:<ds-port>/graphql
+export DS_WS_URL=ws://localhost:<ds-port>/graphql
+
+node packages/ds-cli/src/generated/index.js --help
+```
+
+Or install it globally / link it via pnpm so the binary (`<projectName>`) is on your PATH.
+
+**Examples:**
+
+```bash
+# Query
+my-app items
+
+# Mutation (explicit flags)
+my-app create-item --name "Widget" --description "A round widget"
+
+# Mutation (variables from JSON file)
+my-app create-item --input vars.json
+
+# Mutation (piped JSON)
+echo '{"name":"Widget"}' | my-app create-item
+
+# Subscription — stream 3 events then exit
+my-app item-created --count 3
+
+# Subscription — stream for 5 seconds
+my-app item-created --timeout 5000
+```
+
+All output is newline-delimited JSON (NDJSON) on stdout. Errors go to stderr with a non-zero exit code.
+
+Man page: `man ./packages/ds-cli/src/generated/man/<projectName>.1`
+
+---
+
 ## Useful Scripts
 
 | Script | Description |
 |--------|-------------|
 | `pnpm dev` | Start all packages in development mode |
 | `pnpm build` | Build all packages (codegen runs first) |
-| `pnpm codegen` | Regenerate TypedDocumentNode SDK |
+| `pnpm codegen` | Regenerate TypedDocumentNode SDK and CLI |
 
 ---
 

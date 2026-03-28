@@ -40,7 +40,8 @@ coding-templates/
     ├── ds-mongo/    (@corpdk/ds-mongo)     GraphQL Yoga + MongoDB native driver + Zod
     ├── ds-ddb/      (@corpdk/ds-ddb)       GraphQL Yoga + DocumentDB (documentdb.io) + Zod
     ├── ds-file/     (@corpdk/ds-file)      GraphQL Yoga + JSON/YAML file storage + Zod
-    └── ds-sdk/      (@corpdk/ds-sdk)       TypedDocumentNode SDK (shared by all DS variants)
+    ├── ds-sdk/      (@corpdk/ds-sdk)       TypedDocumentNode SDK (shared by all DS variants)
+    └── ds-cli/      (@corpdk/ds-cli)       Auto-generated CLI for LLM/automation access to the GraphQL DS
 ```
 
 ### Package Purpose
@@ -56,6 +57,7 @@ coding-templates/
 | `ds-ddb` | `@corpdk/ds-ddb` | GraphQL Yoga server with DocumentDB (documentdb.io) + Zod (MongoDB-compatible wire protocol) |
 | `ds-file` | `@corpdk/ds-file` | GraphQL Yoga server with JSON/YAML file storage + Zod (zero external dependencies) |
 | `ds-sdk` | `@corpdk/ds-sdk` | Auto-generated TypedDocumentNode SDK shared by all DS variants |
+| `ds-cli` | `@corpdk/ds-cli` | Auto-generated CLI (queries, mutations, subscriptions) for LLM/automation access; man page + GNU info included |
 | `pub-sub` | `@corpdk/pub-sub` | Plugin-style pub/sub factory: `createAppPubSub<T>()` selects Redis or in-memory; topics defined per app |
 | `ui-core` | `@corpdk/ui-core` | Design system: shadcn/ui, Tailwind v4, lucide icons, next-themes, Zustand |
 | `ui-auth` | `@corpdk/ui-auth` | Auth.js v5 BFF: sign-in/out components, session gates, OAuth2/OIDC scaffold |

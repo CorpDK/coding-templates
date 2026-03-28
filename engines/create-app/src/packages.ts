@@ -29,6 +29,14 @@ export const PACKAGE_DEFS: Record<PackageId, PackageDef> = {
     builtDeps: [],
     sourceBase: "templates",
   },
+  "ds-cli": {
+    id: "ds-cli",
+    dirName: "ds-cli",
+    label: "ds-cli (Auto-generated CLI for LLM/automation access)",
+    requires: [],
+    builtDeps: [],
+    sourceBase: "templates",
+  },
   "ds-hprt": {
     id: "ds-hprt",
     dirName: "ds-hprt",
@@ -146,21 +154,27 @@ export function resolvePackages(
   if (ds === "standard") {
     selected.add("ds");
     selected.add("ds-sdk");
+    selected.add("ds-cli");
   } else if (ds === "hprt") {
     selected.add("ds-hprt");
     selected.add("ds-sdk");
+    selected.add("ds-cli");
   } else if (ds === "cdb") {
     selected.add("ds-cdb");
     selected.add("ds-sdk");
+    selected.add("ds-cli");
   } else if (ds === "mongo") {
     selected.add("ds-mongo");
     selected.add("ds-sdk");
+    selected.add("ds-cli");
   } else if (ds === "ddb") {
     selected.add("ds-ddb");
     selected.add("ds-sdk");
+    selected.add("ds-cli");
   } else if (ds === "file") {
     selected.add("ds-file");
     selected.add("ds-sdk");
+    selected.add("ds-cli");
   }
 
   if (ui === "standard") {

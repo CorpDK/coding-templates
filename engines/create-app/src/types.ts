@@ -13,7 +13,8 @@ export type PackageId =
   | "ui-forms"
   | "ui-datagrid"
   | "ui-charts"
-  | "ui-auth";
+  | "ui-auth"
+  | "ds-cli";
 
 export type DsChoice = "none" | "standard" | "hprt" | "cdb" | "mongo" | "ddb" | "file";
 export type UiChoice = "none" | "standard" | "hprt";

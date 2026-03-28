@@ -1,6 +1,6 @@
 {
   "name": "@corpdk/ds-hprt",
-  "version": "0.1.0",
+  "version": "2026.3.0-alpha.1",
   "private": true,
   "type": "module",
   "scripts": {
@@ -26,6 +26,7 @@
     "ws": "^8.18.2"
   },
   "devDependencies": {
+    "@corpdk/codegen-cli": "workspace:*",
     "@graphql-codegen/cli": "^5.0.5",
     "@graphql-codegen/client-preset": "^4.5.1",
     "@graphql-codegen/typescript": "^4.1.5",

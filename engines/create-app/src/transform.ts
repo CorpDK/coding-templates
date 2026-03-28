@@ -280,6 +280,20 @@ function escapeRegex(str: string): string {
 }
 
 // ---------------------------------------------------------------------------
+// CLI package binary renaming
+// ---------------------------------------------------------------------------
+
+/**
+ * Rename the bin key and man page filename from "ds-cli" to the project name.
+ * Applied to ds-cli/package.json after the standard scope transform.
+ */
+export function transformCliPackage(content: string, projectName: string): string {
+  return content
+    .replace(/"ds-cli"(\s*:)/g, `"${projectName}"$1`)
+    .replace(/ds-cli\.1/g, `${projectName}.1`);
+}
+
+// ---------------------------------------------------------------------------
 // Orchestrated per-file transform
 // ---------------------------------------------------------------------------
 

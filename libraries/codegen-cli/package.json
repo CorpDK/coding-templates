@@ -1,0 +1,23 @@
+{
+  "name": "@corpdk/codegen-cli",
+  "version": "2026.3.0-alpha.1",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsup src/index.ts --format esm --dts",
+    "clean": "rm -rf dist node_modules .turbo *.tsbuildinfo"
+  },
+  "devDependencies": {
+    "@graphql-codegen/plugin-helpers": "^5.0.0",
+    "graphql": "^16.11.0",
+    "tsup": "^8.0.0",
+    "typescript": "^5.9.3"
+  },
+  "peerDependencies": {
+    "graphql": "^16.0.0"
+  }
+}

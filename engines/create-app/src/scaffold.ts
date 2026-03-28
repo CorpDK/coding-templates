@@ -14,6 +14,7 @@ import {
 import {
   transformFileContent,
   transformDrizzlePackageJson,
+  transformCliPackage,
   type TransformContext,
 } from "./transform.js";
 import {
@@ -128,6 +129,14 @@ async function copyPackage(
     const pkgJsonPath = path.join(destDir, "package.json");
     const pkgJsonContent = await fs.readFile(pkgJsonPath, "utf8");
     const updated = transformDrizzlePackageJson(pkgJsonContent, config.db);
+    await fs.writeFile(pkgJsonPath, updated, "utf8");
+  }
+
+  // Post-copy: rename ds-cli bin key to projectName
+  if (pkgId === "ds-cli") {
+    const pkgJsonPath = path.join(destDir, "package.json");
+    const pkgJsonContent = await fs.readFile(pkgJsonPath, "utf8");
+    const updated = transformCliPackage(pkgJsonContent, config.projectName);
     await fs.writeFile(pkgJsonPath, updated, "utf8");
   }
 

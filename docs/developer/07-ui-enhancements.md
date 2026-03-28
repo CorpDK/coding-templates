@@ -41,17 +41,17 @@ Enables autocomplete when referencing theme tokens programmatically (e.g., D3 fi
 
 ## 5. CalVer Graduation (alpha → stable)
 
-Packages are versioned using **CalVer `YYYY.0M.MICRO`** (e.g. `2026.03.0`). Current packages are at `2026.03.0-alpha.1`. Once the package APIs stabilize, drop the pre-release tag to publish the first stable release (`2026.03.0` or the next calendar period).
+Packages are versioned using **CalVer `YYYY.MM.MICRO`** (e.g. `2026.3.0`). Current packages are at `2026.3.0-alpha.1`. Once the package APIs stabilize, drop the pre-release tag to publish the first stable release (`2026.3.0` or the next calendar period).
 
 **Version format rules:**
 
 | Release type | Format | Example |
 |---|---|---|
-| Stable | `YYYY.0M.MICRO` | `2026.03.0` |
-| Alpha | `YYYY.0M.MICRO-alpha.N` | `2026.03.0-alpha.1` |
-| Beta | `YYYY.0M.MICRO-beta.N` | `2026.03.0-beta.2` |
-| Patch | `YYYY.0M.MICRO` (increment MICRO) | `2026.03.1` |
-| Hotfix | `YYYY.0M.MICRO-hotfix.N` | `2026.03.1-hotfix.1` |
+| Stable | `YYYY.MM.MICRO` | `2026.3.0` |
+| Alpha | `YYYY.MM.MICRO-alpha.N` | `2026.3.0-alpha.1` |
+| Beta | `YYYY.MM.MICRO-beta.N` | `2026.3.0-beta.2` |
+| Patch | `YYYY.MM.MICRO` (increment MICRO) | `2026.03.1` |
+| Hotfix | `YYYY.MM.MICRO-hotfix.N` | `2026.03.1-hotfix.1` |
 
 ---
 

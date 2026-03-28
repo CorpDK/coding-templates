@@ -77,3 +77,58 @@ The Repository Pattern (`IItemRepository` interface + `itemRepository` implement
 3. **Validation boundary** — Zod parsing happens in resolvers, before data enters the repository. Repository methods return validated application types, not raw ORM/driver types.
 
 See [Repository Pattern](../developer/03-repository-pattern.md) for the full implementation guide.
+
+---
+
+## Generated CLI (`ds-cli`)
+
+Every DS variant runs `graphql-codegen` with the `@corpdk/codegen-cli` preset alongside the standard `client` preset. This generates three files in `templates/ds-cli/src/generated/` (and the equivalent path in scaffolded projects):
+
+| File | Purpose |
+|------|---------|
+| `index.js` | Executable CLI — zero runtime dependencies (native `fetch` + `WebSocket`) |
+| `man/ds-cli.1` | groff man page — `man ./src/generated/man/ds-cli.1` |
+| `info/ds-cli.texi` | Texinfo source — compile with `makeinfo` |
+
+All command names, descriptions, and argument documentation are derived directly from the GraphQL schema docstrings. Regenerate by running `pnpm codegen` whenever the schema changes.
+
+### CLI interface
+
+Each query, mutation, and subscription becomes a top-level subcommand (field name converted to kebab-case):
+
+```bash
+my-app items                                 # query — prints JSON
+my-app create-item --name "Widget"           # mutation — prints JSON
+echo '{"name":"Widget"}' | my-app create-item  # mutation — variables from stdin
+my-app create-item --input vars.json         # mutation — variables from file
+my-app item-created --count 3               # subscription — streams 3 NDJSON events then exits
+```
+
+Variable merging order: `--input <file>` → piped stdin → explicit flags (flags win).
+
+### Environment
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `DS_HTTP_URL` | — | HTTP endpoint for queries and mutations |
+| `DS_WS_URL` | — | WebSocket endpoint for subscriptions |
+
+### How it's wired
+
+`codegen.ts` in each DS package adds a third output target:
+
+```typescript
+"../ds-cli/src/generated/": {
+  preset: "@corpdk/codegen-cli",
+  presetConfig: {
+    httpUrlEnvVar: "DS_HTTP_URL",
+    wsUrlEnvVar: "DS_WS_URL",
+  },
+},
+```
+
+The preset lives in `libraries/codegen-cli/` and is compiled with `tsup`. The `codegen` Turbo task declares `dependsOn: ["@corpdk/codegen-cli#build"]` so the preset is always compiled before any DS runs codegen.
+
+### Scaffolded binary name
+
+After scaffolding, the binary name is renamed from `ds-cli` to the project name. For a project named `my-app` the installed binary is `my-app`, not `my-app-cli`.

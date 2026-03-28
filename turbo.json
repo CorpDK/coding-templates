@@ -3,8 +3,9 @@
   "ui": "tui",
   "tasks": {
     "codegen": {
+      "dependsOn": ["@corpdk/codegen-cli#build"],
       "inputs": ["src/**/*.ts", "prisma/schema.prisma", "drizzle/schema.ts"],
-      "outputs": ["../ds-sdk/src/generated/**"],
+      "outputs": ["../ds-sdk/src/generated/**", "../ds-cli/src/generated/**"],
       "cache": true
     },
     "build": {

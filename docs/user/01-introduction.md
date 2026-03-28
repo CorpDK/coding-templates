@@ -21,6 +21,7 @@ Use `pnpm create-app` to scaffold a new project from any combination of these te
 | **Data Service** | `@corpdk/ds-ddb` | GraphQL Yoga + DocumentDB (documentdb.io) + Zod |
 | **Data Service** | `@corpdk/ds-file` | GraphQL Yoga + JSON/YAML file storage + Zod (zero external dependencies) |
 | **SDK** | `@corpdk/ds-sdk` | Auto-generated TypedDocumentNode SDK shared by all DS variants |
+| **CLI** | `@corpdk/ds-cli` | Auto-generated CLI for LLM/automation access (queries, mutations, subscriptions) |
 
 You can scaffold a **full-stack** project (UI + DS), a **DS only** backend, or a **UI only** frontend that connects to an existing published DS.
 
@@ -30,8 +31,8 @@ You can scaffold a **full-stack** project (UI + DS), a **DS only** backend, or a
 
 | Shape | What you get |
 |-------|-------------|
-| **Full-stack** | A monorepo with `packages/ui` + `packages/ds` + `packages/ds-sdk` |
-| **DS only** | A monorepo with `packages/ds` |
+| **Full-stack** | A monorepo with `packages/ui` + `packages/ds` + `packages/ds-sdk` + `packages/ds-cli` |
+| **DS only** | A monorepo with `packages/ds` + `packages/ds-sdk` + `packages/ds-cli` |
 | **UI only** | A standalone Next.js app pointing at a published `@scope/ds-sdk` |
 
 ---
