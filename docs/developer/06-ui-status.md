@@ -1,7 +1,7 @@
-# CorpDK UI Template — Capability Status Dashboard
+# UI Capability Status Dashboard
 
 Living document. Update this file as packages are installed and decisions are resolved.
-For architecture rationale and technology decisions, see [ui-architecture.md](ui-architecture.md).
+For architecture rationale and technology decisions, see [05-ui-architecture.md](05-ui-architecture.md).
 
 ---
 
@@ -169,7 +169,7 @@ Capabilities that live in each app (`templates/ui`, `templates/ui-hprt`) rather 
 | Client state | Zustand | Redux Toolkit, Jotai, Recoil, Context API | Minimal boilerplate; no provider tree; SSR-safe `createStore` pattern | Pre-template |
 | Form state | React Hook Form | Formik, TanStack Form | Uncontrolled = no keystroke re-renders; best-in-class performance | Pre-template |
 | Validation | Zod | Yup, Valibot, io-ts | TypeScript-first type inference; schema shareable client ↔ server | Pre-template |
-| Data grid | TanStack Table v8 | AG-Grid Community, MUI DataGrid, Glide Data Grid | Headless = full styling control; no license cost; AG-Grid feature parity achievable | Pre-template |
+| Data grid | TanStack Table v8 | AG-Grid Community, MUI DataGrid, Glide Data Grid | Headless = full styling control; no license cost | Pre-template |
 | Virtualization | @tanstack/react-virtual | react-window, react-virtuoso | Same TanStack ecosystem; minimal API surface | Pre-template |
 | REST caching | TanStack Query | SWR, Apollo REST link | Richer feature set; DevTools; consistent with TanStack family | Pre-template |
 | GraphQL (standard) | Apollo Client 3 | urql (standard), URQL | Largest ecosystem; mature DevTools; production-proven | Pre-template |

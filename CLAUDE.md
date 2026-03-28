@@ -11,14 +11,21 @@ This is a **pnpm + Turborepo monorepo** under the `@corpdk` org — a production
 ```
 coding-templates/
 ├── package.json                    ← workspace root: turbo scripts + devDeps only
-├── pnpm-workspace.yaml             ← packages: ["templates/*", "engines/*", "libraries/*"]
+├── pnpm-workspace.yaml             ← packages: ["templates/*", "engines/*", "libraries/*", "packages/*"]
 ├── turbo.json                      ← task pipeline (codegen → build → dev/start)
 ├── CLAUDE.md                       ← this file
-├── CODING_GUIDELINES.md            ← coding standards
+├── docs/                           ← all documentation (user / admin / developer)
 ├── engines/
 │   └── create-app/  (@corpdk/create-app)   Interactive CLI scaffolding tool
 ├── libraries/
 │   └── pub-sub/     (@corpdk/pub-sub)       Plugin-style GraphQL pub/sub factory (memory + Redis)
+├── packages/
+│   ├── ui-core/     (@corpdk/ui-core)       Design system, primitives, shadcn/ui, theming
+│   ├── ui-auth/     (@corpdk/ui-auth)        Auth.js v5 BFF components + OAuth2/OIDC scaffold
+│   ├── ui-charts/   (@corpdk/ui-charts)     D3.js chart components
+│   ├── ui-forms/    (@corpdk/ui-forms)       React Hook Form + Zod validation wrappers
+│   ├── ui-datagrid/ (@corpdk/ui-datagrid)   TanStack Table v8 + virtualization
+│   └── ui-feedback/ (@corpdk/ui-feedback)   Toast notifications + error boundaries
 └── templates/
     ├── docker/                    Docker templates (not a workspace package)
     │   ├── Dockerfile             Standalone Next.js UI (UI-only scaffold, output root)
@@ -26,6 +33,7 @@ coding-templates/
     │   └── Dockerfile.ui          UI variant template (copied to packages/<ui>/Dockerfile)
     ├── ui/          (@corpdk/ui)           Next.js + Apollo Client
     ├── ui-hprt/     (@corpdk/ui-hprt)      Next.js + urql + Graphcache
+    ├── ui-showcase/ (@corpdk/ui-showcase)  Showcase app — demonstrates all shared packages
     ├── ds/          (@corpdk/ds)           GraphQL Yoga + Prisma + PostgreSQL
     ├── ds-hprt/     (@corpdk/ds-hprt)      GraphQL Yoga + Drizzle + PostgreSQL
     ├── ds-cdb/      (@corpdk/ds-cdb)       GraphQL Yoga + Couchbase SDK + Zod
@@ -49,6 +57,12 @@ coding-templates/
 | `ds-file` | `@corpdk/ds-file` | GraphQL Yoga server with JSON/YAML file storage + Zod (zero external dependencies) |
 | `ds-sdk` | `@corpdk/ds-sdk` | Auto-generated TypedDocumentNode SDK shared by all DS variants |
 | `pub-sub` | `@corpdk/pub-sub` | Plugin-style pub/sub factory: `createAppPubSub<T>()` selects Redis or in-memory; topics defined per app |
+| `ui-core` | `@corpdk/ui-core` | Design system: shadcn/ui, Tailwind v4, lucide icons, next-themes, Zustand |
+| `ui-auth` | `@corpdk/ui-auth` | Auth.js v5 BFF: sign-in/out components, session gates, OAuth2/OIDC scaffold |
+| `ui-charts` | `@corpdk/ui-charts` | D3.js chart components with CSS variable theming |
+| `ui-forms` | `@corpdk/ui-forms` | React Hook Form + Zod integration (form fields, resolvers) |
+| `ui-datagrid` | `@corpdk/ui-datagrid` | TanStack Table v8 + @tanstack/react-virtual for large datasets |
+| `ui-feedback` | `@corpdk/ui-feedback` | Sonner toast notifications + AppErrorBoundary |
 
 ### Key Design Decisions
 
@@ -65,7 +79,7 @@ coding-templates/
 
 ## Coding Standards
 
-**All code changes MUST follow the guidelines in [CODING_GUIDELINES.md](CODING_GUIDELINES.md)**.
+**All code changes MUST follow the guidelines in [docs/developer/08-coding-guidelines.md](docs/developer/08-coding-guidelines.md)**.
 
 Key principles:
 
@@ -91,6 +105,8 @@ pnpm dev                  # Start all packages in dev mode (via Turbo)
 pnpm build                # Build all packages (codegen → build)
 pnpm --filter @corpdk/ds dev        # Start only ds
 pnpm --filter @corpdk/ui dev        # Start only ui
+pnpm codegen                        # Run graphql-codegen for @corpdk/ds (root shortcut)
+pnpm showcase                       # Start @corpdk/ui-showcase dev server
 pnpm --filter @corpdk/ds codegen    # Run graphql-codegen for ds
 pnpm create-app                     # Run the interactive scaffolding CLI
 ```
@@ -121,6 +137,10 @@ docker build -t my-app-ui .                                # Build UI image (sta
 - No TODO comments
 - Must be production-ready and runnable as-is
 - Clean, readable code with appropriate comments
+
+## Docs Update Rule
+
+**Every feature plan must include a docs update step.** When planning any feature, new package, template, script, env var, architecture change, or behavioural change to an existing pattern, identify which file(s) under `docs/` need updating and include that as an explicit step in the plan. Do not close a task as complete if the relevant docs are stale.
 
 ## Workflow Optimization & Token Efficiency
 
