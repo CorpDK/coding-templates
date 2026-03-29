@@ -12,7 +12,6 @@ All monorepo Dockerfiles use the **repo root as the build context** because they
 |---------------|--------------------|----|
 | DS (monorepo) | `packages/<ds>/Dockerfile` | `docker build -f packages/ds/Dockerfile -t my-app-ds .` |
 | UI (monorepo) | `packages/<ui>/Dockerfile` | `docker build -f packages/ui/Dockerfile -t my-app-ui .` |
-| UI only (standalone) | `Dockerfile` | `docker build -t my-app .` |
 
 ---
 
@@ -59,6 +58,5 @@ The template Dockerfiles are stored in `templates/docker/` and are copied into s
 
 | File | Usage |
 |------|-------|
-| `Dockerfile` | Standalone Next.js UI (UI-only scaffold) |
 | `Dockerfile.ui` | UI variant (copied to `packages/<ui>/Dockerfile`) |
 | `Dockerfile.ds` | DS variant (copied to `packages/<ds>/Dockerfile`) |

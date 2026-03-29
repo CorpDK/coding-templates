@@ -18,6 +18,7 @@ coding-templates/
 ├── engines/
 │   └── create-app/  (@corpdk/create-app)   Interactive CLI scaffolding tool
 ├── libraries/
+│   ├── codegen-cli/ (@corpdk/codegen-cli)   GraphQL codegen plugin for resolver types + SDK generation
 │   └── pub-sub/     (@corpdk/pub-sub)       Plugin-style GraphQL pub/sub factory (memory + Redis)
 ├── packages/
 │   ├── ui-core/     (@corpdk/ui-core)       Design system, primitives, shadcn/ui, theming
@@ -25,7 +26,8 @@ coding-templates/
 │   ├── ui-charts/   (@corpdk/ui-charts)     D3.js chart components
 │   ├── ui-forms/    (@corpdk/ui-forms)       React Hook Form + Zod validation wrappers
 │   ├── ui-datagrid/ (@corpdk/ui-datagrid)   TanStack Table v8 + virtualization
-│   └── ui-feedback/ (@corpdk/ui-feedback)   Toast notifications + error boundaries
+│   ├── ui-feedback/ (@corpdk/ui-feedback)   Toast notifications + error boundaries
+│   └── eslint-config/ (@corpdk/eslint-config) Shared ESLint flat config for all packages
 └── templates/
     ├── docker/                    Docker templates (not a workspace package)
     │   ├── Dockerfile.ds          DS variant template (copied to packages/<ds>/Dockerfile)
@@ -64,10 +66,14 @@ coding-templates/
 | `ui-forms` | `@corpdk/ui-forms` | React Hook Form + Zod integration (form fields, resolvers) |
 | `ui-datagrid` | `@corpdk/ui-datagrid` | TanStack Table v8 + @tanstack/react-virtual for large datasets |
 | `ui-feedback` | `@corpdk/ui-feedback` | Sonner toast notifications + AppErrorBoundary |
+| `codegen-cli` | `@corpdk/codegen-cli` | GraphQL codegen plugin for resolver types + SDK generation |
+| `eslint-config` | `@corpdk/eslint-config` | Shared ESLint flat config (base + Next.js) for all packages |
+| `create-app` | `@corpdk/create-app` | Interactive CLI scaffolding tool for full-stack, DS-only, or UI-only projects |
+| `ui-showcase` | `@corpdk/ui-showcase` | Showcase app — demonstrates all shared `packages/ui-*` for visual testing |
 
 ### Key Design Decisions
 
-- **`"type": "module"` on DS packages only** — Yoga v5 is pure ESM; Next.js manages its own module system
+- **`"type": "module"` on all packages except Next.js template apps** — DS packages, libraries, engines, and shared `packages/*` are pure ESM. The three Next.js templates (`ui`, `ui-hprt`, `ui-showcase`) omit it; Next.js manages its own module system
 - **HTTP via Next.js proxy, WS direct** — `rewrites()` handles queries/mutations; WebSocket connects directly via `NEXT_PUBLIC_DS_WS_URL` (avoids Next.js WS proxy limitations)
 - **SDK as workspace dependency** — `ui` depends on `@corpdk/ds-sdk: "workspace:*"`; Turbo ensures codegen runs before build
 - **All ports from env, no defaults** — prevents port collision surprises; each package has `.env.example`

@@ -34,6 +34,7 @@ The scaffold type is inferred from the combination of flags you provide:
 | `--document-impl` | — | `standard` | `standard \| hprt` _(mongodb/documentdb only)_ |
 | `--ui` | — | _(none)_ | `standard \| hprt` |
 | `--sdk` | — | — | External SDK package _(required for UI only mode)_ |
+| `--ui-packages` | — | _(all)_ | Comma-separated optional UI packages: `ui-forms`, `ui-datagrid`, `ui-charts`, `ui-auth`. Use `""` to include none |
 | `--no-env` | — | — | Skip `.env` generation |
 | `--no-git` | — | — | Skip `git init` |
 | `--yes` | `-y` | — | Accept all defaults (still requires `--name` and `--scope`) |
@@ -52,7 +53,7 @@ pnpm create-app --name my-app --scope myorg \
 pnpm create-app --name my-app --scope myorg \
   --storage-type relational --orm prisma --db mysql --ui standard
 
-# Full-stack — Document DB, MongoDB, native SDK, standard UI
+# Full-stack — Document DB, MongoDB, HPRT implementation (native driver), standard UI
 pnpm create-app --name my-app --scope myorg \
   --storage-type document --document-provider mongodb --document-impl hprt --ui standard
 

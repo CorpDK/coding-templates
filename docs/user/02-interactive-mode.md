@@ -103,7 +103,22 @@ In Full-stack mode, only the variants compatible with your chosen DS are shown. 
 
 ---
 
-### 11. External SDK _(UI only)_
+### 11. Optional UI packages _(Full-stack / UI only)_
+
+A multiselect prompt where you toggle optional shared packages (space to toggle, enter to confirm):
+
+| Package | Description |
+|---------|-------------|
+| `ui-forms` | React Hook Form + Zod |
+| `ui-datagrid` | TanStack Table + virtualization |
+| `ui-charts` | D3.js charts |
+| `ui-auth` | Auth UI components + BFF OAuth2/OIDC scaffold |
+
+> `ui-core` and `ui-feedback` are always included automatically when any UI is selected.
+
+---
+
+### 12. External SDK _(UI only)_
 
 The published `@scope/ds-sdk` package your UI will consume.
 
@@ -111,13 +126,13 @@ Must be a valid scoped package name, e.g. `@acme/ds-sdk`.
 
 ---
 
-### 12. Generate `.env` files
+### 13. Generate `.env` files
 
 Copies `.env.example` → `.env` in each scaffolded package. Defaults to **yes**.
 
 ---
 
-### 13. Init git repository
+### 14. Init git repository
 
 Runs `git init` and creates an initial commit. Defaults to **yes**.
 

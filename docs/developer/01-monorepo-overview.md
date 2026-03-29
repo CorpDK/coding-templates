@@ -14,6 +14,7 @@ coding-templates/
 ├── engines/
 │   └── create-app/  (@corpdk/create-app)   Interactive CLI scaffolding tool
 ├── libraries/
+│   ├── codegen-cli/ (@corpdk/codegen-cli)   GraphQL codegen plugin for resolver types + SDK generation
 │   └── pub-sub/     (@corpdk/pub-sub)       Plugin-style GraphQL pub/sub factory
 ├── packages/
 │   ├── ui-core/     (@corpdk/ui-core)       Design system foundation
@@ -21,7 +22,8 @@ coding-templates/
 │   ├── ui-charts/   (@corpdk/ui-charts)     D3 chart components
 │   ├── ui-forms/    (@corpdk/ui-forms)      React Hook Form + Zod forms
 │   ├── ui-feedback/ (@corpdk/ui-feedback)   Toasts, errors, loading states
-│   └── ui-auth/     (@corpdk/ui-auth)       Auth.js v5 BFF scaffold + session UI
+│   ├── ui-auth/     (@corpdk/ui-auth)       Auth.js v5 BFF scaffold + session UI
+│   └── eslint-config/ (@corpdk/eslint-config) Shared ESLint flat config for all packages
 └── templates/
     ├── docker/                    Docker templates (not a workspace package)
     ├── ui/          (@corpdk/ui)           Next.js + Apollo Client
@@ -67,12 +69,14 @@ coding-templates/
 | `ui-forms` | `@corpdk/ui-forms` | React Hook Form + Zod forms and field components |
 | `ui-feedback` | `@corpdk/ui-feedback` | Toasts (Sonner), error boundaries, loading states |
 | `ui-auth` | `@corpdk/ui-auth` | Auth.js v5 BFF scaffold, `SessionProvider`, gate components |
+| `eslint-config` | `@corpdk/eslint-config` | Shared ESLint flat config (base + Next.js) for all packages |
 
 ### Engines and libraries
 
 | Package | Scope | Description |
 |---------|-------|-------------|
 | `create-app` | `@corpdk/create-app` | Interactive CLI scaffolding tool |
+| `codegen-cli` | `@corpdk/codegen-cli` | GraphQL codegen plugin for resolver types + SDK generation |
 | `pub-sub` | `@corpdk/pub-sub` | `createAppPubSub<T>()` — selects Redis or in-memory pub/sub |
 
 For versioning strategy and key design decisions (module system, HTTP/WS routing, SDK strategy, repository pattern, pub/sub), see [Monorepo Design](../architecture/02-monorepo-design.md).
