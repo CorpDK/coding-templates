@@ -151,7 +151,7 @@ Dependencies used across multiple workspace packages.
 | Package | Version | Type |
 |---------|---------|------|
 | graphql | ^16.0.0 | peer |
-| @graphql-codegen/plugin-helpers | ^5.0.0 | dev |
+| @graphql-codegen/plugin-helpers | ^6.2.0 | dev |
 | tsup | ^8.5.1 | dev |
 
 ### pub-sub (@corpdk/pub-sub)
@@ -191,10 +191,10 @@ Common dev dependencies used across most workspace packages.
 
 | Package | Version | Used by |
 |---------|---------|---------|
-| @graphql-codegen/cli | ^5.0.5 | ds, ds-hprt, ds-cdb, ds-mongo, ds-ddb, ds-file |
-| @graphql-codegen/client-preset | ^4.5.1 | ds, ds-hprt, ds-cdb, ds-mongo, ds-ddb, ds-file |
-| @graphql-codegen/typescript | ^4.1.5 | ds, ds-hprt, ds-cdb, ds-mongo, ds-ddb, ds-file |
-| @graphql-codegen/typescript-resolvers | ^4.5.1 | ds, ds-hprt, ds-cdb, ds-mongo, ds-ddb, ds-file |
+| @graphql-codegen/cli | ^6.2.1 | ds, ds-hprt, ds-cdb, ds-mongo, ds-ddb, ds-file |
+| @graphql-codegen/client-preset | ^5.2.4 | ds, ds-hprt, ds-cdb, ds-mongo, ds-ddb, ds-file |
+| @graphql-codegen/typescript | ^5.0.9 | ds, ds-hprt, ds-cdb, ds-mongo, ds-ddb, ds-file |
+| @graphql-codegen/typescript-resolvers | ^5.1.7 | ds, ds-hprt, ds-cdb, ds-mongo, ds-ddb, ds-file |
 
 ---
 
@@ -217,7 +217,6 @@ Tracked here until applied. Remove entries as they are completed.
 
 | Package | Current | Latest | Risk | Phase |
 |---------|---------|--------|------|-------|
-| @graphql-codegen/* | 4.x–5.x | 5.x–6.x | Medium | 2 |
 | graphql-ws | ^5.16.0 | 6.x | Medium | 3 |
 | mongodb | ^6.16.0 | 7.x | Medium | 4 |
 | @clack/prompts | ^0.9.1 | 1.x | Low | 5 |
@@ -251,3 +250,8 @@ Tracked here until applied. Remove entries as they are completed.
 | 2026-03-29 | tsup | ^8.0.0 | ^8.5.1 | Minor bump |
 | 2026-03-29 | @tanstack/react-virtual | ^3.13.6 | ^3.13.23 | Patch bump |
 | 2026-03-29 | @tanstack/react-query | ^5.75.5 | ^5.95.2 | Aligned across ui, ui-hprt, ui-showcase |
+| 2026-03-29 | @graphql-codegen/cli | ^5.0.5 | ^6.2.1 | Major bump, coordinated |
+| 2026-03-29 | @graphql-codegen/client-preset | ^4.5.1 | ^5.2.4 | Major bump, coordinated |
+| 2026-03-29 | @graphql-codegen/typescript | ^4.1.5 | ^5.0.9 | Major bump, coordinated |
+| 2026-03-29 | @graphql-codegen/typescript-resolvers | ^4.5.1 | ^5.1.7 | Major bump, coordinated |
+| 2026-03-29 | @graphql-codegen/plugin-helpers | ^5.0.0 | ^6.2.0 | Major bump, coordinated |
