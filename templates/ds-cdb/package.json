@@ -16,12 +16,12 @@
   "dependencies": {
     "@corpdk/pub-sub": "workspace:*",
     "@graphql-yoga/redis-event-target": "^3.0.0",
-    "couchbase": "^4.4.5",
-    "graphql": "^16.11.0",
+    "couchbase": "^4.6.1",
+    "graphql": "^16.13.2",
     "graphql-ws": "^5.16.0",
-    "graphql-yoga": "^5.13.4",
-    "ioredis": "^5.0.0",
-    "ws": "^8.18.2",
+    "graphql-yoga": "^5.18.1",
+    "ioredis": "^5.10.1",
+    "ws": "^8.20.0",
     "zod": "^3.24.2"
   },
   "devDependencies": {
@@ -32,7 +32,7 @@
     "@graphql-codegen/typescript-resolvers": "^4.5.1",
     "@types/node": "^20.19.37",
     "@types/ws": "^8.18.1",
-    "tsx": "^4.19.4",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3"
   }
 }

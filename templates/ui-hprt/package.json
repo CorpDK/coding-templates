@@ -21,11 +21,11 @@
     "@corpdk/ui-forms": "workspace:*",
     "@tanstack/react-query": "^5.95.2",
     "@urql/exchange-graphcache": "^9.0.0",
-    "graphql": "^16.11.0",
+    "graphql": "^16.13.2",
     "graphql-ws": "^5.16.0",
-    "next": "16.1.6",
-    "react": "19.2.3",
-    "react-dom": "19.2.3",
+    "next": "16.2.1",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
     "urql": "^5.0.1"
   },
   "devDependencies": {
@@ -34,7 +34,7 @@
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
     "eslint": "^9.39.4",
-    "eslint-config-next": "16.1.6",
+    "eslint-config-next": "16.2.1",
     "tailwindcss": "^4.2.1",
     "typescript": "^5.9.3"
   }

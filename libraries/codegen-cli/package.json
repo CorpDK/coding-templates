@@ -17,8 +17,8 @@
   },
   "devDependencies": {
     "@graphql-codegen/plugin-helpers": "^5.0.0",
-    "graphql": "^16.11.0",
-    "tsup": "^8.0.0",
+    "graphql": "^16.13.2",
+    "tsup": "^8.5.1",
     "typescript": "^5.9.3"
   },
   "peerDependencies": {
