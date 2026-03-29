@@ -13,6 +13,12 @@ const preview: Preview = {
     nextjs: {
       appDirectory: true,
     },
+    a11y: {
+      test: 'todo',
+      config: {
+        rules: [{ id: 'color-contrast', enabled: true }],
+      },
+    },
   },
   decorators: [
     (Story) => (

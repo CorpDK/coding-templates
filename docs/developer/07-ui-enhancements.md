@@ -33,19 +33,3 @@ Instead of requiring each consuming app to copy CSS variable definitions into it
 Add `.github/workflows/ci.yml`: lint + typecheck + `pnpm build` on every PR. Turbo's remote cache can be wired to Vercel for speed. Ensures the monorepo always builds cleanly before merge.
 
 ---
-
-## 6. Accessibility Audit
-
-Run `axe-core` or `@axe-core/react` against the Storybook stories; fix all WCAG 2.1 AA violations. Document any intentional deviations. Accessibility is a prerequisite for enterprise customers.
-
----
-
-## 7. Storybook Interaction Tests
-
-Add `@storybook/test` interaction tests to the existing story files — form validation flows, toast triggers, error boundary recovery, and auth gate state transitions. These run in the Storybook test runner and complement future Vitest unit tests.
-
----
-
-## 8. Storybook Visual Regression
-
-Integrate Chromatic or `storybook-addon-visual-tests` for automated visual regression snapshots. Catch unintended design changes across PRs without manual review of every component.

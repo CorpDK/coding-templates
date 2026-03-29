@@ -1,2 +1,4 @@
 import nextConfig from '@corpdk/eslint-config/next';
-export default nextConfig;
+import storybook from 'eslint-plugin-storybook';
+
+export default [...nextConfig, ...storybook.configs['flat/recommended']];

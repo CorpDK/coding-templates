@@ -9,7 +9,7 @@
     "lint": "turbo run lint",
     "codegen": "turbo run codegen --filter=@corpdk/ds",
     "clean": "turbo run clean",
-    "storybook": "pnpm --filter @corpdk/ui-showcase storybook",
+    "storybook": "pnpm --filter @corpdk/ui-showcase dev",
     "create-app": "node engines/create-app/dist/index.js"
   },
   "devDependencies": {

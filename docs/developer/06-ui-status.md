@@ -159,6 +159,10 @@ Capabilities that live in each app (`templates/ui`, `templates/ui-hprt`) rather 
 | Capability | Technology | Status | Notes |
 |------------|------------|--------|-------|
 | Component stories | Storybook 10 | ✅ | `templates/ui-showcase/.storybook/`; `pnpm storybook` |
+| Autodocs | `@storybook/addon-docs` | ✅ | Auto-generated from JSDoc on prop interfaces via `tags: ['autodocs']` |
+| Accessibility auditing | `@storybook/addon-a11y` | ✅ | axe-core WCAG 2.1 AA checks in Storybook panel |
+| Interaction testing | `@storybook/addon-vitest` | ✅ | Vitest + Playwright browser tests via `play` functions; `pnpm --filter @corpdk/ui-showcase test` |
+| Visual regression | `@chromatic-com/storybook` | ✅ | Chromatic visual testing integration |
 | Unit testing | Vitest | 🔲 | Decision made, adoption timing TBD |
 | Component testing | Testing Library | 🔲 | Pairs with Vitest |
 | E2E testing | Playwright | 🔲 | Decision made, adoption timing TBD |

@@ -128,6 +128,18 @@ The `scaffold/` directory provides the BFF plumbing (`app/api/auth/[...nextauth]
 
 **Auth mocking:** Auth stories use a mock `SessionProvider` decorator (`src/stories/auth/decorators.tsx`) that injects configurable session objects, avoiding the need for a running auth server.
 
+**Addon stack:**
+
+| Addon | Purpose |
+|-------|---------|
+| `@storybook/addon-docs` | Auto-generates documentation pages from JSDoc on prop interfaces (`tags: ['autodocs']`) |
+| `@storybook/addon-a11y` | axe-core accessibility auditing panel — WCAG 2.1 AA checks on every story |
+| `@storybook/addon-vitest` | Vitest-based interaction testing via `play` functions; run with `pnpm --filter @corpdk/ui-showcase test` |
+| `@storybook/addon-themes` | Theme switching toolbar — pairs with the `ThemeProvider` decorator in `preview.tsx` |
+| `@chromatic-com/storybook` | Chromatic visual regression testing integration |
+
+**Testing:** Stories can include `play` functions for interaction testing (imports from `storybook/test`). The `@storybook/addon-vitest` addon runs these in a real browser via Playwright. Config lives in `vitest.config.ts` (projects-based Vitest config with the `storybookTest` plugin).
+
 ---
 
 ## `eslint-config` — Shared Linting Rules
@@ -141,4 +153,4 @@ The `scaffold/` directory provides the BFF plumbing (`app/api/auth/[...nextauth]
 
 Both configs use `eslint-config-next` as a peer dependency (already installed in every consuming package). The `./next` config adds `core-web-vitals` rules on top of the base TypeScript config.
 
-All packages and templates declare `"@corpdk/eslint-config": "workspace:*"` as a devDependency and keep a two-line `eslint.config.mjs` that imports the appropriate preset. Rule changes propagate to the whole monorepo from a single file.
+All packages and templates declare `"@corpdk/eslint-config": "workspace:*"` as a devDependency and keep a minimal `eslint.config.mjs` that imports the appropriate preset. Rule changes propagate to the whole monorepo from a single file. `ui-showcase` additionally includes `eslint-plugin-storybook` flat config for story-specific linting rules.

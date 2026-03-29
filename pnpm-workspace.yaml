@@ -13,4 +13,5 @@ onlyBuiltDependencies:
   - couchbase
   - esbuild
   - msw
+  - playwright
   - prisma
