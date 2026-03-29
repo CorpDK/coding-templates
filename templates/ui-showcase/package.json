@@ -1,7 +1,9 @@
 {
   "name": "@corpdk/ui-showcase",
   "version": "2026.3.0-alpha.1",
-  "private": true,
+  "publishConfig": {
+    "registry": "https://artifactory.corp.example.com/api/npm/npm-private/"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",

@@ -1,8 +1,12 @@
 {
   "name": "@corpdk/codegen-cli",
   "version": "2026.3.0-alpha.1",
-  "private": true,
   "type": "module",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "files": ["dist"],
   "main": "./dist/index.js",
   "exports": {
     ".": "./dist/index.js"

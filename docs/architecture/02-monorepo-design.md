@@ -93,3 +93,76 @@ The CalVer scheme used is `YYYY.MM.MICRO` where months are **not** zero-padded (
 - Increment `MICRO` for bug fixes and patches within the same calendar month.
 - Roll `YYYY.MM` (reset `MICRO` to `0`) when a new month has passed since the last release, or when shipping a significant feature batch that merits a new calendar stamp.
 - Never increment `MICRO` past `9` to avoid semantic confusion — a new calendar period should be used instead.
+
+---
+
+## Publishing Strategy
+
+Packages are published to two registries depending on their audience.
+
+### Registries
+
+| Registry | URL | Audience |
+|----------|-----|----------|
+| **npmjs** (public) | `https://registry.npmjs.org/` | External consumers, open-source community |
+| **Artifactory** (private) | `https://artifactory.corp.example.com/api/npm/npm-private/` | Internal teams only; template scaffolding |
+
+### Package → Registry Mapping
+
+| Directory | Registry | Rationale |
+|-----------|----------|-----------|
+| `engines/*` | npmjs | CLI tooling consumed by external users |
+| `libraries/*` | npmjs | Runtime libraries depended on by published packages |
+| `packages/*` | npmjs | Shared UI packages and linting config consumed by downstream apps |
+| `templates/*` | Artifactory | Internal project starters; scaffolded by `create-app` |
+| Root `package.json` | _(not published)_ | Workspace root; `"private": true` |
+
+### Configuration
+
+Each publishable package declares its target registry in `package.json`:
+
+```jsonc
+// npmjs packages (engines, libraries, packages)
+"publishConfig": {
+  "registry": "https://registry.npmjs.org/",
+  "access": "public"
+},
+"files": ["dist"]
+
+// Artifactory packages (templates)
+"publishConfig": {
+  "registry": "https://artifactory.corp.example.com/api/npm/npm-private/"
+}
+```
+
+**Key details:**
+- **`"access": "public"`** — required for scoped packages (`@corpdk/*`) on npmjs; without it, `npm publish` defaults to restricted (paid feature).
+- **`"files": ["dist"]`** — npmjs packages ship only compiled output. Templates omit `files` to include all source files (the scaffolded project needs `src/`, config files, etc.).
+- **No `"private": true`** on published packages — only the workspace root retains `"private": true`.
+
+### Authentication
+
+Registry credentials are configured via `.npmrc` (not checked into the repo):
+
+```ini
+# .npmrc (local or CI)
+//registry.npmjs.org/:_authToken=${NPM_TOKEN}
+//artifactory.corp.example.com/api/npm/npm-private/:_authToken=${ARTIFACTORY_TOKEN}
+```
+
+In CI, set `NPM_TOKEN` and `ARTIFACTORY_TOKEN` as pipeline secrets.
+
+### Publishing Workflow
+
+```bash
+# Publish a single package to its configured registry
+pnpm --filter @corpdk/ui-core publish --no-git-checks
+
+# Publish all npmjs packages
+pnpm --filter './engines/**' --filter './libraries/**' --filter './packages/**' publish --no-git-checks
+
+# Publish all templates to Artifactory
+pnpm --filter './templates/**' publish --no-git-checks
+```
+
+`--no-git-checks` is required in CI where the working tree may be detached or shallow. Omit it locally to enforce clean-tree publishing.
