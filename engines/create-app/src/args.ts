@@ -7,6 +7,7 @@ import type {
   DocumentImpl,
   DocumentProvider,
   OrmChoice,
+  PackageId,
   RelationalDbChoice,
   ScaffoldConfig,
   StorageType,
@@ -34,6 +35,7 @@ interface ParsedArgs {
   db: string | undefined;
   ui: string | undefined;
   sdk: string | undefined;
+  uiPackages: string | undefined;
   env: boolean;
   git: boolean;
   yes: boolean;
@@ -54,6 +56,7 @@ export function parseCliArgs(): ParsedArgs {
       db: { type: "string" },
       ui: { type: "string" },
       sdk: { type: "string" },
+      "ui-packages": { type: "string" },
       env: { type: "boolean", default: true },
       "no-env": { type: "boolean", default: false },
       git: { type: "boolean", default: true },
@@ -78,6 +81,7 @@ export function parseCliArgs(): ParsedArgs {
     db: values.db as string | undefined,
     ui: values.ui as string | undefined,
     sdk: values.sdk as string | undefined,
+    uiPackages: values["ui-packages"] as string | undefined,
     env: noEnv ? false : ((values.env as boolean | undefined) ?? true),
     git: noGit ? false : ((values.git as boolean | undefined) ?? true),
     yes: (values.yes as boolean | undefined) ?? false,
@@ -94,6 +98,7 @@ const VALID_ORMS: OrmChoice[] = ["prisma", "drizzle"];
 const VALID_DOC_PROVIDERS: DocumentProvider[] = ["couchbase", "mongodb", "documentdb"];
 const VALID_DOC_IMPLS: DocumentImpl[] = ["standard", "hprt"];
 const VALID_UI: UiChoice[] = ["none", "standard", "hprt"];
+const VALID_OPTIONAL_UI: PackageId[] = ["ui-forms", "ui-datagrid", "ui-charts", "ui-auth"];
 const VALID_RELATIONAL_DBS: RelationalDbChoice[] = ["postgresql", "mysql", "sqlite", "cockroachdb"];
 const VALID_DB_DRIZZLE = DRIZZLE_DB_OPTIONS.map((o) => o.value);
 
@@ -153,6 +158,20 @@ function resolveDsChoice(args: ParsedArgs): { ds: DsChoice; db: DbChoice | null 
   if (st === "filebased") return { ds: "file", db: null };
   if (st === "document") return resolveDocumentDs(args);
   return resolveRelationalDs(args);
+}
+
+function resolveOptionalUiPackages(ui: UiChoice, raw: string | undefined): PackageId[] {
+  if (ui === "none") return [];
+  if (raw === undefined) return [...VALID_OPTIONAL_UI];
+  if (raw === "") return [];
+
+  const packages = raw.split(",").map((s) => s.trim()) as PackageId[];
+  for (const pkg of packages) {
+    if (!VALID_OPTIONAL_UI.includes(pkg)) {
+      fail(`--ui-packages: invalid package "${pkg}". Valid: ${VALID_OPTIONAL_UI.join(", ")}`);
+    }
+  }
+  return packages;
 }
 
 async function resolveExternalSdkPackage(
@@ -216,8 +235,8 @@ export async function buildConfig(args: ParsedArgs): Promise<ScaffoldConfig> {
   }
 
   const externalSdkPackage = await resolveExternalSdkPackage(ui, ds, args.sdk);
-  const selectedPackages = resolvePackages(ds, ui);
-  const projectType = ds === "none" && ui !== "none" ? "standalone" : "monorepo";
+  const optionalUiPackages = resolveOptionalUiPackages(ui, args.uiPackages);
+  const selectedPackages = resolvePackages(ds, ui, optionalUiPackages);
 
   return {
     projectName: name,
@@ -226,8 +245,8 @@ export async function buildConfig(args: ParsedArgs): Promise<ScaffoldConfig> {
     ds,
     db,
     ui,
+    optionalUiPackages,
     externalSdkPackage,
-    projectType,
     selectedPackages,
     generateEnv: args.env,
     initGit: args.git,
@@ -275,13 +294,16 @@ Required:
   --sdk  <pkg>   Published TypedDocumentNode SDK package (e.g. @acme/ds-sdk)
 
 ─── Common options ───────────────────────────────────────────────────────────
-  -o, --output   <dir>   Output directory (default: ./<name>)
-      --env              Generate .env from .env.example (default: on)
-      --no-env           Skip .env generation
-      --git              Init git repository (default: on)
-      --no-git           Skip git init
-  -y, --yes              Accept all defaults (still requires --name and --scope)
-  -h, --help             Show this help
+  -o, --output       <dir>   Output directory (default: ./<name>)
+      --ui-packages  <list>  Comma-separated optional UI packages (default: all)
+                             Values: ui-forms, ui-datagrid, ui-charts, ui-auth
+                             Use --ui-packages "" to include none
+      --env                  Generate .env from .env.example (default: on)
+      --no-env               Skip .env generation
+      --git                  Init git repository (default: on)
+      --no-git               Skip git init
+  -y, --yes                  Accept all defaults (still requires --name and --scope)
+  -h, --help                 Show this help
 
 Storage / UI compatibility:
   relational + prisma  →  standard UI only (Apollo-based schema)
@@ -308,7 +330,10 @@ Examples:
   # DS only — Relational, Drizzle, SQLite
   pnpm create-app --name my-api --scope myorg --storage-type relational --orm drizzle --db sqlite
 
-  # UI only — standalone Next.js with external published SDK
+  # Full-stack with specific UI packages only
+  pnpm create-app --name my-app --scope myorg --storage-type relational --ui standard --ui-packages ui-forms,ui-auth
+
+  # UI only with external published SDK
   pnpm create-app --name my-ui --scope myorg --ui standard --sdk @acme/ds-sdk
 `);
 }

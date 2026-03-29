@@ -35,7 +35,6 @@ export type DocumentProvider = "couchbase" | "mongodb" | "documentdb";
 /** Implementation within MongoDB / DocumentDB */
 export type DocumentImpl = "standard" | "hprt";
 
-export type ProjectType = "monorepo" | "standalone";
 export type ScaffoldTarget = "ui-only" | "ds-only" | "ui-ds";
 
 export interface ScaffoldConfig {
@@ -47,7 +46,6 @@ export interface ScaffoldConfig {
   ui: UiChoice;
   optionalUiPackages: PackageId[];
   externalSdkPackage: string | null;
-  projectType: ProjectType;
   selectedPackages: Set<PackageId>;
   generateEnv: boolean;
   initGit: boolean;

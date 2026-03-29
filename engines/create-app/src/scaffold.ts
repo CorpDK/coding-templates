@@ -19,6 +19,7 @@ import {
 } from "./transform.js";
 import {
   generateRootPackageJson,
+  generateReadme,
   generateWorkspaceYaml,
 } from "./generate.js";
 
@@ -32,8 +33,6 @@ const ROOT_FILES_TO_COPY = [
   ".prettierignore",
   ".editorconfig",
   ".gitignore",
-  "CODING_GUIDELINES.md",
-  "README.md",
 ];
 
 /** Resolve the source directory for a package based on its sourceBase */
@@ -77,11 +76,7 @@ export async function scaffold(
   }
   s.stop("Root config files copied");
 
-  if (config.projectType === "monorepo") {
-    await scaffoldMonorepo(config, templateRoot, s);
-  } else {
-    await scaffoldStandalone(config, templateRoot, s);
-  }
+  await scaffoldMonorepo(config, templateRoot, s);
 
   // 6. Git init
   if (config.initGit) {
@@ -107,7 +102,9 @@ async function copyPackage(
     ds: config.ds,
     ui: config.ui,
     db: config.db,
-    externalSdk: null,
+    externalSdk: config.externalSdkPackage
+      ? { oldPkg: "@corpdk/ds-sdk", externalPkg: config.externalSdkPackage, version: "latest" }
+      : null,
     isRootPackageJson: false,
     projectName: config.projectName,
   };
@@ -175,6 +172,7 @@ async function scaffoldMonorepo(
   await fs.writeFile(path.join(outDir, "package.json"), rootPkgContent, "utf8");
   const workspaceYaml = generateWorkspaceYaml(config.selectedPackages);
   await fs.writeFile(path.join(outDir, "pnpm-workspace.yaml"), workspaceYaml, "utf8");
+  await fs.writeFile(path.join(outDir, "README.md"), generateReadme(config), "utf8");
   s.stop("Workspace files generated");
 
   // 4. Copy selected packages
@@ -242,116 +240,4 @@ async function scaffoldMonorepo(
     );
   }
   s.stop("Dockerfiles copied");
-}
-
-async function scaffoldStandalone(
-  config: ScaffoldConfig,
-  templateRoot: string,
-  s: ReturnType<typeof spinner>
-): Promise<void> {
-  const outDir = config.outputDir;
-
-  // 3. Generate root workspace files (standalone = UI-only monorepo)
-  s.start("Generating workspace files");
-  const sourceRootPkg = await readJson<{
-    devDependencies: Record<string, string>;
-    packageManager: string;
-  }>(path.join(templateRoot, "package.json"));
-  const rootPkgContent = generateRootPackageJson(
-    config.projectName,
-    config.orgScope,
-    sourceRootPkg
-  );
-  await fs.writeFile(path.join(outDir, "package.json"), rootPkgContent, "utf8");
-  const workspaceYaml = generateWorkspaceYaml(config.selectedPackages);
-  await fs.writeFile(path.join(outDir, "pnpm-workspace.yaml"), workspaceYaml, "utf8");
-  s.stop("Workspace files generated");
-
-  // 4. Copy selected packages into packages/
-  s.start(`Copying ${config.selectedPackages.size} packages`);
-
-  const oldSdkPkg = "@corpdk/ds-sdk";
-  let uiDestDir: string | null = null;
-
-  for (const pkgId of config.selectedPackages) {
-    const { dirName } = PACKAGE_DEFS[pkgId];
-    const srcDir = getSrcDir(pkgId, templateRoot);
-    const destDir = path.join(outDir, "packages", dirName);
-
-    const ctx: TransformContext = {
-      orgScope: config.orgScope,
-      ds: config.ds,
-      ui: config.ui,
-      db: null,
-      externalSdk: config.externalSdkPackage
-        ? { oldPkg: oldSdkPkg, externalPkg: config.externalSdkPackage, version: "latest" }
-        : null,
-      isRootPackageJson: false,
-      projectName: config.projectName,
-    };
-
-    const excludeScaffold = pkgId === "ui-auth";
-
-    await copyDir(srcDir, destDir, (content, relPath) => {
-      if (excludeScaffold && relPath.startsWith("scaffold")) return "";
-      return transformFileContent(content, relPath, ctx);
-    });
-
-    if (excludeScaffold) {
-      const scaffoldDest = path.join(destDir, "scaffold");
-      if (await pathExists(scaffoldDest)) {
-        await fs.rm(scaffoldDest, { recursive: true, force: true });
-      }
-    }
-
-    if (config.generateEnv) {
-      const envExamplePath = path.join(destDir, ".env.example");
-      const envPath = path.join(destDir, ".env");
-      if (await pathExists(envExamplePath)) {
-        await fs.copyFile(envExamplePath, envPath);
-      }
-    }
-
-    if (pkgId === "ui" || pkgId === "ui-hprt") {
-      uiDestDir = destDir;
-    }
-  }
-  s.stop("Packages copied");
-
-  // 4b. Merge BFF scaffold if ui-auth is selected
-  if (config.selectedPackages.has("ui-auth") && uiDestDir) {
-    s.start("Merging Auth.js BFF scaffold into UI app");
-    const authScaffoldDir = path.join(templateRoot, "packages", "ui-auth", "scaffold");
-    await mergeDir(authScaffoldDir, uiDestDir, [".env.example.append"]);
-    await appendToFile(
-      path.join(authScaffoldDir, ".env.example.append"),
-      path.join(uiDestDir, ".env.example")
-    );
-    s.stop("BFF scaffold merged");
-  }
-
-  // 5. Copy Dockerfile.ui into the UI package directory
-  if (config.ui !== "none" && uiDestDir) {
-    s.start("Copying Dockerfile");
-    const dockerTemplateDir = path.join(templateRoot, "templates", "docker");
-    const dockerCtx: TransformContext = {
-      orgScope: config.orgScope,
-      ds: config.ds,
-      ui: config.ui,
-      db: null,
-      externalSdk: null,
-      isRootPackageJson: false,
-      projectName: config.projectName,
-    };
-    const src = path.join(dockerTemplateDir, "Dockerfile.ui");
-    if (await pathExists(src)) {
-      const content = await fs.readFile(src, "utf8");
-      await fs.writeFile(
-        path.join(uiDestDir, "Dockerfile"),
-        transformFileContent(content, "Dockerfile.ui", dockerCtx),
-        "utf8"
-      );
-    }
-    s.stop("Dockerfile copied");
-  }
 }

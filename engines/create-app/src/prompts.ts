@@ -363,7 +363,6 @@ export async function runPrompts(): Promise<ScaffoldConfig> {
 
   // Resolve final package set
   const selectedPackages = resolvePackages(ds, ui, optionalUiPackages);
-  const projectType = ds === "none" && ui !== "none" ? "standalone" : "monorepo";
 
   // Summary
   const pkgList =
@@ -372,7 +371,6 @@ export async function runPrompts(): Promise<ScaffoldConfig> {
       : "  (none — bare project)";
   note(
     `Project:  @${orgScope}/${projectName}\n` +
-      `Type:     ${projectType}\n` +
       `Output:   ${outputDir}\n` +
       (db ? `Database: ${db}\n` : "") +
       `\nPackages:\n${pkgList}`,
@@ -388,7 +386,6 @@ export async function runPrompts(): Promise<ScaffoldConfig> {
     ui,
     optionalUiPackages,
     externalSdkPackage,
-    projectType,
     selectedPackages,
     generateEnv,
     initGit,

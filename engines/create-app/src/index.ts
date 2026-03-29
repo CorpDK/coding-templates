@@ -35,7 +35,7 @@ async function main(): Promise<void> {
       );
     }
 
-    if (config.projectType === "monorepo") {
+    if (config.ds !== "none") {
       nextSteps.push(
         "  pnpm codegen   # Generate TypedDocumentNode SDK and resolver types"
       );

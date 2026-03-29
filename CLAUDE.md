@@ -28,7 +28,6 @@ coding-templates/
 │   └── ui-feedback/ (@corpdk/ui-feedback)   Toast notifications + error boundaries
 └── templates/
     ├── docker/                    Docker templates (not a workspace package)
-    │   ├── Dockerfile             Standalone Next.js UI (UI-only scaffold, output root)
     │   ├── Dockerfile.ds          DS variant template (copied to packages/<ds>/Dockerfile)
     │   └── Dockerfile.ui          UI variant template (copied to packages/<ui>/Dockerfile)
     ├── ui/          (@corpdk/ui)           Next.js + Apollo Client
@@ -124,8 +123,7 @@ Scaffolded projects include Dockerfiles co-located with each package:
 ```bash
 # From the scaffolded project root
 docker build -f packages/ds/Dockerfile -t my-app-ds .     # Build DS image
-docker build -f packages/ui/Dockerfile -t my-app-ui .     # Build UI image (monorepo)
-docker build -t my-app-ui .                                # Build UI image (standalone)
+docker build -f packages/ui/Dockerfile -t my-app-ui .     # Build UI image
 ```
 
 **UI Dockerfile requirement**: `output: 'standalone'` must be set in the UI package's `next.config.ts`. The standalone output bundles the Next.js server into `server.js` (no `next` CLI needed at runtime).
