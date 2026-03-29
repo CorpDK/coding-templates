@@ -13,7 +13,7 @@ Consolidated record of architectural technology choices — what was chosen, wha
 | Icons | lucide-react | Heroicons, Phosphor, react-icons | Consistent stroke weight; ships with shadcn; tree-shakeable |
 | Dark mode | next-themes | Manual CSS vars, Tailwind `prefers-color-scheme` only | SSR-safe class toggling; no hydration flash |
 | Date/time | Luxon | date-fns, dayjs | Immutable API; first-class timezone and locale support |
-| GraphQL client (standard) | Apollo Client 3 | urql (standard apps) | Largest ecosystem; mature DevTools; proven in production |
+| GraphQL client (standard) | Apollo Client 4 | urql (standard apps) | Largest ecosystem; mature DevTools; proven in production |
 | GraphQL client (HPRT) | urql 5 + Graphcache | Apollo Client | Graphcache normalised cache handles high-frequency updates without over-rendering |
 | REST caching | TanStack Query | SWR, Apollo REST link | Richer feature set; DevTools; consistent with TanStack ecosystem |
 | Form state | React Hook Form | Formik, TanStack Form | Uncontrolled inputs = no re-renders on keystroke; best-in-class performance |

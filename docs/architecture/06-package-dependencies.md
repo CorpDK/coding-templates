@@ -70,7 +70,7 @@ Dependencies used across multiple workspace packages.
 
 | Package | Version | Used by |
 |---------|---------|---------|
-| @apollo/client | ^3.13.8 | ui |
+| @apollo/client | ^4.1.6 | ui |
 | urql | ^5.0.1 | ui-hprt |
 | @urql/exchange-graphcache | ^9.0.0 | ui-hprt |
 | shadcn | ^4.1.0 | ui-showcase (devDep) |
@@ -86,7 +86,7 @@ Dependencies used across multiple workspace packages.
 | drizzle-kit | ^0.31.10 | ds-hprt (devDep) |
 | pg | ^8.20.0 | ds-hprt |
 | couchbase | ^4.6.1 | ds-cdb |
-| mongodb | ^6.16.0 | ds-mongo, ds-ddb |
+| mongodb | ^7.1.1 | ds-mongo, ds-ddb |
 | js-yaml | ^4.1.0 | ds-file |
 
 ---
@@ -166,7 +166,7 @@ Dependencies used across multiple workspace packages.
 
 | Package | Version | Type |
 |---------|---------|------|
-| @clack/prompts | ^0.9.1 | runtime |
+| @clack/prompts | ^1.1.0 | runtime |
 | tsup | ^8.5.1 | dev |
 
 ---
@@ -217,9 +217,6 @@ Tracked here until applied. Remove entries as they are completed.
 
 | Package | Current | Latest | Risk | Phase |
 |---------|---------|--------|------|-------|
-| mongodb | ^6.16.0 | 7.x | Medium | 4 |
-| @clack/prompts | ^0.9.1 | 1.x | Low | 5 |
-| @apollo/client | ^3.13.8 | 4.x | Medium-High | 6 |
 | zod | ^3.24.2 | 4.x | High | 7 |
 | eslint | ^9.39.4 | 10.x | High | 8 |
 | typescript | ^5.9.3 | 6.x | Highest | 9 |
@@ -255,3 +252,6 @@ Tracked here until applied. Remove entries as they are completed.
 | 2026-03-29 | @graphql-codegen/typescript-resolvers | ^4.5.1 | ^5.1.7 | Major bump, coordinated |
 | 2026-03-29 | @graphql-codegen/plugin-helpers | ^5.0.0 | ^6.2.0 | Major bump, coordinated |
 | 2026-03-29 | graphql-ws | ^5.16.0 | ^6.0.8 | Major bump; import path changed from graphql-ws/lib/use/ws to graphql-ws/use/ws |
+| 2026-03-29 | mongodb | ^6.16.0 | ^7.1.1 | Major bump; no source changes needed (async/await API unchanged) |
+| 2026-03-29 | @clack/prompts | ^0.9.1 | ^1.1.0 | Major bump (0.x→1.x); no source changes needed |
+| 2026-03-29 | @apollo/client | ^3.13.8 | ^4.1.6 | Major bump; ApolloProvider moved to @apollo/client/react; split() replaced by ApolloLink.split() |

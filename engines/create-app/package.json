@@ -16,7 +16,7 @@
     "clean": "rm -rf dist node_modules .turbo"
   },
   "dependencies": {
-    "@clack/prompts": "^0.9.1"
+    "@clack/prompts": "^1.1.0"
   },
   "devDependencies": {
     "@types/node": "^20.19.37",

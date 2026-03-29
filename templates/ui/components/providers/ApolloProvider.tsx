@@ -2,11 +2,11 @@
 
 import {
   ApolloClient,
-  ApolloProvider,
+  ApolloLink,
   HttpLink,
   InMemoryCache,
-  split,
 } from "@apollo/client";
+import { ApolloProvider } from "@apollo/client/react";
 import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
 import { getMainDefinition } from "@apollo/client/utilities";
 import { createClient } from "graphql-ws";
@@ -22,7 +22,7 @@ const wsLink = new GraphQLWsLink(
  * Split link: subscriptions go over WebSocket, queries/mutations over HTTP.
  * The same TypedDocumentNode operations from @corpdk/ds-sdk work with both.
  */
-const splitLink = split(
+const splitLink = ApolloLink.split(
   ({ query }) => {
     const def = getMainDefinition(query);
     return (

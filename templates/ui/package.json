@@ -12,7 +12,7 @@
     "clean": "rm -rf .next node_modules .turbo *.tsbuildinfo"
   },
   "dependencies": {
-    "@apollo/client": "^3.13.8",
+    "@apollo/client": "^4.1.6",
     "@corpdk/ds-sdk": "workspace:*",
     "@corpdk/ui-auth": "workspace:*",
     "@corpdk/ui-charts": "workspace:*",
