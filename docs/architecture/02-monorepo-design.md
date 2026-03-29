@@ -76,3 +76,20 @@ Turbo's `dev` task declares `dependsOn: ["^build"]`. This ensures shared package
 | Template apps (`templates/ui`, `templates/ui-hprt`, `templates/ui-showcase`) | Semver | `0.1.0` | Not published to npm — scaffolded into user projects; semver communicates API stability |
 
 Template apps are not versioned for consumers — they are scaffolded once and then owned by the user. Semver `0.1.0` signals pre-stable without imposing CalVer semantics on code that will never be published.
+
+### CalVer Format Rules
+
+The CalVer scheme used is `YYYY.MM.MICRO` where months are **not** zero-padded (e.g. `2026.3.0`, not `2026.03.0`).
+
+| Release type | Format | Example | When to use |
+|---|---|---|---|
+| Stable | `YYYY.MM.MICRO` | `2026.3.0` | First stable release in a calendar period |
+| Alpha | `YYYY.MM.MICRO-alpha.N` | `2026.3.0-alpha.1` | Early unstable builds; API may change |
+| Beta | `YYYY.MM.MICRO-beta.N` | `2026.3.0-beta.2` | Feature-complete; undergoing validation |
+| Patch | `YYYY.MM.MICRO` (increment MICRO) | `2026.3.1` | Bug fixes within the same calendar period |
+| Hotfix | `YYYY.MM.MICRO-hotfix.N` | `2026.3.1-hotfix.1` | Critical production fix on a released patch |
+
+**When to bump MICRO vs roll to a new `YYYY.MM`:**
+- Increment `MICRO` for bug fixes and patches within the same calendar month.
+- Roll `YYYY.MM` (reset `MICRO` to `0`) when a new month has passed since the last release, or when shipping a significant feature batch that merits a new calendar stamp.
+- Never increment `MICRO` past `9` to avoid semantic confusion — a new calendar period should be used instead.

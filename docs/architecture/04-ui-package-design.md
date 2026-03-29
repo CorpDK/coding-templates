@@ -32,10 +32,13 @@ All packages build to `dist/` and export from their `package.json` `exports` map
 | Date/time | Luxon | Immutable API; first-class timezone and locale support; avoids the timezone pitfalls of `Date` |
 | Client state | Zustand | No provider wrapper needed; SSR-compatible with `createStore`; minimal boilerplate |
 | Design tokens | CSS variables in `@theme` | Token definitions stay app-level — each app owns its own `globals.css` for per-tenant theming flexibility |
+| Token constants | `TOKENS` object | Maps semantic names to CSS variable strings; enables autocomplete when referencing tokens programmatically (e.g. D3 fills) |
+| Component demo | `ComponentShowcase` | Single canonical interactive demo of `SearchInput` + `FilterButton`; exported so all consuming apps share one implementation |
 
 **Key decisions:**
 - **shadcn copy model** — components land in `packages/ui-core/src/components/ui/` and are owned by the package. This trades convenience (no upgrade path) for control (the package can evolve the component without waiting for an upstream release).
 - **CSS design tokens stay app-level** — not extracted into a shared CSS export because Turbopack does not resolve the `"style"` export condition (see [UI Enhancement #9](../developer/07-ui-enhancements.md)). Each app maintains its own `globals.css` with `@theme` tokens.
+- **`"sideEffects": false` on all shared packages** — signals to bundlers (Next.js Webpack/Turbopack) that all exports are pure; unused code can be tree-shaken. Apps that only import `ui-forms` do not pull in `ui-datagrid` code.
 
 ---
 
@@ -106,6 +109,23 @@ All packages build to `dist/` and export from their `package.json` `exports` map
 | Gate components | Custom | `IfAuthenticated`, `IfPermission` — render children conditionally based on session state |
 | BFF boilerplate | `scaffold/` directory | Merged into the UI app by `create-app`; not included in the npm publish |
 
-**Key decision — BFF pattern:** The app never handles credentials. OAuth2/OIDC authentication is performed server-side by Next.js (acting as the Backend for Frontend). The OAuth2 code exchange happens on the server; tokens are stored server-side; the browser receives only an HttpOnly session cookie. This eliminates the entire class of token leakage vulnerabilities that come from storing tokens in `localStorage` or non-HttpOnly cookies.
+**Key decisions:**
+- **`AppUserClaims` interface** — exported from `ui-auth` for declaration merging. Consuming apps extend it in their own `types/auth.d.ts` to add SSO-specific claims (`department`, `tenantId`, etc.). The scaffold's `next-auth.d.ts` wires `AppUserClaims` into `Session.user` and `JWT` automatically.
+- **BFF pattern** — The app never handles credentials. OAuth2/OIDC authentication is performed server-side by Next.js (acting as the Backend for Frontend). The OAuth2 code exchange happens on the server; tokens are stored server-side; the browser receives only an HttpOnly session cookie. This eliminates the entire class of token leakage vulnerabilities that come from storing tokens in `localStorage` or non-HttpOnly cookies.
 
-The `scaffold/` directory provides the BFF plumbing (`app/api/auth/[...nextauth]/route.ts`, `auth.config.ts`, `middleware.ts`) that `create-app` merges into the output when `ui-auth` is selected. It is intentionally excluded from the npm package.
+The `scaffold/` directory provides the BFF plumbing (`app/api/auth/[...nextauth]/route.ts`, `auth.config.ts`, `middleware.ts`, `next-auth.d.ts`) that `create-app` merges into the output when `ui-auth` is selected. It is intentionally excluded from the npm package.
+
+---
+
+## `eslint-config` — Shared Linting Rules
+
+**Scope:** Consolidated ESLint flat config for all packages and templates in the monorepo.
+
+| Export | File | Use case |
+|--------|------|----------|
+| `.` (default) | `index.mjs` | Shared library packages (`ui-core`, `ui-auth`, etc.) |
+| `./next` | `next.mjs` | Next.js application templates (`ui`, `ui-showcase`) |
+
+Both configs use `eslint-config-next` as a peer dependency (already installed in every consuming package). The `./next` config adds `core-web-vitals` rules on top of the base TypeScript config.
+
+All packages and templates declare `"@corpdk/eslint-config": "workspace:*"` as a devDependency and keep a two-line `eslint.config.mjs` that imports the appropriate preset. Rule changes propagate to the whole monorepo from a single file.

@@ -79,7 +79,11 @@ Capabilities that live in each app (`templates/ui`, `templates/ui-hprt`) rather 
 | Client state | Zustand | ✅ | ✅ | Available in `ui-core` |
 | Fine-grained state | Jotai | ⚠️ | ⚠️ | Complex UI only |
 | Design tokens | CSS variables | ✅ | ✅ | Defined per-app in `globals.css` via `@theme` |
+| Token constants | `TOKENS` object in `ui-core` | ✅ | ✅ | CSS var names as typed constants; use with D3 or inline styles |
 | Theme system | CSS vars + Tailwind | ✅ | ✅ | Multi-tenant ready |
+| Tree-shaking | `"sideEffects": false` | ✅ | ✅ | All 6 shared packages; bundlers drop unused exports |
+| Shared ESLint config | `@corpdk/eslint-config` | ✅ | ✅ | `packages/eslint-config`; all packages + templates use it |
+| Component demo | `ComponentShowcase` in `ui-core` | ✅ | ✅ | Canonical interactive demo; replaces per-app `PrimitivesDemo` |
 
 ### `ui-core` — Layout & Navigation
 
@@ -144,6 +148,7 @@ Capabilities that live in each app (`templates/ui`, `templates/ui-hprt`) rather 
 | Session UI | Auth.js v5 | ✅ | ✅ | `SignInButton`, `SignOutButton`, `SessionProvider`, `useSession` |
 | Permission-aware UI | Custom | ✅ | ✅ | `IfAuthenticated`, `IfPermission` gate components |
 | BFF boilerplate | `scaffold/` | ✅ | ✅ | Merged into app by `create-app` when `ui-auth` selected |
+| Session type augmentation | `AppUserClaims` + `next-auth.d.ts` | ✅ | ✅ | Typed `session.user.role`/`scope`; extend via declaration merging |
 
 ---
 

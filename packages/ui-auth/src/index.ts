@@ -1,3 +1,4 @@
+export type { AppUserClaims } from './types';
 export { SignInButton } from './components/SignInButton';
 export { SignOutButton } from './components/SignOutButton';
 export { SessionProvider } from './components/SessionProvider';

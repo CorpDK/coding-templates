@@ -11,8 +11,12 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "react-jsx"
+    "jsx": "react-jsx",
+    "paths": {
+      "@corpdk/ui-auth": ["./src/index.ts"],
+      "@/*": ["./scaffold/*"]
+    }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", "scaffold/**/*.ts", "scaffold/**/*.tsx", "scaffold/**/*.d.ts"],
   "exclude": ["node_modules"]
 }
