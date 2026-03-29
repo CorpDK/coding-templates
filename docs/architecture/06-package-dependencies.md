@@ -35,7 +35,7 @@ Dependencies used across multiple workspace packages.
 |---------|---------|---------|
 | graphql | ^16.13.2 | ds, ds-hprt, ds-cdb, ds-mongo, ds-ddb, ds-file, ui, ui-hprt, ds-sdk, codegen-cli |
 | graphql-yoga | ^5.18.1 | ds, ds-hprt, ds-cdb, ds-mongo, ds-ddb, ds-file, pub-sub |
-| graphql-ws | ^5.16.0 | ds, ds-hprt, ds-cdb, ds-mongo, ds-ddb, ds-file, ui, ui-hprt |
+| graphql-ws | ^6.0.8 | ds, ds-hprt, ds-cdb, ds-mongo, ds-ddb, ds-file, ui, ui-hprt |
 | @graphql-yoga/redis-event-target | ^3.0.0 | ds, ds-hprt, ds-cdb, ds-mongo, ds-ddb, ds-file, pub-sub |
 
 ### UI Framework
@@ -217,7 +217,6 @@ Tracked here until applied. Remove entries as they are completed.
 
 | Package | Current | Latest | Risk | Phase |
 |---------|---------|--------|------|-------|
-| graphql-ws | ^5.16.0 | 6.x | Medium | 3 |
 | mongodb | ^6.16.0 | 7.x | Medium | 4 |
 | @clack/prompts | ^0.9.1 | 1.x | Low | 5 |
 | @apollo/client | ^3.13.8 | 4.x | Medium-High | 6 |
@@ -255,3 +254,4 @@ Tracked here until applied. Remove entries as they are completed.
 | 2026-03-29 | @graphql-codegen/typescript | ^4.1.5 | ^5.0.9 | Major bump, coordinated |
 | 2026-03-29 | @graphql-codegen/typescript-resolvers | ^4.5.1 | ^5.1.7 | Major bump, coordinated |
 | 2026-03-29 | @graphql-codegen/plugin-helpers | ^5.0.0 | ^6.2.0 | Major bump, coordinated |
+| 2026-03-29 | graphql-ws | ^5.16.0 | ^6.0.8 | Major bump; import path changed from graphql-ws/lib/use/ws to graphql-ws/use/ws |
