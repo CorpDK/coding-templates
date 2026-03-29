@@ -42,10 +42,10 @@ Dependencies used across multiple workspace packages.
 
 | Package | Version | Used by |
 |---------|---------|---------|
-| next | 16.2.1 | ui, ui-hprt, ui-showcase |
+| next | 16.2.1 | ui, ui-hprt |
 | react | 19.2.4 | ui, ui-hprt, ui-showcase |
 | react-dom | 19.2.4 | ui, ui-hprt, ui-showcase |
-| @tanstack/react-query | ^5.95.2 | ui, ui-hprt, ui-showcase |
+| @tanstack/react-query | ^5.95.2 | ui, ui-hprt |
 | tailwindcss | ^4.2.1 | ui, ui-hprt, ui-showcase |
 | @tailwindcss/postcss | ^4.2.1 | ui, ui-hprt, ui-showcase |
 

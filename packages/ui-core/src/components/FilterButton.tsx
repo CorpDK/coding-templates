@@ -1,6 +1,9 @@
 interface FilterButtonProps {
+  /** Whether this filter is currently selected. */
   active: boolean;
+  /** Called when the button is clicked. */
   onClick: () => void;
+  /** Button label content. */
   children: React.ReactNode;
 }
 

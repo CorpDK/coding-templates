@@ -1,4 +1,5 @@
 interface LoadingStateProps {
+  /** Text displayed below the spinner. @default "Loading..." */
   message?: string;
 }
 

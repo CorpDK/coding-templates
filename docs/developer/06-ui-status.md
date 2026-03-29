@@ -74,7 +74,7 @@ Capabilities that live in each app (`templates/ui`, `templates/ui-hprt`) rather 
 | Utility styling | Tailwind CSS v4 | ✅ | ✅ | `@tailwindcss/postcss` installed |
 | Component primitives | shadcn/ui | ✅ | ✅ | In `packages/ui-core/src/components/ui/` |
 | Icons | lucide-react | ✅ | ✅ | Bundled with shadcn |
-| Dark mode | next-themes | ✅ | ✅ | `ThemeProvider` exported from `ui-core` |
+| Dark mode | next-themes | ✅ | ✅ | `ThemeProvider` + `useTheme` exported from `ui-core` |
 | Date/time | Luxon | ✅ | ✅ | `formatTimestamp` exported from `ui-core` |
 | Client state | Zustand | ✅ | ✅ | Available in `ui-core` |
 | Fine-grained state | Jotai | ⚠️ | ⚠️ | Complex UI only |
@@ -84,6 +84,8 @@ Capabilities that live in each app (`templates/ui`, `templates/ui-hprt`) rather 
 | Tree-shaking | `"sideEffects": false` | ✅ | ✅ | All 6 shared packages; bundlers drop unused exports |
 | Shared ESLint config | `@corpdk/eslint-config` | ✅ | ✅ | `packages/eslint-config`; all packages + templates use it |
 | Component demo | `ComponentShowcase` in `ui-core` | ✅ | ✅ | Canonical interactive demo; replaces per-app `PrimitivesDemo` |
+| Component stories | Storybook 10 | ✅ | — | In `ui-showcase`; covers all 6 shared packages; `pnpm storybook` |
+| Prop documentation | JSDoc on interfaces | ✅ | ✅ | All exported prop interfaces in `ui-core`, `ui-forms`, `ui-datagrid`, `ui-charts` |
 
 ### `ui-core` — Layout & Navigation
 
@@ -152,10 +154,11 @@ Capabilities that live in each app (`templates/ui`, `templates/ui-hprt`) rather 
 
 ---
 
-## Repo-Level — Testing
+## Repo-Level — Testing & Documentation
 
 | Capability | Technology | Status | Notes |
 |------------|------------|--------|-------|
+| Component stories | Storybook 10 | ✅ | `templates/ui-showcase/.storybook/`; `pnpm storybook` |
 | Unit testing | Vitest | 🔲 | Decision made, adoption timing TBD |
 | Component testing | Testing Library | 🔲 | Pairs with Vitest |
 | E2E testing | Playwright | 🔲 | Decision made, adoption timing TBD |
@@ -181,6 +184,7 @@ Capabilities that live in each app (`templates/ui`, `templates/ui-hprt`) rather 
 | GraphQL (HPRT) | urql + Graphcache | Apollo Client | Graphcache handles high-frequency normalized updates without over-rendering | Pre-template |
 | Charts | D3 | Recharts, Nivo, ECharts, Victory | Low-level control; `useD3` hook abstracts attach/cleanup; bundles only what's used | 2026-03 |
 | Auth | Auth.js v5 (BFF) | Clerk, custom JWT | OIDC/OAuth2 SSO; BFF keeps tokens server-side; Next.js-native | 2026-03 |
+| Component stories | Storybook 10 (`@storybook/nextjs-vite`) | Ladle, Styleguidist, Docz | First-class Next.js + RSC support; Vite-based HMR; autodocs from JSDoc | 2026-03 |
 | i18n | 🔲 TBD | next-intl, next-i18next, Lingui | Global apps only; can be deferred per-app | — |
 | Unit testing | 🔲 TBD | Vitest (strong candidate), Jest | Vitest chosen in principle; adoption timing open | — |
 | E2E testing | 🔲 TBD | Playwright (strong candidate), Cypress | Playwright chosen in principle; adoption timing open | — |

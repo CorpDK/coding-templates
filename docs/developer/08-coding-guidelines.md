@@ -186,6 +186,27 @@ export default function MyComponent({ data, onSelect }: MyComponentProps) {
    }
    ```
 
+5. **Prop documentation**: All exported prop interfaces must have JSDoc comments on every property
+
+   ```typescript
+   interface SearchInputProps {
+     /** Placeholder text shown when the input is empty. */
+     placeholder: string;
+     /** Current search string (controlled). */
+     value: string;
+     /** Called with the new value on every keystroke. */
+     onChange: (value: string) => void;
+     /** Tailwind ring-color class applied on focus. @default "ring-blue-500" */
+     ringColor?: string;
+   }
+   ```
+
+   Rules:
+   - One-line JSDoc comment per property
+   - Include `@default` tag for optional props with defaults
+   - Document callback semantics (when called, what the argument is)
+   - Skip JSDoc on shadcn/ui primitives (follow upstream patterns)
+
 ---
 
 ## Anti-Patterns to Avoid
@@ -314,6 +335,7 @@ Before committing, verify:
 - [ ] No duplicated code
 - [ ] All types defined in centralized location
 - [ ] Props interface defined with proper naming
+- [ ] All exported prop interfaces have JSDoc on every property
 - [ ] Early returns for loading/error/empty states
 - [ ] No business logic in pure UI components
 - [ ] Expensive computations wrapped in `useMemo`

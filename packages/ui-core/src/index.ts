@@ -16,7 +16,7 @@ export { default as ErrorState } from './components/ErrorState';
 export { default as EmptyState } from './components/EmptyState';
 export { default as SearchInput } from './components/SearchInput';
 export { default as FilterButton } from './components/FilterButton';
-export { ThemeProvider } from './components/ThemeProvider';
+export { ThemeProvider, useTheme } from './components/ThemeProvider';
 
 // shadcn ui primitives
 export { Button, buttonVariants } from './components/ui/button';

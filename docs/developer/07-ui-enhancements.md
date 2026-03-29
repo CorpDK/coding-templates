@@ -28,30 +28,24 @@ Instead of requiring each consuming app to copy CSS variable definitions into it
 
 ---
 
-## 5. Storybook for `ui-showcase`
-
-Replace or augment the Next.js showcase pages with a Storybook 8 instance. Enables component-level args/controls/interactions and is the standard reference format for design system consumers. Storybook 8 has first-class RSC and Next.js support.
-
----
-
-## 6. GitHub Actions CI
+## 5. GitHub Actions CI
 
 Add `.github/workflows/ci.yml`: lint + typecheck + `pnpm build` on every PR. Turbo's remote cache can be wired to Vercel for speed. Ensures the monorepo always builds cleanly before merge.
 
 ---
 
-## 7. Component Prop Documentation
+## 6. Accessibility Audit
 
-Add JSDoc `@param` comments to all exported component props in `ui-core`, `ui-forms`, `ui-datagrid`, and `ui-charts`. Consumers get hover documentation in their IDE without having to open source files.
-
----
-
-## 8. `useTheme` Re-export from `ui-core`
-
-Re-export `useTheme` from `next-themes` in `ui-core/src/index.ts`. Currently consumers must import it directly from `next-themes`, breaking the pattern of `@corpdk/ui-core` being the single import surface for theme utilities.
+Run `axe-core` or `@axe-core/react` against the Storybook stories; fix all WCAG 2.1 AA violations. Document any intentional deviations. Accessibility is a prerequisite for enterprise customers.
 
 ---
 
-## 9. Accessibility Audit
+## 7. Storybook Interaction Tests
 
-Run `axe-core` or `@axe-core/react` against the showcase pages and fix all WCAG 2.1 AA violations. Document any intentional deviations. Accessibility is a prerequisite for enterprise customers.
+Add `@storybook/test` interaction tests to the existing story files — form validation flows, toast triggers, error boundary recovery, and auth gate state transitions. These run in the Storybook test runner and complement future Vitest unit tests.
+
+---
+
+## 8. Storybook Visual Regression
+
+Integrate Chromatic or `storybook-addon-visual-tests` for automated visual regression snapshots. Catch unintended design changes across PRs without manual review of every component.

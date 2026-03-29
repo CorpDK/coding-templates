@@ -1,7 +1,11 @@
 interface SearchInputProps {
+  /** Placeholder text shown when the input is empty. */
   placeholder: string;
+  /** Current search string (controlled). */
   value: string;
+  /** Called with the new value on every keystroke. */
   onChange: (value: string) => void;
+  /** Tailwind ring-color class applied on focus. @default "ring-blue-500" */
   ringColor?: string;
 }
 

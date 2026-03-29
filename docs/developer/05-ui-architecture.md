@@ -17,9 +17,9 @@ The monorepo contains three UI application templates and six shared packages:
 |---------|-------|----------------|-----------|---------|
 | `templates/ui` | `@corpdk/ui` | Apollo Client | graphql-ws via split link | Standard CRUD template |
 | `templates/ui-hprt` | `@corpdk/ui-hprt` | urql + Graphcache | graphql-ws via subscriptionExchange | High-frequency real-time template |
-| `templates/ui-showcase` | `@corpdk/ui-showcase` | — | — | Dev-time showcase — consumes all 6 shared packages for visual demonstration |
+| `templates/ui-showcase` | `@corpdk/ui-showcase` | — | — | Storybook showcase — visual testing for all 6 shared packages; `pnpm storybook` |
 
-Both runnable templates consume shared capabilities from `packages/ui-*` as workspace dependencies. The showcase app imports from all six packages and is used during development to verify the shared package API.
+Both runnable templates consume shared capabilities from `packages/ui-*` as workspace dependencies. The Storybook showcase (`ui-showcase`) imports from all six packages and is used during development to verify the shared package API visually.
 
 Shared packages (`packages/ui-core`, `packages/ui-feedback`, `packages/ui-forms`, `packages/ui-datagrid`, `packages/ui-charts`, `packages/ui-auth`) are built to `dist/` and are publishable to npm under the `@corpdk` scope.
 

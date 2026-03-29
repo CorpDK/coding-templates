@@ -83,7 +83,7 @@ tsconfig.base.json     ← strict, esModuleInterop, skipLibCheck, sourceMap, dec
 |-------------|--------|--------|---------|
 | `tsconfig.node.json` | ES2024 | NodeNext | `ds`, `ds-hprt`, `ds-cdb`, `ds-ddb`, `ds-file`, `ds-mongo`, `ds-sdk`, `pub-sub`, `codegen-cli`, `create-app` |
 | `tsconfig.react.json` | ES2024 | esnext/bundler | `ui-core`, `ui-auth`, `ui-charts`, `ui-forms`, `ui-datagrid`, `ui-feedback` |
-| `tsconfig.next.json` | ES2024 | esnext/bundler | `ui`, `ui-hprt`, `ui-showcase` |
+| `tsconfig.next.json` | ES2024 | esnext/bundler | `ui`, `ui-hprt` |
 
 Per-package tsconfigs declare only local overrides (paths, custom includes). UI shared packages additionally have a `tsconfig.build.json` that extends their `tsconfig.json` with `noEmit: false`, `outDir: "dist"`, and `declarationMap: true`.
 

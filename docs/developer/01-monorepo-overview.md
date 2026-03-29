@@ -28,7 +28,7 @@ coding-templates/
     ├── docker/                    Docker templates (not a workspace package)
     ├── ui/          (@corpdk/ui)           Next.js + Apollo Client
     ├── ui-hprt/     (@corpdk/ui-hprt)      Next.js + urql + Graphcache
-    ├── ui-showcase/ (@corpdk/ui-showcase)  Showcase app — demonstrates all shared packages
+    ├── ui-showcase/ (@corpdk/ui-showcase)  Storybook showcase — visual testing for all shared packages
     ├── ds/          (@corpdk/ds)           GraphQL Yoga + Prisma + PostgreSQL
     ├── ds-hprt/     (@corpdk/ds-hprt)      GraphQL Yoga + Drizzle + PostgreSQL
     ├── ds-cdb/      (@corpdk/ds-cdb)       GraphQL Yoga + Couchbase SDK + Zod
@@ -49,7 +49,7 @@ coding-templates/
 |---------|-------|-------------|
 | `ui` | `@corpdk/ui` | Standard Next.js UI using Apollo Client for GraphQL |
 | `ui-hprt` | `@corpdk/ui-hprt` | High-performance real-time UI using urql + Graphcache |
-| `ui-showcase` | `@corpdk/ui-showcase` | Dev-time showcase app — consumes all 6 shared `packages/ui-*` for demonstration and visual testing |
+| `ui-showcase` | `@corpdk/ui-showcase` | Storybook showcase — visual testing for all 6 shared `packages/ui-*` components; `pnpm storybook` |
 | `ds` | `@corpdk/ds` | GraphQL Yoga + Prisma (PostgreSQL / MySQL / SQLite / CockroachDB) |
 | `ds-hprt` | `@corpdk/ds-hprt` | GraphQL Yoga + Drizzle, optimised for real-time workloads |
 | `ds-cdb` | `@corpdk/ds-cdb` | GraphQL Yoga + Couchbase SDK + Zod |
@@ -89,7 +89,7 @@ For versioning strategy and key design decisions (module system, HTTP/WS routing
 pnpm dev        # start all packages in dev mode (via Turbo)
 pnpm build      # build all packages (codegen → build)
 pnpm codegen    # run graphql-codegen for @corpdk/ds
-pnpm showcase   # start the ui-showcase app
+pnpm storybook  # start Storybook for ui-showcase (port 6006)
 pnpm create-app # run the interactive scaffolding CLI
 ```
 

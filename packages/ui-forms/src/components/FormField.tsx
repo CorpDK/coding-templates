@@ -11,10 +11,15 @@ export interface FormFieldProps<
   TFieldValues extends FieldValues,
   TName extends FieldPath<TFieldValues>,
 > {
+  /** React Hook Form instance returned by `useForm` or `useZodForm`. */
   form: UseFormReturn<TFieldValues>;
+  /** Field path within the form schema (dot-notation for nested fields). */
   name: TName;
+  /** Label text rendered above the input. */
   label: string;
+  /** Placeholder text shown when the input is empty. */
   placeholder?: string;
+  /** HTML input type. @default "text" */
   type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url';
 }
 

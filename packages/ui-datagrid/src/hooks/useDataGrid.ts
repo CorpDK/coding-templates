@@ -9,6 +9,13 @@ import {
 } from '@tanstack/react-table';
 import { useState } from 'react';
 
+/**
+ * Initializes a TanStack Table instance with sorting, column filtering, and global filtering.
+ *
+ * @param data - Row data array.
+ * @param columns - Column definitions.
+ * @returns Object containing the `table` instance, current `globalFilter` string, and `setGlobalFilter` setter.
+ */
 export function useDataGrid<TData>(
   data: TData[],
   columns: ColumnDef<TData>[]

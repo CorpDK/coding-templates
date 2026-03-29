@@ -12,4 +12,5 @@ onlyBuiltDependencies:
   - '@prisma/engines'
   - couchbase
   - esbuild
+  - msw
   - prisma

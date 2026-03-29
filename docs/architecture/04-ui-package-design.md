@@ -37,8 +37,9 @@ All packages build to `dist/` and export from their `package.json` `exports` map
 
 **Key decisions:**
 - **shadcn copy model** — components land in `packages/ui-core/src/components/ui/` and are owned by the package. This trades convenience (no upgrade path) for control (the package can evolve the component without waiting for an upstream release).
-- **CSS design tokens stay app-level** — not extracted into a shared CSS export because Turbopack does not resolve the `"style"` export condition (see [UI Enhancement #9](../developer/07-ui-enhancements.md)). Each app maintains its own `globals.css` with `@theme` tokens.
+- **CSS design tokens stay app-level** — not extracted into a shared CSS export because Turbopack does not resolve the `"style"` export condition (see [UI Enhancement #4](../developer/07-ui-enhancements.md)). Each app maintains its own `globals.css` with `@theme` tokens.
 - **`"sideEffects": false` on all shared packages** — signals to bundlers (Next.js Webpack/Turbopack) that all exports are pure; unused code can be tree-shaken. Apps that only import `ui-forms` do not pull in `ui-datagrid` code.
+- **`useTheme` re-exported alongside `ThemeProvider`** — consumers import all theme utilities from `@corpdk/ui-core`; no need to depend on `next-themes` directly.
 
 ---
 
@@ -117,6 +118,18 @@ The `scaffold/` directory provides the BFF plumbing (`app/api/auth/[...nextauth]
 
 ---
 
+## Component Stories (Storybook)
+
+`templates/ui-showcase` is a pure Storybook 10 showcase (no Next.js application). Run with `pnpm storybook` from the workspace root.
+
+**Story organization:** Stories live in `templates/ui-showcase/src/stories/` grouped by source package (`core/`, `forms/`, `charts/`, `datagrid/`, `feedback/`, `auth/`). Each story file uses `tags: ['autodocs']` to auto-generate documentation from JSDoc comments on prop interfaces.
+
+**Framework:** `@storybook/nextjs-vite` — Vite-based for fast HMR; supports Next.js App Router, `next/font`, `next/image`, and RSC. Tailwind CSS v4 styling loads via `globals.css` import in `.storybook/preview.tsx`.
+
+**Auth mocking:** Auth stories use a mock `SessionProvider` decorator (`src/stories/auth/decorators.tsx`) that injects configurable session objects, avoiding the need for a running auth server.
+
+---
+
 ## `eslint-config` — Shared Linting Rules
 
 **Scope:** Consolidated ESLint flat config for all packages and templates in the monorepo.
@@ -124,7 +137,7 @@ The `scaffold/` directory provides the BFF plumbing (`app/api/auth/[...nextauth]
 | Export | File | Use case |
 |--------|------|----------|
 | `.` (default) | `index.mjs` | Shared library packages (`ui-core`, `ui-auth`, etc.) |
-| `./next` | `next.mjs` | Next.js application templates (`ui`, `ui-showcase`) |
+| `./next` | `next.mjs` | Next.js application templates (`ui`, `ui-hprt`) and Storybook showcase (`ui-showcase`) |
 
 Both configs use `eslint-config-next` as a peer dependency (already installed in every consuming package). The `./next` config adds `core-web-vitals` rules on top of the base TypeScript config.
 

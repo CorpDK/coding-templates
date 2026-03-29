@@ -34,7 +34,7 @@ coding-templates/
     │   └── Dockerfile.ui          UI variant template (copied to packages/<ui>/Dockerfile)
     ├── ui/          (@corpdk/ui)           Next.js + Apollo Client
     ├── ui-hprt/     (@corpdk/ui-hprt)      Next.js + urql + Graphcache
-    ├── ui-showcase/ (@corpdk/ui-showcase)  Showcase app — demonstrates all shared packages
+    ├── ui-showcase/ (@corpdk/ui-showcase)  Storybook showcase — visual testing for all shared UI packages
     ├── ds/          (@corpdk/ds)           GraphQL Yoga + Prisma + PostgreSQL
     ├── ds-hprt/     (@corpdk/ds-hprt)      GraphQL Yoga + Drizzle + PostgreSQL
     ├── ds-cdb/      (@corpdk/ds-cdb)       GraphQL Yoga + Couchbase SDK + Zod
@@ -69,11 +69,11 @@ coding-templates/
 | `codegen-cli` | `@corpdk/codegen-cli` | GraphQL codegen plugin for resolver types + SDK generation |
 | `eslint-config` | `@corpdk/eslint-config` | Shared ESLint flat config (base + Next.js) for all packages |
 | `create-app` | `@corpdk/create-app` | Interactive CLI scaffolding tool for full-stack, DS-only, or UI-only projects |
-| `ui-showcase` | `@corpdk/ui-showcase` | Showcase app — demonstrates all shared `packages/ui-*` for visual testing |
+| `ui-showcase` | `@corpdk/ui-showcase` | Storybook showcase — visual testing for all shared `packages/ui-*` components |
 
 ### Key Design Decisions
 
-- **`"type": "module"` on all packages except Next.js template apps** — DS packages, libraries, engines, and shared `packages/*` are pure ESM. The three Next.js templates (`ui`, `ui-hprt`, `ui-showcase`) omit it; Next.js manages its own module system
+- **`"type": "module"` on all packages except Next.js template apps and `ui-showcase`** — DS packages, libraries, engines, and shared `packages/*` are pure ESM. The two Next.js templates (`ui`, `ui-hprt`) and the Storybook-only `ui-showcase` omit it
 - **HTTP via Next.js proxy, WS direct** — `rewrites()` handles queries/mutations; WebSocket connects directly via `NEXT_PUBLIC_DS_WS_URL` (avoids Next.js WS proxy limitations)
 - **SDK as workspace dependency** — `ui` depends on `@corpdk/ds-sdk: "workspace:*"`; Turbo ensures codegen runs before build
 - **All ports from env, no defaults** — prevents port collision surprises; each package has `.env.example`
@@ -115,7 +115,7 @@ pnpm build                # Build all packages (codegen → build)
 pnpm --filter @corpdk/ds dev        # Start only ds
 pnpm --filter @corpdk/ui dev        # Start only ui
 pnpm codegen                        # Run graphql-codegen for @corpdk/ds (root shortcut)
-pnpm showcase                       # Start @corpdk/ui-showcase dev server
+pnpm storybook                      # Start Storybook for ui-showcase (port 6006)
 pnpm --filter @corpdk/ds codegen    # Run graphql-codegen for ds
 pnpm create-app                     # Run the interactive scaffolding CLI
 ```
@@ -166,6 +166,7 @@ Files that are commonly modified together:
 - `templates/ds/src/schema.ts` + `templates/ds/src/pubsub/index.ts` (schema changes)
 - `templates/ds/package.json` + `templates/ds-sdk/package.json` (SDK dependency updates)
 - Root `package.json` + `turbo.json` (task pipeline changes)
+- `packages/ui-*/src/types.ts` + `templates/ui-showcase/src/stories/` (prop changes affect stories)
 
 ### Common Operations
 

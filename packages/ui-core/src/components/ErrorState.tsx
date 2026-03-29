@@ -1,5 +1,7 @@
 interface ErrorStateProps {
+  /** Error message to display prominently. */
   error: string;
+  /** Supplementary hint text shown below the error. @default "Please try again or check the console for details." */
   hint?: string;
 }
 

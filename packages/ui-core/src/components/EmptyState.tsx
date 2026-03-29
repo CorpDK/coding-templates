@@ -1,4 +1,5 @@
 interface EmptyStateProps {
+  /** Message displayed when no data is available. */
   message: string;
 }
 
