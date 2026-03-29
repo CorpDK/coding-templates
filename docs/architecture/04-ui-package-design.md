@@ -26,7 +26,7 @@ All packages build to `dist/` and export from their `package.json` `exports` map
 | Capability | Technology | Design rationale |
 |------------|------------|-----------------|
 | Utility styling | Tailwind CSS v4 | CSS-first config via `@theme` — no `tailwind.config.js` file needed; `@import "tailwindcss"` is the entry point |
-| Component primitives | shadcn/ui | Copy-into-repo model gives full ownership; no dependency version lock; accessible by default |
+| Component primitives | shadcn/ui (all 54 registry components) | Copy-into-repo model gives full ownership; no dependency version lock; accessible by default. Full registry installed: includes Radix UI and @base-ui/react headless primitives, plus external deps (cmdk, embla-carousel, react-day-picker, react-resizable-panels, recharts, react-hook-form, input-otp, vaul) |
 | Icons | lucide-react | Bundled with shadcn; consistent stroke weight; tree-shakeable |
 | Dark mode | next-themes | Class-based toggling on `<html>` — SSR-safe, no hydration flash |
 | Date/time | Luxon | Immutable API; first-class timezone and locale support; avoids the timezone pitfalls of `Date` |

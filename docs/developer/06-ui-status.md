@@ -72,7 +72,7 @@ Capabilities that live in each app (`templates/ui`, `templates/ui-hprt`) rather 
 | Capability | Technology | `ui` | `ui-hprt` | Notes |
 |------------|------------|------|-----------|-------|
 | Utility styling | Tailwind CSS v4 | ✅ | ✅ | `@tailwindcss/postcss` installed |
-| Component primitives | shadcn/ui | ✅ | ✅ | In `packages/ui-core/src/components/ui/` |
+| Component primitives | shadcn/ui (all 54) | ✅ | ✅ | Full shadcn registry in `packages/ui-core/src/components/ui/` |
 | Icons | lucide-react | ✅ | ✅ | Bundled with shadcn |
 | Dark mode | next-themes | ✅ | ✅ | `ThemeProvider` + `useTheme` exported from `ui-core` |
 | Date/time | Luxon | ✅ | ✅ | `formatTimestamp` exported from `ui-core` |
@@ -91,9 +91,9 @@ Capabilities that live in each app (`templates/ui`, `templates/ui-hprt`) rather 
 
 | Capability | Technology | `ui` | `ui-hprt` | Notes |
 |------------|------------|------|-----------|-------|
-| App shell | Custom + shadcn | 📦 | 📦 | Sidebar/topbar layout — not yet built |
+| App shell | shadcn Sidebar | ✅ | ✅ | `Sidebar*` components exported from `ui-core` |
 | Responsive layout | Tailwind | ✅ | ✅ | Covered by Tailwind |
-| Navigation components | shadcn | 📦 | 📦 | Not yet built |
+| Navigation components | shadcn NavigationMenu, Menubar, Breadcrumb | ✅ | ✅ | Exported from `ui-core` |
 
 ---
 
