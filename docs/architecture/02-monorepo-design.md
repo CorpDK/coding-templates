@@ -68,6 +68,27 @@ Turbo's `dev` task declares `dependsOn: ["^build"]`. This ensures shared package
 
 ---
 
+## TypeScript Configuration
+
+All tsconfig files extend from four shared base configs at the workspace root:
+
+```
+tsconfig.base.json     ← strict, esModuleInterop, skipLibCheck, sourceMap, declaration
+  ├─ tsconfig.node.json    ← ES2024, NodeNext (DS templates, libraries, engines)
+  └─ tsconfig.react.json   ← ES2024, bundler, JSX (shared UI packages)
+       └─ tsconfig.next.json   ← incremental, Next.js plugin (UI app templates)
+```
+
+| Base config | Target | Module | Used by |
+|-------------|--------|--------|---------|
+| `tsconfig.node.json` | ES2024 | NodeNext | `ds`, `ds-hprt`, `ds-cdb`, `ds-ddb`, `ds-file`, `ds-mongo`, `ds-sdk`, `pub-sub`, `codegen-cli`, `create-app` |
+| `tsconfig.react.json` | ES2024 | esnext/bundler | `ui-core`, `ui-auth`, `ui-charts`, `ui-forms`, `ui-datagrid`, `ui-feedback` |
+| `tsconfig.next.json` | ES2024 | esnext/bundler | `ui`, `ui-hprt`, `ui-showcase` |
+
+Per-package tsconfigs declare only local overrides (paths, custom includes). UI shared packages additionally have a `tsconfig.build.json` that extends their `tsconfig.json` with `noEmit: false`, `outDir: "dist"`, and `declarationMap: true`.
+
+---
+
 ## Versioning Strategy
 
 | Category | Scheme | Example | Reason |

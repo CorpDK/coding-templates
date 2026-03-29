@@ -79,6 +79,7 @@ coding-templates/
 - **GraphQL SDL in `src/schema/`** — DS packages define the schema as multiple `.graphqls` files in `src/schema/` (not inline in TypeScript). `base.graphqls` declares empty root types; feature files use `extend type` to add fields. Loaded at runtime by scanning the directory with `readdirSync`. Codegen uses `./src/schema/**/*.graphqls`. The directory is copied to `dist/` as part of the build script (`cp -r src/schema dist/`).
 - **Plugin-style pub/sub via `@corpdk/pub-sub`** — all DS packages use `createAppPubSub<T>()` from the shared library to wire up memory or Redis event targets. Topics (`PubSubTopics`) are defined locally in each package's `src/pubsub/index.ts`.
 - **Publishing: npmjs vs Artifactory** — engines, libraries, and `packages/*` (including `eslint-config`) publish to **npmjs** (public, `"access": "public"`). Templates publish to a **private Artifactory** registry. Only the workspace root stays `"private": true`. See [docs/architecture/02-monorepo-design.md](docs/architecture/02-monorepo-design.md) for the full publishing strategy.
+- **Shared tsconfig hierarchy** — four base configs at the workspace root (`tsconfig.base.json` → `tsconfig.node.json`, `tsconfig.react.json` → `tsconfig.next.json`). All packages target **ES2024**. Per-package tsconfigs declare only local overrides.
 
 ## Coding Standards
 

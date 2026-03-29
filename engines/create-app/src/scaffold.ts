@@ -24,6 +24,10 @@ import {
 
 const ROOT_FILES_TO_COPY = [
   "turbo.json",
+  "tsconfig.base.json",
+  "tsconfig.node.json",
+  "tsconfig.react.json",
+  "tsconfig.next.json",
   ".prettierrc",
   ".prettierignore",
   ".editorconfig",
