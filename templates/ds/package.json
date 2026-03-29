@@ -20,7 +20,7 @@
     "@graphql-yoga/redis-event-target": "^3.0.0",
     "@prisma/client": "^7.6.0",
     "graphql": "^16.13.2",
-    "zod": "^3.24.2",
+    "zod": "^4.3.6",
     "graphql-ws": "^6.0.8",
     "graphql-yoga": "^5.18.1",
     "ioredis": "^5.10.1",
@@ -36,6 +36,6 @@
     "@types/ws": "^8.18.1",
     "prisma": "^7.6.0",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
+    "typescript": "^6.0.2"
   }
 }

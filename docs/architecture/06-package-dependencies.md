@@ -21,7 +21,7 @@ All workspace packages using the same dependency **must** use the same version r
 | Package | Version | Purpose |
 |---------|---------|---------|
 | turbo | ^2.8.21 | Monorepo task orchestration |
-| typescript | ^5.9.3 | Type checking (inherited by all packages) |
+| typescript | ^6.0.2 | Type checking (inherited by all packages) |
 
 ---
 
@@ -53,7 +53,7 @@ Dependencies used across multiple workspace packages.
 
 | Package | Version | Used by |
 |---------|---------|---------|
-| zod | ^3.24.2 | ds, ds-hprt, ds-cdb, ds-mongo, ds-ddb, ds-file, ui-forms |
+| zod | ^4.3.6 | ds, ds-hprt, ds-cdb, ds-mongo, ds-ddb, ds-file, ui-forms |
 
 ### Infrastructure
 
@@ -127,7 +127,7 @@ Dependencies used across multiple workspace packages.
 |---------|---------|------|
 | @hookform/resolvers | ^5.2.2 | runtime |
 | react-hook-form | ^7.72.0 | runtime |
-| zod | ^3.24.2 | runtime |
+| zod | ^4.3.6 | runtime |
 
 ### ui-datagrid (@corpdk/ui-datagrid)
 
@@ -177,7 +177,7 @@ Common dev dependencies used across most workspace packages.
 
 | Package | Version | Scope |
 |---------|---------|-------|
-| typescript | ^5.9.3 | All packages |
+| typescript | ^6.0.2 | All packages |
 | eslint | ^9.39.4 | All UI packages + templates |
 | eslint-config-next | 16.2.1 | All UI packages + templates |
 | @corpdk/eslint-config | workspace:* | All UI packages + templates |
@@ -217,9 +217,7 @@ Tracked here until applied. Remove entries as they are completed.
 
 | Package | Current | Latest | Risk | Phase |
 |---------|---------|--------|------|-------|
-| zod | ^3.24.2 | 4.x | High | 7 |
-| eslint | ^9.39.4 | 10.x | High | 8 |
-| typescript | ^5.9.3 | 6.x | Highest | 9 |
+| eslint | ^9.39.4 | 10.x | Blocked | 8 — blocked by eslint-plugin-react (via eslint-config-next) incompatibility |
 
 ---
 
@@ -255,3 +253,5 @@ Tracked here until applied. Remove entries as they are completed.
 | 2026-03-29 | mongodb | ^6.16.0 | ^7.1.1 | Major bump; no source changes needed (async/await API unchanged) |
 | 2026-03-29 | @clack/prompts | ^0.9.1 | ^1.1.0 | Major bump (0.x→1.x); no source changes needed |
 | 2026-03-29 | @apollo/client | ^3.13.8 | ^4.1.6 | Major bump; ApolloProvider moved to @apollo/client/react; split() replaced by ApolloLink.split() |
+| 2026-03-29 | zod | ^3.24.2 | ^4.3.6 | Major bump; root export maintains v3 compat, no source changes needed |
+| 2026-03-29 | typescript | ^5.9.3 | ^6.0.2 | Major bump; added rootDir to ui-* tsconfig.build.json; ignoreDeprecations for tsup baseUrl |
