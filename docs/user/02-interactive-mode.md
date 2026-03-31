@@ -141,3 +141,9 @@ Runs `git init` and creates an initial commit. Defaults to **yes**.
 ## After the Prompts
 
 Once confirmed, the scaffold writes your project to the output directory. See [Post-Scaffold Setup](05-post-scaffold-setup.md) for next steps.
+
+---
+
+**Related**: [CLI Reference](03-cli-reference.md) | [Storage / UI Matrix](04-storage-ui-matrix.md) | [Post-Scaffold Setup](05-post-scaffold-setup.md)
+
+**Last updated**: March 31, 2026

@@ -109,3 +109,9 @@ See [GraphQL Schema](02-graphql-schema.md) for the full schema pattern documenta
 ## Deployment
 
 See [PubSub / Redis](../admin/03-pubsub-redis.md) for Redis connection string configuration and when to use Redis vs in-memory.
+
+---
+
+**Related**: [PubSub / Redis](../admin/03-pubsub-redis.md) | [GraphQL Schema](02-graphql-schema.md)
+
+**Last updated**: March 31, 2026

@@ -68,3 +68,9 @@ export const pubsub = createAppPubSub<PubSubTopics>();
 Resolvers publish events; subscription resolvers subscribe to topics. The transport is entirely transparent to the application code.
 
 See [PubSub Internals](../developer/04-pubsub-internals.md) for the full developer-facing documentation.
+
+---
+
+**Related**: [PubSub Internals](../developer/04-pubsub-internals.md) | [Environment Variables](01-environment-variables.md)
+
+**Last updated**: March 31, 2026

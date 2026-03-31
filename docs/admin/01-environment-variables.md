@@ -98,7 +98,6 @@ Each package reads from its own `.env` file. Copy `.env.example` to `.env` in ea
 
 ---
 
-## Related
+**Related**: [Docker Deployment](02-docker-deployment.md) | [PubSub / Redis](03-pubsub-redis.md)
 
-- [PubSub / Redis](03-pubsub-redis.md) — details on the `REDIS_URL` toggle
-- [Docker Deployment](02-docker-deployment.md) — passing env vars to containers
+**Last updated**: March 31, 2026

@@ -187,3 +187,9 @@ pnpm --filter './templates/**' publish --no-git-checks
 ```
 
 `--no-git-checks` is required in CI where the working tree may be detached or shallow. Omit it locally to enforce clean-tree publishing.
+
+---
+
+**Related**: [System Overview](01-system-overview.md) | [Package Dependencies](06-package-dependencies.md) | [Monorepo Overview](../developer/01-monorepo-overview.md)
+
+**Last updated**: March 31, 2026

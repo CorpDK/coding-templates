@@ -63,3 +63,9 @@ Auth.js v5 — BFF pattern (OAuth2/OIDC SSO). Configured via `ui-auth` scaffold.
 | **Error tracking** | Sentry | Production infra decision; DSN and org config needed |
 | **Performance monitoring** | TBD | HPRT-specific; may be Sentry Performance or a custom solution |
 | **File upload** | react-dropzone | Confirmed candidate; not yet required by any package |
+
+---
+
+**Related**: [UI Package Design](../architecture/04-ui-package-design.md) | [UI Status Dashboard](06-ui-status.md) | [Technology Decisions](../architecture/05-technology-decisions.md)
+
+**Last updated**: March 31, 2026

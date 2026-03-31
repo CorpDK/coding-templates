@@ -36,3 +36,9 @@ Not every DS variant is compatible with every UI variant. This table shows valid
 | `ds-mongo` | MongoDB Atlas / self-hosted | Native driver + Zod | Yes |
 | `ds-ddb` | DocumentDB (documentdb.io) | Native driver + Zod | Yes |
 | `ds-file` | JSON or YAML file on disk | fs/promises + Zod | Yes (in-memory pub/sub) |
+
+---
+
+**Related**: [Data Service Design](../architecture/03-data-service-design.md) | [Introduction](01-introduction.md) | [CLI Reference](03-cli-reference.md)
+
+**Last updated**: March 31, 2026

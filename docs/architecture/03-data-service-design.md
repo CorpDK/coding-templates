@@ -132,3 +132,9 @@ The preset lives in `libraries/codegen-cli/` and is compiled with `tsup`. The `c
 ### Scaffolded binary name
 
 After scaffolding, the binary name is renamed from `ds-cli` to the project name. For a project named `my-app` the installed binary is `my-app`, not `my-app-cli`.
+
+---
+
+**Related**: [Repository Pattern](../developer/03-repository-pattern.md) | [System Overview](01-system-overview.md) | [Storage / UI Matrix](../user/04-storage-ui-matrix.md)
+
+**Last updated**: March 31, 2026

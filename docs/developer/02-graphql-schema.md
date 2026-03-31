@@ -136,3 +136,9 @@ type Subscription {
 - [ ] GraphQL SDL is in `src/schema/*.graphqls`, not inline in TypeScript
 - [ ] Every mutation has a corresponding subscription
 - [ ] Subscription field name matches the publish payload key (see [PubSub Internals](04-pubsub-internals.md))
+
+---
+
+**Related**: [Repository Pattern](03-repository-pattern.md) | [PubSub Internals](04-pubsub-internals.md) | [Data Service Design](../architecture/03-data-service-design.md)
+
+**Last updated**: March 31, 2026

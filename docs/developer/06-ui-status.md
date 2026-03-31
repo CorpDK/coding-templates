@@ -193,3 +193,9 @@ Capabilities that live in each app (`templates/ui`, `templates/ui-hprt`) rather 
 | Unit testing | 🔲 TBD | Vitest (strong candidate), Jest | Vitest chosen in principle; adoption timing open | — |
 | E2E testing | 🔲 TBD | Playwright (strong candidate), Cypress | Playwright chosen in principle; adoption timing open | — |
 | Error tracking | 🔲 TBD | Sentry (strong candidate), Datadog, Rollbar | Production infra decision; DSN/org config needed | — |
+
+---
+
+**Related**: [UI Architecture](05-ui-architecture.md) | [Enhancement Backlog](09-enhancement-backlog.md) | [Technology Decisions](../architecture/05-technology-decisions.md)
+
+**Last updated**: March 31, 2026

@@ -121,3 +121,9 @@ Each package category has a different module system, driven by its runtime envir
 | Shared packages (`packages/ui-*`) | `ESNext` / `bundler` | Must omit `.js` | Consumed by Next.js bundler |
 
 The DS packages use `"type": "module"` because GraphQL Yoga v5 is pure ESM. Next.js manages its own module system for UI packages, so they don't require `"type": "module"` at the package level.
+
+---
+
+**Related**: [Monorepo Design](02-monorepo-design.md) | [Data Service Design](03-data-service-design.md) | [UI Package Design](04-ui-package-design.md)
+
+**Last updated**: March 31, 2026

@@ -61,3 +61,9 @@ Unresolved technology choices. Update this table when a decision is made.
 | Error tracking | Sentry | Production infra decision; DSN and org config needed | Pre-template |
 | Performance monitoring | TBD | HPRT-specific; may be Sentry Performance or custom | Pre-template |
 | File upload | react-dropzone | Confirmed candidate; not yet required by any package | Pre-template |
+
+---
+
+**Related**: [UI Package Design](04-ui-package-design.md) | [Package Dependencies](06-package-dependencies.md) | [UI Status Dashboard](../developer/06-ui-status.md)
+
+**Last updated**: March 31, 2026

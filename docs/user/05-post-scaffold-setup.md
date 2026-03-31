@@ -107,8 +107,6 @@ Man page: `man ./packages/ds-cli/src/generated/man/<projectName>.1`
 
 ---
 
-## Next Steps
+**Related**: [Environment Variables](../admin/01-environment-variables.md) | [Docker Deployment](../admin/02-docker-deployment.md) | [PubSub / Redis](../admin/03-pubsub-redis.md)
 
-- [Environment Variables](../admin/01-environment-variables.md) — full variable reference
-- [Docker Deployment](../admin/02-docker-deployment.md) — containerising your project
-- [PubSub / Redis](../admin/03-pubsub-redis.md) — enabling Redis for production subscriptions
+**Last updated**: March 31, 2026

@@ -123,3 +123,9 @@ orders: () => orderRepository.findAll(),
 3. **Input validation happens in resolvers**, not in repository methods — parse with Zod before calling `repository.create()`
 4. **Repository methods return the application type**, not raw ORM/driver types — map and validate with `ItemSchema.parse()` on the way out
 5. **One interface per entity** — `IItemRepository`, `IOrderRepository`, etc. — grouped in the same `repository.ts` file
+
+---
+
+**Related**: [GraphQL Schema](02-graphql-schema.md) | [Data Service Design](../architecture/03-data-service-design.md)
+
+**Last updated**: March 31, 2026

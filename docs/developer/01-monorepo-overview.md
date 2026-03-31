@@ -100,3 +100,9 @@ pnpm --filter @corpdk/ds dev        # start only ds
 pnpm --filter @corpdk/ui dev        # start only ui
 pnpm --filter @corpdk/ds codegen    # run codegen for ds
 ```
+
+---
+
+**Related**: [Monorepo Design](../architecture/02-monorepo-design.md) | [Post-Scaffold Setup](../user/05-post-scaffold-setup.md)
+
+**Last updated**: March 31, 2026

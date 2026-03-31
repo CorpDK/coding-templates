@@ -255,3 +255,9 @@ Tracked here until applied. Remove entries as they are completed.
 | 2026-03-29 | @apollo/client | ^3.13.8 | ^4.1.6 | Major bump; ApolloProvider moved to @apollo/client/react; split() replaced by ApolloLink.split() |
 | 2026-03-29 | zod | ^3.24.2 | ^4.3.6 | Major bump; root export maintains v3 compat, no source changes needed |
 | 2026-03-29 | typescript | ^5.9.3 | ^6.0.2 | Major bump; added rootDir to ui-* tsconfig.build.json; ignoreDeprecations for tsup baseUrl |
+
+---
+
+**Related**: [Monorepo Design](02-monorepo-design.md) | [Monorepo Overview](../developer/01-monorepo-overview.md)
+
+**Last updated**: March 31, 2026

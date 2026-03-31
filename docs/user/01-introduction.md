@@ -37,9 +37,6 @@ You can scaffold a **full-stack** project (UI + DS), a **DS only** backend, or a
 
 ---
 
-## Next Steps
+**Related**: [Interactive Mode](02-interactive-mode.md) | [CLI Reference](03-cli-reference.md) | [Post-Scaffold Setup](05-post-scaffold-setup.md)
 
-- [Interactive Mode](02-interactive-mode.md) — guided prompt walkthrough
-- [CLI Reference](03-cli-reference.md) — non-interactive flags for CI/scripting
-- [Storage / UI Matrix](04-storage-ui-matrix.md) — which DS and UI variants are compatible
-- [Post-Scaffold Setup](05-post-scaffold-setup.md) — env files, codegen, and running the project
+**Last updated**: March 31, 2026

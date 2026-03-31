@@ -76,7 +76,6 @@ pnpm create-app --name my-ui --scope myorg \
 
 ---
 
-## Related
+**Related**: [Storage / UI Matrix](04-storage-ui-matrix.md) | [Post-Scaffold Setup](05-post-scaffold-setup.md)
 
-- [Storage / UI Matrix](04-storage-ui-matrix.md) — which DS and UI variants are compatible
-- [Post-Scaffold Setup](05-post-scaffold-setup.md) — what to do once the scaffold is written
+**Last updated**: March 31, 2026

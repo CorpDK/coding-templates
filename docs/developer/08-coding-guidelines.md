@@ -362,3 +362,9 @@ Before committing, verify:
 - [React Best Practices](https://react.dev/learn/thinking-in-react)
 - [TypeScript Do's and Don'ts](https://www.typescriptlang.org/docs/handbook/declaration-files/do-s-and-don-ts.html)
 - [Clean Code JavaScript](https://github.com/ryanmcdermott/clean-code-javascript)
+
+---
+
+**Related**: [Git Conventions](07-git-conventions.md) | [GraphQL Schema](02-graphql-schema.md) | [Repository Pattern](03-repository-pattern.md)
+
+**Last updated**: March 31, 2026

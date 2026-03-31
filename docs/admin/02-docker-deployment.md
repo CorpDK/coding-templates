@@ -60,3 +60,9 @@ The template Dockerfiles are stored in `templates/docker/` and are copied into s
 |------|-------|
 | `Dockerfile.ui` | UI variant (copied to `packages/<ui>/Dockerfile`) |
 | `Dockerfile.ds` | DS variant (copied to `packages/<ds>/Dockerfile`) |
+
+---
+
+**Related**: [Environment Variables](01-environment-variables.md) | [Post-Scaffold Setup](../user/05-post-scaffold-setup.md)
+
+**Last updated**: March 31, 2026

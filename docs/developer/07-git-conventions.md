@@ -53,3 +53,9 @@ Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 ---
 
 For technology choice guidance (state management, GraphQL tooling), see [Technology Decisions](../architecture/05-technology-decisions.md).
+
+---
+
+**Related**: [Coding Guidelines](08-coding-guidelines.md) | [Contributing](../10-contributing.md)
+
+**Last updated**: March 31, 2026
