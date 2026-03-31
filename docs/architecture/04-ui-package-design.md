@@ -122,7 +122,7 @@ The `scaffold/` directory provides the BFF plumbing (`app/api/auth/[...nextauth]
 
 `templates/ui-showcase` is a pure Storybook 10 showcase (no Next.js application). Run with `pnpm storybook` from the workspace root.
 
-**Story organization:** Stories live in `templates/ui-showcase/src/stories/` grouped by source package (`core/`, `forms/`, `charts/`, `datagrid/`, `feedback/`, `auth/`). Each story file uses `tags: ['autodocs']` to auto-generate documentation from JSDoc comments on prop interfaces.
+**Story organization:** Stories live in `templates/ui-showcase/src/stories/` grouped by source package (`core/`, `forms/`, `charts/`, `datagrid/`, `feedback/`, `auth/`). The `core/` directory is further subdivided by component category: `data-display/`, `data-entry/`, `feedback/`, `layout/`, and `navigation/` — each containing one story file per shadcn/ui primitive. Each story file uses `tags: ['autodocs']` to auto-generate documentation from JSDoc comments on prop interfaces.
 
 **Framework:** `@storybook/nextjs-vite` — Vite-based for fast HMR; supports Next.js App Router, `next/font`, `next/image`, and RSC. Tailwind CSS v4 styling loads via `globals.css` import in `.storybook/preview.tsx`.
 
