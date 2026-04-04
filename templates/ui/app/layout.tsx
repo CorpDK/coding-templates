@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { Roboto, Roboto_Mono } from "next/font/google";
-import "./globals.css";
+import "./globals.scss";
 import { Providers } from "@/components/providers/ApolloProvider";
-import { ThemeProvider } from "@corpdk/ui-core";
+import { StyleProvider } from "@corpdk/ui-core";
 
 const robotoSans = Roboto({
   variable: "--font-roboto-sans",
@@ -31,9 +31,9 @@ export default function RootLayout({
       <body
         className={`${robotoSans.variable} ${robotoMono.variable} antialiased`}
       >
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <StyleProvider attribute="class" defaultTheme="system" enableSystem>
           <Providers>{children}</Providers>
-        </ThemeProvider>
+        </StyleProvider>
       </body>
     </html>
   );

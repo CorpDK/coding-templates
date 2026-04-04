@@ -1,0 +1,91 @@
+{
+  "$schema": "./brand-config.schema.json",
+  "name": "Vibrant Startup",
+  "description": "High-saturation purple/pink with large border radius and prominent shadows.",
+  "colors": {
+    "light": {
+      "background": "oklch(0.995 0.005 310)",
+      "foreground": "oklch(0.15 0.03 310)",
+      "card": "oklch(1 0 0)",
+      "cardForeground": "oklch(0.15 0.03 310)",
+      "popover": "oklch(1 0 0)",
+      "popoverForeground": "oklch(0.15 0.03 310)",
+      "primary": "oklch(0.55 0.25 310)",
+      "primaryForeground": "oklch(0.99 0 0)",
+      "secondary": "oklch(0.94 0.04 310)",
+      "secondaryForeground": "oklch(0.3 0.1 310)",
+      "muted": "oklch(0.96 0.015 310)",
+      "mutedForeground": "oklch(0.5 0.03 310)",
+      "accent": "oklch(0.85 0.12 340)",
+      "accentForeground": "oklch(0.25 0.08 340)",
+      "destructive": "oklch(0.577 0.245 27.325)",
+      "border": "oklch(0.92 0.02 310)",
+      "input": "oklch(0.92 0.02 310)",
+      "ring": "oklch(0.55 0.25 310)",
+      "overlay": "oklch(0.15 0.04 310 / 75%)",
+      "sidebar": "oklch(0.97 0.01 310)",
+      "sidebarForeground": "oklch(0.15 0.03 310)",
+      "sidebarBorder": "oklch(0.92 0.02 310)",
+      "sidebarAccent": "oklch(0.9 0.06 310)",
+      "sidebarAccentForeground": "oklch(0.3 0.1 310)",
+      "sidebarRing": "oklch(0.55 0.25 310)",
+      "chart1": "oklch(0.55 0.25 310)",
+      "chart2": "oklch(0.65 0.2 340)",
+      "chart3": "oklch(0.6 0.22 280)",
+      "chart4": "oklch(0.7 0.15 200)",
+      "chart5": "oklch(0.75 0.18 60)"
+    },
+    "dark": {
+      "background": "oklch(0.14 0.02 310)",
+      "foreground": "oklch(0.97 0.005 310)",
+      "card": "oklch(0.19 0.025 310)",
+      "cardForeground": "oklch(0.97 0.005 310)",
+      "popover": "oklch(0.19 0.025 310)",
+      "popoverForeground": "oklch(0.97 0.005 310)",
+      "primary": "oklch(0.7 0.22 310)",
+      "primaryForeground": "oklch(0.12 0.02 310)",
+      "secondary": "oklch(0.28 0.04 310)",
+      "secondaryForeground": "oklch(0.97 0.005 310)",
+      "muted": "oklch(0.27 0.025 310)",
+      "mutedForeground": "oklch(0.65 0.04 310)",
+      "accent": "oklch(0.35 0.08 340)",
+      "accentForeground": "oklch(0.92 0.04 340)",
+      "destructive": "oklch(0.704 0.191 22.216)",
+      "border": "oklch(1 0.01 310 / 12%)",
+      "input": "oklch(1 0.01 310 / 15%)",
+      "ring": "oklch(0.7 0.22 310)",
+      "overlay": "oklch(0.05 0.02 310 / 85%)",
+      "sidebar": "oklch(0.16 0.025 310)",
+      "sidebarForeground": "oklch(0.97 0.005 310)",
+      "sidebarBorder": "oklch(1 0.01 310 / 12%)",
+      "sidebarAccent": "oklch(0.3 0.06 310)",
+      "sidebarAccentForeground": "oklch(0.97 0.005 310)",
+      "sidebarRing": "oklch(0.7 0.22 310)",
+      "chart1": "oklch(0.7 0.22 310)",
+      "chart2": "oklch(0.75 0.18 340)",
+      "chart3": "oklch(0.65 0.2 280)",
+      "chart4": "oklch(0.75 0.14 200)",
+      "chart5": "oklch(0.8 0.16 60)"
+    }
+  },
+  "shape": {
+    "radius": "1rem",
+    "borderWidth": "1px",
+    "shadow": {
+      "sm": "0 1px 3px oklch(0.3 0.05 310 / 10%)",
+      "md": "0 4px 8px oklch(0.3 0.05 310 / 14%)",
+      "lg": "0 12px 20px oklch(0.3 0.05 310 / 18%)"
+    }
+  },
+  "typography": {
+    "fontWeightNormal": "400",
+    "fontWeightMedium": "500",
+    "fontWeightBold": "700",
+    "letterSpacing": "0.01em",
+    "lineHeight": "1.6"
+  },
+  "motion": {
+    "transitionDuration": "200ms",
+    "transitionTimingFn": "cubic-bezier(0.34, 1.56, 0.64, 1)"
+  }
+}

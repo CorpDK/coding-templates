@@ -1,0 +1,91 @@
+{
+  "$schema": "./brand-config.schema.json",
+  "name": "Sharp Enterprise",
+  "description": "Zero border radius, thick borders, no shadows. For brands that reject rounded aesthetics.",
+  "colors": {
+    "light": {
+      "background": "oklch(0.995 0 0)",
+      "foreground": "oklch(0.13 0 0)",
+      "card": "oklch(1 0 0)",
+      "cardForeground": "oklch(0.13 0 0)",
+      "popover": "oklch(1 0 0)",
+      "popoverForeground": "oklch(0.13 0 0)",
+      "primary": "oklch(0.35 0.15 160)",
+      "primaryForeground": "oklch(0.99 0 0)",
+      "secondary": "oklch(0.94 0 0)",
+      "secondaryForeground": "oklch(0.2 0 0)",
+      "muted": "oklch(0.96 0 0)",
+      "mutedForeground": "oklch(0.48 0 0)",
+      "accent": "oklch(0.93 0.01 160)",
+      "accentForeground": "oklch(0.2 0.04 160)",
+      "destructive": "oklch(0.52 0.24 27)",
+      "border": "oklch(0.78 0 0)",
+      "input": "oklch(0.82 0 0)",
+      "ring": "oklch(0.35 0.15 160)",
+      "overlay": "oklch(0 0 0 / 85%)",
+      "sidebar": "oklch(0.96 0 0)",
+      "sidebarForeground": "oklch(0.13 0 0)",
+      "sidebarBorder": "oklch(0.78 0 0)",
+      "sidebarAccent": "oklch(0.93 0.01 160)",
+      "sidebarAccentForeground": "oklch(0.2 0.04 160)",
+      "sidebarRing": "oklch(0.35 0.15 160)",
+      "chart1": "oklch(0.35 0.15 160)",
+      "chart2": "oklch(0.5 0.1 220)",
+      "chart3": "oklch(0.6 0.08 40)",
+      "chart4": "oklch(0.45 0.12 280)",
+      "chart5": "oklch(0.55 0.14 120)"
+    },
+    "dark": {
+      "background": "oklch(0.12 0 0)",
+      "foreground": "oklch(0.95 0 0)",
+      "card": "oklch(0.16 0 0)",
+      "cardForeground": "oklch(0.95 0 0)",
+      "popover": "oklch(0.16 0 0)",
+      "popoverForeground": "oklch(0.95 0 0)",
+      "primary": "oklch(0.65 0.15 160)",
+      "primaryForeground": "oklch(0.1 0 0)",
+      "secondary": "oklch(0.25 0 0)",
+      "secondaryForeground": "oklch(0.95 0 0)",
+      "muted": "oklch(0.25 0 0)",
+      "mutedForeground": "oklch(0.65 0 0)",
+      "accent": "oklch(0.28 0.03 160)",
+      "accentForeground": "oklch(0.9 0.02 160)",
+      "destructive": "oklch(0.7 0.19 22)",
+      "border": "oklch(0.38 0 0)",
+      "input": "oklch(0.35 0 0)",
+      "ring": "oklch(0.65 0.15 160)",
+      "overlay": "oklch(0 0 0 / 90%)",
+      "sidebar": "oklch(0.14 0 0)",
+      "sidebarForeground": "oklch(0.95 0 0)",
+      "sidebarBorder": "oklch(0.38 0 0)",
+      "sidebarAccent": "oklch(0.28 0.03 160)",
+      "sidebarAccentForeground": "oklch(0.9 0.02 160)",
+      "sidebarRing": "oklch(0.65 0.15 160)",
+      "chart1": "oklch(0.65 0.15 160)",
+      "chart2": "oklch(0.7 0.1 220)",
+      "chart3": "oklch(0.75 0.1 40)",
+      "chart4": "oklch(0.6 0.12 280)",
+      "chart5": "oklch(0.7 0.14 120)"
+    }
+  },
+  "shape": {
+    "radius": "0",
+    "borderWidth": "2px",
+    "shadow": {
+      "sm": "none",
+      "md": "none",
+      "lg": "none"
+    }
+  },
+  "typography": {
+    "fontWeightNormal": "400",
+    "fontWeightMedium": "600",
+    "fontWeightBold": "800",
+    "letterSpacing": "-0.01em",
+    "lineHeight": "1.4"
+  },
+  "motion": {
+    "transitionDuration": "100ms",
+    "transitionTimingFn": "ease-in-out"
+  }
+}

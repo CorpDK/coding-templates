@@ -5,6 +5,20 @@ export { fuzzyMatch } from './lib/search';
 export { APP_NAME, PAGINATION } from './lib/constants';
 export { TOKENS } from './lib/tokens';
 export type { TokenKey, TokenValue } from './lib/tokens';
+export { createBrandConfig, colorKeyToCssVar, DEFAULT_BRAND } from './lib/brand';
+export type {
+  BrandConfig,
+  BrandColorTokens,
+  BrandShape,
+  BrandTypography,
+  BrandMotion,
+} from './lib/brand';
+
+// brand presets
+export { default as defaultNeutralBrand } from './brands/default-neutral.json';
+export { default as corporateBlueBrand } from './brands/corporate-blue.json';
+export { default as sharpEnterpriseBrand } from './brands/sharp-enterprise.json';
+export { default as vibrantStartupBrand } from './brands/vibrant-startup.json';
 
 // types
 export type { AsyncStateProps, IdentifiableItem, FilterOption } from './types/index';
@@ -14,13 +28,8 @@ export { useIsMobile } from './hooks/use-mobile';
 export { useToast, toast } from './hooks/use-toast';
 
 // components
-export { default as ComponentShowcase } from './components/ComponentShowcase';
-export { default as LoadingState } from './components/LoadingState';
-export { default as ErrorState } from './components/ErrorState';
-export { default as EmptyState } from './components/EmptyState';
-export { default as SearchInput } from './components/SearchInput';
-export { default as FilterButton } from './components/FilterButton';
-export { ThemeProvider, useTheme } from './components/ThemeProvider';
+export { StyleProvider, useTheme } from './components/StyleProvider';
+export type { StyleProviderProps } from './components/StyleProvider';
 
 // shadcn ui primitives
 export {

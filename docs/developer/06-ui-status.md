@@ -78,9 +78,12 @@ Capabilities that live in each app (`templates/ui`, `templates/ui-hprt`) rather 
 | Date/time | Luxon | ✅ | ✅ | `formatTimestamp` exported from `ui-core` |
 | Client state | Zustand | ✅ | ✅ | Available in `ui-core` |
 | Fine-grained state | Jotai | ⚠️ | ⚠️ | Complex UI only |
-| Design tokens | CSS variables | ✅ | ✅ | Defined per-app in `globals.css` via `@theme` |
+| Design tokens | CSS variables | ✅ | ✅ | Defined per-app in `globals.scss` via `@theme` |
 | Token constants | `TOKENS` object in `ui-core` | ✅ | ✅ | CSS var names as typed constants; use with D3 or inline styles |
 | Theme system | CSS vars + Tailwind | ✅ | ✅ | Multi-tenant ready |
+| SCSS stylesheets | Sass | ✅ | ✅ | `globals.css` → `globals.scss`; `sass` devDep in all UI templates |
+| Brand theming | BrandProvider + Brand JSON | ✅ | ✅ | JSON-driven brand config; 4 presets; Storybook brand switcher. See [10-brand-theming.md](10-brand-theming.md) |
+| Brand JSON Schema | JSON Schema (draft-07) | ✅ | ✅ | `brand-config.schema.json` for editor validation + autocomplete |
 | Tree-shaking | `"sideEffects": false` | ✅ | ✅ | All 6 shared packages; bundlers drop unused exports |
 | Shared ESLint config | `@corpdk/eslint-config` | ✅ | ✅ | `packages/eslint-config`; all packages + templates use it |
 | Component demo | `ComponentShowcase` in `ui-core` | ✅ | ✅ | Canonical interactive demo; replaces per-app `PrimitivesDemo` |
@@ -189,6 +192,8 @@ Capabilities that live in each app (`templates/ui`, `templates/ui-hprt`) rather 
 | Charts | D3 | Recharts, Nivo, ECharts, Victory | Low-level control; `useD3` hook abstracts attach/cleanup; bundles only what's used | 2026-03 |
 | Auth | Auth.js v5 (BFF) | Clerk, custom JWT | OIDC/OAuth2 SSO; BFF keeps tokens server-side; Next.js-native | 2026-03 |
 | Component stories | Storybook 10 (`@storybook/nextjs-vite`) | Ladle, Styleguidist, Docz | First-class Next.js + RSC support; Vite-based HMR; autodocs from JSDoc | 2026-03 |
+| Brand theming | BrandProvider + Brand JSON | Style Dictionary, Theme UI, vanilla-extract themes | JSON-driven; no build step; works with existing CSS vars + Tailwind pipeline; JSON Schema for validation | 2026-04 |
+| CSS preprocessor | Sass (SCSS) | PostCSS-only, Less, Stylus | Nesting, comments, partials; native support in Next.js + Vite; supplements Tailwind PostCSS | 2026-04 |
 | i18n | 🔲 TBD | next-intl, next-i18next, Lingui | Global apps only; can be deferred per-app | — |
 | Unit testing | 🔲 TBD | Vitest (strong candidate), Jest | Vitest chosen in principle; adoption timing open | — |
 | E2E testing | 🔲 TBD | Playwright (strong candidate), Cypress | Playwright chosen in principle; adoption timing open | — |
@@ -196,6 +201,6 @@ Capabilities that live in each app (`templates/ui`, `templates/ui-hprt`) rather 
 
 ---
 
-**Related**: [UI Architecture](05-ui-architecture.md) | [Enhancement Backlog](09-enhancement-backlog.md) | [Technology Decisions](../architecture/05-technology-decisions.md)
+**Related**: [UI Architecture](05-ui-architecture.md) | [Enhancement Backlog](09-enhancement-backlog.md) | [Brand Theming](10-brand-theming.md) | [Technology Decisions](../architecture/05-technology-decisions.md)
 
-**Last updated**: March 31, 2026
+**Last updated**: April 3, 2026

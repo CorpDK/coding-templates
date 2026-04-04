@@ -11,6 +11,7 @@
  * const color = getComputedStyle(el).getPropertyValue(TOKENS.primary);
  */
 export const TOKENS = {
+  // Core color tokens
   background: '--background',
   foreground: '--foreground',
   card: '--card',
@@ -29,7 +30,43 @@ export const TOKENS = {
   border: '--border',
   input: '--input',
   ring: '--ring',
+
+  // Sidebar
+  sidebar: '--sidebar',
+  sidebarForeground: '--sidebar-foreground',
+  sidebarBorder: '--sidebar-border',
+  sidebarAccent: '--sidebar-accent',
+  sidebarAccentForeground: '--sidebar-accent-foreground',
+  sidebarRing: '--sidebar-ring',
+
+  // Chart palette
+  chart1: '--chart-1',
+  chart2: '--chart-2',
+  chart3: '--chart-3',
+  chart4: '--chart-4',
+  chart5: '--chart-5',
+
+  // Overlay
+  overlay: '--overlay',
+
+  // Shape
   radius: '--radius',
+  shadowSm: '--shadow-sm',
+  shadowMd: '--shadow-md',
+  shadowLg: '--shadow-lg',
+
+  // Typography
+  fontSans: '--font-sans',
+  fontMono: '--font-mono',
+  fontWeightNormal: '--font-weight-normal',
+  fontWeightMedium: '--font-weight-medium',
+  fontWeightBold: '--font-weight-bold',
+  letterSpacing: '--tracking-normal',
+  lineHeight: '--leading-normal',
+
+  // Motion
+  transitionDuration: '--transition-duration',
+  transitionTimingFn: '--transition-timing-fn',
 } as const;
 
 export type TokenKey = keyof typeof TOKENS;
