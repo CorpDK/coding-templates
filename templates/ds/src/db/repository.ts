@@ -1,3 +1,4 @@
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../../generated/prisma/index.js";
 import { ItemSchema, type Item } from "./schemas.js";
 
@@ -15,7 +16,10 @@ export interface IItemRepository {
   create(item: Item): Promise<Item>;
 }
 
-const prisma = new PrismaClient();
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL,
+});
+const prisma = new PrismaClient({ adapter });
 
 /** Prisma implementation — delegates to the generated client. */
 export const itemRepository: IItemRepository = {

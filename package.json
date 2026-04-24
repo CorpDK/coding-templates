@@ -3,7 +3,7 @@
   "version": "2026.3.0-alpha.1",
   "private": true,
   "scripts": {
-    "dev": "turbo run dev",
+    "dev": "turbo run dev --concurrency=20",
     "build": "turbo run build",
     "start": "turbo run start",
     "lint": "turbo run lint",
