@@ -32,13 +32,13 @@
 
 ### File Naming Conventions
 
-| Type | Convention | Example |
-|------|-----------|---------|
-| Index files | `00-index.md` | `docs/00-index.md` |
-| Content docs | `NN-kebab-case.md` (01–08) | `01-quickstart.md` |
-| Future / roadmap | `09-*.md` | `09-enhancement-backlog.md` |
-| Contributing guide | `10-contributing.md` | `docs/10-contributing.md` |
-| Subdirectory overviews | `README.md` (capitalized) | `admin/README.md` |
+| Type                   | Convention                 | Example                     |
+| ---------------------- | -------------------------- | --------------------------- |
+| Index files            | `00-index.md`              | `docs/00-index.md`          |
+| Content docs           | `NN-kebab-case.md` (01–08) | `01-quickstart.md`          |
+| Future / roadmap       | `09-*.md`                  | `09-enhancement-backlog.md` |
+| Contributing guide     | `10-contributing.md`       | `docs/10-contributing.md`   |
+| Subdirectory overviews | `README.md` (capitalized)  | `admin/README.md`           |
 
 ### Code Quality
 

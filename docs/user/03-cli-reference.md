@@ -12,33 +12,33 @@ pnpm create-app --help   # show usage
 
 The scaffold type is inferred from the combination of flags you provide:
 
-| Scaffold type | Required flags |
-|---------------|----------------|
-| **Full-stack** | `--storage-type` + `--ui` |
-| **DS only** | `--storage-type` (no `--ui`) |
-| **UI only** | `--ui` + `--sdk` (no `--storage-type`) |
+| Scaffold type  | Required flags                         |
+| -------------- | -------------------------------------- |
+| **Full-stack** | `--storage-type` + `--ui`              |
+| **DS only**    | `--storage-type` (no `--ui`)           |
+| **UI only**    | `--ui` + `--sdk` (no `--storage-type`) |
 
 ---
 
 ## Flags
 
-| Flag | Short | Default | Description |
-|------|-------|---------|-------------|
-| `--name` | `-n` | **required** | Project name (lowercase, hyphens allowed) |
-| `--scope` | `-s` | **required** | Org scope without `@` (e.g. `myorg`) |
-| `--output` | `-o` | `./<name>` | Output directory |
-| `--storage-type` | — | _(none)_ | `relational \| document \| filebased` |
-| `--orm` | — | `prisma` | `prisma \| drizzle` _(relational only)_ |
-| `--db` | — | `postgresql` | `postgresql \| mysql \| sqlite \| cockroachdb` _(relational only)_ |
-| `--document-provider` | — | `couchbase` | `couchbase \| mongodb \| documentdb` _(document only)_ |
-| `--document-impl` | — | `standard` | `standard \| hprt` _(mongodb/documentdb only)_ |
-| `--ui` | — | _(none)_ | `standard \| hprt` |
-| `--sdk` | — | — | External SDK package _(required for UI only mode)_ |
-| `--ui-packages` | — | _(all)_ | Comma-separated optional UI packages: `ui-forms`, `ui-datagrid`, `ui-charts`, `ui-auth`. Use `""` to include none |
-| `--no-env` | — | — | Skip `.env` generation |
-| `--no-git` | — | — | Skip `git init` |
-| `--yes` | `-y` | — | Accept all defaults (still requires `--name` and `--scope`) |
-| `--help` | `-h` | — | Show usage |
+| Flag                  | Short | Default      | Description                                                                                                       |
+| --------------------- | ----- | ------------ | ----------------------------------------------------------------------------------------------------------------- |
+| `--name`              | `-n`  | **required** | Project name (lowercase, hyphens allowed)                                                                         |
+| `--scope`             | `-s`  | **required** | Org scope without `@` (e.g. `myorg`)                                                                              |
+| `--output`            | `-o`  | `./<name>`   | Output directory                                                                                                  |
+| `--storage-type`      | —     | _(none)_     | `relational \| document \| filebased`                                                                             |
+| `--orm`               | —     | `prisma`     | `prisma \| drizzle` _(relational only)_                                                                           |
+| `--db`                | —     | `postgresql` | `postgresql \| mysql \| sqlite \| cockroachdb` _(relational only)_                                                |
+| `--document-provider` | —     | `couchbase`  | `couchbase \| mongodb \| documentdb` _(document only)_                                                            |
+| `--document-impl`     | —     | `standard`   | `standard \| hprt` _(mongodb/documentdb only)_                                                                    |
+| `--ui`                | —     | _(none)_     | `standard \| hprt`                                                                                                |
+| `--sdk`               | —     | —            | External SDK package _(required for UI only mode)_                                                                |
+| `--ui-packages`       | —     | _(all)_      | Comma-separated optional UI packages: `ui-forms`, `ui-datagrid`, `ui-charts`, `ui-auth`. Use `""` to include none |
+| `--no-env`            | —     | —            | Skip `.env` generation                                                                                            |
+| `--no-git`            | —     | —            | Skip `git init`                                                                                                   |
+| `--yes`               | `-y`  | —            | Accept all defaults (still requires `--name` and `--scope`)                                                       |
+| `--help`              | `-h`  | —            | Show usage                                                                                                        |
 
 ---
 

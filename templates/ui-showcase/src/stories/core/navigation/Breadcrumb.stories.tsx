@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import {
   Breadcrumb,
   BreadcrumbEllipsis,
@@ -7,12 +7,12 @@ import {
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
-} from '@corpdk/ui-core';
+} from "@corpdk/ui-core";
 
 const meta: Meta<typeof Breadcrumb> = {
-  title: 'ui-core/Navigation/Breadcrumb',
+  title: "ui-core/Navigation/Breadcrumb",
   component: Breadcrumb,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;

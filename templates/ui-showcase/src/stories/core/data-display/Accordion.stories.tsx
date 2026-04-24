@@ -1,22 +1,22 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
-} from '@corpdk/ui-core';
+} from "@corpdk/ui-core";
 
 const meta: Meta<typeof Accordion> = {
-  title: 'ui-core/Data Display/Accordion',
+  title: "ui-core/Data Display/Accordion",
   component: Accordion,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: { type: 'single', collapsible: true },
+  args: { type: "single", collapsible: true },
   render: function Render(args) {
     return (
       <Accordion {...args} className="w-full max-w-md">
@@ -35,7 +35,8 @@ export const Default: Story = {
         <AccordionItem value="item-3">
           <AccordionTrigger>Is it animated?</AccordionTrigger>
           <AccordionContent>
-            Yes. It&apos;s animated by default, but you can disable it if you prefer.
+            Yes. It&apos;s animated by default, but you can disable it if you
+            prefer.
           </AccordionContent>
         </AccordionItem>
       </Accordion>
@@ -44,17 +45,25 @@ export const Default: Story = {
 };
 
 export const Multiple: Story = {
-  args: { type: 'multiple' },
+  args: { type: "multiple" },
   render: function Render(args) {
     return (
-      <Accordion {...args} defaultValue={['item-1', 'item-2']} className="w-full max-w-md">
+      <Accordion
+        {...args}
+        defaultValue={["item-1", "item-2"]}
+        className="w-full max-w-md"
+      >
         <AccordionItem value="item-1">
           <AccordionTrigger>First section</AccordionTrigger>
-          <AccordionContent>Multiple items can be open at once.</AccordionContent>
+          <AccordionContent>
+            Multiple items can be open at once.
+          </AccordionContent>
         </AccordionItem>
         <AccordionItem value="item-2">
           <AccordionTrigger>Second section</AccordionTrigger>
-          <AccordionContent>This section is also open by default.</AccordionContent>
+          <AccordionContent>
+            This section is also open by default.
+          </AccordionContent>
         </AccordionItem>
         <AccordionItem value="item-3">
           <AccordionTrigger>Third section</AccordionTrigger>

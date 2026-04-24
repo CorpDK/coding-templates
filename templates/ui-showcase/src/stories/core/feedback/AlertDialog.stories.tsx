@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -10,12 +10,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
   Button,
-} from '@corpdk/ui-core';
+} from "@corpdk/ui-core";
 
 const meta: Meta<typeof AlertDialog> = {
-  title: 'ui-core/Feedback/AlertDialog',
+  title: "ui-core/Feedback/AlertDialog",
   component: AlertDialog,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;
@@ -32,8 +32,8 @@ export const Default: Story = {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete your account
-              and remove your data from our servers.
+              This action cannot be undone. This will permanently delete your
+              account and remove your data from our servers.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

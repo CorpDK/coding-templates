@@ -21,13 +21,19 @@ function uiDirName(ui: UiChoice): string {
 
 /** Published packages that keep the @corpdk scope even in scaffolded output */
 const PUBLISHED_CORPDK_PACKAGES = new Set([
-  "ui-core", "ui-feedback", "ui-forms", "ui-datagrid", "ui-charts", "ui-auth", "pub-sub",
+  "ui-core",
+  "ui-feedback",
+  "ui-forms",
+  "ui-datagrid",
+  "ui-charts",
+  "ui-auth",
+  "pub-sub",
 ]);
 
 /** Replace @corpdk/ scope with the user's org scope, preserving published package names */
 export function transformScope(content: string, orgScope: string): string {
   return content.replace(/@corpdk\/([a-z][a-z0-9-]*)/g, (match, pkgName) =>
-    PUBLISHED_CORPDK_PACKAGES.has(pkgName) ? match : `@${orgScope}/${pkgName}`
+    PUBLISHED_CORPDK_PACKAGES.has(pkgName) ? match : `@${orgScope}/${pkgName}`,
   );
 }
 
@@ -35,11 +41,11 @@ export function transformScope(content: string, orgScope: string): string {
 export function transformRootPackageName(
   content: string,
   projectName: string,
-  orgScope: string
+  orgScope: string,
 ): string {
   return content.replace(
     /"name":\s*"@corpdk\/coding-templates"/,
-    `"name": "@${orgScope}/${projectName}"`
+    `"name": "@${orgScope}/${projectName}"`,
   );
 }
 
@@ -62,20 +68,21 @@ const PRISMA_DATABASE_URL: Record<DbChoice, string> = {
   sqlite: "file:./dev.db",
   cockroachdb: "postgresql://user:pass@localhost:26257/defaultdb",
   mongodb: "mongodb://user:pass@localhost:27017/dbname",
-  documentdb: "mongodb://user:pass@localhost:27017/dbname?tls=true&tlsCAFile=/path/to/ca.pem",
+  documentdb:
+    "mongodb://user:pass@localhost:27017/dbname?tls=true&tlsCAFile=/path/to/ca.pem",
 };
 
 export function transformPrismaSchema(content: string, db: DbChoice): string {
   return content.replace(
     /provider = "postgresql"/,
-    `provider = "${PRISMA_PROVIDER[db]}"`
+    `provider = "${PRISMA_PROVIDER[db]}"`,
   );
 }
 
 export function transformPrismaDotEnv(content: string, db: DbChoice): string {
   return content.replace(
     /DATABASE_URL=postgresql:\/\/.*$/m,
-    `DATABASE_URL=${PRISMA_DATABASE_URL[db]}`
+    `DATABASE_URL=${PRISMA_DATABASE_URL[db]}`,
   );
 }
 
@@ -90,7 +97,7 @@ const DRIZZLE_DIALECT: Record<DbChoice, DrizzleDialect> = {
   mysql: "mysql",
   sqlite: "sqlite",
   cockroachdb: "postgresql",
-  mongodb: "postgresql",    // should not happen for drizzle
+  mongodb: "postgresql", // should not happen for drizzle
   documentdb: "postgresql", // should not happen for drizzle
 };
 
@@ -99,7 +106,7 @@ const DRIZZLE_DATABASE_URL: Record<DbChoice, string> = {
   mysql: "mysql://user:pass@localhost:3306/dbname",
   sqlite: "file:./dev.db",
   cockroachdb: "postgresql://user:pass@localhost:26257/defaultdb",
-  mongodb: "postgresql://user:pass@localhost:5432/dbname",    // should not happen
+  mongodb: "postgresql://user:pass@localhost:5432/dbname", // should not happen
   documentdb: "postgresql://user:pass@localhost:5432/dbname", // should not happen
 };
 
@@ -147,7 +154,7 @@ const DRIZZLE_DRIVER_DEP: Record<DbChoice, string> = {
   mysql: "mysql2",
   sqlite: "better-sqlite3",
   cockroachdb: "pg",
-  mongodb: "pg",    // should not happen for drizzle
+  mongodb: "pg", // should not happen for drizzle
   documentdb: "pg", // should not happen for drizzle
 };
 
@@ -156,19 +163,22 @@ const DRIZZLE_DRIVER_TYPE_DEP: Record<DbChoice, string | null> = {
   mysql: null,
   sqlite: "@types/better-sqlite3",
   cockroachdb: "@types/pg",
-  mongodb: "@types/pg",    // should not happen for drizzle
+  mongodb: "@types/pg", // should not happen for drizzle
   documentdb: "@types/pg", // should not happen for drizzle
 };
 
 export function transformDrizzleConfig(content: string, db: DbChoice): string {
   const dialect = DRIZZLE_DIALECT[db];
-  let result = content.replace(/dialect: "postgresql"/, `dialect: "${dialect}"`);
+  let result = content.replace(
+    /dialect: "postgresql"/,
+    `dialect: "${dialect}"`,
+  );
 
   // For SQLite, dbCredentials uses a file path, not url
   if (db === "sqlite") {
     result = result.replace(
       /dbCredentials:\s*\{\s*url: process\.env\.DS_HPRT_DATABASE_URL!,\s*\}/,
-      `dbCredentials: {\n    url: process.env.DS_HPRT_DATABASE_URL!,\n  }`
+      `dbCredentials: {\n    url: process.env.DS_HPRT_DATABASE_URL!,\n  }`,
     );
   }
 
@@ -183,7 +193,7 @@ export function transformDrizzleSchema(content: string, db: DbChoice): string {
   // Replace import line
   result = result.replace(
     /import \{[^}]+\} from "drizzle-orm\/pg-core";/,
-    `import { ${map.importedNames.join(", ")} } from "${map.module}";`
+    `import { ${map.importedNames.join(", ")} } from "${map.module}";`,
   );
 
   // Replace pgTable with the correct table function
@@ -191,17 +201,23 @@ export function transformDrizzleSchema(content: string, db: DbChoice): string {
 
   // For MySQL: replace integer() with int(), boolean() → boolean() (keep), varchar → varchar
   if (db === "mysql") {
-    result = result.replace(/integer\(\)\.primaryKey\(\)\.generatedAlwaysAsIdentity\(\)/, "int().primaryKey().autoincrement()");
+    result = result.replace(
+      /integer\(\)\.primaryKey\(\)\.generatedAlwaysAsIdentity\(\)/,
+      "int().primaryKey().autoincrement()",
+    );
   }
 
   // For SQLite: replace integer().generatedAlwaysAsIdentity() with integer().primaryKey({ autoIncrement: true })
   if (db === "sqlite") {
     result = result.replace(
       /integer\(\)\.primaryKey\(\)\.generatedAlwaysAsIdentity\(\)/,
-      "integer().primaryKey({ autoIncrement: true })"
+      "integer().primaryKey({ autoIncrement: true })",
     );
     // SQLite text() for boolean
-    result = result.replace(/boolean\(\)\.default\(true\)/, "integer({ mode: 'boolean' }).default(1)");
+    result = result.replace(
+      /boolean\(\)\.default\(true\)/,
+      "integer({ mode: 'boolean' }).default(1)",
+    );
   }
 
   return result;
@@ -209,7 +225,7 @@ export function transformDrizzleSchema(content: string, db: DbChoice): string {
 
 export function transformDrizzlePackageJson(
   content: string,
-  db: DbChoice
+  db: DbChoice,
 ): string {
   const parsed = JSON.parse(content) as Record<string, unknown>;
   const deps = parsed["dependencies"] as Record<string, string>;
@@ -241,7 +257,7 @@ export function transformDrizzlePackageJson(
 export function transformDrizzleDotEnv(content: string, db: DbChoice): string {
   return content.replace(
     /DS_HPRT_DATABASE_URL=postgresql:\/\/.*$/m,
-    `DS_HPRT_DATABASE_URL=${DRIZZLE_DATABASE_URL[db]}`
+    `DS_HPRT_DATABASE_URL=${DRIZZLE_DATABASE_URL[db]}`,
   );
 }
 
@@ -255,7 +271,7 @@ export function transformDrizzleDotEnv(content: string, db: DbChoice): string {
 export function transformUiSdkImport(
   content: string,
   oldSdkPkg: string,
-  newSdkPkg: string
+  newSdkPkg: string,
 ): string {
   return content.replaceAll(oldSdkPkg, newSdkPkg);
 }
@@ -267,11 +283,11 @@ export function transformExternalSdk(
   content: string,
   oldSdkPkg: string,
   externalPkg: string,
-  externalVersion: string
+  externalVersion: string,
 ): string {
   return content.replace(
     new RegExp(String.raw`"${escapeRegex(oldSdkPkg)}":\s*"workspace:\*"`),
-    `"${externalPkg}": "${externalVersion}"`
+    `"${externalPkg}": "${externalVersion}"`,
   );
 }
 
@@ -287,7 +303,10 @@ function escapeRegex(str: string): string {
  * Rename the bin key and man page filename from "ds-cli" to the project name.
  * Applied to ds-cli/package.json after the standard scope transform.
  */
-export function transformCliPackage(content: string, projectName: string): string {
+export function transformCliPackage(
+  content: string,
+  projectName: string,
+): string {
   return content
     .replace(/"ds-cli"(\s*:)/g, `"${projectName}"$1`)
     .replace(/ds-cli\.1/g, `${projectName}.1`);
@@ -308,7 +327,11 @@ export interface TransformContext {
   projectName: string;
 }
 
-function applyPrismaTransforms(result: string, relPath: string, db: DbChoice): string {
+function applyPrismaTransforms(
+  result: string,
+  relPath: string,
+  db: DbChoice,
+): string {
   if (relPath.endsWith("schema.prisma")) {
     result = transformPrismaSchema(result, db);
   }
@@ -318,11 +341,18 @@ function applyPrismaTransforms(result: string, relPath: string, db: DbChoice): s
   return result;
 }
 
-function applyDrizzleTransforms(result: string, relPath: string, db: DbChoice): string {
+function applyDrizzleTransforms(
+  result: string,
+  relPath: string,
+  db: DbChoice,
+): string {
   if (relPath.endsWith("drizzle.config.ts")) {
     result = transformDrizzleConfig(result, db);
   }
-  if (relPath.endsWith("drizzle/schema.ts") || relPath.includes("drizzle" + "/" + "schema.ts")) {
+  if (
+    relPath.endsWith("drizzle/schema.ts") ||
+    relPath.includes("drizzle" + "/" + "schema.ts")
+  ) {
     result = transformDrizzleSchema(result, db);
   }
   if (relPath === ".env" || relPath === ".env.example") {
@@ -335,7 +365,7 @@ function applyDrizzleTransforms(result: string, relPath: string, db: DbChoice): 
 export function transformFileContent(
   content: string,
   relPath: string,
-  ctx: TransformContext
+  ctx: TransformContext,
 ): string {
   let result = content;
 
@@ -359,16 +389,23 @@ export function transformFileContent(
 
   // 5. External SDK (standalone UI-only)
   if (ctx.externalSdk) {
-    const renamedOldPkg = ctx.externalSdk.oldPkg.replace("@corpdk/", `@${ctx.orgScope}/`);
+    const renamedOldPkg = ctx.externalSdk.oldPkg.replace(
+      "@corpdk/",
+      `@${ctx.orgScope}/`,
+    );
     if (relPath === "package.json") {
       result = transformExternalSdk(
         result,
         renamedOldPkg,
         ctx.externalSdk.externalPkg,
-        ctx.externalSdk.version
+        ctx.externalSdk.version,
       );
     } else {
-      result = transformUiSdkImport(result, renamedOldPkg, ctx.externalSdk.externalPkg);
+      result = transformUiSdkImport(
+        result,
+        renamedOldPkg,
+        ctx.externalSdk.externalPkg,
+      );
     }
   }
 

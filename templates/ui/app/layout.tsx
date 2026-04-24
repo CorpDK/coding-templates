@@ -18,7 +18,8 @@ const robotoMono = Roboto_Mono({
 
 export const metadata: Metadata = {
   title: "Next.js Template",
-  description: "A generic Next.js starter template with App Router, TypeScript, and Tailwind CSS",
+  description:
+    "A generic Next.js starter template with App Router, TypeScript, and Tailwind CSS",
 };
 
 export default function RootLayout({

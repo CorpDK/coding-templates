@@ -1,10 +1,10 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { Avatar, AvatarFallback, AvatarImage } from '@corpdk/ui-core';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { Avatar, AvatarFallback, AvatarImage } from "@corpdk/ui-core";
 
 const meta: Meta<typeof Avatar> = {
-  title: 'ui-core/Data Display/Avatar',
+  title: "ui-core/Data Display/Avatar",
   component: Avatar,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;

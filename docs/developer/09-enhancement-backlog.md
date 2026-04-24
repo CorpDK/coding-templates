@@ -51,6 +51,7 @@ Replace offset pagination with connection-spec (Relay-style) cursor pagination a
 ### 5. Health Check Endpoint
 
 Add `GET /health` to each DS package returning:
+
 - HTTP 200 on healthy, 503 on degraded
 - JSON body: `{ status, uptime, db: { connected, latencyMs }, version }`
 

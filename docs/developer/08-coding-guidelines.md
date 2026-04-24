@@ -32,7 +32,7 @@ Coding standards and best practices for all packages in this repository.
 
 ### Directory Organization
 
-```
+```text
 ├── app/                     # Next.js App Router pages
 │   ├── layout.tsx           # Root layout
 │   └── page.tsx             # Main page (orchestration only)
@@ -237,7 +237,9 @@ export default function ItemView() {
 
 ```typescript
 // lib/utils.ts
-export function fuzzyMatch(query: string, target: string) { /* ... */ }
+export function fuzzyMatch(query: string, target: string) {
+  /* ... */
+}
 
 // In both components
 import { fuzzyMatch } from "@/lib/utils";
@@ -310,7 +312,7 @@ Use `useMemo` for expensive computations:
 ```typescript
 const sortedItems = useMemo(() => {
   return items
-    .filter(item => item.active)
+    .filter((item) => item.active)
     .sort((a, b) => a.label.localeCompare(b.label));
 }, [items]);
 ```

@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import {
   Field,
   FieldContent,
@@ -6,12 +6,12 @@ import {
   FieldError,
   FieldLabel,
   Input,
-} from '@corpdk/ui-core';
+} from "@corpdk/ui-core";
 
 const meta: Meta<typeof Field> = {
-  title: 'ui-core/Data Entry/Field',
+  title: "ui-core/Data Entry/Field",
   component: Field,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;

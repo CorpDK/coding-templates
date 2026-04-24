@@ -6,5 +6,11 @@
       "@/*": ["./scaffold/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "scaffold/**/*.ts", "scaffold/**/*.tsx", "scaffold/**/*.d.ts"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "scaffold/**/*.ts",
+    "scaffold/**/*.tsx",
+    "scaffold/**/*.d.ts"
+  ]
 }

@@ -8,6 +8,11 @@
       "outputs": ["../ds-sdk/src/generated/**", "../ds-cli/src/generated/**"],
       "cache": true
     },
+    "db:generate": {
+      "inputs": ["prisma/schema.prisma"],
+      "outputs": ["generated/prisma/**"],
+      "cache": true
+    },
     "build": {
       "dependsOn": ["^build"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]

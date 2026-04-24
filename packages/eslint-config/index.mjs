@@ -6,8 +6,8 @@
  *   import libraryConfig from '@corpdk/eslint-config';
  *   export default libraryConfig;
  */
-import { defineConfig } from 'eslint/config';
-import nextTs from 'eslint-config-next/typescript';
+import { defineConfig } from "eslint/config";
+import nextTs from "eslint-config-next/typescript";
 
 const libraryConfig = defineConfig([...nextTs]);
 

@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import {
   Sheet,
   SheetContent,
@@ -7,12 +7,12 @@ import {
   SheetTitle,
   SheetTrigger,
   Button,
-} from '@corpdk/ui-core';
+} from "@corpdk/ui-core";
 
 const meta: Meta<typeof Sheet> = {
-  title: 'ui-core/Layout/Sheet',
+  title: "ui-core/Layout/Sheet",
   component: Sheet,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;

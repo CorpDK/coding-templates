@@ -1,11 +1,11 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { Switch, Label } from '@corpdk/ui-core';
-import { useState } from 'react';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { Switch, Label } from "@corpdk/ui-core";
+import { useState } from "react";
 
 const meta: Meta<typeof Switch> = {
-  title: 'ui-core/Data Entry/Switch',
+  title: "ui-core/Data Entry/Switch",
   component: Switch,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;

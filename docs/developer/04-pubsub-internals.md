@@ -11,6 +11,7 @@ import { createAppPubSub } from "@corpdk/pub-sub";
 ```
 
 `createAppPubSub<T>()` automatically selects:
+
 - **Redis** (`@graphql-yoga/redis-event-target`) when `REDIS_URL` is set
 - **In-memory** (`EventTarget`) otherwise
 
@@ -92,12 +93,16 @@ This is a hard requirement. Every mutation must publish a PubSub event, and ever
 
 ```graphql
 type Mutation {
-  """Creates an item. Publishes itemCreated."""
+  """
+  Creates an item. Publishes itemCreated.
+  """
   createItem(name: String!): Item!
 }
 
 type Subscription {
-  """Fires when an item is created via createItem."""
+  """
+  Fires when an item is created via createItem.
+  """
   itemCreated: Item!
 }
 ```

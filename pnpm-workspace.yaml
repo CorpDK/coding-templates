@@ -9,7 +9,8 @@ ignoredBuiltDependencies:
   - unrs-resolver
 
 onlyBuiltDependencies:
-  - '@prisma/engines'
+  - "@parcel/watcher"
+  - "@prisma/engines"
   - couchbase
   - esbuild
   - msw

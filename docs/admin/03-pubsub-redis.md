@@ -6,10 +6,10 @@ All DS packages use a plugin-style pub/sub layer from `@corpdk/pub-sub`. The tra
 
 ## Transport Selection
 
-| `REDIS_URL` set? | Transport |
-|------------------|-----------|
-| No | In-memory (`EventTarget`) — single process only |
-| Yes | Redis / Valkey — works across multiple DS instances |
+| `REDIS_URL` set? | Transport                                           |
+| ---------------- | --------------------------------------------------- |
+| No               | In-memory (`EventTarget`) — single process only     |
+| Yes              | Redis / Valkey — works across multiple DS instances |
 
 No code changes are required to switch transports. Set or unset `REDIS_URL` in the package's `.env`.
 
@@ -41,12 +41,12 @@ The connection string format is the same for both Redis and Valkey.
 
 ## When to Use Redis
 
-| Scenario | Recommendation |
-|----------|----------------|
-| Single DS instance, development | In-memory (no `REDIS_URL`) |
-| Production with a single DS instance | Either works; Redis gives durability |
+| Scenario                                   | Recommendation                                                        |
+| ------------------------------------------ | --------------------------------------------------------------------- |
+| Single DS instance, development            | In-memory (no `REDIS_URL`)                                            |
+| Production with a single DS instance       | Either works; Redis gives durability                                  |
 | Multiple DS instances / horizontal scaling | **Redis required** — in-memory pub/sub is not shared across processes |
-| Serverless / edge DS deployment | Redis required |
+| Serverless / edge DS deployment            | Redis required                                                        |
 
 ---
 

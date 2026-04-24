@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import {
   Sidebar,
   SidebarContent,
@@ -13,20 +13,20 @@ import {
   SidebarProvider,
   SidebarTrigger,
   SidebarInset,
-} from '@corpdk/ui-core';
+} from "@corpdk/ui-core";
 
 const items = [
-  { title: 'Home', url: '#' },
-  { title: 'Inbox', url: '#' },
-  { title: 'Calendar', url: '#' },
-  { title: 'Search', url: '#' },
-  { title: 'Settings', url: '#' },
+  { title: "Home", url: "#" },
+  { title: "Inbox", url: "#" },
+  { title: "Calendar", url: "#" },
+  { title: "Search", url: "#" },
+  { title: "Settings", url: "#" },
 ];
 
 const meta: Meta<typeof Sidebar> = {
-  title: 'ui-core/Layout/Sidebar',
+  title: "ui-core/Layout/Sidebar",
   component: Sidebar,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
   decorators: [
     (Story) => (
       <div className="h-[500px] w-full">

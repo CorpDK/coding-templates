@@ -1,12 +1,12 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { Button } from '@corpdk/ui-core';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { Button } from "@corpdk/ui-core";
 
 const meta: Meta<typeof Button> = {
-  title: 'ui-core/Data Entry/Button',
+  title: "ui-core/Data Entry/Button",
   component: Button,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
   args: {
-    children: 'Button',
+    children: "Button",
   },
 };
 
@@ -16,38 +16,51 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const Secondary: Story = {
-  args: { variant: 'secondary' },
+  args: { variant: "secondary" },
 };
 
 export const Destructive: Story = {
-  args: { variant: 'destructive' },
+  args: { variant: "destructive" },
 };
 
 export const Outline: Story = {
-  args: { variant: 'outline' },
+  args: { variant: "outline" },
 };
 
 export const Ghost: Story = {
-  args: { variant: 'ghost' },
+  args: { variant: "ghost" },
 };
 
 export const Link: Story = {
-  args: { variant: 'link' },
+  args: { variant: "link" },
 };
 
 export const Small: Story = {
-  args: { size: 'sm' },
+  args: { size: "sm" },
 };
 
 export const Large: Story = {
-  args: { size: 'lg' },
+  args: { size: "lg" },
 };
 
 export const Icon: Story = {
   args: {
-    size: 'icon',
+    size: "icon",
     children: (
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14"/><path d="M12 5v14"/></svg>
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M5 12h14" />
+        <path d="M12 5v14" />
+      </svg>
     ),
   },
 };

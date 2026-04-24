@@ -1,6 +1,6 @@
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm, type UseFormProps } from 'react-hook-form';
-import { type z } from 'zod';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm, type UseFormProps } from "react-hook-form";
+import { type z } from "zod";
 
 /**
  * Creates a React Hook Form instance pre-wired with a Zod schema resolver.
@@ -11,7 +11,7 @@ import { type z } from 'zod';
  */
 export function useZodForm<TSchema extends z.ZodType<object>>(
   schema: TSchema,
-  options?: Omit<UseFormProps<z.infer<TSchema>>, 'resolver'>
+  options?: Omit<UseFormProps<z.infer<TSchema>>, "resolver">,
 ) {
   return useForm<z.infer<TSchema>>({
     ...options,

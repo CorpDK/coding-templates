@@ -6,7 +6,7 @@
 
 Follow the [Conventional Commits](https://www.conventionalcommits.org/) format:
 
-```
+```text
 <type>[(<component>)]: <description>
 
 [optional body]
@@ -18,19 +18,19 @@ The `(<component>)` section is optional.
 
 ### Types
 
-| Type | Use for |
-|------|---------|
-| `feat:` | New feature |
-| `fix:` | Bug fix |
+| Type        | Use for                                       |
+| ----------- | --------------------------------------------- |
+| `feat:`     | New feature                                   |
+| `fix:`      | Bug fix                                       |
 | `refactor:` | Code restructuring without changing behaviour |
-| `docs:` | Documentation changes |
-| `style:` | Code style changes (formatting, etc.) |
-| `test:` | Adding or updating tests |
-| `chore:` | Maintenance tasks |
+| `docs:`     | Documentation changes                         |
+| `style:`    | Code style changes (formatting, etc.)         |
+| `test:`     | Adding or updating tests                      |
+| `chore:`    | Maintenance tasks                             |
 
 ### Examples
 
-```
+```text
 refactor: Extract header components into reusable modules
 
 - Created SystemInfo component for metadata display
@@ -40,7 +40,7 @@ refactor: Extract header components into reusable modules
 Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
 ```
 
-```
+```text
 refactor(ui): Extract header components into reusable modules
 
 - Created SystemInfo component for metadata display

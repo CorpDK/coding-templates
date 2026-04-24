@@ -1,7 +1,7 @@
-import type { StorybookConfig } from '@storybook/nextjs-vite';
+import type { StorybookConfig } from "@storybook/nextjs-vite";
 
-import { dirname } from 'path';
-import { fileURLToPath } from 'url';
+import { dirname } from "path";
+import { fileURLToPath } from "url";
 
 /**
  * This function is used to resolve the absolute path of a package.
@@ -12,14 +12,14 @@ function getAbsolutePath(value: string) {
 }
 
 const config: StorybookConfig = {
-  stories: ['../src/stories/**/*.stories.@(ts|tsx)'],
-  framework: getAbsolutePath('@storybook/nextjs-vite'),
+  stories: ["../src/stories/**/*.stories.@(ts|tsx)"],
+  framework: getAbsolutePath("@storybook/nextjs-vite"),
   addons: [
-    getAbsolutePath('@storybook/addon-docs'),
-    getAbsolutePath('@storybook/addon-a11y'),
-    getAbsolutePath('@storybook/addon-vitest'),
-    getAbsolutePath('@storybook/addon-themes'),
-    getAbsolutePath('@chromatic-com/storybook'),
+    getAbsolutePath("@storybook/addon-docs"),
+    getAbsolutePath("@storybook/addon-a11y"),
+    getAbsolutePath("@storybook/addon-vitest"),
+    getAbsolutePath("@storybook/addon-themes"),
+    getAbsolutePath("@chromatic-com/storybook"),
   ],
   features: {
     experimentalRSC: true,

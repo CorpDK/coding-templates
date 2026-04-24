@@ -6,14 +6,14 @@ System design, technology decisions, and architectural rationale for the coding-
 
 ## Contents
 
-| Document | Description |
-|----------|-------------|
-| [01-system-overview.md](01-system-overview.md) | Component topology, routing model, SDK pipeline |
-| [02-monorepo-design.md](02-monorepo-design.md) | Workspace layout, directory roles, CalVer versioning |
-| [03-data-service-design.md](03-data-service-design.md) | DS variant rationale, Repository Pattern, codegen strategy |
-| [04-ui-package-design.md](04-ui-package-design.md) | Six shared UI packages — scope, technology, and design decisions |
-| [05-technology-decisions.md](05-technology-decisions.md) | ADR table for UI layer, state management, and GraphQL tooling |
-| [06-package-dependencies.md](06-package-dependencies.md) | Version pinning policy, CalVer format, dependency upgrade log |
+| Document                                                 | Description                                                      |
+| -------------------------------------------------------- | ---------------------------------------------------------------- |
+| [01-system-overview.md](01-system-overview.md)           | Component topology, routing model, SDK pipeline                  |
+| [02-monorepo-design.md](02-monorepo-design.md)           | Workspace layout, directory roles, CalVer versioning             |
+| [03-data-service-design.md](03-data-service-design.md)   | DS variant rationale, Repository Pattern, codegen strategy       |
+| [04-ui-package-design.md](04-ui-package-design.md)       | Six shared UI packages — scope, technology, and design decisions |
+| [05-technology-decisions.md](05-technology-decisions.md) | ADR table for UI layer, state management, and GraphQL tooling    |
+| [06-package-dependencies.md](06-package-dependencies.md) | Version pinning policy, CalVer format, dependency upgrade log    |
 
 ---
 

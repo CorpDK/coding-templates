@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import {
   Select,
   SelectContent,
@@ -7,12 +7,12 @@ import {
   SelectLabel,
   SelectTrigger,
   SelectValue,
-} from '@corpdk/ui-core';
+} from "@corpdk/ui-core";
 
 const meta: Meta<typeof Select> = {
-  title: 'ui-core/Data Entry/Select',
+  title: "ui-core/Data Entry/Select",
   component: Select,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;

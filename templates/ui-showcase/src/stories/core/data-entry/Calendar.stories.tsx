@@ -1,11 +1,11 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { Calendar } from '@corpdk/ui-core';
-import { useState } from 'react';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { Calendar } from "@corpdk/ui-core";
+import { useState } from "react";
 
 const meta: Meta<typeof Calendar> = {
-  title: 'ui-core/Data Entry/Calendar',
+  title: "ui-core/Data Entry/Calendar",
   component: Calendar,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;

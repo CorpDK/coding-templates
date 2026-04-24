@@ -241,7 +241,10 @@
         "fontMono": {
           "type": "string",
           "description": "Monospace font stack. Maps to --font-mono.",
-          "examples": ["\"JetBrains Mono\", monospace", "\"Fira Code\", monospace"]
+          "examples": [
+            "\"JetBrains Mono\", monospace",
+            "\"Fira Code\", monospace"
+          ]
         },
         "fontWeightNormal": {
           "type": "string",
@@ -290,7 +293,12 @@
           "type": "string",
           "description": "Default easing function. Maps to --transition-timing-fn.",
           "default": "cubic-bezier(0.4, 0, 0.2, 1)",
-          "examples": ["ease", "ease-in-out", "cubic-bezier(0.4, 0, 0.2, 1)", "linear"]
+          "examples": [
+            "ease",
+            "ease-in-out",
+            "cubic-bezier(0.4, 0, 0.2, 1)",
+            "linear"
+          ]
         }
       }
     }

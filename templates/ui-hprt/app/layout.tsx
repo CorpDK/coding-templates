@@ -18,7 +18,8 @@ const robotoMono = Roboto_Mono({
 
 export const metadata: Metadata = {
   title: "Next.js Template (HPRT)",
-  description: "A generic Next.js starter template with urql, Graphcache, and real-time subscriptions",
+  description:
+    "A generic Next.js starter template with urql, Graphcache, and real-time subscriptions",
 };
 
 export default function RootLayout({

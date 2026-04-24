@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import {
   Tabs,
   TabsContent,
@@ -9,12 +9,12 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@corpdk/ui-core';
+} from "@corpdk/ui-core";
 
 const meta: Meta<typeof Tabs> = {
-  title: 'ui-core/Navigation/Tabs',
+  title: "ui-core/Navigation/Tabs",
   component: Tabs,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;
@@ -37,7 +37,9 @@ export const Default: Story = {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">Account settings content.</p>
+              <p className="text-sm text-muted-foreground">
+                Account settings content.
+              </p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -45,12 +47,12 @@ export const Default: Story = {
           <Card>
             <CardHeader>
               <CardTitle>Password</CardTitle>
-              <CardDescription>
-                Change your password here.
-              </CardDescription>
+              <CardDescription>Change your password here.</CardDescription>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground">Password settings content.</p>
+              <p className="text-sm text-muted-foreground">
+                Password settings content.
+              </p>
             </CardContent>
           </Card>
         </TabsContent>

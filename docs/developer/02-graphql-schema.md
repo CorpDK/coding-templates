@@ -6,7 +6,7 @@
 
 The GraphQL schema lives in `src/schema/` — a directory of `.graphqls` files, not inline TypeScript. `schema.ts` scans the directory at runtime, sorts files alphabetically, and merges them into a single SDL string.
 
-```
+```text
 src/schema/
 ├── base.graphqls      ← declares empty root types: type Query / Mutation / Subscription
 ├── server.graphqls    ← server health types + extend type Query/Mutation/Subscription
@@ -20,24 +20,34 @@ src/schema/
 ## File Structure for a New Entity
 
 ```graphql
-"""An order."""
+"""
+An order.
+"""
 type Order {
-  """Unique identifier."""
+  """
+  Unique identifier.
+  """
   id: ID!
 }
 
 extend type Query {
-  """Returns all orders."""
+  """
+  Returns all orders.
+  """
   orders: [Order!]!
 }
 
 extend type Mutation {
-  """Creates a new order. Publishes orderCreated."""
+  """
+  Creates a new order. Publishes orderCreated.
+  """
   createOrder(itemId: ID!): Order!
 }
 
 extend type Subscription {
-  """Fires when an order is created via createOrder."""
+  """
+  Fires when an order is created via createOrder.
+  """
   orderCreated: Order!
 }
 ```
@@ -50,13 +60,13 @@ Every element of a GraphQL schema **must** have a `"""docstring"""`. This is a h
 
 ### Required Coverage
 
-| Element | Requirement |
-|---------|-------------|
-| Root types (`Query`, `Mutation`, `Subscription`) | One-line description of the operation category |
-| Object types | One-line description of what the type represents |
-| Every field | What the field returns and when it's useful |
-| Every argument | What the argument controls or filters |
-| Enum values | What each value means |
+| Element                                          | Requirement                                      |
+| ------------------------------------------------ | ------------------------------------------------ |
+| Root types (`Query`, `Mutation`, `Subscription`) | One-line description of the operation category   |
+| Object types                                     | One-line description of what the type represents |
+| Every field                                      | What the field returns and when it's useful      |
+| Every argument                                   | What the argument controls or filters            |
+| Enum values                                      | What each value means                            |
 
 ### Example
 
@@ -77,24 +87,38 @@ type ServerStatus {
 ✅ **Good** — fully documented:
 
 ```graphql
-"""Entry points for read-only data fetching."""
+"""
+Entry points for read-only data fetching.
+"""
 type Query {
-  """Returns a personalised greeting. Omit name to receive the default."""
+  """
+  Returns a personalised greeting. Omit name to receive the default.
+  """
   hello(
-    """Optional name to include in the greeting."""
+    """
+    Optional name to include in the greeting.
+    """
     name: String
   ): String!
 
-  """Returns the current server health status and a server-side timestamp."""
+  """
+  Returns the current server health status and a server-side timestamp.
+  """
   status: ServerStatus!
 }
 
-"""Current health state of the server."""
+"""
+Current health state of the server.
+"""
 type ServerStatus {
-  """True when the server is operating normally."""
+  """
+  True when the server is operating normally.
+  """
   ok: Boolean!
 
-  """ISO-8601 timestamp of when this status was generated."""
+  """
+  ISO-8601 timestamp of when this status was generated.
+  """
   timestamp: String!
 }
 ```
@@ -118,12 +142,16 @@ type ServerStatus {
 
 ```graphql
 type Mutation {
-  """Creates a new document record. Publishes documentCreated."""
+  """
+  Creates a new document record. Publishes documentCreated.
+  """
   createDocument(input: CreateDocumentInput!): Document!
 }
 
 type Subscription {
-  """Fires when a document is created via the createDocument mutation."""
+  """
+  Fires when a document is created via the createDocument mutation.
+  """
   documentCreated: Document!
 }
 ```

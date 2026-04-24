@@ -1,11 +1,11 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { Progress } from '@corpdk/ui-core';
-import { useEffect, useState } from 'react';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { Progress } from "@corpdk/ui-core";
+import { useEffect, useState } from "react";
 
 const meta: Meta<typeof Progress> = {
-  title: 'ui-core/Feedback/Progress',
+  title: "ui-core/Feedback/Progress",
   component: Progress,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
   decorators: [
     (Story) => (
       <div className="w-64">

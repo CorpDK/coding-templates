@@ -6,11 +6,11 @@ Deployment, configuration, and infrastructure guides for the coding-templates mo
 
 ## Contents
 
-| Document | Description |
-|----------|-------------|
-| [01-environment-variables.md](01-environment-variables.md) | Full env var reference for DS, UI, and auth packages |
-| [02-docker-deployment.md](02-docker-deployment.md) | Dockerfile usage, build commands, standalone output config |
-| [03-pubsub-redis.md](03-pubsub-redis.md) | Redis vs in-memory transport selection and configuration |
+| Document                                                   | Description                                                |
+| ---------------------------------------------------------- | ---------------------------------------------------------- |
+| [01-environment-variables.md](01-environment-variables.md) | Full env var reference for DS, UI, and auth packages       |
+| [02-docker-deployment.md](02-docker-deployment.md)         | Dockerfile usage, build commands, standalone output config |
+| [03-pubsub-redis.md](03-pubsub-redis.md)                   | Redis vs in-memory transport selection and configuration   |
 
 ---
 

@@ -38,7 +38,10 @@ export interface OperationDescriptor {
 // ---------------------------------------------------------------------------
 
 function toKebabCase(name: string): string {
-  return name.replace(/([A-Z])/g, "-$1").toLowerCase().replace(/^-/, "");
+  return name
+    .replace(/([A-Z])/g, "-$1")
+    .toLowerCase()
+    .replace(/^-/, "");
 }
 
 function toPascalCase(name: string): string {
@@ -95,7 +98,7 @@ function buildDocument(
   opType: "query" | "mutation" | "subscription",
   fieldName: string,
   args: ArgDescriptor[],
-  returnType: GraphQLOutputType
+  returnType: GraphQLOutputType,
 ): string {
   const opName = toPascalCase(fieldName);
   const selection = buildSelectionSet(returnType);
@@ -118,7 +121,9 @@ function buildDocument(
 // ---------------------------------------------------------------------------
 
 /** Extract all query/mutation/subscription operations from a GraphQLSchema. */
-export function extractOperations(schema: GraphQLSchema): OperationDescriptor[] {
+export function extractOperations(
+  schema: GraphQLSchema,
+): OperationDescriptor[] {
   const ops: OperationDescriptor[] = [];
 
   const roots: [string, GraphQLObjectType | null | undefined][] = [
@@ -150,7 +155,7 @@ export function extractOperations(schema: GraphQLSchema): OperationDescriptor[] 
           opType as "query" | "mutation" | "subscription",
           fieldName,
           args,
-          field.type
+          field.type,
         ),
       });
     }

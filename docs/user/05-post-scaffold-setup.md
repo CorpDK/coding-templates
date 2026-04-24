@@ -26,6 +26,7 @@ pnpm codegen
 ```
 
 This runs `graphql-codegen` against the DS package and writes into two places:
+
 - `packages/ds-sdk/src/generated/` — TypedDocumentNode types for the UI
 - `packages/ds-cli/src/generated/` — executable CLI + man page + GNU info page
 
@@ -99,10 +100,10 @@ Man page: `man ./packages/ds-cli/src/generated/man/<projectName>.1`
 
 ## Useful Scripts
 
-| Script | Description |
-|--------|-------------|
-| `pnpm dev` | Start all packages in development mode |
-| `pnpm build` | Build all packages (codegen runs first) |
+| Script         | Description                              |
+| -------------- | ---------------------------------------- |
+| `pnpm dev`     | Start all packages in development mode   |
+| `pnpm build`   | Build all packages (codegen runs first)  |
 | `pnpm codegen` | Regenerate TypedDocumentNode SDK and CLI |
 
 ---

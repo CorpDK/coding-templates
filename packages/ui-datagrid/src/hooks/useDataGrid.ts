@@ -6,8 +6,8 @@ import {
   getSortedRowModel,
   getFilteredRowModel,
   useReactTable,
-} from '@tanstack/react-table';
-import { useState } from 'react';
+} from "@tanstack/react-table";
+import { useState } from "react";
 
 /**
  * Initializes a TanStack Table instance with sorting, column filtering, and global filtering.
@@ -16,13 +16,10 @@ import { useState } from 'react';
  * @param columns - Column definitions.
  * @returns Object containing the `table` instance, current `globalFilter` string, and `setGlobalFilter` setter.
  */
-export function useDataGrid<TData>(
-  data: TData[],
-  columns: ColumnDef<TData>[]
-) {
+export function useDataGrid<TData>(data: TData[], columns: ColumnDef<TData>[]) {
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [globalFilter, setGlobalFilter] = useState('');
+  const [globalFilter, setGlobalFilter] = useState("");
 
   const table = useReactTable({
     data,

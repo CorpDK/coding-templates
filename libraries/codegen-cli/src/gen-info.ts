@@ -19,13 +19,20 @@ function fmtArgsTable(args: OperationDescriptor["args"]): string {
 function fmtCommandsSection(
   ops: OperationDescriptor[],
   title: string,
-  extraNote?: string
+  extraNote?: string,
 ): string {
   if (ops.length === 0) return "";
 
   const items = ops
     .map((op) => {
-      const usage = [op.commandName, ...op.args.map((a) => (a.required ? `--${a.name} <${a.graphqlType}>` : `[--${a.name} <${a.graphqlType}>]`))].join(" ");
+      const usage = [
+        op.commandName,
+        ...op.args.map((a) =>
+          a.required
+            ? `--${a.name} <${a.graphqlType}>`
+            : `[--${a.name} <${a.graphqlType}>]`,
+        ),
+      ].join(" ");
       return (
         `@subsection ${texEscape(op.commandName)}\n` +
         `@example\n${texEscape(usage)}\n@end example\n\n` +
@@ -105,7 +112,7 @@ export function generateInfo(ops: OperationDescriptor[]): string {
     fmtCommandsSection(
       subs,
       "Subscriptions",
-      "Subscriptions stream newline-delimited JSON until Ctrl-C, --count, or --timeout."
+      "Subscriptions stream newline-delimited JSON until Ctrl-C, --count, or --timeout.",
     ),
     "",
     "@node Input",
@@ -147,6 +154,5 @@ export function generateInfo(ops: OperationDescriptor[]): string {
     "WebSocket subscriptions require Node.js 22 or later.",
     "",
     "@bye",
-  ]
-    .join("\n");
+  ].join("\n");
 }

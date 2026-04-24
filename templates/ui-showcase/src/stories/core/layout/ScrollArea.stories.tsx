@@ -1,12 +1,12 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { ScrollArea, ScrollBar, Separator } from '@corpdk/ui-core';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { ScrollArea, ScrollBar, Separator } from "@corpdk/ui-core";
 
 const tags = Array.from({ length: 50 }).map((_, i) => `v1.2.0-beta.${i + 1}`);
 
 const meta: Meta<typeof ScrollArea> = {
-  title: 'ui-core/Layout/ScrollArea',
+  title: "ui-core/Layout/ScrollArea",
   component: ScrollArea,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;
@@ -40,7 +40,9 @@ export const Horizontal: Story = {
               key={i}
               className="w-[150px] h-[200px] shrink-0 rounded-md bg-muted flex items-center justify-center"
             >
-              <span className="text-sm text-muted-foreground">Item {i + 1}</span>
+              <span className="text-sm text-muted-foreground">
+                Item {i + 1}
+              </span>
             </div>
           ))}
         </div>

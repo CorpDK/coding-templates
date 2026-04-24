@@ -8,7 +8,7 @@ All DS packages use a Repository Pattern to keep GraphQL resolvers decoupled fro
 
 Every DS package must maintain this layout in `src/db/`:
 
-```
+```text
 src/
   db/
     schemas.ts      ← Zod schemas: one per entity (e.g. ItemSchema, OrderSchema)
@@ -43,13 +43,13 @@ export type CreateOrderInput = z.infer<typeof CreateOrderInputSchema>;
 
 ### 2. Extend the storage layer
 
-| Package | Action |
-|---------|--------|
-| `ds` (Prisma) | Add the model to `prisma/schema.prisma`, run `pnpm db:migrate` |
-| `ds-hprt` (Drizzle) | Add the table to `drizzle/schema.ts`, run `pnpm db:generate && pnpm db:migrate` |
-| `ds-mongo`, `ds-ddb` | Add a typed collection to `src/db/index.ts` |
-| `ds-cdb` | Use the existing cluster/scope, add a collection if needed |
-| `ds-file` | Add `getOrders()`/`saveOrders()` pair to `src/storage/index.ts` |
+| Package              | Action                                                                          |
+| -------------------- | ------------------------------------------------------------------------------- |
+| `ds` (Prisma)        | Add the model to `prisma/schema.prisma`, run `pnpm db:migrate`                  |
+| `ds-hprt` (Drizzle)  | Add the table to `drizzle/schema.ts`, run `pnpm db:generate && pnpm db:migrate` |
+| `ds-mongo`, `ds-ddb` | Add a typed collection to `src/db/index.ts`                                     |
+| `ds-cdb`             | Use the existing cluster/scope, add a collection if needed                      |
+| `ds-file`            | Add `getOrders()`/`saveOrders()` pair to `src/storage/index.ts`                 |
 
 ### 3. Add the repository to `src/db/repository.ts`
 
@@ -63,9 +63,15 @@ export interface IOrderRepository {
 }
 
 export const orderRepository: IOrderRepository = {
-  findAll: async () => { /* storage-specific implementation */ },
-  findOne: async (id) => { /* storage-specific implementation */ },
-  create: async (order) => { /* storage-specific implementation */ },
+  findAll: async () => {
+    /* storage-specific implementation */
+  },
+  findOne: async (id) => {
+    /* storage-specific implementation */
+  },
+  create: async (order) => {
+    /* storage-specific implementation */
+  },
 };
 ```
 

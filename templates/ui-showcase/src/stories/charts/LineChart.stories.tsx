@@ -1,11 +1,11 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { LineChart } from '@corpdk/ui-charts';
-import { LINE_CHART_DATA } from '../../lib/mock-data';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { LineChart } from "@corpdk/ui-charts";
+import { LINE_CHART_DATA } from "../../lib/mock-data";
 
 const meta: Meta<typeof LineChart> = {
-  title: 'ui-charts/LineChart',
+  title: "ui-charts/LineChart",
   component: LineChart,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
   args: {
     data: LINE_CHART_DATA,
     width: 600,
@@ -23,5 +23,5 @@ export const Small: Story = {
 };
 
 export const CustomColor: Story = {
-  args: { color: '#10b981' },
+  args: { color: "#10b981" },
 };

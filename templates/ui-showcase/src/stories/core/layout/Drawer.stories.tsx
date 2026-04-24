@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import {
   Drawer,
   DrawerClose,
@@ -9,12 +9,12 @@ import {
   DrawerTitle,
   DrawerTrigger,
   Button,
-} from '@corpdk/ui-core';
+} from "@corpdk/ui-core";
 
 const meta: Meta<typeof Drawer> = {
-  title: 'ui-core/Layout/Drawer',
+  title: "ui-core/Layout/Drawer",
   component: Drawer,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;
@@ -31,10 +31,14 @@ export const Default: Story = {
           <div className="mx-auto w-full max-w-sm">
             <DrawerHeader>
               <DrawerTitle>Move Goal</DrawerTitle>
-              <DrawerDescription>Set your daily activity goal.</DrawerDescription>
+              <DrawerDescription>
+                Set your daily activity goal.
+              </DrawerDescription>
             </DrawerHeader>
             <div className="p-4">
-              <p className="text-sm text-muted-foreground">Drawer body content goes here.</p>
+              <p className="text-sm text-muted-foreground">
+                Drawer body content goes here.
+              </p>
             </div>
             <DrawerFooter>
               <Button>Submit</Button>

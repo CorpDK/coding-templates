@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import {
   Item,
   ItemActions,
@@ -10,12 +10,12 @@ import {
   ItemSeparator,
   ItemTitle,
   Button,
-} from '@corpdk/ui-core';
+} from "@corpdk/ui-core";
 
 const meta: Meta<typeof Item> = {
-  title: 'ui-core/Data Display/Item',
+  title: "ui-core/Data Display/Item",
   component: Item,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;
@@ -29,7 +29,9 @@ export const Default: Story = {
           <ItemContent>
             <ItemHeader>
               <ItemTitle>Default Item</ItemTitle>
-              <ItemDescription>A basic item with title and description.</ItemDescription>
+              <ItemDescription>
+                A basic item with title and description.
+              </ItemDescription>
             </ItemHeader>
           </ItemContent>
         </Item>
@@ -79,7 +81,20 @@ export const WithActions: Story = {
         <ItemGroup>
           <Item variant="outline">
             <ItemMedia variant="icon">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                <polyline points="14 2 14 8 20 8" />
+              </svg>
             </ItemMedia>
             <ItemContent>
               <ItemHeader>
@@ -88,13 +103,28 @@ export const WithActions: Story = {
               </ItemHeader>
             </ItemContent>
             <ItemActions>
-              <Button variant="ghost" size="sm">Download</Button>
+              <Button variant="ghost" size="sm">
+                Download
+              </Button>
             </ItemActions>
           </Item>
           <ItemSeparator />
           <Item variant="outline">
             <ItemMedia variant="icon">
-              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                <polyline points="14 2 14 8 20 8" />
+              </svg>
             </ItemMedia>
             <ItemContent>
               <ItemHeader>
@@ -103,7 +133,9 @@ export const WithActions: Story = {
               </ItemHeader>
             </ItemContent>
             <ItemActions>
-              <Button variant="ghost" size="sm">Download</Button>
+              <Button variant="ghost" size="sm">
+                Download
+              </Button>
             </ItemActions>
           </Item>
         </ItemGroup>

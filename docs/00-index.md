@@ -47,16 +47,16 @@ Welcome to the coding-templates documentation! This monorepo provides production
 
 ### Common Tasks
 
-| Task | Documentation |
-|------|---------------|
-| **Set up a new project** | [Interactive Mode](user/02-interactive-mode.md) |
-| **Configure environment** | [Environment Variables](admin/01-environment-variables.md) |
-| **Deploy with Docker** | [Docker Deployment](admin/02-docker-deployment.md) |
-| **Add a GraphQL entity** | [Repository Pattern](developer/03-repository-pattern.md) |
-| **Add a subscription** | [PubSub Internals](developer/04-pubsub-internals.md) |
-| **Choose a DS variant** | [Data Service Design](architecture/03-data-service-design.md) |
-| **Write a commit message** | [Git Conventions](developer/07-git-conventions.md) |
-| **Check UI package status** | [UI Status Dashboard](developer/06-ui-status.md) |
+| Task                        | Documentation                                                 |
+| --------------------------- | ------------------------------------------------------------- |
+| **Set up a new project**    | [Interactive Mode](user/02-interactive-mode.md)               |
+| **Configure environment**   | [Environment Variables](admin/01-environment-variables.md)    |
+| **Deploy with Docker**      | [Docker Deployment](admin/02-docker-deployment.md)            |
+| **Add a GraphQL entity**    | [Repository Pattern](developer/03-repository-pattern.md)      |
+| **Add a subscription**      | [PubSub Internals](developer/04-pubsub-internals.md)          |
+| **Choose a DS variant**     | [Data Service Design](architecture/03-data-service-design.md) |
+| **Write a commit message**  | [Git Conventions](developer/07-git-conventions.md)            |
+| **Check UI package status** | [UI Status Dashboard](developer/06-ui-status.md)              |
 
 ---
 
@@ -87,28 +87,28 @@ Welcome to the coding-templates documentation! This monorepo provides production
 
 ## 🗂️ Complete File Listing
 
-| File | Description |
-|------|-------------|
-| [00-index.md](00-index.md) | This navigation index |
-| [10-contributing.md](10-contributing.md) | Contributing guidelines |
-| [admin/01-environment-variables.md](admin/01-environment-variables.md) | Env var reference per package |
-| [admin/02-docker-deployment.md](admin/02-docker-deployment.md) | Docker build and deploy |
-| [admin/03-pubsub-redis.md](admin/03-pubsub-redis.md) | Redis transport config |
-| [architecture/01-system-overview.md](architecture/01-system-overview.md) | Component topology |
-| [architecture/02-monorepo-design.md](architecture/02-monorepo-design.md) | Workspace design |
-| [architecture/03-data-service-design.md](architecture/03-data-service-design.md) | DS variant rationale |
-| [architecture/04-ui-package-design.md](architecture/04-ui-package-design.md) | UI package design |
-| [architecture/05-technology-decisions.md](architecture/05-technology-decisions.md) | Technology ADRs |
-| [architecture/06-package-dependencies.md](architecture/06-package-dependencies.md) | Dependency versions |
-| [developer/01-monorepo-overview.md](developer/01-monorepo-overview.md) | Repo layout and scripts |
-| [developer/02-graphql-schema.md](developer/02-graphql-schema.md) | SDL conventions |
-| [developer/03-repository-pattern.md](developer/03-repository-pattern.md) | Repository interface |
-| [developer/04-pubsub-internals.md](developer/04-pubsub-internals.md) | PubSub wiring |
-| [developer/05-ui-architecture.md](developer/05-ui-architecture.md) | UI template state |
-| [developer/06-ui-status.md](developer/06-ui-status.md) | Capability matrix |
-| [developer/07-git-conventions.md](developer/07-git-conventions.md) | Commit format |
-| [developer/08-coding-guidelines.md](developer/08-coding-guidelines.md) | Code style guide |
-| [developer/09-enhancement-backlog.md](developer/09-enhancement-backlog.md) | Future improvements |
+| File                                                                               | Description                   |
+| ---------------------------------------------------------------------------------- | ----------------------------- |
+| [00-index.md](00-index.md)                                                         | This navigation index         |
+| [10-contributing.md](10-contributing.md)                                           | Contributing guidelines       |
+| [admin/01-environment-variables.md](admin/01-environment-variables.md)             | Env var reference per package |
+| [admin/02-docker-deployment.md](admin/02-docker-deployment.md)                     | Docker build and deploy       |
+| [admin/03-pubsub-redis.md](admin/03-pubsub-redis.md)                               | Redis transport config        |
+| [architecture/01-system-overview.md](architecture/01-system-overview.md)           | Component topology            |
+| [architecture/02-monorepo-design.md](architecture/02-monorepo-design.md)           | Workspace design              |
+| [architecture/03-data-service-design.md](architecture/03-data-service-design.md)   | DS variant rationale          |
+| [architecture/04-ui-package-design.md](architecture/04-ui-package-design.md)       | UI package design             |
+| [architecture/05-technology-decisions.md](architecture/05-technology-decisions.md) | Technology ADRs               |
+| [architecture/06-package-dependencies.md](architecture/06-package-dependencies.md) | Dependency versions           |
+| [developer/01-monorepo-overview.md](developer/01-monorepo-overview.md)             | Repo layout and scripts       |
+| [developer/02-graphql-schema.md](developer/02-graphql-schema.md)                   | SDL conventions               |
+| [developer/03-repository-pattern.md](developer/03-repository-pattern.md)           | Repository interface          |
+| [developer/04-pubsub-internals.md](developer/04-pubsub-internals.md)               | PubSub wiring                 |
+| [developer/05-ui-architecture.md](developer/05-ui-architecture.md)                 | UI template state             |
+| [developer/06-ui-status.md](developer/06-ui-status.md)                             | Capability matrix             |
+| [developer/07-git-conventions.md](developer/07-git-conventions.md)                 | Commit format                 |
+| [developer/08-coding-guidelines.md](developer/08-coding-guidelines.md)             | Code style guide              |
+| [developer/09-enhancement-backlog.md](developer/09-enhancement-backlog.md)         | Future improvements           |
 
 ---
 

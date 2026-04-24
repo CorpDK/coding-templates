@@ -1,5 +1,5 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { VirtualGrid, type DataGridColumn } from '@corpdk/ui-datagrid';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { VirtualGrid, type DataGridColumn } from "@corpdk/ui-datagrid";
 
 interface Row {
   id: string;
@@ -14,15 +14,15 @@ const LARGE_DATASET: Row[] = Array.from({ length: 1000 }, (_, i) => ({
 }));
 
 const columns: DataGridColumn<Row>[] = [
-  { accessorKey: 'id', header: 'ID' },
-  { accessorKey: 'name', header: 'Name' },
-  { accessorKey: 'value', header: 'Value' },
+  { accessorKey: "id", header: "ID" },
+  { accessorKey: "name", header: "Name" },
+  { accessorKey: "value", header: "Value" },
 ];
 
 const meta: Meta<typeof VirtualGrid<Row>> = {
-  title: 'ui-datagrid/VirtualGrid',
+  title: "ui-datagrid/VirtualGrid",
   component: VirtualGrid<Row>,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
   args: {
     data: LARGE_DATASET,
     columns,

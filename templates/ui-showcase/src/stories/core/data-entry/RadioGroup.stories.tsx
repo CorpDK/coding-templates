@@ -1,11 +1,11 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { RadioGroup, RadioGroupItem, Label } from '@corpdk/ui-core';
-import { useState } from 'react';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { RadioGroup, RadioGroupItem, Label } from "@corpdk/ui-core";
+import { useState } from "react";
 
 const meta: Meta<typeof RadioGroup> = {
-  title: 'ui-core/Data Entry/RadioGroup',
+  title: "ui-core/Data Entry/RadioGroup",
   component: RadioGroup,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;
@@ -13,7 +13,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
   render: function Render() {
-    const [value, setValue] = useState('comfortable');
+    const [value, setValue] = useState("comfortable");
     return (
       <RadioGroup value={value} onValueChange={setValue}>
         <div className="flex items-center space-x-2">

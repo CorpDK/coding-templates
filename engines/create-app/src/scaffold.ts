@@ -38,15 +38,16 @@ const ROOT_FILES_TO_COPY = [
 /** Resolve the source directory for a package based on its sourceBase */
 function getSrcDir(pkgId: string, templateRoot: string): string {
   const def = PACKAGE_DEFS[pkgId as keyof typeof PACKAGE_DEFS];
-  const base = def.sourceBase === "packages"
-    ? path.join(templateRoot, "packages")
-    : path.join(templateRoot, "templates");
+  const base =
+    def.sourceBase === "packages"
+      ? path.join(templateRoot, "packages")
+      : path.join(templateRoot, "templates");
   return path.join(base, def.dirName);
 }
 
 export async function scaffold(
   config: ScaffoldConfig,
-  templateRoot: string
+  templateRoot: string,
 ): Promise<void> {
   const s = spinner();
   const outDir = config.outputDir;
@@ -85,7 +86,7 @@ export async function scaffold(
     await execAsync("git add .", { cwd: outDir });
     await execAsync(
       `git commit -m "chore: initial scaffold from coding-templates"`,
-      { cwd: outDir }
+      { cwd: outDir },
     );
     s.stop("Git repository initialised");
   }
@@ -95,7 +96,7 @@ async function copyPackage(
   pkgId: string,
   srcDir: string,
   destDir: string,
-  config: ScaffoldConfig
+  config: ScaffoldConfig,
 ): Promise<void> {
   const ctx: TransformContext = {
     orgScope: config.orgScope,
@@ -103,7 +104,11 @@ async function copyPackage(
     ui: config.ui,
     db: config.db,
     externalSdk: config.externalSdkPackage
-      ? { oldPkg: "@corpdk/ds-sdk", externalPkg: config.externalSdkPackage, version: "latest" }
+      ? {
+          oldPkg: "@corpdk/ds-sdk",
+          externalPkg: config.externalSdkPackage,
+          version: "latest",
+        }
       : null,
     isRootPackageJson: false,
     projectName: config.projectName,
@@ -126,7 +131,12 @@ async function copyPackage(
   }
 
   // Post-copy: Drizzle driver swap
-  if (pkgId === "ds-hprt" && config.db && config.db !== "postgresql" && config.db !== "cockroachdb") {
+  if (
+    pkgId === "ds-hprt" &&
+    config.db &&
+    config.db !== "postgresql" &&
+    config.db !== "cockroachdb"
+  ) {
     const pkgJsonPath = path.join(destDir, "package.json");
     const pkgJsonContent = await fs.readFile(pkgJsonPath, "utf8");
     const updated = transformDrizzlePackageJson(pkgJsonContent, config.db);
@@ -154,7 +164,7 @@ async function copyPackage(
 async function scaffoldMonorepo(
   config: ScaffoldConfig,
   templateRoot: string,
-  s: ReturnType<typeof spinner>
+  s: ReturnType<typeof spinner>,
 ): Promise<void> {
   const outDir = config.outputDir;
 
@@ -167,12 +177,20 @@ async function scaffoldMonorepo(
   const rootPkgContent = generateRootPackageJson(
     config.projectName,
     config.orgScope,
-    sourceRootPkg
+    sourceRootPkg,
   );
   await fs.writeFile(path.join(outDir, "package.json"), rootPkgContent, "utf8");
   const workspaceYaml = generateWorkspaceYaml(config.selectedPackages);
-  await fs.writeFile(path.join(outDir, "pnpm-workspace.yaml"), workspaceYaml, "utf8");
-  await fs.writeFile(path.join(outDir, "README.md"), generateReadme(config), "utf8");
+  await fs.writeFile(
+    path.join(outDir, "pnpm-workspace.yaml"),
+    workspaceYaml,
+    "utf8",
+  );
+  await fs.writeFile(
+    path.join(outDir, "README.md"),
+    generateReadme(config),
+    "utf8",
+  );
   s.stop("Workspace files generated");
 
   // 4. Copy selected packages
@@ -196,11 +214,16 @@ async function scaffoldMonorepo(
   // 4b. Merge BFF scaffold into UI app dir if ui-auth is selected
   if (config.selectedPackages.has("ui-auth") && uiDestDir) {
     s.start("Merging Auth.js BFF scaffold into UI app");
-    const authScaffoldDir = path.join(templateRoot, "packages", "ui-auth", "scaffold");
+    const authScaffoldDir = path.join(
+      templateRoot,
+      "packages",
+      "ui-auth",
+      "scaffold",
+    );
     await mergeDir(authScaffoldDir, uiDestDir, [".env.example.append"]);
     await appendToFile(
       path.join(authScaffoldDir, ".env.example.append"),
-      path.join(uiDestDir, ".env.example")
+      path.join(uiDestDir, ".env.example"),
     );
     s.stop("BFF scaffold merged");
   }
@@ -225,7 +248,7 @@ async function scaffoldMonorepo(
     await fs.writeFile(
       path.join(outDir, "packages", dir, "Dockerfile"),
       transformFileContent(content, "Dockerfile.ds", dockerCtx),
-      "utf8"
+      "utf8",
     );
   }
 
@@ -236,7 +259,7 @@ async function scaffoldMonorepo(
     await fs.writeFile(
       path.join(outDir, "packages", dir, "Dockerfile"),
       transformFileContent(content, "Dockerfile.ui", dockerCtx),
-      "utf8"
+      "utf8",
     );
   }
   s.stop("Dockerfiles copied");

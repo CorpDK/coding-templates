@@ -1,2 +1,2 @@
-import nextConfig from '@corpdk/eslint-config/next';
+import nextConfig from "@corpdk/eslint-config/next";
 export default nextConfig;

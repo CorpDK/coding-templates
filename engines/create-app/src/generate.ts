@@ -9,7 +9,7 @@ interface RootPackageJsonSource {
 export function generateRootPackageJson(
   projectName: string,
   orgScope: string,
-  source: RootPackageJsonSource
+  source: RootPackageJsonSource,
 ): string {
   const pkg = {
     name: `@${orgScope}/${projectName}`,
@@ -48,8 +48,16 @@ export function generateWorkspaceYaml(selected: Set<PackageId>): string {
 
 /** App-level packages that live in packages/ — shared libs are npm deps */
 const APP_PACKAGE_IDS = new Set<PackageId>([
-  "ds", "ds-hprt", "ds-cdb", "ds-mongo", "ds-ddb", "ds-file",
-  "ds-sdk", "ds-cli", "ui", "ui-hprt",
+  "ds",
+  "ds-hprt",
+  "ds-cdb",
+  "ds-mongo",
+  "ds-ddb",
+  "ds-file",
+  "ds-sdk",
+  "ds-cli",
+  "ui",
+  "ui-hprt",
 ]);
 
 export function generateReadme(config: ScaffoldConfig): string {
@@ -58,7 +66,9 @@ export function generateReadme(config: ScaffoldConfig): string {
 
   lines.push(`# ${projectName}`);
   lines.push("");
-  lines.push("> Scaffolded with [@corpdk/create-app](https://github.com/corpdk/coding-templates)");
+  lines.push(
+    "> Scaffolded with [@corpdk/create-app](https://github.com/corpdk/coding-templates)",
+  );
   lines.push("");
 
   // Quick Start
@@ -99,7 +109,9 @@ export function generateReadme(config: ScaffoldConfig): string {
   // Environment Variables
   lines.push("## Environment Variables");
   lines.push("");
-  lines.push("Copy `.env.example` to `.env` in each package directory before running.");
+  lines.push(
+    "Copy `.env.example` to `.env` in each package directory before running.",
+  );
   lines.push("");
 
   // Project Structure
@@ -122,10 +134,16 @@ export function generateReadme(config: ScaffoldConfig): string {
   lines.push("```");
   lines.push("");
 
-  const sharedPkgs = [...selectedPackages].filter((id) => !APP_PACKAGE_IDS.has(id));
+  const sharedPkgs = [...selectedPackages].filter(
+    (id) => !APP_PACKAGE_IDS.has(id),
+  );
   if (sharedPkgs.length > 0) {
-    const names = sharedPkgs.map((id) => `\`@${orgScope}/${PACKAGE_DEFS[id].dirName}\``).join(", ");
-    lines.push(`Shared UI libraries (${names}) are consumed as npm dependencies.`);
+    const names = sharedPkgs
+      .map((id) => `\`@${orgScope}/${PACKAGE_DEFS[id].dirName}\``)
+      .join(", ");
+    lines.push(
+      `Shared UI libraries (${names}) are consumed as npm dependencies.`,
+    );
     lines.push("");
   }
 
@@ -135,7 +153,7 @@ export function generateReadme(config: ScaffoldConfig): string {
 export function generateStandalonePackageJson(
   projectName: string,
   orgScope: string,
-  templatePkgJson: Record<string, unknown>
+  templatePkgJson: Record<string, unknown>,
 ): string {
   const pkg = {
     ...(templatePkgJson as object),

@@ -1,10 +1,10 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { Separator } from '@corpdk/ui-core';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { Separator } from "@corpdk/ui-core";
 
 const meta: Meta<typeof Separator> = {
-  title: 'ui-core/Layout/Separator',
+  title: "ui-core/Layout/Separator",
   component: Separator,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;

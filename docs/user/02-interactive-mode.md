@@ -32,11 +32,11 @@ Example: `myorg` (produces `@myorg/` scoped packages)
 
 Choose the project shape:
 
-| Option | Description |
-|--------|-------------|
-| `Full-stack` | UI + DS (GraphQL Yoga + chosen storage) |
-| `DS only` | GraphQL Yoga backend only |
-| `UI only` | Next.js frontend connecting to an external DS |
+| Option       | Description                                   |
+| ------------ | --------------------------------------------- |
+| `Full-stack` | UI + DS (GraphQL Yoga + chosen storage)       |
+| `DS only`    | GraphQL Yoga backend only                     |
+| `UI only`    | Next.js frontend connecting to an external DS |
 
 ---
 
@@ -50,39 +50,39 @@ Where to write the scaffolded project. Defaults to `./<name>`.
 
 Top-level backend category:
 
-| Option | Description |
-|--------|-------------|
-| `relational` | SQL databases via Prisma or Drizzle ORM |
-| `document` | NoSQL: Couchbase, MongoDB, or DocumentDB |
-| `filebased` | JSON/YAML file storage, zero external dependencies |
+| Option       | Description                                        |
+| ------------ | -------------------------------------------------- |
+| `relational` | SQL databases via Prisma or Drizzle ORM            |
+| `document`   | NoSQL: Couchbase, MongoDB, or DocumentDB           |
+| `filebased`  | JSON/YAML file storage, zero external dependencies |
 
 ---
 
 ### 6. ORM _(relational only)_
 
-| Option | Description |
-|--------|-------------|
-| `prisma` | Prisma ORM — supports PostgreSQL, MySQL, SQLite, CockroachDB |
+| Option    | Description                                                                         |
+| --------- | ----------------------------------------------------------------------------------- |
+| `prisma`  | Prisma ORM — supports PostgreSQL, MySQL, SQLite, CockroachDB                        |
 | `drizzle` | Drizzle ORM — supports the same databases, optimised for high-performance real-time |
 
 ---
 
 ### 7. Document DB provider _(document only)_
 
-| Option | Description |
-|--------|-------------|
-| `couchbase` | Couchbase Capella or self-hosted |
-| `mongodb` | MongoDB Atlas or self-hosted |
+| Option       | Description                                                   |
+| ------------ | ------------------------------------------------------------- |
+| `couchbase`  | Couchbase Capella or self-hosted                              |
+| `mongodb`    | MongoDB Atlas or self-hosted                                  |
 | `documentdb` | DocumentDB (documentdb.io) — MongoDB-compatible wire protocol |
 
 ---
 
 ### 8. Implementation _(MongoDB / DocumentDB only)_
 
-| Option | Description |
-|--------|-------------|
-| `standard` | Prisma ORM |
-| `hprt` | Native SDK — no ORM overhead, higher throughput |
+| Option     | Description                                     |
+| ---------- | ----------------------------------------------- |
+| `standard` | Prisma ORM                                      |
+| `hprt`     | Native SDK — no ORM overhead, higher throughput |
 
 ---
 
@@ -94,10 +94,10 @@ Top-level backend category:
 
 ### 10. UI variant _(Full-stack / UI only)_
 
-| Option | Description |
-|--------|-------------|
-| `standard` | Apollo Client — best for standard CRUD UIs |
-| `hprt` | urql + Graphcache — best for high-frequency real-time data |
+| Option     | Description                                                |
+| ---------- | ---------------------------------------------------------- |
+| `standard` | Apollo Client — best for standard CRUD UIs                 |
+| `hprt`     | urql + Graphcache — best for high-frequency real-time data |
 
 In Full-stack mode, only the variants compatible with your chosen DS are shown. See the [Storage / UI Matrix](04-storage-ui-matrix.md).
 
@@ -107,12 +107,12 @@ In Full-stack mode, only the variants compatible with your chosen DS are shown. 
 
 A multiselect prompt where you toggle optional shared packages (space to toggle, enter to confirm):
 
-| Package | Description |
-|---------|-------------|
-| `ui-forms` | React Hook Form + Zod |
-| `ui-datagrid` | TanStack Table + virtualization |
-| `ui-charts` | D3.js charts |
-| `ui-auth` | Auth UI components + BFF OAuth2/OIDC scaffold |
+| Package       | Description                                   |
+| ------------- | --------------------------------------------- |
+| `ui-forms`    | React Hook Form + Zod                         |
+| `ui-datagrid` | TanStack Table + virtualization               |
+| `ui-charts`   | D3.js charts                                  |
+| `ui-auth`     | Auth UI components + BFF OAuth2/OIDC scaffold |
 
 > `ui-core` and `ui-feedback` are always included automatically when any UI is selected.
 

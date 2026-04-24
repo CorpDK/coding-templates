@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { useRef } from 'react';
-import { flexRender } from '@tanstack/react-table';
-import { useVirtualizer } from '@tanstack/react-virtual';
-import { useDataGrid } from '../hooks/useDataGrid';
-import { type VirtualGridProps } from '../types';
+import { useRef } from "react";
+import { flexRender } from "@tanstack/react-table";
+import { useVirtualizer } from "@tanstack/react-virtual";
+import { useDataGrid } from "../hooks/useDataGrid";
+import { type VirtualGridProps } from "../types";
 
 export function VirtualGrid<TData>({
   data,
@@ -49,7 +49,7 @@ export function VirtualGrid<TData>({
                       ? null
                       : flexRender(
                           header.column.columnDef.header,
-                          header.getContext()
+                          header.getContext(),
                         )}
                   </th>
                 ))}
@@ -62,17 +62,19 @@ export function VirtualGrid<TData>({
           className="overflow-y-auto"
           style={{ height: Math.min(rows.length * rowHeight, 500) }}
         >
-          <div style={{ height: virtualizer.getTotalSize(), position: 'relative' }}>
+          <div
+            style={{ height: virtualizer.getTotalSize(), position: "relative" }}
+          >
             {virtualizer.getVirtualItems().map((virtualRow) => {
               const row = rows[virtualRow.index];
               return (
                 <div
                   key={row.id}
                   style={{
-                    position: 'absolute',
+                    position: "absolute",
                     top: 0,
                     transform: `translateY(${virtualRow.start}px)`,
-                    width: '100%',
+                    width: "100%",
                     height: `${virtualRow.size}px`,
                   }}
                   className="flex border-t border-zinc-200 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
@@ -84,7 +86,7 @@ export function VirtualGrid<TData>({
                     >
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext()
+                        cell.getContext(),
                       )}
                     </div>
                   ))}

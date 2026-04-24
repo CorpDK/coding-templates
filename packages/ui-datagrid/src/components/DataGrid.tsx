@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { flexRender } from '@tanstack/react-table';
-import { useDataGrid } from '../hooks/useDataGrid';
-import { type DataGridProps } from '../types';
+import { flexRender } from "@tanstack/react-table";
+import { useDataGrid } from "../hooks/useDataGrid";
+import { type DataGridProps } from "../types";
 
 export function DataGrid<TData>({
   data,
@@ -36,13 +36,13 @@ export function DataGrid<TData>({
                       ? null
                       : flexRender(
                           header.column.columnDef.header,
-                          header.getContext()
+                          header.getContext(),
                         )}
-                    {header.column.getIsSorted() === 'asc'
-                      ? ' ↑'
-                      : header.column.getIsSorted() === 'desc'
-                        ? ' ↓'
-                        : ''}
+                    {header.column.getIsSorted() === "asc"
+                      ? " ↑"
+                      : header.column.getIsSorted() === "desc"
+                        ? " ↓"
+                        : ""}
                   </th>
                 ))}
               </tr>

@@ -8,8 +8,8 @@ Every scaffolded project includes production-ready Dockerfiles co-located with e
 
 All monorepo Dockerfiles use the **repo root as the build context** because they need `pnpm-lock.yaml` and the workspace manifests.
 
-| Scaffold type | Dockerfile location | Build command |
-|---------------|--------------------|----|
+| Scaffold type | Dockerfile location        | Build command                                           |
+| ------------- | -------------------------- | ------------------------------------------------------- |
 | DS (monorepo) | `packages/<ds>/Dockerfile` | `docker build -f packages/ds/Dockerfile -t my-app-ds .` |
 | UI (monorepo) | `packages/<ui>/Dockerfile` | `docker build -f packages/ui/Dockerfile -t my-app-ui .` |
 
@@ -24,7 +24,7 @@ You must have `output: 'standalone'` set in the UI package's `next.config.ts` be
 ```typescript
 // packages/ui/next.config.ts
 const nextConfig: NextConfig = {
-  output: 'standalone',
+  output: "standalone",
   // ...
 };
 ```
@@ -56,8 +56,8 @@ Or use Docker Compose with an `env_file` directive. See [Environment Variables](
 
 The template Dockerfiles are stored in `templates/docker/` and are copied into scaffolded projects:
 
-| File | Usage |
-|------|-------|
+| File            | Usage                                             |
+| --------------- | ------------------------------------------------- |
 | `Dockerfile.ui` | UI variant (copied to `packages/<ui>/Dockerfile`) |
 | `Dockerfile.ds` | DS variant (copied to `packages/<ds>/Dockerfile`) |
 

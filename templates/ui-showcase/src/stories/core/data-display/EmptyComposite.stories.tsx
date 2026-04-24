@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import {
   Empty,
   EmptyContent,
@@ -7,12 +7,12 @@ import {
   EmptyMedia,
   EmptyTitle,
   Button,
-} from '@corpdk/ui-core';
+} from "@corpdk/ui-core";
 
 const meta: Meta<typeof Empty> = {
-  title: 'ui-core/Data Display/Empty',
+  title: "ui-core/Data Display/Empty",
   component: Empty,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;
@@ -41,7 +41,8 @@ export const Default: Story = {
           </EmptyMedia>
           <EmptyTitle>No results found</EmptyTitle>
           <EmptyDescription>
-            Try adjusting your search or filter to find what you&apos;re looking for.
+            Try adjusting your search or filter to find what you&apos;re looking
+            for.
           </EmptyDescription>
         </EmptyHeader>
       </Empty>
@@ -55,7 +56,9 @@ export const WithAction: Story = {
       <Empty>
         <EmptyHeader>
           <EmptyTitle>No projects yet</EmptyTitle>
-          <EmptyDescription>Get started by creating your first project.</EmptyDescription>
+          <EmptyDescription>
+            Get started by creating your first project.
+          </EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
           <Button>Create project</Button>

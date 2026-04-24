@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -6,12 +6,12 @@ import {
   ContextMenuSeparator,
   ContextMenuShortcut,
   ContextMenuTrigger,
-} from '@corpdk/ui-core';
+} from "@corpdk/ui-core";
 
 const meta: Meta<typeof ContextMenu> = {
-  title: 'ui-core/Navigation/ContextMenu',
+  title: "ui-core/Navigation/ContextMenu",
   component: ContextMenu,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;

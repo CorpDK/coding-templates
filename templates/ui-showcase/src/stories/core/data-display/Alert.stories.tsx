@@ -1,10 +1,10 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { Alert, AlertDescription, AlertTitle } from '@corpdk/ui-core';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { Alert, AlertDescription, AlertTitle } from "@corpdk/ui-core";
 
 const meta: Meta<typeof Alert> = {
-  title: 'ui-core/Data Display/Alert',
+  title: "ui-core/Data Display/Alert",
   component: Alert,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;

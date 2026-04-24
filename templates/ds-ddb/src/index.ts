@@ -13,10 +13,10 @@ try {
 } catch (err) {
   console.error(
     "\n❌  DocumentDB connection failed.\n" +
-    "    Check:\n" +
-    "      1. DS_DDB_URL is correct (e.g. mongodb://localhost:27017)\n" +
-    "      2. The DocumentDB server is running and reachable\n" +
-    "      3. DS_DDB_DB_NAME matches an existing database\n",
+      "    Check:\n" +
+      "      1. DS_DDB_URL is correct (e.g. mongodb://localhost:27017)\n" +
+      "      2. The DocumentDB server is running and reachable\n" +
+      "      3. DS_DDB_DB_NAME matches an existing database\n",
     err,
   );
   process.exit(1);

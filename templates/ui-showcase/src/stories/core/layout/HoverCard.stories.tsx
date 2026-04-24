@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import {
   HoverCard,
   HoverCardContent,
@@ -7,12 +7,12 @@ import {
   AvatarFallback,
   AvatarImage,
   Button,
-} from '@corpdk/ui-core';
+} from "@corpdk/ui-core";
 
 const meta: Meta<typeof HoverCard> = {
-  title: 'ui-core/Layout/HoverCard',
+  title: "ui-core/Layout/HoverCard",
   component: HoverCard,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;
@@ -36,7 +36,9 @@ export const Default: Story = {
               <p className="text-sm">
                 The React Framework &ndash; created and maintained by @vercel.
               </p>
-              <p className="text-xs text-muted-foreground">Joined December 2021</p>
+              <p className="text-xs text-muted-foreground">
+                Joined December 2021
+              </p>
             </div>
           </div>
         </HoverCardContent>

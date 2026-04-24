@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import {
   Command,
   CommandEmpty,
@@ -7,12 +7,12 @@ import {
   CommandItem,
   CommandList,
   CommandSeparator,
-} from '@corpdk/ui-core';
+} from "@corpdk/ui-core";
 
 const meta: Meta<typeof Command> = {
-  title: 'ui-core/Navigation/Command',
+  title: "ui-core/Navigation/Command",
   component: Command,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;

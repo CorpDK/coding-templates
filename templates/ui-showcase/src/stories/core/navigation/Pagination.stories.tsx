@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import {
   Pagination,
   PaginationContent,
@@ -7,12 +7,12 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from '@corpdk/ui-core';
+} from "@corpdk/ui-core";
 
 const meta: Meta<typeof Pagination> = {
-  title: 'ui-core/Navigation/Pagination',
+  title: "ui-core/Navigation/Pagination",
   component: Pagination,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;
@@ -30,7 +30,9 @@ export const Default: Story = {
             <PaginationLink href="#">1</PaginationLink>
           </PaginationItem>
           <PaginationItem>
-            <PaginationLink href="#" isActive>2</PaginationLink>
+            <PaginationLink href="#" isActive>
+              2
+            </PaginationLink>
           </PaginationItem>
           <PaginationItem>
             <PaginationLink href="#">3</PaginationLink>

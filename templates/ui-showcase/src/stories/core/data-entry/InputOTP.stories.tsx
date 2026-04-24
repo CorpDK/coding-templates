@@ -1,15 +1,15 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSeparator,
   InputOTPSlot,
-} from '@corpdk/ui-core';
+} from "@corpdk/ui-core";
 
 const meta: Meta<typeof InputOTP> = {
-  title: 'ui-core/Data Entry/InputOTP',
+  title: "ui-core/Data Entry/InputOTP",
   component: InputOTP,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;

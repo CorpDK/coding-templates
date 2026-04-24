@@ -1,12 +1,12 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { Kbd, KbdGroup } from '@corpdk/ui-core';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { Kbd, KbdGroup } from "@corpdk/ui-core";
 
 const meta: Meta<typeof Kbd> = {
-  title: 'ui-core/Data Display/Kbd',
+  title: "ui-core/Data Display/Kbd",
   component: Kbd,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
   args: {
-    children: 'K',
+    children: "K",
   },
 };
 

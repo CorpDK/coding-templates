@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import {
   Carousel,
   CarouselContent,
@@ -7,12 +7,12 @@ import {
   CarouselPrevious,
   Card,
   CardContent,
-} from '@corpdk/ui-core';
+} from "@corpdk/ui-core";
 
 const meta: Meta<typeof Carousel> = {
-  title: 'ui-core/Data Display/Carousel',
+  title: "ui-core/Data Display/Carousel",
   component: Carousel,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
   decorators: [
     (Story) => (
       <div className="w-full max-w-xs mx-auto">

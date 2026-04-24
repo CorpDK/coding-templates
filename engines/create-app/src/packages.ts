@@ -1,4 +1,9 @@
-import type { PackageId, DsChoice, UiChoice, RelationalDbChoice } from "./types.js";
+import type {
+  PackageId,
+  DsChoice,
+  UiChoice,
+  RelationalDbChoice,
+} from "./types.js";
 
 export interface PackageDef {
   id: PackageId;
@@ -147,7 +152,7 @@ export const PACKAGE_DEFS: Record<PackageId, PackageDef> = {
 export function resolvePackages(
   ds: DsChoice,
   ui: UiChoice,
-  optionalUiPackages: PackageId[]
+  optionalUiPackages: PackageId[],
 ): Set<PackageId> {
   const selected = new Set<PackageId>();
 
@@ -204,15 +209,19 @@ export function getBuiltDeps(selected: Set<PackageId>): string[] {
 }
 
 /** Relational DB options for Prisma (no MongoDB — belongs in Document DB) */
-export const PRISMA_DB_OPTIONS: { value: RelationalDbChoice; label: string }[] = [
-  { value: "postgresql", label: "PostgreSQL" },
-  { value: "mysql", label: "MySQL" },
-  { value: "sqlite", label: "SQLite" },
-  { value: "cockroachdb", label: "CockroachDB" },
-];
+export const PRISMA_DB_OPTIONS: { value: RelationalDbChoice; label: string }[] =
+  [
+    { value: "postgresql", label: "PostgreSQL" },
+    { value: "mysql", label: "MySQL" },
+    { value: "sqlite", label: "SQLite" },
+    { value: "cockroachdb", label: "CockroachDB" },
+  ];
 
 /** Relational DB options for Drizzle */
-export const DRIZZLE_DB_OPTIONS: { value: RelationalDbChoice; label: string }[] = [
+export const DRIZZLE_DB_OPTIONS: {
+  value: RelationalDbChoice;
+  label: string;
+}[] = [
   { value: "postgresql", label: "PostgreSQL" },
   { value: "mysql", label: "MySQL" },
   { value: "sqlite", label: "SQLite" },

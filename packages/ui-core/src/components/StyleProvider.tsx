@@ -1,39 +1,63 @@
-'use client';
+"use client";
 
-import { useEffect, type ReactNode } from 'react';
-import { ThemeProvider, useTheme, type ThemeProviderProps } from 'next-themes';
+import { useEffect, type ReactNode } from "react";
+import { ThemeProvider, useTheme, type ThemeProviderProps } from "next-themes";
 
 export { useTheme };
-import { TOKENS } from '../lib/tokens';
+import { TOKENS } from "../lib/tokens";
 import {
   type BrandConfig,
   type BrandColorTokens,
   colorKeyToCssVar,
-} from '../lib/brand';
+} from "../lib/brand";
 
 const COLOR_KEYS: Array<keyof BrandColorTokens> = [
-  'background', 'foreground',
-  'card', 'cardForeground',
-  'popover', 'popoverForeground',
-  'primary', 'primaryForeground',
-  'secondary', 'secondaryForeground',
-  'muted', 'mutedForeground',
-  'accent', 'accentForeground',
-  'destructive',
-  'border', 'input', 'ring', 'overlay',
-  'sidebar', 'sidebarForeground', 'sidebarBorder',
-  'sidebarAccent', 'sidebarAccentForeground', 'sidebarRing',
-  'chart1', 'chart2', 'chart3', 'chart4', 'chart5',
+  "background",
+  "foreground",
+  "card",
+  "cardForeground",
+  "popover",
+  "popoverForeground",
+  "primary",
+  "primaryForeground",
+  "secondary",
+  "secondaryForeground",
+  "muted",
+  "mutedForeground",
+  "accent",
+  "accentForeground",
+  "destructive",
+  "border",
+  "input",
+  "ring",
+  "overlay",
+  "sidebar",
+  "sidebarForeground",
+  "sidebarBorder",
+  "sidebarAccent",
+  "sidebarAccentForeground",
+  "sidebarRing",
+  "chart1",
+  "chart2",
+  "chart3",
+  "chart4",
+  "chart5",
 ];
 
-function BrandInjector({ config, children }: { config: BrandConfig; children: ReactNode }) {
+function BrandInjector({
+  config,
+  children,
+}: {
+  config: BrandConfig;
+  children: ReactNode;
+}) {
   const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     const el = document.documentElement;
     const appliedVars: string[] = [];
 
-    const mode = resolvedTheme === 'dark' ? 'dark' : 'light';
+    const mode = resolvedTheme === "dark" ? "dark" : "light";
     const colorSet = config.colors[mode];
 
     for (const key of COLOR_KEYS) {
@@ -135,13 +159,15 @@ export interface StyleProviderProps extends ThemeProviderProps {
  *   <App />
  * </StyleProvider>
  */
-export function StyleProvider({ brand, children, ...themeProps }: StyleProviderProps) {
+export function StyleProvider({
+  brand,
+  children,
+  ...themeProps
+}: StyleProviderProps) {
   if (brand) {
     return (
       <ThemeProvider {...themeProps}>
-        <BrandInjector config={brand}>
-          {children}
-        </BrandInjector>
+        <BrandInjector config={brand}>{children}</BrandInjector>
       </ThemeProvider>
     );
   }

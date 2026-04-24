@@ -1,5 +1,5 @@
-import type { DefaultSession } from 'next-auth';
-import type { AppUserClaims } from '@corpdk/ui-auth';
+import type { DefaultSession } from "next-auth";
+import type { AppUserClaims } from "@corpdk/ui-auth";
 
 /**
  * Augments next-auth types with the claims defined in AppUserClaims.
@@ -20,9 +20,9 @@ import type { AppUserClaims } from '@corpdk/ui-auth';
  *   }
  * }
  */
-declare module 'next-auth' {
+declare module "next-auth" {
   interface Session {
-    user: DefaultSession['user'] & AppUserClaims;
+    user: DefaultSession["user"] & AppUserClaims;
   }
 
   // Covers session.user inside callbacks.session when using JWT strategy
@@ -32,6 +32,6 @@ declare module 'next-auth' {
   interface Profile extends AppUserClaims {}
 }
 
-declare module 'next-auth/jwt' {
+declare module "next-auth/jwt" {
   interface JWT extends AppUserClaims {}
 }

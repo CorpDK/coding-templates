@@ -1,10 +1,10 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { Checkbox, Label } from '@corpdk/ui-core';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { Checkbox, Label } from "@corpdk/ui-core";
 
 const meta: Meta<typeof Checkbox> = {
-  title: 'ui-core/Data Entry/Checkbox',
+  title: "ui-core/Data Entry/Checkbox",
   component: Checkbox,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;

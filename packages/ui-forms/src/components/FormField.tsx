@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
 import {
   type FieldPath,
   type FieldValues,
   type UseFormReturn,
   Controller,
-} from 'react-hook-form';
+} from "react-hook-form";
 
 export interface FormFieldProps<
   TFieldValues extends FieldValues,
@@ -20,7 +20,7 @@ export interface FormFieldProps<
   /** Placeholder text shown when the input is empty. */
   placeholder?: string;
   /** HTML input type. @default "text" */
-  type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url';
+  type?: "text" | "email" | "password" | "number" | "tel" | "url";
 }
 
 export function FormField<
@@ -31,7 +31,7 @@ export function FormField<
   name,
   label,
   placeholder,
-  type = 'text',
+  type = "text",
 }: FormFieldProps<TFieldValues, TName>) {
   return (
     <Controller
@@ -50,7 +50,7 @@ export function FormField<
             id={String(name)}
             type={type}
             placeholder={placeholder}
-            value={field.value ?? ''}
+            value={field.value ?? ""}
             className="px-3 py-2 rounded border border-zinc-300 dark:border-zinc-600 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-zinc-100 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
           {fieldState.error && (

@@ -7,6 +7,7 @@ Rationale behind the monorepo structure and its key architectural decisions.
 ## Why a Monorepo?
 
 The repo combines templates, shared UI packages, engines, and libraries that evolve together. A monorepo ensures:
+
 - Shared packages (`packages/ui-*`) are always consumed at the version that was developed alongside the templates
 - Turbo's task pipeline (codegen → build → dev) can orchestrate cross-package dependencies
 - `create-app` can reference template source directly without a publish/install cycle
@@ -15,12 +16,12 @@ The repo combines templates, shared UI packages, engines, and libraries that evo
 
 ## Workspace Layout Rationale
 
-| Directory | Role | Rationale |
-|-----------|------|-----------|
-| `templates/` | Scaffolded project sources | Isolates runnable applications from shared infrastructure |
-| `packages/` | Shared UI libraries | Publishable to npm; built to `dist/` with proper exports maps |
-| `engines/` | CLI tooling | `create-app` is a dev-time tool, not a runtime dependency |
-| `libraries/` | Shared runtime libraries | `pub-sub` is a runtime dep of every DS package — separate from UI concerns |
+| Directory    | Role                       | Rationale                                                                  |
+| ------------ | -------------------------- | -------------------------------------------------------------------------- |
+| `templates/` | Scaffolded project sources | Isolates runnable applications from shared infrastructure                  |
+| `packages/`  | Shared UI libraries        | Publishable to npm; built to `dist/` with proper exports maps              |
+| `engines/`   | CLI tooling                | `create-app` is a dev-time tool, not a runtime dependency                  |
+| `libraries/` | Shared runtime libraries   | `pub-sub` is a runtime dep of every DS package — separate from UI concerns |
 
 ---
 
@@ -72,18 +73,18 @@ Turbo's `dev` task declares `dependsOn: ["^build"]`. This ensures shared package
 
 All tsconfig files extend from four shared base configs at the workspace root:
 
-```
+```text
 tsconfig.base.json     ← strict, esModuleInterop, skipLibCheck, sourceMap, declaration
   ├─ tsconfig.node.json    ← ES2024, NodeNext (DS templates, libraries, engines)
   └─ tsconfig.react.json   ← ES2024, bundler, JSX (shared UI packages)
        └─ tsconfig.next.json   ← incremental, Next.js plugin (UI app templates)
 ```
 
-| Base config | Target | Module | Used by |
-|-------------|--------|--------|---------|
-| `tsconfig.node.json` | ES2024 | NodeNext | `ds`, `ds-hprt`, `ds-cdb`, `ds-ddb`, `ds-file`, `ds-mongo`, `ds-sdk`, `pub-sub`, `codegen-cli`, `create-app` |
-| `tsconfig.react.json` | ES2024 | esnext/bundler | `ui-core`, `ui-auth`, `ui-charts`, `ui-forms`, `ui-datagrid`, `ui-feedback` |
-| `tsconfig.next.json` | ES2024 | esnext/bundler | `ui`, `ui-hprt` |
+| Base config           | Target | Module         | Used by                                                                                                      |
+| --------------------- | ------ | -------------- | ------------------------------------------------------------------------------------------------------------ |
+| `tsconfig.node.json`  | ES2024 | NodeNext       | `ds`, `ds-hprt`, `ds-cdb`, `ds-ddb`, `ds-file`, `ds-mongo`, `ds-sdk`, `pub-sub`, `codegen-cli`, `create-app` |
+| `tsconfig.react.json` | ES2024 | esnext/bundler | `ui-core`, `ui-auth`, `ui-charts`, `ui-forms`, `ui-datagrid`, `ui-feedback`                                  |
+| `tsconfig.next.json`  | ES2024 | esnext/bundler | `ui`, `ui-hprt`                                                                                              |
 
 Per-package tsconfigs declare only local overrides (paths, custom includes). UI shared packages additionally have a `tsconfig.build.json` that extends their `tsconfig.json` with `noEmit: false`, `outDir: "dist"`, and `declarationMap: true`.
 
@@ -91,10 +92,10 @@ Per-package tsconfigs declare only local overrides (paths, custom includes). UI 
 
 ## Versioning Strategy
 
-| Category | Scheme | Example | Reason |
-|----------|--------|---------|--------|
-| Shared packages (`packages/ui-*`), engines, libraries | CalVer `YYYY.MM.MICRO[-pre.N]` | `2026.3.0-alpha.1` | Published to npm — calendar versioning communicates when a release was cut |
-| Template apps (`templates/ui`, `templates/ui-hprt`, `templates/ui-showcase`) | Semver | `0.1.0` | Not published to npm — scaffolded into user projects; semver communicates API stability |
+| Category                                                                     | Scheme                         | Example            | Reason                                                                                  |
+| ---------------------------------------------------------------------------- | ------------------------------ | ------------------ | --------------------------------------------------------------------------------------- |
+| Shared packages (`packages/ui-*`), engines, libraries                        | CalVer `YYYY.MM.MICRO[-pre.N]` | `2026.3.0-alpha.1` | Published to npm — calendar versioning communicates when a release was cut              |
+| Template apps (`templates/ui`, `templates/ui-hprt`, `templates/ui-showcase`) | Semver                         | `0.1.0`            | Not published to npm — scaffolded into user projects; semver communicates API stability |
 
 Template apps are not versioned for consumers — they are scaffolded once and then owned by the user. Semver `0.1.0` signals pre-stable without imposing CalVer semantics on code that will never be published.
 
@@ -102,15 +103,16 @@ Template apps are not versioned for consumers — they are scaffolded once and t
 
 The CalVer scheme used is `YYYY.MM.MICRO` where months are **not** zero-padded (e.g. `2026.3.0`, not `2026.03.0`).
 
-| Release type | Format | Example | When to use |
-|---|---|---|---|
-| Stable | `YYYY.MM.MICRO` | `2026.3.0` | First stable release in a calendar period |
-| Alpha | `YYYY.MM.MICRO-alpha.N` | `2026.3.0-alpha.1` | Early unstable builds; API may change |
-| Beta | `YYYY.MM.MICRO-beta.N` | `2026.3.0-beta.2` | Feature-complete; undergoing validation |
-| Patch | `YYYY.MM.MICRO` (increment MICRO) | `2026.3.1` | Bug fixes within the same calendar period |
-| Hotfix | `YYYY.MM.MICRO-hotfix.N` | `2026.3.1-hotfix.1` | Critical production fix on a released patch |
+| Release type | Format                            | Example             | When to use                                 |
+| ------------ | --------------------------------- | ------------------- | ------------------------------------------- |
+| Stable       | `YYYY.MM.MICRO`                   | `2026.3.0`          | First stable release in a calendar period   |
+| Alpha        | `YYYY.MM.MICRO-alpha.N`           | `2026.3.0-alpha.1`  | Early unstable builds; API may change       |
+| Beta         | `YYYY.MM.MICRO-beta.N`            | `2026.3.0-beta.2`   | Feature-complete; undergoing validation     |
+| Patch        | `YYYY.MM.MICRO` (increment MICRO) | `2026.3.1`          | Bug fixes within the same calendar period   |
+| Hotfix       | `YYYY.MM.MICRO-hotfix.N`          | `2026.3.1-hotfix.1` | Critical production fix on a released patch |
 
 **When to bump MICRO vs roll to a new `YYYY.MM`:**
+
 - Increment `MICRO` for bug fixes and patches within the same calendar month.
 - Roll `YYYY.MM` (reset `MICRO` to `0`) when a new month has passed since the last release, or when shipping a significant feature batch that merits a new calendar stamp.
 - Never increment `MICRO` past `9` to avoid semantic confusion — a new calendar period should be used instead.
@@ -123,20 +125,20 @@ Packages are published to two registries depending on their audience.
 
 ### Registries
 
-| Registry | URL | Audience |
-|----------|-----|----------|
-| **npmjs** (public) | `https://registry.npmjs.org/` | External consumers, open-source community |
+| Registry                  | URL                                                         | Audience                                  |
+| ------------------------- | ----------------------------------------------------------- | ----------------------------------------- |
+| **npmjs** (public)        | `https://registry.npmjs.org/`                               | External consumers, open-source community |
 | **Artifactory** (private) | `https://artifactory.corp.example.com/api/npm/npm-private/` | Internal teams only; template scaffolding |
 
 ### Package → Registry Mapping
 
-| Directory | Registry | Rationale |
-|-----------|----------|-----------|
-| `engines/*` | npmjs | CLI tooling consumed by external users |
-| `libraries/*` | npmjs | Runtime libraries depended on by published packages |
-| `packages/*` | npmjs | Shared UI packages and linting config consumed by downstream apps |
-| `templates/*` | Artifactory | Internal project starters; scaffolded by `create-app` |
-| Root `package.json` | _(not published)_ | Workspace root; `"private": true` |
+| Directory           | Registry          | Rationale                                                         |
+| ------------------- | ----------------- | ----------------------------------------------------------------- |
+| `engines/*`         | npmjs             | CLI tooling consumed by external users                            |
+| `libraries/*`       | npmjs             | Runtime libraries depended on by published packages               |
+| `packages/*`        | npmjs             | Shared UI packages and linting config consumed by downstream apps |
+| `templates/*`       | Artifactory       | Internal project starters; scaffolded by `create-app`             |
+| Root `package.json` | _(not published)_ | Workspace root; `"private": true`                                 |
 
 ### Configuration
 
@@ -157,6 +159,7 @@ Each publishable package declares its target registry in `package.json`:
 ```
 
 **Key details:**
+
 - **`"access": "public"`** — required for scoped packages (`@corpdk/*`) on npmjs; without it, `npm publish` defaults to restricted (paid feature).
 - **`"files": ["dist"]`** — npmjs packages ship only compiled output. Templates omit `files` to include all source files (the scaffolded project needs `src/`, config files, etc.).
 - **No `"private": true`** on published packages — only the workspace root retains `"private": true`.

@@ -1,12 +1,12 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { Label, Input } from '@corpdk/ui-core';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { Label, Input } from "@corpdk/ui-core";
 
 const meta: Meta<typeof Label> = {
-  title: 'ui-core/Data Entry/Label',
+  title: "ui-core/Data Entry/Label",
   component: Label,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
   args: {
-    children: 'Email address',
+    children: "Email address",
   },
 };
 

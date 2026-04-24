@@ -1,10 +1,10 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { AspectRatio } from '@corpdk/ui-core';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { AspectRatio } from "@corpdk/ui-core";
 
 const meta: Meta<typeof AspectRatio> = {
-  title: 'ui-core/Data Display/AspectRatio',
+  title: "ui-core/Data Display/AspectRatio",
   component: AspectRatio,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
   decorators: [
     (Story) => (
       <div className="w-[450px]">

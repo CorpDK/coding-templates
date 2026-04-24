@@ -1,23 +1,23 @@
-import type { Decorator } from '@storybook/nextjs-vite';
-import { SessionProvider } from '@corpdk/ui-auth';
+import type { Decorator } from "@storybook/nextjs-vite";
+import { SessionProvider } from "@corpdk/ui-auth";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const mockSession = {
   user: {
-    name: 'Test User',
-    email: 'test@example.com',
-    role: 'admin',
+    name: "Test User",
+    email: "test@example.com",
+    role: "admin",
   },
-  expires: '2099-01-01T00:00:00.000Z',
+  expires: "2099-01-01T00:00:00.000Z",
 } as any;
 
 const viewerSession = {
   user: {
-    name: 'Test User',
-    email: 'test@example.com',
-    role: 'viewer',
+    name: "Test User",
+    email: "test@example.com",
+    role: "viewer",
   },
-  expires: '2099-01-01T00:00:00.000Z',
+  expires: "2099-01-01T00:00:00.000Z",
 } as any;
 /* eslint-enable @typescript-eslint/no-explicit-any */
 

@@ -2,10 +2,7 @@ import type { OperationDescriptor } from "./schema-utils.js";
 
 /** Escape groff special characters in a plain-text string. */
 function groffEscape(s: string): string {
-  return s
-    .replace(/\\/g, "\\\\")
-    .replace(/"/g, "\\(dq")
-    .replace(/-/g, "\\-");
+  return s.replace(/\\/g, "\\\\").replace(/"/g, "\\(dq").replace(/-/g, "\\-");
 }
 
 function fmtSynopsis(ops: OperationDescriptor[]): string {
@@ -15,7 +12,7 @@ function fmtSynopsis(ops: OperationDescriptor[]): string {
         .map((a) =>
           a.required
             ? `\\fB\\-\\-${a.name}\\fP \\fI${a.graphqlType}\\fP`
-            : `[\\fB\\-\\-${a.name}\\fP \\fI${a.graphqlType}\\fP]`
+            : `[\\fB\\-\\-${a.name}\\fP \\fI${a.graphqlType}\\fP]`,
         )
         .join(" ");
       return `.TP\n.B ${groffEscape(op.commandName)}${args ? "\n" + args : ""}`;
@@ -23,7 +20,10 @@ function fmtSynopsis(ops: OperationDescriptor[]): string {
     .join("\n");
 }
 
-function fmtCommandSection(ops: OperationDescriptor[], heading: string): string {
+function fmtCommandSection(
+  ops: OperationDescriptor[],
+  heading: string,
+): string {
   if (ops.length === 0) return "";
 
   const items = ops

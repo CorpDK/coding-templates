@@ -1,12 +1,12 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { Badge } from '@corpdk/ui-core';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { Badge } from "@corpdk/ui-core";
 
 const meta: Meta<typeof Badge> = {
-  title: 'ui-core/Data Display/Badge',
+  title: "ui-core/Data Display/Badge",
   component: Badge,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
   args: {
-    children: 'Badge',
+    children: "Badge",
   },
 };
 
@@ -16,15 +16,15 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {};
 
 export const Secondary: Story = {
-  args: { variant: 'secondary' },
+  args: { variant: "secondary" },
 };
 
 export const Destructive: Story = {
-  args: { variant: 'destructive' },
+  args: { variant: "destructive" },
 };
 
 export const Outline: Story = {
-  args: { variant: 'outline' },
+  args: { variant: "outline" },
 };
 
 export const AllVariants: Story = {

@@ -30,7 +30,7 @@ export interface BarChartProps {
   /** Fill color for the bars (CSS color string). @default TOKENS.primary */
   color?: string;
   /** Bar orientation. @default "vertical" */
-  direction?: 'vertical' | 'horizontal';
+  direction?: "vertical" | "horizontal";
   /** CSS class applied to the SVG element. */
   className?: string;
 }

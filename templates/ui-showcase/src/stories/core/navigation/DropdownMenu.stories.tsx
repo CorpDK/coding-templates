@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import {
   DropdownMenu,
   DropdownMenuCheckboxItem,
@@ -10,13 +10,13 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
   Button,
-} from '@corpdk/ui-core';
-import { useState } from 'react';
+} from "@corpdk/ui-core";
+import { useState } from "react";
 
 const meta: Meta<typeof DropdownMenu> = {
-  title: 'ui-core/Navigation/DropdownMenu',
+  title: "ui-core/Navigation/DropdownMenu",
   component: DropdownMenu,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;
@@ -63,10 +63,16 @@ export const WithCheckboxes: Story = {
         <DropdownMenuContent className="w-56">
           <DropdownMenuLabel>Appearance</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuCheckboxItem checked={showPanel} onCheckedChange={setShowPanel}>
+          <DropdownMenuCheckboxItem
+            checked={showPanel}
+            onCheckedChange={setShowPanel}
+          >
             Status Bar
           </DropdownMenuCheckboxItem>
-          <DropdownMenuCheckboxItem checked={showToolbar} onCheckedChange={setShowToolbar}>
+          <DropdownMenuCheckboxItem
+            checked={showToolbar}
+            onCheckedChange={setShowToolbar}
+          >
             Toolbar
           </DropdownMenuCheckboxItem>
         </DropdownMenuContent>

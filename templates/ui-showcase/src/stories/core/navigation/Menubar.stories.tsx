@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import {
   Menubar,
   MenubarContent,
@@ -7,12 +7,12 @@ import {
   MenubarSeparator,
   MenubarShortcut,
   MenubarTrigger,
-} from '@corpdk/ui-core';
+} from "@corpdk/ui-core";
 
 const meta: Meta<typeof Menubar> = {
-  title: 'ui-core/Navigation/Menubar',
+  title: "ui-core/Navigation/Menubar",
   component: Menubar,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;

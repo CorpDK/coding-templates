@@ -1,10 +1,10 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { ButtonGroup, ButtonGroupSeparator, Button } from '@corpdk/ui-core';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { ButtonGroup, ButtonGroupSeparator, Button } from "@corpdk/ui-core";
 
 const meta: Meta<typeof ButtonGroup> = {
-  title: 'ui-core/Data Entry/ButtonGroup',
+  title: "ui-core/Data Entry/ButtonGroup",
   component: ButtonGroup,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;

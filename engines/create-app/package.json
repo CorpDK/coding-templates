@@ -6,7 +6,9 @@
     "registry": "https://registry.npmjs.org/",
     "access": "public"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "bin": {
     "create-app": "./dist/index.js"
   },

@@ -1,10 +1,10 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { Input } from '@corpdk/ui-core';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { Input } from "@corpdk/ui-core";
 
 const meta: Meta<typeof Input> = {
-  title: 'ui-core/Data Entry/Input',
+  title: "ui-core/Data Entry/Input",
   component: Input,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
   decorators: [
     (Story) => (
       <div className="w-64">
@@ -18,13 +18,13 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
-  args: { type: 'text' },
+  args: { type: "text" },
 };
 
 export const WithPlaceholder: Story = {
-  args: { placeholder: 'Enter your email...' },
+  args: { placeholder: "Enter your email..." },
 };
 
 export const Disabled: Story = {
-  args: { placeholder: 'Disabled', disabled: true },
+  args: { placeholder: "Disabled", disabled: true },
 };

@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
 import {
   Popover,
   PopoverContent,
@@ -6,12 +6,12 @@ import {
   Button,
   Input,
   Label,
-} from '@corpdk/ui-core';
+} from "@corpdk/ui-core";
 
 const meta: Meta<typeof Popover> = {
-  title: 'ui-core/Layout/Popover',
+  title: "ui-core/Layout/Popover",
   component: Popover,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
 };
 
 export default meta;
@@ -35,11 +35,19 @@ export const Default: Story = {
             <div className="grid gap-2">
               <div className="grid grid-cols-3 items-center gap-4">
                 <Label htmlFor="width">Width</Label>
-                <Input id="width" defaultValue="100%" className="col-span-2 h-8" />
+                <Input
+                  id="width"
+                  defaultValue="100%"
+                  className="col-span-2 h-8"
+                />
               </div>
               <div className="grid grid-cols-3 items-center gap-4">
                 <Label htmlFor="height">Height</Label>
-                <Input id="height" defaultValue="25px" className="col-span-2 h-8" />
+                <Input
+                  id="height"
+                  defaultValue="25px"
+                  className="col-span-2 h-8"
+                />
               </div>
             </div>
           </div>

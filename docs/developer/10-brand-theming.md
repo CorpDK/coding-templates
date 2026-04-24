@@ -8,7 +8,7 @@ Brand theming lets consumers of `@corpdk/ui-*` libraries apply their organizatio
 
 ## Architecture
 
-```
+```text
 Brand JSON ──▶ StyleProvider ──▶ CSS Custom Properties ──▶ Tailwind classes ──▶ Components
                     │
                     ├─ ThemeProvider (next-themes) → light/dark class
@@ -29,12 +29,16 @@ Apps without a `brand` prop on `StyleProvider` get theme-only behavior (backward
 ### 1. Use a built-in preset
 
 ```tsx
-import { StyleProvider, corporateBlueBrand } from '@corpdk/ui-core';
-import type { BrandConfig } from '@corpdk/ui-core';
+import { StyleProvider, corporateBlueBrand } from "@corpdk/ui-core";
+import type { BrandConfig } from "@corpdk/ui-core";
 
 export default function Layout({ children }) {
   return (
-    <StyleProvider attribute="class" defaultTheme="light" brand={corporateBlueBrand as BrandConfig}>
+    <StyleProvider
+      attribute="class"
+      defaultTheme="light"
+      brand={corporateBlueBrand as BrandConfig}
+    >
       {children}
     </StyleProvider>
   );
@@ -78,15 +82,21 @@ Create a JSON file with `$schema` for editor validation:
 Only specify what differs from the neutral baseline:
 
 ```tsx
-import { createBrandConfig } from '@corpdk/ui-core';
+import { createBrandConfig } from "@corpdk/ui-core";
 
 const myBrand = createBrandConfig({
-  name: 'My Brand',
+  name: "My Brand",
   colors: {
-    light: { primary: 'oklch(0.5 0.2 260)', primaryForeground: 'oklch(0.99 0 0)' },
-    dark: { primary: 'oklch(0.7 0.15 260)', primaryForeground: 'oklch(0.1 0 0)' },
+    light: {
+      primary: "oklch(0.5 0.2 260)",
+      primaryForeground: "oklch(0.99 0 0)",
+    },
+    dark: {
+      primary: "oklch(0.7 0.15 260)",
+      primaryForeground: "oklch(0.1 0 0)",
+    },
   },
-  shape: { radius: '0' },
+  shape: { radius: "0" },
 });
 ```
 
@@ -98,12 +108,12 @@ The schema is defined in `packages/ui-core/src/brands/brand-config.schema.json` 
 
 ### Required fields
 
-| Field | Type | Description |
-|-------|------|-------------|
-| `name` | `string` | Human-readable brand name |
-| `colors.light` | `BrandColorTokens` | Light mode color palette (18 required + optional sidebar/chart) |
-| `colors.dark` | `BrandColorTokens` | Dark mode color palette |
-| `shape.radius` | `string` | Base border radius (`"0"` for sharp, `"0.625rem"` default, `"1rem"` for pill) |
+| Field          | Type               | Description                                                                   |
+| -------------- | ------------------ | ----------------------------------------------------------------------------- |
+| `name`         | `string`           | Human-readable brand name                                                     |
+| `colors.light` | `BrandColorTokens` | Light mode color palette (18 required + optional sidebar/chart)               |
+| `colors.dark`  | `BrandColorTokens` | Dark mode color palette                                                       |
+| `shape.radius` | `string`           | Base border radius (`"0"` for sharp, `"0.625rem"` default, `"1rem"` for pill) |
 
 ### Color tokens (required)
 
@@ -115,41 +125,41 @@ The schema is defined in `packages/ui-core/src/brands/brand-config.schema.json` 
 
 ### Shape
 
-| Field | Default | Description |
-|-------|---------|-------------|
-| `radius` | (required) | Base border radius. Derived radii computed via `@theme inline` |
-| `borderWidth` | `"1px"` | Default border thickness |
-| `shadow.sm/md/lg` | subtle shadows | Box shadows. Use `"none"` for flat brands |
+| Field             | Default        | Description                                                    |
+| ----------------- | -------------- | -------------------------------------------------------------- |
+| `radius`          | (required)     | Base border radius. Derived radii computed via `@theme inline` |
+| `borderWidth`     | `"1px"`        | Default border thickness                                       |
+| `shadow.sm/md/lg` | subtle shadows | Box shadows. Use `"none"` for flat brands                      |
 
 ### Typography
 
-| Field | Default | Description |
-|-------|---------|-------------|
-| `fontSans` | — | Sans-serif font stack |
-| `fontMono` | — | Monospace font stack |
-| `fontWeightNormal` | `"400"` | Normal text weight |
+| Field              | Default | Description                         |
+| ------------------ | ------- | ----------------------------------- |
+| `fontSans`         | —       | Sans-serif font stack               |
+| `fontMono`         | —       | Monospace font stack                |
+| `fontWeightNormal` | `"400"` | Normal text weight                  |
 | `fontWeightMedium` | `"500"` | Medium weight (labels, subheadings) |
-| `fontWeightBold` | `"700"` | Bold weight (headings) |
-| `letterSpacing` | `"0em"` | Letter spacing |
-| `lineHeight` | `"1.5"` | Line height |
+| `fontWeightBold`   | `"700"` | Bold weight (headings)              |
+| `letterSpacing`    | `"0em"` | Letter spacing                      |
+| `lineHeight`       | `"1.5"` | Line height                         |
 
 ### Motion
 
-| Field | Default | Description |
-|-------|---------|-------------|
-| `transitionDuration` | `"150ms"` | Default transition speed. `"0ms"` for no animation |
-| `transitionTimingFn` | `cubic-bezier(0.4, 0, 0.2, 1)` | Easing function |
+| Field                | Default                        | Description                                        |
+| -------------------- | ------------------------------ | -------------------------------------------------- |
+| `transitionDuration` | `"150ms"`                      | Default transition speed. `"0ms"` for no animation |
+| `transitionTimingFn` | `cubic-bezier(0.4, 0, 0.2, 1)` | Easing function                                    |
 
 ---
 
 ## Built-in Presets
 
-| Preset | Import | Description |
-|--------|--------|-------------|
-| Default Neutral | `defaultNeutralBrand` | Achromatic grays, `0.625rem` radius, subtle shadows |
-| Corporate Blue | `corporateBlueBrand` | Professional blue primary, `0.5rem` radius |
-| Sharp Enterprise | `sharpEnterpriseBrand` | Zero radius, 2px borders, no shadows, tighter spacing |
-| Vibrant Startup | `vibrantStartupBrand` | Purple/pink, `1rem` radius, prominent shadows, bouncy easing |
+| Preset           | Import                 | Description                                                  |
+| ---------------- | ---------------------- | ------------------------------------------------------------ |
+| Default Neutral  | `defaultNeutralBrand`  | Achromatic grays, `0.625rem` radius, subtle shadows          |
+| Corporate Blue   | `corporateBlueBrand`   | Professional blue primary, `0.5rem` radius                   |
+| Sharp Enterprise | `sharpEnterpriseBrand` | Zero radius, 2px borders, no shadows, tighter spacing        |
+| Vibrant Startup  | `vibrantStartupBrand`  | Purple/pink, `1rem` radius, prominent shadows, bouncy easing |
 
 ---
 
@@ -170,6 +180,7 @@ To add a custom brand to the Storybook selector:
 All `globals.css` files have been migrated to `globals.scss`. The SCSS files retain full Tailwind compatibility — SCSS is processed first, then Tailwind's PostCSS plugin runs.
 
 SCSS adds value for:
+
 - Organized SCSS comments (`//`) for token sections
 - Future use of SCSS partials, mixins, and nesting for complex brand logic
 

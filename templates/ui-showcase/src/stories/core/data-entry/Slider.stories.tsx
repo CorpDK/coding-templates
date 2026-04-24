@@ -1,11 +1,11 @@
-import type { Meta, StoryObj } from '@storybook/nextjs-vite';
-import { Slider } from '@corpdk/ui-core';
-import { useState } from 'react';
+import type { Meta, StoryObj } from "@storybook/nextjs-vite";
+import { Slider } from "@corpdk/ui-core";
+import { useState } from "react";
 
 const meta: Meta<typeof Slider> = {
-  title: 'ui-core/Data Entry/Slider',
+  title: "ui-core/Data Entry/Slider",
   component: Slider,
-  tags: ['autodocs'],
+  tags: ["autodocs"],
   decorators: [
     (Story) => (
       <div className="w-64">

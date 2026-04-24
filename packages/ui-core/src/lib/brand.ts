@@ -1,4 +1,4 @@
-import { TOKENS } from './tokens';
+import { TOKENS } from "./tokens";
 
 /** Color palette for a single mode (light or dark). */
 export interface BrandColorTokens {
@@ -77,76 +77,77 @@ export interface BrandConfig {
 }
 
 const DEFAULT_COLORS_LIGHT: BrandColorTokens = {
-  background: 'oklch(1 0 0)',
-  foreground: 'oklch(0.145 0 0)',
-  card: 'oklch(1 0 0)',
-  cardForeground: 'oklch(0.145 0 0)',
-  popover: 'oklch(1 0 0)',
-  popoverForeground: 'oklch(0.145 0 0)',
-  primary: 'oklch(0.205 0 0)',
-  primaryForeground: 'oklch(0.985 0 0)',
-  secondary: 'oklch(0.97 0 0)',
-  secondaryForeground: 'oklch(0.205 0 0)',
-  muted: 'oklch(0.97 0 0)',
-  mutedForeground: 'oklch(0.556 0 0)',
-  accent: 'oklch(0.97 0 0)',
-  accentForeground: 'oklch(0.205 0 0)',
-  destructive: 'oklch(0.577 0.245 27.325)',
-  border: 'oklch(0.922 0 0)',
-  input: 'oklch(0.922 0 0)',
-  ring: 'oklch(0.708 0 0)',
-  overlay: 'oklch(0 0 0 / 80%)',
+  background: "oklch(1 0 0)",
+  foreground: "oklch(0.145 0 0)",
+  card: "oklch(1 0 0)",
+  cardForeground: "oklch(0.145 0 0)",
+  popover: "oklch(1 0 0)",
+  popoverForeground: "oklch(0.145 0 0)",
+  primary: "oklch(0.205 0 0)",
+  primaryForeground: "oklch(0.985 0 0)",
+  secondary: "oklch(0.97 0 0)",
+  secondaryForeground: "oklch(0.205 0 0)",
+  muted: "oklch(0.97 0 0)",
+  mutedForeground: "oklch(0.556 0 0)",
+  accent: "oklch(0.97 0 0)",
+  accentForeground: "oklch(0.205 0 0)",
+  destructive: "oklch(0.577 0.245 27.325)",
+  border: "oklch(0.922 0 0)",
+  input: "oklch(0.922 0 0)",
+  ring: "oklch(0.708 0 0)",
+  overlay: "oklch(0 0 0 / 80%)",
 };
 
 const DEFAULT_COLORS_DARK: BrandColorTokens = {
-  background: 'oklch(0.145 0 0)',
-  foreground: 'oklch(0.985 0 0)',
-  card: 'oklch(0.205 0 0)',
-  cardForeground: 'oklch(0.985 0 0)',
-  popover: 'oklch(0.205 0 0)',
-  popoverForeground: 'oklch(0.985 0 0)',
-  primary: 'oklch(0.922 0 0)',
-  primaryForeground: 'oklch(0.205 0 0)',
-  secondary: 'oklch(0.269 0 0)',
-  secondaryForeground: 'oklch(0.985 0 0)',
-  muted: 'oklch(0.269 0 0)',
-  mutedForeground: 'oklch(0.708 0 0)',
-  accent: 'oklch(0.269 0 0)',
-  accentForeground: 'oklch(0.985 0 0)',
-  destructive: 'oklch(0.704 0.191 22.216)',
-  border: 'oklch(1 0 0 / 10%)',
-  input: 'oklch(1 0 0 / 15%)',
-  ring: 'oklch(0.556 0 0)',
-  overlay: 'oklch(0 0 0 / 85%)',
+  background: "oklch(0.145 0 0)",
+  foreground: "oklch(0.985 0 0)",
+  card: "oklch(0.205 0 0)",
+  cardForeground: "oklch(0.985 0 0)",
+  popover: "oklch(0.205 0 0)",
+  popoverForeground: "oklch(0.985 0 0)",
+  primary: "oklch(0.922 0 0)",
+  primaryForeground: "oklch(0.205 0 0)",
+  secondary: "oklch(0.269 0 0)",
+  secondaryForeground: "oklch(0.985 0 0)",
+  muted: "oklch(0.269 0 0)",
+  mutedForeground: "oklch(0.708 0 0)",
+  accent: "oklch(0.269 0 0)",
+  accentForeground: "oklch(0.985 0 0)",
+  destructive: "oklch(0.704 0.191 22.216)",
+  border: "oklch(1 0 0 / 10%)",
+  input: "oklch(1 0 0 / 15%)",
+  ring: "oklch(0.556 0 0)",
+  overlay: "oklch(0 0 0 / 85%)",
 };
 
 const DEFAULT_SHAPE: BrandShape = {
-  radius: '0.625rem',
-  borderWidth: '1px',
+  radius: "0.625rem",
+  borderWidth: "1px",
   shadow: {
-    sm: '0 1px 2px oklch(0 0 0 / 5%)',
-    md: '0 4px 6px oklch(0 0 0 / 7%)',
-    lg: '0 10px 15px oklch(0 0 0 / 10%)',
+    sm: "0 1px 2px oklch(0 0 0 / 5%)",
+    md: "0 4px 6px oklch(0 0 0 / 7%)",
+    lg: "0 10px 15px oklch(0 0 0 / 10%)",
   },
 };
 
 const DEFAULT_TYPOGRAPHY: BrandTypography = {
-  fontWeightNormal: '400',
-  fontWeightMedium: '500',
-  fontWeightBold: '700',
-  letterSpacing: '0em',
-  lineHeight: '1.5',
+  fontWeightNormal: "400",
+  fontWeightMedium: "500",
+  fontWeightBold: "700",
+  letterSpacing: "0em",
+  lineHeight: "1.5",
 };
 
 const DEFAULT_MOTION: BrandMotion = {
-  transitionDuration: '150ms',
-  transitionTimingFn: 'cubic-bezier(0.4, 0, 0.2, 1)',
+  transitionDuration: "150ms",
+  transitionTimingFn: "cubic-bezier(0.4, 0, 0.2, 1)",
 };
 
 /** Default neutral brand (baseline). */
 export const DEFAULT_BRAND: BrandConfig = {
-  name: 'Default Neutral',
-  description: 'Achromatic neutral baseline with subtle rounded corners and soft shadows.',
+  name: "Default Neutral",
+  description:
+    "Achromatic neutral baseline with subtle rounded corners and soft shadows.",
   colors: { light: DEFAULT_COLORS_LIGHT, dark: DEFAULT_COLORS_DARK },
   shape: DEFAULT_SHAPE,
   typography: DEFAULT_TYPOGRAPHY,
@@ -164,7 +165,12 @@ function deepMerge(
   const result = { ...base };
   for (const key of Object.keys(override)) {
     const val = override[key];
-    if (val !== undefined && val !== null && typeof val === 'object' && !Array.isArray(val)) {
+    if (
+      val !== undefined &&
+      val !== null &&
+      typeof val === "object" &&
+      !Array.isArray(val)
+    ) {
       result[key] = deepMerge(
         (base[key] ?? {}) as Record<string, unknown>,
         val as Record<string, unknown>,
@@ -204,5 +210,8 @@ export function createBrandConfig(
  * Uses the TOKENS constant as the single source of truth.
  */
 export function colorKeyToCssVar(key: keyof BrandColorTokens): string {
-  return TOKENS[key as keyof typeof TOKENS] ?? `--${key.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
+  return (
+    TOKENS[key as keyof typeof TOKENS] ??
+    `--${key.replace(/([A-Z])/g, "-$1").toLowerCase()}`
+  );
 }

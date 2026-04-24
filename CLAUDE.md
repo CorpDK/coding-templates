@@ -47,29 +47,29 @@ coding-templates/
 
 ### Package Purpose
 
-| Package | Scope | Description |
-|---------|-------|-------------|
-| `ui` | `@corpdk/ui` | Standard Next.js UI using Apollo Client for GraphQL |
-| `ui-hprt` | `@corpdk/ui-hprt` | High-performance real-time UI using urql + Graphcache |
-| `ds` | `@corpdk/ds` | GraphQL Yoga server with Prisma ORM (PostgreSQL/MySQL/SQLite/CockroachDB/MongoDB) |
-| `ds-hprt` | `@corpdk/ds-hprt` | GraphQL Yoga server with Drizzle ORM (PostgreSQL/MySQL/SQLite/CockroachDB), optimized for real-time |
-| `ds-cdb` | `@corpdk/ds-cdb` | GraphQL Yoga server with Couchbase SDK + Zod (cloud-agnostic NoSQL) |
-| `ds-mongo` | `@corpdk/ds-mongo` | GraphQL Yoga server with MongoDB native driver + Zod (Atlas or self-hosted) |
-| `ds-ddb` | `@corpdk/ds-ddb` | GraphQL Yoga server with DocumentDB (documentdb.io) + Zod (MongoDB-compatible wire protocol) |
-| `ds-file` | `@corpdk/ds-file` | GraphQL Yoga server with JSON/YAML file storage + Zod (zero external dependencies) |
-| `ds-sdk` | `@corpdk/ds-sdk` | Auto-generated TypedDocumentNode SDK shared by all DS variants |
-| `ds-cli` | `@corpdk/ds-cli` | Auto-generated CLI (queries, mutations, subscriptions) for LLM/automation access; man page + GNU info included |
-| `pub-sub` | `@corpdk/pub-sub` | Plugin-style pub/sub factory: `createAppPubSub<T>()` selects Redis or in-memory; topics defined per app |
-| `ui-core` | `@corpdk/ui-core` | Design system: shadcn/ui, Tailwind v4, lucide icons, next-themes, Zustand |
-| `ui-auth` | `@corpdk/ui-auth` | Auth.js v5 BFF: sign-in/out components, session gates, OAuth2/OIDC scaffold |
-| `ui-charts` | `@corpdk/ui-charts` | D3.js chart components with CSS variable theming |
-| `ui-forms` | `@corpdk/ui-forms` | React Hook Form + Zod integration (form fields, resolvers) |
-| `ui-datagrid` | `@corpdk/ui-datagrid` | TanStack Table v8 + @tanstack/react-virtual for large datasets |
-| `ui-feedback` | `@corpdk/ui-feedback` | Sonner toast notifications + AppErrorBoundary |
-| `codegen-cli` | `@corpdk/codegen-cli` | GraphQL codegen plugin for resolver types + SDK generation |
-| `eslint-config` | `@corpdk/eslint-config` | Shared ESLint flat config (base + Next.js) for all packages |
-| `create-app` | `@corpdk/create-app` | Interactive CLI scaffolding tool for full-stack, DS-only, or UI-only projects |
-| `ui-showcase` | `@corpdk/ui-showcase` | Storybook showcase — visual testing for all shared `packages/ui-*` components |
+| Package         | Scope                   | Description                                                                                                    |
+| --------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `ui`            | `@corpdk/ui`            | Standard Next.js UI using Apollo Client for GraphQL                                                            |
+| `ui-hprt`       | `@corpdk/ui-hprt`       | High-performance real-time UI using urql + Graphcache                                                          |
+| `ds`            | `@corpdk/ds`            | GraphQL Yoga server with Prisma ORM (PostgreSQL/MySQL/SQLite/CockroachDB/MongoDB)                              |
+| `ds-hprt`       | `@corpdk/ds-hprt`       | GraphQL Yoga server with Drizzle ORM (PostgreSQL/MySQL/SQLite/CockroachDB), optimized for real-time            |
+| `ds-cdb`        | `@corpdk/ds-cdb`        | GraphQL Yoga server with Couchbase SDK + Zod (cloud-agnostic NoSQL)                                            |
+| `ds-mongo`      | `@corpdk/ds-mongo`      | GraphQL Yoga server with MongoDB native driver + Zod (Atlas or self-hosted)                                    |
+| `ds-ddb`        | `@corpdk/ds-ddb`        | GraphQL Yoga server with DocumentDB (documentdb.io) + Zod (MongoDB-compatible wire protocol)                   |
+| `ds-file`       | `@corpdk/ds-file`       | GraphQL Yoga server with JSON/YAML file storage + Zod (zero external dependencies)                             |
+| `ds-sdk`        | `@corpdk/ds-sdk`        | Auto-generated TypedDocumentNode SDK shared by all DS variants                                                 |
+| `ds-cli`        | `@corpdk/ds-cli`        | Auto-generated CLI (queries, mutations, subscriptions) for LLM/automation access; man page + GNU info included |
+| `pub-sub`       | `@corpdk/pub-sub`       | Plugin-style pub/sub factory: `createAppPubSub<T>()` selects Redis or in-memory; topics defined per app        |
+| `ui-core`       | `@corpdk/ui-core`       | Design system: shadcn/ui, Tailwind v4, lucide icons, next-themes, Zustand                                      |
+| `ui-auth`       | `@corpdk/ui-auth`       | Auth.js v5 BFF: sign-in/out components, session gates, OAuth2/OIDC scaffold                                    |
+| `ui-charts`     | `@corpdk/ui-charts`     | D3.js chart components with CSS variable theming                                                               |
+| `ui-forms`      | `@corpdk/ui-forms`      | React Hook Form + Zod integration (form fields, resolvers)                                                     |
+| `ui-datagrid`   | `@corpdk/ui-datagrid`   | TanStack Table v8 + @tanstack/react-virtual for large datasets                                                 |
+| `ui-feedback`   | `@corpdk/ui-feedback`   | Sonner toast notifications + AppErrorBoundary                                                                  |
+| `codegen-cli`   | `@corpdk/codegen-cli`   | GraphQL codegen plugin for resolver types + SDK generation                                                     |
+| `eslint-config` | `@corpdk/eslint-config` | Shared ESLint flat config (base + Next.js) for all packages                                                    |
+| `create-app`    | `@corpdk/create-app`    | Interactive CLI scaffolding tool for full-stack, DS-only, or UI-only projects                                  |
+| `ui-showcase`   | `@corpdk/ui-showcase`   | Storybook showcase — visual testing for all shared `packages/ui-*` components                                  |
 
 ### Key Design Decisions
 
@@ -99,10 +99,10 @@ Key principles:
 
 ## GraphQL Tooling Decision Table
 
-| Tool | Use when |
-|------|----------|
-| **GraphQL Yoga** | Default for every DS. You own the schema and call your own databases. |
-| **GraphQL Mesh** | Add only when you must stitch 2+ external APIs you don't own (REST/gRPC/OpenAPI/GraphQL) into one unified graph. Overkill for a single owned source. |
+| Tool             | Use when                                                                                                                                                                    |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **GraphQL Yoga** | Default for every DS. You own the schema and call your own databases.                                                                                                       |
+| **GraphQL Mesh** | Add only when you must stitch 2+ external APIs you don't own (REST/gRPC/OpenAPI/GraphQL) into one unified graph. Overkill for a single owned source.                        |
 | **GraphQL Hive** | Add when: 3+ devs modify the schema independently, API is public/partner-facing, or you run a federated supergraph. Not warranted for a private monorepo with a small team. |
 
 ## Development Workflow
@@ -135,6 +135,7 @@ docker build -f packages/ui/Dockerfile -t my-app-ui .     # Build UI image
 **UI Dockerfile requirement**: `output: 'standalone'` must be set in the UI package's `next.config.ts`. The standalone output bundles the Next.js server into `server.js` (no `next` CLI needed at runtime).
 
 **DS Dockerfile notes**:
+
 - Build context is always the monorepo root (needed for `pnpm-lock.yaml` and workspace manifests)
 - `@corpdk/ds-sdk` is resolved at build time; Docker's `COPY` dereferences pnpm symlinks so it is self-contained in `node_modules` at runtime
 - SDL schema files are copied to `dist/` by the DS build script — no extra step needed

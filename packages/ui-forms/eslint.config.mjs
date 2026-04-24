@@ -1,2 +1,2 @@
-import libraryConfig from '@corpdk/eslint-config';
+import libraryConfig from "@corpdk/eslint-config";
 export default libraryConfig;

@@ -1,4 +1,4 @@
-import { type ColumnDef } from '@tanstack/react-table';
+import { type ColumnDef } from "@tanstack/react-table";
 
 export type DataGridColumn<TData> = ColumnDef<TData>;
 
