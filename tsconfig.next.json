@@ -2,6 +2,7 @@
   "extends": "./tsconfig.react.json",
   "compilerOptions": {
     "incremental": true,
+    "declaration": false,
     "plugins": [{ "name": "next" }]
   }
 }

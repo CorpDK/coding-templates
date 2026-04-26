@@ -161,6 +161,40 @@ async function copyPackage(
   }
 }
 
+/** @corpdk libraries that are always copied into the scaffold as workspace packages */
+const BUNDLED_LIBRARIES: { srcSubdir: string; destSubdir: string }[] = [
+  { srcSubdir: "libraries/pub-sub", destSubdir: "libraries/pub-sub" },
+  { srcSubdir: "libraries/codegen-cli", destSubdir: "libraries/codegen-cli" },
+  {
+    srcSubdir: "packages/eslint-config",
+    destSubdir: "packages/eslint-config",
+  },
+];
+
+async function copyBundledLibraries(
+  config: ScaffoldConfig,
+  templateRoot: string,
+): Promise<void> {
+  const ctx: TransformContext = {
+    orgScope: config.orgScope,
+    ds: config.ds,
+    ui: config.ui,
+    db: config.db,
+    externalSdk: null,
+    isRootPackageJson: false,
+    projectName: config.projectName,
+  };
+
+  for (const { srcSubdir, destSubdir } of BUNDLED_LIBRARIES) {
+    const srcDir = path.join(templateRoot, srcSubdir);
+    if (!(await pathExists(srcDir))) continue;
+    const destDir = path.join(config.outputDir, destSubdir);
+    await copyDir(srcDir, destDir, (content, relPath) =>
+      transformFileContent(content, relPath, ctx),
+    );
+  }
+}
+
 async function scaffoldMonorepo(
   config: ScaffoldConfig,
   templateRoot: string,
@@ -173,11 +207,15 @@ async function scaffoldMonorepo(
   const sourceRootPkg = await readJson<{
     devDependencies: Record<string, string>;
     packageManager: string;
+    pnpm?: { overrides?: Record<string, string> };
   }>(path.join(templateRoot, "package.json"));
+
+  const hasDs = config.ds !== "none";
   const rootPkgContent = generateRootPackageJson(
     config.projectName,
     config.orgScope,
     sourceRootPkg,
+    { hasDs },
   );
   await fs.writeFile(path.join(outDir, "package.json"), rootPkgContent, "utf8");
   const workspaceYaml = generateWorkspaceYaml(config.selectedPackages);
@@ -211,6 +249,13 @@ async function scaffoldMonorepo(
   }
   s.stop("Packages copied");
 
+  // 4a. Copy bundled @corpdk libraries (pub-sub, codegen-cli, eslint-config).
+  // These keep the @corpdk scope and are workspace deps of selected packages,
+  // so they must live alongside as workspace packages.
+  s.start("Copying bundled libraries");
+  await copyBundledLibraries(config, templateRoot);
+  s.stop("Bundled libraries copied");
+
   // 4b. Merge BFF scaffold into UI app dir if ui-auth is selected
   if (config.selectedPackages.has("ui-auth") && uiDestDir) {
     s.start("Merging Auth.js BFF scaffold into UI app");
@@ -225,6 +270,27 @@ async function scaffoldMonorepo(
       path.join(authScaffoldDir, ".env.example.append"),
       path.join(uiDestDir, ".env.example"),
     );
+
+    // The merged BFF code (auth.config.ts, middleware.ts, route.ts) imports
+    // next-auth directly, so the consumer UI package must list it as a
+    // direct dependency. Pull the version from ui-auth.
+    const uiAuthPkg = await readJson<{
+      dependencies: Record<string, string>;
+    }>(path.join(templateRoot, "packages", "ui-auth", "package.json"));
+    const nextAuthVersion = uiAuthPkg.dependencies["next-auth"];
+    if (nextAuthVersion) {
+      const uiPkgPath = path.join(uiDestDir, "package.json");
+      const uiPkg = JSON.parse(await fs.readFile(uiPkgPath, "utf8")) as {
+        dependencies: Record<string, string>;
+      };
+      uiPkg.dependencies["next-auth"] = nextAuthVersion;
+      await fs.writeFile(
+        uiPkgPath,
+        JSON.stringify(uiPkg, null, 2) + "\n",
+        "utf8",
+      );
+    }
+
     s.stop("BFF scaffold merged");
   }
 

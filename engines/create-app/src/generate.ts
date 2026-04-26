@@ -4,31 +4,46 @@ import { getBuiltDeps, PACKAGE_DEFS } from "./packages.js";
 interface RootPackageJsonSource {
   devDependencies: Record<string, string>;
   packageManager: string;
+  pnpm?: { overrides?: Record<string, string> };
+}
+
+interface RootPackageJsonOptions {
+  /** True when the scaffold includes a DS variant — adds db:generate root script */
+  hasDs: boolean;
 }
 
 export function generateRootPackageJson(
   projectName: string,
   orgScope: string,
   source: RootPackageJsonSource,
+  options: RootPackageJsonOptions,
 ): string {
-  const pkg = {
+  const scripts: Record<string, string> = {
+    dev: "turbo run dev --concurrency=20",
+    build: "turbo run build",
+    start: "turbo run start",
+    lint: "turbo run lint",
+    codegen: "turbo run codegen",
+    clean: "turbo run clean",
+  };
+  if (options.hasDs) {
+    scripts["db:generate"] = "turbo run db:generate";
+  }
+
+  const pkg: Record<string, unknown> = {
     name: `@${orgScope}/${projectName}`,
     version: "0.1.0",
     private: true,
-    scripts: {
-      dev: "turbo run dev",
-      build: "turbo run build",
-      start: "turbo run start",
-      lint: "turbo run lint",
-      codegen: "turbo run codegen",
-      clean: "turbo run clean",
-    },
+    scripts,
     devDependencies: {
       turbo: source.devDependencies["turbo"] ?? "^2.5.4",
       typescript: source.devDependencies["typescript"] ?? "^5.9.3",
     },
-    packageManager: source.packageManager,
   };
+  if (source.pnpm?.overrides && Object.keys(source.pnpm.overrides).length > 0) {
+    pkg["pnpm"] = { overrides: source.pnpm.overrides };
+  }
+  pkg["packageManager"] = source.packageManager;
   return JSON.stringify(pkg, null, 2) + "\n";
 }
 
@@ -36,7 +51,7 @@ export function generateWorkspaceYaml(selected: Set<PackageId>): string {
   const builtDeps = getBuiltDeps(selected);
   const ignoredDeps = ["sharp", "unrs-resolver"];
 
-  let yaml = `packages:\n  - packages/*\n\n`;
+  let yaml = `packages:\n  - libraries/*\n  - packages/*\n\n`;
   yaml += `ignoredBuiltDependencies:\n`;
   yaml += ignoredDeps.map((d) => `  - ${d}`).join("\n") + "\n";
   if (builtDeps.length > 0) {

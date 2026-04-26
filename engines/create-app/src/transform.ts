@@ -19,7 +19,12 @@ function uiDirName(ui: UiChoice): string {
 // Drizzle transforms never receive these values.
 // ---------------------------------------------------------------------------
 
-/** Published packages that keep the @corpdk scope even in scaffolded output */
+/**
+ * Published @corpdk packages that keep the @corpdk scope in scaffolded output.
+ * These are bundled into the scaffold as workspace packages so consumers can
+ * either use them as-is or customise locally; their `workspace:*` references
+ * resolve through the workspace.
+ */
 const PUBLISHED_CORPDK_PACKAGES = new Set([
   "ui-core",
   "ui-feedback",
@@ -28,6 +33,8 @@ const PUBLISHED_CORPDK_PACKAGES = new Set([
   "ui-charts",
   "ui-auth",
   "pub-sub",
+  "codegen-cli",
+  "eslint-config",
 ]);
 
 /** Replace @corpdk/ scope with the user's org scope, preserving published package names */
