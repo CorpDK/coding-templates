@@ -10,11 +10,11 @@ function FormFieldDemo({
   label,
   placeholder,
   type,
-}: {
+}: Readonly<{
   label: string;
   placeholder: string;
   type: "text" | "email" | "password" | "number" | "tel" | "url";
-}) {
+}>) {
   const form = useZodForm(schema);
   const fieldName = type === "email" ? "email" : "name";
   return (

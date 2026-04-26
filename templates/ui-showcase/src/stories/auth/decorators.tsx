@@ -33,11 +33,7 @@ export const withAuthenticated: Decorator = (Story) => (
   </SessionProvider>
 );
 
-export const withAdminRole: Decorator = (Story) => (
-  <SessionProvider session={mockSession}>
-    <Story />
-  </SessionProvider>
-);
+export const withAdminRole: Decorator = withAuthenticated;
 
 export const withViewerRole: Decorator = (Story) => (
   <SessionProvider session={viewerSession}>

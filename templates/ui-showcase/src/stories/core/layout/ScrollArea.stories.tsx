@@ -35,14 +35,12 @@ export const Horizontal: Story = {
     return (
       <ScrollArea className="w-96 whitespace-nowrap rounded-md border">
         <div className="flex w-max space-x-4 p-4">
-          {Array.from({ length: 10 }).map((_, i) => (
+          {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
             <div
-              key={i}
+              key={`item-${n}`}
               className="w-[150px] h-[200px] shrink-0 rounded-md bg-muted flex items-center justify-center"
             >
-              <span className="text-sm text-muted-foreground">
-                Item {i + 1}
-              </span>
+              <span className="text-sm text-muted-foreground">Item {n}</span>
             </div>
           ))}
         </div>

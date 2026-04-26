@@ -445,7 +445,7 @@ const CATEGORIES = [
   "Navigation",
 ] as const;
 
-function CatalogCard({ entry }: { entry: CatalogEntry }) {
+function CatalogCard({ entry }: Readonly<{ entry: CatalogEntry }>) {
   const storyUrl = `/?path=/docs/${entry.storyId}--docs`;
 
   return (
