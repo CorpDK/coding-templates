@@ -11,6 +11,8 @@ import {
   getNamedType,
 } from "graphql";
 
+export type OperationType = "query" | "mutation" | "subscription";
+
 export interface ArgDescriptor {
   name: string;
   /** Full GraphQL type string, e.g. "ID!", "String", "[Item!]!" */
@@ -22,7 +24,7 @@ export interface ArgDescriptor {
 }
 
 export interface OperationDescriptor {
-  operationType: "query" | "mutation" | "subscription";
+  operationType: OperationType;
   /** camelCase field name from the schema, e.g. "createItem" */
   fieldName: string;
   /** kebab-case command name for the CLI, e.g. "create-item" */
@@ -39,7 +41,7 @@ export interface OperationDescriptor {
 
 function toKebabCase(name: string): string {
   return name
-    .replace(/([A-Z])/g, "-$1")
+    .replaceAll(/([A-Z])/g, "-$1")
     .toLowerCase()
     .replace(/^-/, "");
 }
@@ -95,7 +97,7 @@ function buildSelectionSet(type: GraphQLOutputType, depth = 0): string | null {
 }
 
 function buildDocument(
-  opType: "query" | "mutation" | "subscription",
+  opType: OperationType,
   fieldName: string,
   args: ArgDescriptor[],
   returnType: GraphQLOutputType,
@@ -146,13 +148,13 @@ export function extractOperations(
       }));
 
       ops.push({
-        operationType: opType as "query" | "mutation" | "subscription",
+        operationType: opType as OperationType,
         fieldName,
         commandName: toKebabCase(fieldName),
         description: field.description ?? "",
         args,
         document: buildDocument(
-          opType as "query" | "mutation" | "subscription",
+          opType as OperationType,
           fieldName,
           args,
           field.type,
