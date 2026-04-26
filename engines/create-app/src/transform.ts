@@ -39,7 +39,7 @@ const PUBLISHED_CORPDK_PACKAGES = new Set([
 
 /** Replace @corpdk/ scope with the user's org scope, preserving published package names */
 export function transformScope(content: string, orgScope: string): string {
-  return content.replace(/@corpdk\/([a-z][a-z0-9-]*)/g, (match, pkgName) =>
+  return content.replaceAll(/@corpdk\/([a-z][a-z0-9-]*)/g, (match, pkgName) =>
     PUBLISHED_CORPDK_PACKAGES.has(pkgName) ? match : `@${orgScope}/${pkgName}`,
   );
 }
@@ -315,8 +315,8 @@ export function transformCliPackage(
   projectName: string,
 ): string {
   return content
-    .replace(/"ds-cli"(\s*:)/g, `"${projectName}"$1`)
-    .replace(/ds-cli\.1/g, `${projectName}.1`);
+    .replaceAll(/"ds-cli"(\s*:)/g, `"${projectName}"$1`)
+    .replaceAll("ds-cli.1", `${projectName}.1`);
 }
 
 // ---------------------------------------------------------------------------

@@ -14,7 +14,7 @@ export function SignInButton({
   callbackUrl = "/",
   children = "Sign in",
   className,
-}: SignInButtonProps) {
+}: Readonly<SignInButtonProps>) {
   return (
     <button
       onClick={() => signIn(provider, { callbackUrl })}

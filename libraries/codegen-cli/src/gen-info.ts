@@ -2,7 +2,7 @@ import type { OperationDescriptor } from "./schema-utils.js";
 
 /** Escape Texinfo special characters. */
 function texEscape(s: string): string {
-  return s.replace(/@/g, "@@").replace(/\{/g, "@{").replace(/\}/g, "@}");
+  return s.replaceAll("@", "@@").replaceAll("{", "@{").replaceAll("}", "@}");
 }
 
 function fmtArgsTable(args: OperationDescriptor["args"]): string {
@@ -57,7 +57,7 @@ export function generateInfo(ops: OperationDescriptor[]): string {
   const today = new Date().toISOString().split("T")[0];
 
   return [
-    "\\input texinfo",
+    String.raw`\input texinfo`,
     "@c @generated — do not edit manually",
     `@c Generated: ${today}`,
     "@c Compile with: makeinfo ds-cli.texi",

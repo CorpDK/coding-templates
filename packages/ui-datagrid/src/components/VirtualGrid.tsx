@@ -12,7 +12,7 @@ export function VirtualGrid<TData>({
   className,
   rowHeight = 48,
   overscan = 10,
-}: VirtualGridProps<TData>) {
+}: Readonly<VirtualGridProps<TData>>) {
   const { table, globalFilter, setGlobalFilter } = useDataGrid(data, columns);
   const rows = table.getRowModel().rows;
   const containerRef = useRef<HTMLDivElement>(null);

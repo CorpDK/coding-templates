@@ -30,11 +30,11 @@ export const Horizontal: Story = {
     return (
       <Carousel>
         <CarouselContent>
-          {Array.from({ length: 5 }).map((_, i) => (
-            <CarouselItem key={i}>
+          {Array.from({ length: 5 }, (_, i) => i + 1).map((n) => (
+            <CarouselItem key={`slide-${n}`}>
               <Card>
                 <CardContent className="flex aspect-square items-center justify-center p-6">
-                  <span className="text-4xl font-semibold">{i + 1}</span>
+                  <span className="text-4xl font-semibold">{n}</span>
                 </CardContent>
               </Card>
             </CarouselItem>
@@ -59,11 +59,11 @@ export const Vertical: Story = {
     return (
       <Carousel orientation="vertical" className="w-full max-w-xs">
         <CarouselContent className="-mt-1 h-[200px]">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <CarouselItem key={i} className="pt-1 basis-1/2">
+          {Array.from({ length: 5 }, (_, i) => i + 1).map((n) => (
+            <CarouselItem key={`slide-${n}`} className="pt-1 basis-1/2">
               <Card>
                 <CardContent className="flex items-center justify-center p-6">
-                  <span className="text-3xl font-semibold">{i + 1}</span>
+                  <span className="text-3xl font-semibold">{n}</span>
                 </CardContent>
               </Card>
             </CarouselItem>

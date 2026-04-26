@@ -32,7 +32,7 @@ export function FormField<
   label,
   placeholder,
   type = "text",
-}: FormFieldProps<TFieldValues, TName>) {
+}: Readonly<FormFieldProps<TFieldValues, TName>>) {
   return (
     <Controller
       control={form.control}

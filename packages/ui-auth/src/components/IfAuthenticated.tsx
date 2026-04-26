@@ -11,7 +11,7 @@ interface IfAuthenticatedProps {
 export function IfAuthenticated({
   children,
   fallback = null,
-}: IfAuthenticatedProps) {
+}: Readonly<IfAuthenticatedProps>) {
   const { status } = useSession();
   if (status === "authenticated") return <>{children}</>;
   if (status === "loading") return null;

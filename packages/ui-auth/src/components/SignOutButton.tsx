@@ -12,7 +12,7 @@ export function SignOutButton({
   callbackUrl = "/",
   children = "Sign out",
   className,
-}: SignOutButtonProps) {
+}: Readonly<SignOutButtonProps>) {
   return (
     <button
       onClick={() => signOut({ callbackUrl })}

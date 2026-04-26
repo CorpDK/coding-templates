@@ -2,7 +2,10 @@ import type { OperationDescriptor } from "./schema-utils.js";
 
 /** Escape groff special characters in a plain-text string. */
 function groffEscape(s: string): string {
-  return s.replace(/\\/g, "\\\\").replace(/"/g, "\\(dq").replace(/-/g, "\\-");
+  return s
+    .replaceAll("\\", String.raw`\\`)
+    .replaceAll('"', String.raw`\(dq`)
+    .replaceAll("-", String.raw`\-`);
 }
 
 function fmtSynopsis(ops: OperationDescriptor[]): string {
@@ -11,8 +14,8 @@ function fmtSynopsis(ops: OperationDescriptor[]): string {
       const args = op.args
         .map((a) =>
           a.required
-            ? `\\fB\\-\\-${a.name}\\fP \\fI${a.graphqlType}\\fP`
-            : `[\\fB\\-\\-${a.name}\\fP \\fI${a.graphqlType}\\fP]`,
+            ? String.raw`\fB\-\-${a.name}\fP \fI${a.graphqlType}\fP`
+            : String.raw`[\fB\-\-${a.name}\fP \fI${a.graphqlType}\fP]`,
         )
         .join(" ");
       return `.TP\n.B ${groffEscape(op.commandName)}${args ? "\n" + args : ""}`;
@@ -31,7 +34,9 @@ function fmtCommandSection(
       const argLines = op.args
         .map((a) => {
           const required = a.required ? " (required)" : " (optional)";
-          return `.RS\n\\fB\\-\\-${a.name}\\fP \\fI${a.graphqlType}\\fP${required}\n.br\n${groffEscape(a.description || "No description.")}\n.RE`;
+          const flag = String.raw`\fB\-\-${a.name}\fP \fI${a.graphqlType}\fP`;
+          const desc = groffEscape(a.description || "No description.");
+          return `.RS\n${flag}${required}\n.br\n${desc}\n.RE`;
         })
         .join("\n");
 
@@ -54,23 +59,23 @@ export function generateMan(ops: OperationDescriptor[]): string {
   const subs = ops.filter((o) => o.operationType === "subscription");
 
   return [
-    `.TH DS\\-CLI 1 "${today}" "ds-cli 0.1.0" "User Commands"`,
+    String.raw`.TH DS\-CLI 1 "${today}" "ds-cli 0.1.0" "User Commands"`,
     "",
     ".SH NAME",
-    "ds\\-cli \\- Auto\\-generated CLI for the GraphQL data service",
+    String.raw`ds\-cli \- Auto\-generated CLI for the GraphQL data service`,
     "",
     ".SH SYNOPSIS",
-    ".B ds\\-cli",
+    String.raw`.B ds\-cli`,
     ".I command",
     "[options]",
     "",
     ".SH DESCRIPTION",
     "Interact with the GraphQL data service from the command line.",
-    "All commands output newline\\-delimited JSON on stdout.",
+    String.raw`All commands output newline\-delimited JSON on stdout.`,
     "Errors are written to stderr and the process exits with code 1.",
     ".PP",
-    "Variables can be supplied as command\\-line flags, via",
-    ".B \\-\\-input",
+    String.raw`Variables can be supplied as command\-line flags, via`,
+    String.raw`.B \-\-input`,
     "file, or piped as JSON on stdin.",
     "Explicit flags override file and stdin values.",
     "",
@@ -85,20 +90,20 @@ export function generateMan(ops: OperationDescriptor[]): string {
     "",
     ".SH INPUT",
     ".TP",
-    ".B \\-\\-input <file.json>",
+    String.raw`.B \-\-input <file.json>`,
     "Read variables from a JSON file.",
     ".TP",
     ".B (stdin)",
     "When stdin is not a TTY, read variables JSON from the pipe.",
     ".PP",
-    "Merge order: \\-\\-input file < piped stdin < explicit flags.",
+    String.raw`Merge order: \-\-input file < piped stdin < explicit flags.`,
     "",
     ".SH SUBSCRIPTION OPTIONS",
     ".TP",
-    ".B \\-\\-count N",
+    String.raw`.B \-\-count N`,
     "Exit after receiving N events.",
     ".TP",
-    ".B \\-\\-timeout Ms",
+    String.raw`.B \-\-timeout Ms`,
     "Exit after Ms milliseconds regardless of received events.",
     "",
     ".SH ENVIRONMENT",
@@ -119,7 +124,7 @@ export function generateMan(ops: OperationDescriptor[]): string {
     "",
     ".SH NOTES",
     "Requires Node.js 18+ (fetch) and Node.js 22+ (WebSocket).",
-    "This file is auto\\-generated. Run",
+    String.raw`This file is auto\-generated. Run`,
     ".B pnpm codegen",
     "in your DS package to regenerate.",
   ]

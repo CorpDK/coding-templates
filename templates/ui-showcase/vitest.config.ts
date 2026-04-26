@@ -8,9 +8,9 @@ import { storybookTest } from "@storybook/addon-vitest/vitest-plugin";
 import { playwright } from "@vitest/browser-playwright";
 
 const dirname =
-  typeof __dirname !== "undefined"
-    ? __dirname
-    : path.dirname(fileURLToPath(import.meta.url));
+  typeof __dirname === "undefined"
+    ? path.dirname(fileURLToPath(import.meta.url))
+    : __dirname;
 
 export default defineConfig({
   test: {
