@@ -1,4 +1,9 @@
-import type { PackageId, DsChoice, UiChoice, RelationalDbChoice } from "./types.js";
+import type {
+  PackageId,
+  DsChoice,
+  UiChoice,
+  RelationalDbChoice,
+} from "./types.js";
 
 export interface PackageDef {
   id: PackageId;
@@ -8,6 +13,8 @@ export interface PackageDef {
   requires: PackageId[];
   /** pnpm-workspace.yaml onlyBuiltDependencies entries needed */
   builtDeps: string[];
+  /** Where the source directory lives in the template root */
+  sourceBase: "templates" | "packages";
 }
 
 export const PACKAGE_DEFS: Record<PackageId, PackageDef> = {
@@ -17,6 +24,7 @@ export const PACKAGE_DEFS: Record<PackageId, PackageDef> = {
     label: "ds (GraphQL Yoga + Prisma)",
     requires: ["ds-sdk"],
     builtDeps: ["@prisma/engines", "prisma"],
+    sourceBase: "templates",
   },
   "ds-sdk": {
     id: "ds-sdk",
@@ -24,6 +32,15 @@ export const PACKAGE_DEFS: Record<PackageId, PackageDef> = {
     label: "ds-sdk (TypedDocumentNode SDK)",
     requires: [],
     builtDeps: [],
+    sourceBase: "templates",
+  },
+  "ds-cli": {
+    id: "ds-cli",
+    dirName: "ds-cli",
+    label: "ds-cli (Auto-generated CLI for LLM/automation access)",
+    requires: [],
+    builtDeps: [],
+    sourceBase: "templates",
   },
   "ds-hprt": {
     id: "ds-hprt",
@@ -31,6 +48,7 @@ export const PACKAGE_DEFS: Record<PackageId, PackageDef> = {
     label: "ds-hprt (GraphQL Yoga + Drizzle)",
     requires: ["ds-sdk"],
     builtDeps: [],
+    sourceBase: "templates",
   },
   "ds-cdb": {
     id: "ds-cdb",
@@ -38,6 +56,7 @@ export const PACKAGE_DEFS: Record<PackageId, PackageDef> = {
     label: "ds-cdb (GraphQL Yoga + Couchbase + Zod)",
     requires: ["ds-sdk"],
     builtDeps: ["couchbase"],
+    sourceBase: "templates",
   },
   "ds-mongo": {
     id: "ds-mongo",
@@ -45,6 +64,7 @@ export const PACKAGE_DEFS: Record<PackageId, PackageDef> = {
     label: "ds-mongo (GraphQL Yoga + MongoDB native SDK + Zod)",
     requires: ["ds-sdk"],
     builtDeps: [],
+    sourceBase: "templates",
   },
   "ds-ddb": {
     id: "ds-ddb",
@@ -52,6 +72,7 @@ export const PACKAGE_DEFS: Record<PackageId, PackageDef> = {
     label: "ds-ddb (GraphQL Yoga + DocumentDB native SDK + Zod)",
     requires: ["ds-sdk"],
     builtDeps: [],
+    sourceBase: "templates",
   },
   "ds-file": {
     id: "ds-file",
@@ -59,6 +80,7 @@ export const PACKAGE_DEFS: Record<PackageId, PackageDef> = {
     label: "ds-file (GraphQL Yoga + JSON/YAML file storage + Zod)",
     requires: ["ds-sdk"],
     builtDeps: [],
+    sourceBase: "templates",
   },
   ui: {
     id: "ui",
@@ -66,6 +88,7 @@ export const PACKAGE_DEFS: Record<PackageId, PackageDef> = {
     label: "ui (Next.js + Apollo Client)",
     requires: [],
     builtDeps: [],
+    sourceBase: "templates",
   },
   "ui-hprt": {
     id: "ui-hprt",
@@ -73,37 +96,102 @@ export const PACKAGE_DEFS: Record<PackageId, PackageDef> = {
     label: "ui-hprt (Next.js + urql + Graphcache)",
     requires: [],
     builtDeps: [],
+    sourceBase: "templates",
+  },
+  "ui-core": {
+    id: "ui-core",
+    dirName: "ui-core",
+    label: "ui-core (Design system + primitives)",
+    requires: [],
+    builtDeps: [],
+    sourceBase: "packages",
+  },
+  "ui-feedback": {
+    id: "ui-feedback",
+    dirName: "ui-feedback",
+    label: "ui-feedback (Toast, ErrorBoundary)",
+    requires: ["ui-core"],
+    builtDeps: [],
+    sourceBase: "packages",
+  },
+  "ui-forms": {
+    id: "ui-forms",
+    dirName: "ui-forms",
+    label: "ui-forms (React Hook Form + Zod)",
+    requires: ["ui-core"],
+    builtDeps: [],
+    sourceBase: "packages",
+  },
+  "ui-datagrid": {
+    id: "ui-datagrid",
+    dirName: "ui-datagrid",
+    label: "ui-datagrid (TanStack Table + virtualization)",
+    requires: ["ui-core"],
+    builtDeps: [],
+    sourceBase: "packages",
+  },
+  "ui-charts": {
+    id: "ui-charts",
+    dirName: "ui-charts",
+    label: "ui-charts (D3.js charts)",
+    requires: ["ui-core"],
+    builtDeps: [],
+    sourceBase: "packages",
+  },
+  "ui-auth": {
+    id: "ui-auth",
+    dirName: "ui-auth",
+    label: "ui-auth (Auth UI components + BFF OAuth2/OIDC scaffold)",
+    requires: ["ui-core"],
+    builtDeps: [],
+    sourceBase: "packages",
   },
 };
 
 /** Resolve packages to include based on DS + UI selections */
-export function resolvePackages(ds: DsChoice, ui: UiChoice): Set<PackageId> {
+export function resolvePackages(
+  ds: DsChoice,
+  ui: UiChoice,
+  optionalUiPackages: PackageId[],
+): Set<PackageId> {
   const selected = new Set<PackageId>();
 
   if (ds === "standard") {
     selected.add("ds");
     selected.add("ds-sdk");
+    selected.add("ds-cli");
   } else if (ds === "hprt") {
     selected.add("ds-hprt");
     selected.add("ds-sdk");
+    selected.add("ds-cli");
   } else if (ds === "cdb") {
     selected.add("ds-cdb");
     selected.add("ds-sdk");
+    selected.add("ds-cli");
   } else if (ds === "mongo") {
     selected.add("ds-mongo");
     selected.add("ds-sdk");
+    selected.add("ds-cli");
   } else if (ds === "ddb") {
     selected.add("ds-ddb");
     selected.add("ds-sdk");
+    selected.add("ds-cli");
   } else if (ds === "file") {
     selected.add("ds-file");
     selected.add("ds-sdk");
+    selected.add("ds-cli");
   }
 
   if (ui === "standard") {
     selected.add("ui");
+    selected.add("ui-core");
+    selected.add("ui-feedback");
+    for (const pkg of optionalUiPackages) selected.add(pkg);
   } else if (ui === "hprt") {
     selected.add("ui-hprt");
+    selected.add("ui-core");
+    selected.add("ui-feedback");
+    for (const pkg of optionalUiPackages) selected.add(pkg);
   }
 
   return selected;
@@ -121,15 +209,19 @@ export function getBuiltDeps(selected: Set<PackageId>): string[] {
 }
 
 /** Relational DB options for Prisma (no MongoDB — belongs in Document DB) */
-export const PRISMA_DB_OPTIONS: { value: RelationalDbChoice; label: string }[] = [
-  { value: "postgresql", label: "PostgreSQL" },
-  { value: "mysql", label: "MySQL" },
-  { value: "sqlite", label: "SQLite" },
-  { value: "cockroachdb", label: "CockroachDB" },
-];
+export const PRISMA_DB_OPTIONS: { value: RelationalDbChoice; label: string }[] =
+  [
+    { value: "postgresql", label: "PostgreSQL" },
+    { value: "mysql", label: "MySQL" },
+    { value: "sqlite", label: "SQLite" },
+    { value: "cockroachdb", label: "CockroachDB" },
+  ];
 
 /** Relational DB options for Drizzle */
-export const DRIZZLE_DB_OPTIONS: { value: RelationalDbChoice; label: string }[] = [
+export const DRIZZLE_DB_OPTIONS: {
+  value: RelationalDbChoice;
+  label: string;
+}[] = [
   { value: "postgresql", label: "PostgreSQL" },
   { value: "mysql", label: "MySQL" },
   { value: "sqlite", label: "SQLite" },

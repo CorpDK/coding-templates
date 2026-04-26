@@ -8,51 +8,72 @@ This is a **pnpm + Turborepo monorepo** under the `@corpdk` org — a production
 
 ## Monorepo Layout
 
-```
+```text
 coding-templates/
 ├── package.json                    ← workspace root: turbo scripts + devDeps only
-├── pnpm-workspace.yaml             ← packages: ["templates/*", "engines/*", "libraries/*"]
+├── pnpm-workspace.yaml             ← packages: ["templates/*", "engines/*", "libraries/*", "packages/*"]
 ├── turbo.json                      ← task pipeline (codegen → build → dev/start)
 ├── CLAUDE.md                       ← this file
-├── CODING_GUIDELINES.md            ← coding standards
+├── docs/                           ← all documentation (user / admin / developer)
 ├── engines/
 │   └── create-app/  (@corpdk/create-app)   Interactive CLI scaffolding tool
 ├── libraries/
+│   ├── codegen-cli/ (@corpdk/codegen-cli)   GraphQL codegen plugin for resolver types + SDK generation
 │   └── pub-sub/     (@corpdk/pub-sub)       Plugin-style GraphQL pub/sub factory (memory + Redis)
+├── packages/
+│   ├── ui-core/     (@corpdk/ui-core)       Design system, primitives, shadcn/ui, theming
+│   ├── ui-auth/     (@corpdk/ui-auth)        Auth.js v5 BFF components + OAuth2/OIDC scaffold
+│   ├── ui-charts/   (@corpdk/ui-charts)     D3.js chart components
+│   ├── ui-forms/    (@corpdk/ui-forms)       React Hook Form + Zod validation wrappers
+│   ├── ui-datagrid/ (@corpdk/ui-datagrid)   TanStack Table v8 + virtualization
+│   ├── ui-feedback/ (@corpdk/ui-feedback)   Toast notifications + error boundaries
+│   └── eslint-config/ (@corpdk/eslint-config) Shared ESLint flat config for all packages
 └── templates/
     ├── docker/                    Docker templates (not a workspace package)
-    │   ├── Dockerfile             Standalone Next.js UI (UI-only scaffold, output root)
     │   ├── Dockerfile.ds          DS variant template (copied to packages/<ds>/Dockerfile)
     │   └── Dockerfile.ui          UI variant template (copied to packages/<ui>/Dockerfile)
     ├── ui/          (@corpdk/ui)           Next.js + Apollo Client
     ├── ui-hprt/     (@corpdk/ui-hprt)      Next.js + urql + Graphcache
+    ├── ui-showcase/ (@corpdk/ui-showcase)  Storybook showcase — visual testing for all shared UI packages
     ├── ds/          (@corpdk/ds)           GraphQL Yoga + Prisma + PostgreSQL
     ├── ds-hprt/     (@corpdk/ds-hprt)      GraphQL Yoga + Drizzle + PostgreSQL
     ├── ds-cdb/      (@corpdk/ds-cdb)       GraphQL Yoga + Couchbase SDK + Zod
     ├── ds-mongo/    (@corpdk/ds-mongo)     GraphQL Yoga + MongoDB native driver + Zod
     ├── ds-ddb/      (@corpdk/ds-ddb)       GraphQL Yoga + DocumentDB (documentdb.io) + Zod
     ├── ds-file/     (@corpdk/ds-file)      GraphQL Yoga + JSON/YAML file storage + Zod
-    └── ds-sdk/      (@corpdk/ds-sdk)       TypedDocumentNode SDK (shared by all DS variants)
+    ├── ds-sdk/      (@corpdk/ds-sdk)       TypedDocumentNode SDK (shared by all DS variants)
+    └── ds-cli/      (@corpdk/ds-cli)       Auto-generated CLI for LLM/automation access to the GraphQL DS
 ```
 
 ### Package Purpose
 
-| Package | Scope | Description |
-|---------|-------|-------------|
-| `ui` | `@corpdk/ui` | Standard Next.js UI using Apollo Client for GraphQL |
-| `ui-hprt` | `@corpdk/ui-hprt` | High-performance real-time UI using urql + Graphcache |
-| `ds` | `@corpdk/ds` | GraphQL Yoga server with Prisma ORM (PostgreSQL/MySQL/SQLite/CockroachDB/MongoDB) |
-| `ds-hprt` | `@corpdk/ds-hprt` | GraphQL Yoga server with Drizzle ORM (PostgreSQL/MySQL/SQLite/CockroachDB), optimized for real-time |
-| `ds-cdb` | `@corpdk/ds-cdb` | GraphQL Yoga server with Couchbase SDK + Zod (cloud-agnostic NoSQL) |
-| `ds-mongo` | `@corpdk/ds-mongo` | GraphQL Yoga server with MongoDB native driver + Zod (Atlas or self-hosted) |
-| `ds-ddb` | `@corpdk/ds-ddb` | GraphQL Yoga server with DocumentDB (documentdb.io) + Zod (MongoDB-compatible wire protocol) |
-| `ds-file` | `@corpdk/ds-file` | GraphQL Yoga server with JSON/YAML file storage + Zod (zero external dependencies) |
-| `ds-sdk` | `@corpdk/ds-sdk` | Auto-generated TypedDocumentNode SDK shared by all DS variants |
-| `pub-sub` | `@corpdk/pub-sub` | Plugin-style pub/sub factory: `createAppPubSub<T>()` selects Redis or in-memory; topics defined per app |
+| Package         | Scope                   | Description                                                                                                    |
+| --------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `ui`            | `@corpdk/ui`            | Standard Next.js UI using Apollo Client for GraphQL                                                            |
+| `ui-hprt`       | `@corpdk/ui-hprt`       | High-performance real-time UI using urql + Graphcache                                                          |
+| `ds`            | `@corpdk/ds`            | GraphQL Yoga server with Prisma ORM (PostgreSQL/MySQL/SQLite/CockroachDB/MongoDB)                              |
+| `ds-hprt`       | `@corpdk/ds-hprt`       | GraphQL Yoga server with Drizzle ORM (PostgreSQL/MySQL/SQLite/CockroachDB), optimized for real-time            |
+| `ds-cdb`        | `@corpdk/ds-cdb`        | GraphQL Yoga server with Couchbase SDK + Zod (cloud-agnostic NoSQL)                                            |
+| `ds-mongo`      | `@corpdk/ds-mongo`      | GraphQL Yoga server with MongoDB native driver + Zod (Atlas or self-hosted)                                    |
+| `ds-ddb`        | `@corpdk/ds-ddb`        | GraphQL Yoga server with DocumentDB (documentdb.io) + Zod (MongoDB-compatible wire protocol)                   |
+| `ds-file`       | `@corpdk/ds-file`       | GraphQL Yoga server with JSON/YAML file storage + Zod (zero external dependencies)                             |
+| `ds-sdk`        | `@corpdk/ds-sdk`        | Auto-generated TypedDocumentNode SDK shared by all DS variants                                                 |
+| `ds-cli`        | `@corpdk/ds-cli`        | Auto-generated CLI (queries, mutations, subscriptions) for LLM/automation access; man page + GNU info included |
+| `pub-sub`       | `@corpdk/pub-sub`       | Plugin-style pub/sub factory: `createAppPubSub<T>()` selects Redis or in-memory; topics defined per app        |
+| `ui-core`       | `@corpdk/ui-core`       | Design system: shadcn/ui, Tailwind v4, lucide icons, next-themes, Zustand                                      |
+| `ui-auth`       | `@corpdk/ui-auth`       | Auth.js v5 BFF: sign-in/out components, session gates, OAuth2/OIDC scaffold                                    |
+| `ui-charts`     | `@corpdk/ui-charts`     | D3.js chart components with CSS variable theming                                                               |
+| `ui-forms`      | `@corpdk/ui-forms`      | React Hook Form + Zod integration (form fields, resolvers)                                                     |
+| `ui-datagrid`   | `@corpdk/ui-datagrid`   | TanStack Table v8 + @tanstack/react-virtual for large datasets                                                 |
+| `ui-feedback`   | `@corpdk/ui-feedback`   | Sonner toast notifications + AppErrorBoundary                                                                  |
+| `codegen-cli`   | `@corpdk/codegen-cli`   | GraphQL codegen plugin for resolver types + SDK generation                                                     |
+| `eslint-config` | `@corpdk/eslint-config` | Shared ESLint flat config (base + Next.js) for all packages                                                    |
+| `create-app`    | `@corpdk/create-app`    | Interactive CLI scaffolding tool for full-stack, DS-only, or UI-only projects                                  |
+| `ui-showcase`   | `@corpdk/ui-showcase`   | Storybook showcase — visual testing for all shared `packages/ui-*` components                                  |
 
 ### Key Design Decisions
 
-- **`"type": "module"` on DS packages only** — Yoga v5 is pure ESM; Next.js manages its own module system
+- **`"type": "module"` on all packages except Next.js template apps and `ui-showcase`** — DS packages, libraries, engines, and shared `packages/*` are pure ESM. The two Next.js templates (`ui`, `ui-hprt`) and the Storybook-only `ui-showcase` omit it
 - **HTTP via Next.js proxy, WS direct** — `rewrites()` handles queries/mutations; WebSocket connects directly via `NEXT_PUBLIC_DS_WS_URL` (avoids Next.js WS proxy limitations)
 - **SDK as workspace dependency** — `ui` depends on `@corpdk/ds-sdk: "workspace:*"`; Turbo ensures codegen runs before build
 - **All ports from env, no defaults** — prevents port collision surprises; each package has `.env.example`
@@ -62,10 +83,12 @@ coding-templates/
 - **Repository Pattern in all DS packages** — every DS package exposes `src/db/repository.ts` with an `IItemRepository` interface. GraphQL resolvers in `schema.ts` call only `itemRepository.*` — never DB-specific APIs directly.
 - **GraphQL SDL in `src/schema/`** — DS packages define the schema as multiple `.graphqls` files in `src/schema/` (not inline in TypeScript). `base.graphqls` declares empty root types; feature files use `extend type` to add fields. Loaded at runtime by scanning the directory with `readdirSync`. Codegen uses `./src/schema/**/*.graphqls`. The directory is copied to `dist/` as part of the build script (`cp -r src/schema dist/`).
 - **Plugin-style pub/sub via `@corpdk/pub-sub`** — all DS packages use `createAppPubSub<T>()` from the shared library to wire up memory or Redis event targets. Topics (`PubSubTopics`) are defined locally in each package's `src/pubsub/index.ts`.
+- **Publishing: npmjs vs Artifactory** — engines, libraries, and `packages/*` (including `eslint-config`) publish to **npmjs** (public, `"access": "public"`). Templates publish to a **private Artifactory** registry. Only the workspace root stays `"private": true`. See [docs/architecture/02-monorepo-design.md](docs/architecture/02-monorepo-design.md) for the full publishing strategy.
+- **Shared tsconfig hierarchy** — four base configs at the workspace root (`tsconfig.base.json` → `tsconfig.node.json`, `tsconfig.react.json` → `tsconfig.next.json`). All packages target **ES2024**. Per-package tsconfigs declare only local overrides.
 
 ## Coding Standards
 
-**All code changes MUST follow the guidelines in [CODING_GUIDELINES.md](CODING_GUIDELINES.md)**.
+**All code changes MUST follow the guidelines in [docs/developer/08-coding-guidelines.md](docs/developer/08-coding-guidelines.md)**.
 
 Key principles:
 
@@ -76,10 +99,10 @@ Key principles:
 
 ## GraphQL Tooling Decision Table
 
-| Tool | Use when |
-|------|----------|
-| **GraphQL Yoga** | Default for every DS. You own the schema and call your own databases. |
-| **GraphQL Mesh** | Add only when you must stitch 2+ external APIs you don't own (REST/gRPC/OpenAPI/GraphQL) into one unified graph. Overkill for a single owned source. |
+| Tool             | Use when                                                                                                                                                                    |
+| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **GraphQL Yoga** | Default for every DS. You own the schema and call your own databases.                                                                                                       |
+| **GraphQL Mesh** | Add only when you must stitch 2+ external APIs you don't own (REST/gRPC/OpenAPI/GraphQL) into one unified graph. Overkill for a single owned source.                        |
 | **GraphQL Hive** | Add when: 3+ devs modify the schema independently, API is public/partner-facing, or you run a federated supergraph. Not warranted for a private monorepo with a small team. |
 
 ## Development Workflow
@@ -91,6 +114,8 @@ pnpm dev                  # Start all packages in dev mode (via Turbo)
 pnpm build                # Build all packages (codegen → build)
 pnpm --filter @corpdk/ds dev        # Start only ds
 pnpm --filter @corpdk/ui dev        # Start only ui
+pnpm codegen                        # Run graphql-codegen for @corpdk/ds (root shortcut)
+pnpm storybook                      # Start Storybook for ui-showcase (port 6006)
 pnpm --filter @corpdk/ds codegen    # Run graphql-codegen for ds
 pnpm create-app                     # Run the interactive scaffolding CLI
 ```
@@ -104,13 +129,13 @@ Scaffolded projects include Dockerfiles co-located with each package:
 ```bash
 # From the scaffolded project root
 docker build -f packages/ds/Dockerfile -t my-app-ds .     # Build DS image
-docker build -f packages/ui/Dockerfile -t my-app-ui .     # Build UI image (monorepo)
-docker build -t my-app-ui .                                # Build UI image (standalone)
+docker build -f packages/ui/Dockerfile -t my-app-ui .     # Build UI image
 ```
 
 **UI Dockerfile requirement**: `output: 'standalone'` must be set in the UI package's `next.config.ts`. The standalone output bundles the Next.js server into `server.js` (no `next` CLI needed at runtime).
 
 **DS Dockerfile notes**:
+
 - Build context is always the monorepo root (needed for `pnpm-lock.yaml` and workspace manifests)
 - `@corpdk/ds-sdk` is resolved at build time; Docker's `COPY` dereferences pnpm symlinks so it is self-contained in `node_modules` at runtime
 - SDL schema files are copied to `dist/` by the DS build script — no extra step needed
@@ -121,6 +146,10 @@ docker build -t my-app-ui .                                # Build UI image (sta
 - No TODO comments
 - Must be production-ready and runnable as-is
 - Clean, readable code with appropriate comments
+
+## Docs Update Rule
+
+**Every feature plan must include a docs update step.** When planning any feature, new package, template, script, env var, architecture change, or behavioural change to an existing pattern, identify which file(s) under `docs/` need updating and include that as an explicit step in the plan. Do not close a task as complete if the relevant docs are stale.
 
 ## Workflow Optimization & Token Efficiency
 
@@ -138,6 +167,7 @@ Files that are commonly modified together:
 - `templates/ds/src/schema.ts` + `templates/ds/src/pubsub/index.ts` (schema changes)
 - `templates/ds/package.json` + `templates/ds-sdk/package.json` (SDK dependency updates)
 - Root `package.json` + `turbo.json` (task pipeline changes)
+- `packages/ui-*/src/types.ts` + `templates/ui-showcase/src/stories/` (prop changes affect stories)
 
 ### Common Operations
 

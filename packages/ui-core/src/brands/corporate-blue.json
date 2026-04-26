@@ -1,0 +1,91 @@
+{
+  "$schema": "./brand-config.schema.json",
+  "name": "Corporate Blue",
+  "description": "Professional blue-primary brand with medium rounding and standard shadows.",
+  "colors": {
+    "light": {
+      "background": "oklch(0.995 0.002 250)",
+      "foreground": "oklch(0.16 0.015 250)",
+      "card": "oklch(1 0 0)",
+      "cardForeground": "oklch(0.16 0.015 250)",
+      "popover": "oklch(1 0 0)",
+      "popoverForeground": "oklch(0.16 0.015 250)",
+      "primary": "oklch(0.45 0.2 250)",
+      "primaryForeground": "oklch(0.99 0 0)",
+      "secondary": "oklch(0.94 0.02 250)",
+      "secondaryForeground": "oklch(0.25 0.06 250)",
+      "muted": "oklch(0.96 0.008 250)",
+      "mutedForeground": "oklch(0.5 0.02 250)",
+      "accent": "oklch(0.92 0.04 250)",
+      "accentForeground": "oklch(0.25 0.06 250)",
+      "destructive": "oklch(0.577 0.245 27.325)",
+      "border": "oklch(0.9 0.015 250)",
+      "input": "oklch(0.9 0.015 250)",
+      "ring": "oklch(0.45 0.2 250)",
+      "overlay": "oklch(0.1 0.02 250 / 80%)",
+      "sidebar": "oklch(0.97 0.01 250)",
+      "sidebarForeground": "oklch(0.16 0.015 250)",
+      "sidebarBorder": "oklch(0.9 0.015 250)",
+      "sidebarAccent": "oklch(0.92 0.04 250)",
+      "sidebarAccentForeground": "oklch(0.25 0.06 250)",
+      "sidebarRing": "oklch(0.45 0.2 250)",
+      "chart1": "oklch(0.45 0.2 250)",
+      "chart2": "oklch(0.55 0.15 200)",
+      "chart3": "oklch(0.65 0.18 170)",
+      "chart4": "oklch(0.7 0.12 280)",
+      "chart5": "oklch(0.6 0.1 310)"
+    },
+    "dark": {
+      "background": "oklch(0.15 0.015 250)",
+      "foreground": "oklch(0.97 0.005 250)",
+      "card": "oklch(0.2 0.02 250)",
+      "cardForeground": "oklch(0.97 0.005 250)",
+      "popover": "oklch(0.2 0.02 250)",
+      "popoverForeground": "oklch(0.97 0.005 250)",
+      "primary": "oklch(0.65 0.18 250)",
+      "primaryForeground": "oklch(0.12 0.015 250)",
+      "secondary": "oklch(0.28 0.03 250)",
+      "secondaryForeground": "oklch(0.97 0.005 250)",
+      "muted": "oklch(0.28 0.02 250)",
+      "mutedForeground": "oklch(0.65 0.03 250)",
+      "accent": "oklch(0.3 0.04 250)",
+      "accentForeground": "oklch(0.97 0.005 250)",
+      "destructive": "oklch(0.704 0.191 22.216)",
+      "border": "oklch(1 0 0 / 12%)",
+      "input": "oklch(1 0 0 / 15%)",
+      "ring": "oklch(0.65 0.18 250)",
+      "overlay": "oklch(0 0 0 / 85%)",
+      "sidebar": "oklch(0.17 0.02 250)",
+      "sidebarForeground": "oklch(0.97 0.005 250)",
+      "sidebarBorder": "oklch(1 0 0 / 12%)",
+      "sidebarAccent": "oklch(0.3 0.04 250)",
+      "sidebarAccentForeground": "oklch(0.97 0.005 250)",
+      "sidebarRing": "oklch(0.65 0.18 250)",
+      "chart1": "oklch(0.65 0.18 250)",
+      "chart2": "oklch(0.7 0.14 200)",
+      "chart3": "oklch(0.75 0.16 170)",
+      "chart4": "oklch(0.65 0.12 280)",
+      "chart5": "oklch(0.7 0.1 310)"
+    }
+  },
+  "shape": {
+    "radius": "0.5rem",
+    "borderWidth": "1px",
+    "shadow": {
+      "sm": "0 1px 2px oklch(0.2 0.02 250 / 8%)",
+      "md": "0 4px 6px oklch(0.2 0.02 250 / 10%)",
+      "lg": "0 10px 15px oklch(0.2 0.02 250 / 12%)"
+    }
+  },
+  "typography": {
+    "fontWeightNormal": "400",
+    "fontWeightMedium": "500",
+    "fontWeightBold": "700",
+    "letterSpacing": "0em",
+    "lineHeight": "1.5"
+  },
+  "motion": {
+    "transitionDuration": "150ms",
+    "transitionTimingFn": "cubic-bezier(0.4, 0, 0.2, 1)"
+  }
+}

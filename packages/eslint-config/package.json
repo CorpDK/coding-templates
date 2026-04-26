@@ -1,0 +1,21 @@
+{
+  "name": "@corpdk/eslint-config",
+  "version": "2026.3.0-alpha.1",
+  "type": "module",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "files": [
+    "index.mjs",
+    "next.mjs"
+  ],
+  "exports": {
+    ".": "./index.mjs",
+    "./next": "./next.mjs"
+  },
+  "peerDependencies": {
+    "eslint": "^9",
+    "eslint-config-next": ">=16"
+  }
+}

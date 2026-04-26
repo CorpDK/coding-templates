@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Roboto, Roboto_Mono } from "next/font/google";
-import "./globals.css";
+import "./globals.scss";
+import { Providers } from "@/components/providers/UrqlProvider";
+import { StyleProvider } from "@corpdk/ui-core";
 
 const robotoSans = Roboto({
   variable: "--font-roboto-sans",
@@ -16,7 +18,8 @@ const robotoMono = Roboto_Mono({
 
 export const metadata: Metadata = {
   title: "Next.js Template (HPRT)",
-  description: "A generic Next.js starter template with urql, Graphcache, and real-time subscriptions",
+  description:
+    "A generic Next.js starter template with urql, Graphcache, and real-time subscriptions",
 };
 
 export default function RootLayout({
@@ -25,11 +28,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${robotoSans.variable} ${robotoMono.variable} antialiased`}
       >
-        {children}
+        <StyleProvider attribute="class" defaultTheme="system" enableSystem>
+          <Providers>{children}</Providers>
+        </StyleProvider>
       </body>
     </html>
   );

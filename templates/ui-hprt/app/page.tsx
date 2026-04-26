@@ -1,8 +1,3 @@
-import EmptyState from "@/components/ui/EmptyState";
-import ErrorState from "@/components/ui/ErrorState";
-import LoadingState from "@/components/ui/LoadingState";
-import PrimitivesDemo from "@/components/PrimitivesDemo";
-
 const FEATURES = [
   {
     title: "App Router",
@@ -17,9 +12,9 @@ const FEATURES = [
     icon: "T",
   },
   {
-    title: "UI Primitives",
+    title: "Shared UI Packages",
     description:
-      "Ready-to-use LoadingState, ErrorState, EmptyState, SearchInput, and FilterButton components.",
+      "@corpdk/ui-core, ui-charts, ui-datagrid, ui-forms, ui-feedback, ui-auth — production-ready primitives.",
     icon: "U",
   },
   {
@@ -73,7 +68,8 @@ export default function Home() {
             Next.js Template (HPRT)
           </h1>
           <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">
-            Next.js + React 19 + TypeScript 5 + Tailwind CSS v4 + urql + Graphcache
+            Next.js + React 19 + TypeScript 5 + Tailwind CSS v4 + urql +
+            Graphcache
           </p>
         </div>
       </header>
@@ -87,43 +83,6 @@ export default function Home() {
             {FEATURES.map((feature) => (
               <FeatureCard key={feature.title} {...feature} />
             ))}
-          </div>
-        </section>
-
-        <section>
-          <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100 mb-6">
-            UI primitives
-          </h2>
-          <div className="space-y-6">
-            <div>
-              <p className="text-xs font-mono text-zinc-400 mb-2">
-                LoadingState
-              </p>
-              <div className="h-24 rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-800">
-                <LoadingState message="Loading data..." />
-              </div>
-            </div>
-            <div>
-              <p className="text-xs font-mono text-zinc-400 mb-2">ErrorState</p>
-              <div className="h-24 rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-800">
-                <ErrorState
-                  error="Something went wrong."
-                  hint="This is a demo error state."
-                />
-              </div>
-            </div>
-            <div>
-              <p className="text-xs font-mono text-zinc-400 mb-2">EmptyState</p>
-              <div className="h-24 rounded-lg overflow-hidden border border-zinc-200 dark:border-zinc-800">
-                <EmptyState message="No items found." />
-              </div>
-            </div>
-            <div>
-              <p className="text-xs font-mono text-zinc-400 mb-2">
-                SearchInput + FilterButton
-              </p>
-              <PrimitivesDemo />
-            </div>
           </div>
         </section>
       </main>

@@ -2,13 +2,17 @@ packages:
   - templates/*
   - engines/*
   - libraries/*
+  - packages/*
 
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver
 
 onlyBuiltDependencies:
-  - '@prisma/engines'
+  - "@parcel/watcher"
+  - "@prisma/engines"
   - couchbase
   - esbuild
+  - msw
+  - playwright
   - prisma

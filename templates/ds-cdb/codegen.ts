@@ -12,6 +12,14 @@ const config: CodegenConfig = {
     "./src/types/resolvers.generated.ts": {
       plugins: ["typescript", "typescript-resolvers"],
     },
+    // CLI for automation and LLM access
+    "../ds-cli/src/generated/": {
+      preset: "@corpdk/codegen-cli",
+      presetConfig: {
+        httpUrlEnvVar: "DS_HTTP_URL",
+        wsUrlEnvVar: "DS_WS_URL",
+      },
+    },
   },
 };
 

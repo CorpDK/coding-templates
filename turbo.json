@@ -3,8 +3,14 @@
   "ui": "tui",
   "tasks": {
     "codegen": {
+      "dependsOn": ["@corpdk/codegen-cli#build"],
       "inputs": ["src/**/*.ts", "prisma/schema.prisma", "drizzle/schema.ts"],
-      "outputs": ["../ds-sdk/src/generated/**"],
+      "outputs": ["../ds-sdk/src/generated/**", "../ds-cli/src/generated/**"],
+      "cache": true
+    },
+    "db:generate": {
+      "inputs": ["prisma/schema.prisma"],
+      "outputs": ["generated/prisma/**"],
       "cache": true
     },
     "build": {
@@ -20,6 +26,19 @@
       "cache": false,
       "persistent": true,
       "dependsOn": ["build"]
+    },
+    "typecheck": {
+      "dependsOn": ["^typecheck"],
+      "outputs": []
+    },
+    "storybook": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": []
     },
     "lint": { "outputs": [] },
     "clean": { "cache": false }

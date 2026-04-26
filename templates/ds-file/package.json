@@ -1,8 +1,10 @@
 {
   "name": "@corpdk/ds-file",
-  "version": "0.1.0",
-  "private": true,
+  "version": "2026.3.0-alpha.1",
   "type": "module",
+  "publishConfig": {
+    "registry": "https://artifactory.corp.example.com/api/npm/npm-private/"
+  },
   "scripts": {
     "dev": "node --env-file .env --import tsx/esm --watch src/index.ts",
     "build": "tsc && cp -r src/schema dist/",
@@ -14,23 +16,24 @@
   "dependencies": {
     "@corpdk/pub-sub": "workspace:*",
     "@graphql-yoga/redis-event-target": "^3.0.0",
-    "graphql": "^16.11.0",
-    "graphql-ws": "^5.16.0",
-    "graphql-yoga": "^5.13.4",
-    "ioredis": "^5.0.0",
+    "graphql": "^16.13.2",
+    "graphql-ws": "^6.0.8",
+    "graphql-yoga": "^5.18.1",
+    "ioredis": "^5.10.1",
     "js-yaml": "^4.1.0",
-    "ws": "^8.18.2",
-    "zod": "^3.24.2"
+    "ws": "^8.20.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@graphql-codegen/cli": "^5.0.5",
-    "@graphql-codegen/client-preset": "^4.5.1",
-    "@graphql-codegen/typescript": "^4.1.5",
-    "@graphql-codegen/typescript-resolvers": "^4.5.1",
+    "@corpdk/codegen-cli": "workspace:*",
+    "@graphql-codegen/cli": "^6.2.1",
+    "@graphql-codegen/client-preset": "^5.2.4",
+    "@graphql-codegen/typescript": "^5.0.9",
+    "@graphql-codegen/typescript-resolvers": "^5.1.7",
     "@types/js-yaml": "^4.0.9",
     "@types/node": "^20.19.37",
     "@types/ws": "^8.18.1",
-    "tsx": "^4.19.4",
-    "typescript": "^5.9.3"
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2"
   }
 }

@@ -7,6 +7,7 @@ import type {
   DocumentImpl,
   DocumentProvider,
   OrmChoice,
+  PackageId,
   RelationalDbChoice,
   ScaffoldConfig,
   StorageType,
@@ -34,6 +35,7 @@ interface ParsedArgs {
   db: string | undefined;
   ui: string | undefined;
   sdk: string | undefined;
+  uiPackages: string | undefined;
   env: boolean;
   git: boolean;
   yes: boolean;
@@ -54,6 +56,7 @@ export function parseCliArgs(): ParsedArgs {
       db: { type: "string" },
       ui: { type: "string" },
       sdk: { type: "string" },
+      "ui-packages": { type: "string" },
       env: { type: "boolean", default: true },
       "no-env": { type: "boolean", default: false },
       git: { type: "boolean", default: true },
@@ -78,6 +81,7 @@ export function parseCliArgs(): ParsedArgs {
     db: values.db as string | undefined,
     ui: values.ui as string | undefined,
     sdk: values.sdk as string | undefined,
+    uiPackages: values["ui-packages"] as string | undefined,
     env: noEnv ? false : ((values.env as boolean | undefined) ?? true),
     git: noGit ? false : ((values.git as boolean | undefined) ?? true),
     yes: (values.yes as boolean | undefined) ?? false,
@@ -89,12 +93,31 @@ export function parseCliArgs(): ParsedArgs {
 // Validation helpers
 // ---------------------------------------------------------------------------
 
-const VALID_STORAGE_TYPES: StorageType[] = ["relational", "document", "filebased"];
+const VALID_STORAGE_TYPES: StorageType[] = [
+  "relational",
+  "document",
+  "filebased",
+];
 const VALID_ORMS: OrmChoice[] = ["prisma", "drizzle"];
-const VALID_DOC_PROVIDERS: DocumentProvider[] = ["couchbase", "mongodb", "documentdb"];
+const VALID_DOC_PROVIDERS: DocumentProvider[] = [
+  "couchbase",
+  "mongodb",
+  "documentdb",
+];
 const VALID_DOC_IMPLS: DocumentImpl[] = ["standard", "hprt"];
 const VALID_UI: UiChoice[] = ["none", "standard", "hprt"];
-const VALID_RELATIONAL_DBS: RelationalDbChoice[] = ["postgresql", "mysql", "sqlite", "cockroachdb"];
+const VALID_OPTIONAL_UI: PackageId[] = [
+  "ui-forms",
+  "ui-datagrid",
+  "ui-charts",
+  "ui-auth",
+];
+const VALID_RELATIONAL_DBS: RelationalDbChoice[] = [
+  "postgresql",
+  "mysql",
+  "sqlite",
+  "cockroachdb",
+];
 const VALID_DB_DRIZZLE = DRIZZLE_DB_OPTIONS.map((o) => o.value);
 
 function fail(msg: string): never {
@@ -107,10 +130,16 @@ function fail(msg: string): never {
 // Storage hierarchy resolution
 // ---------------------------------------------------------------------------
 
-function resolveDocumentDs(args: ParsedArgs): { ds: DsChoice; db: DbChoice | null } {
-  const provider = (args.documentProvider as DocumentProvider | undefined) ?? "couchbase";
+function resolveDocumentDs(args: ParsedArgs): {
+  ds: DsChoice;
+  db: DbChoice | null;
+} {
+  const provider =
+    (args.documentProvider as DocumentProvider | undefined) ?? "couchbase";
   if (!VALID_DOC_PROVIDERS.includes(provider)) {
-    fail(`--document-provider must be one of: ${VALID_DOC_PROVIDERS.join(", ")}`);
+    fail(
+      `--document-provider must be one of: ${VALID_DOC_PROVIDERS.join(", ")}`,
+    );
   }
   if (provider === "couchbase") return { ds: "cdb", db: null };
 
@@ -126,7 +155,10 @@ function resolveDocumentDs(args: ParsedArgs): { ds: DsChoice; db: DbChoice | nul
   return { ds: "standard", db };
 }
 
-function resolveRelationalDs(args: ParsedArgs): { ds: DsChoice; db: DbChoice | null } {
+function resolveRelationalDs(args: ParsedArgs): {
+  ds: DsChoice;
+  db: DbChoice | null;
+} {
   const orm = (args.orm as OrmChoice | undefined) ?? "prisma";
   if (!VALID_ORMS.includes(orm)) {
     fail(`--orm must be one of: ${VALID_ORMS.join(", ")}`);
@@ -137,13 +169,18 @@ function resolveRelationalDs(args: ParsedArgs): { ds: DsChoice; db: DbChoice | n
     fail(`--db must be one of: ${VALID_RELATIONAL_DBS.join(", ")}`);
   }
   if (orm === "drizzle" && !VALID_DB_DRIZZLE.includes(rawDb)) {
-    fail(`Drizzle does not support ${rawDb}. Choose one of: ${VALID_DB_DRIZZLE.join(", ")}`);
+    fail(
+      `Drizzle does not support ${rawDb}. Choose one of: ${VALID_DB_DRIZZLE.join(", ")}`,
+    );
   }
 
   return { ds: orm === "drizzle" ? "hprt" : "standard", db: rawDb };
 }
 
-function resolveDsChoice(args: ParsedArgs): { ds: DsChoice; db: DbChoice | null } {
+function resolveDsChoice(args: ParsedArgs): {
+  ds: DsChoice;
+  db: DbChoice | null;
+} {
   const st = args.storageType as StorageType | undefined;
 
   if (!st) return { ds: "none", db: null };
@@ -155,14 +192,37 @@ function resolveDsChoice(args: ParsedArgs): { ds: DsChoice; db: DbChoice | null 
   return resolveRelationalDs(args);
 }
 
+function resolveOptionalUiPackages(
+  ui: UiChoice,
+  raw: string | undefined,
+): PackageId[] {
+  if (ui === "none") return [];
+  if (raw === undefined) return [...VALID_OPTIONAL_UI];
+  if (raw === "") return [];
+
+  const packages = raw.split(",").map((s) => s.trim()) as PackageId[];
+  for (const pkg of packages) {
+    if (!VALID_OPTIONAL_UI.includes(pkg)) {
+      fail(
+        `--ui-packages: invalid package "${pkg}". Valid: ${VALID_OPTIONAL_UI.join(", ")}`,
+      );
+    }
+  }
+  return packages;
+}
+
 async function resolveExternalSdkPackage(
   ui: UiChoice,
   ds: DsChoice,
-  sdk: string | undefined
+  sdk: string | undefined,
 ): Promise<string | null> {
   if (ui === "none" || ds !== "none") return null;
-  if (!sdk) fail("--sdk is required when --ui is set and --storage-type is omitted (standalone UI mode)");
-  if (!sdk.startsWith("@")) fail('--sdk must be a scoped package name like "@acme/ds-sdk"');
+  if (!sdk)
+    fail(
+      "--sdk is required when --ui is set and --storage-type is omitted (standalone UI mode)",
+    );
+  if (!sdk.startsWith("@"))
+    fail('--sdk must be a scoped package name like "@acme/ds-sdk"');
   const s = spinner();
   s.start(`Checking if ${sdk} is reachable`);
   try {
@@ -172,7 +232,7 @@ async function resolveExternalSdkPackage(
     s.stop(`${sdk} not found`);
     console.error(
       `\nError: Package "${sdk}" is not reachable via pnpm.\n` +
-        "Publish it to Artifactory (or your npm registry) first, then re-run create-app.\n"
+        "Publish it to Artifactory (or your npm registry) first, then re-run create-app.\n",
     );
     process.exit(1);
   }
@@ -187,7 +247,9 @@ export async function buildConfig(args: ParsedArgs): Promise<ScaffoldConfig> {
   if (!scope) fail("--scope is required");
 
   if (!/^[a-z][a-z0-9-]*$/.test(name)) {
-    fail("--name must use lowercase letters, numbers, and hyphens only (must start with a letter)");
+    fail(
+      "--name must use lowercase letters, numbers, and hyphens only (must start with a letter)",
+    );
   }
   if (!/^[a-z][a-z0-9-]*$/.test(scope)) {
     fail("--scope must use lowercase letters, numbers, and hyphens only");
@@ -202,10 +264,14 @@ export async function buildConfig(args: ParsedArgs): Promise<ScaffoldConfig> {
 
   // UI / DS compatibility (applies to standard/hprt only — other DS types support both UIs)
   if (ds === "standard" && ui === "hprt") {
-    fail("--ui hprt requires --storage-type relational --orm drizzle (standard Prisma DS uses Apollo-based schema)");
+    fail(
+      "--ui hprt requires --storage-type relational --orm drizzle (standard Prisma DS uses Apollo-based schema)",
+    );
   }
   if (ds === "hprt" && ui === "standard") {
-    fail("--ui standard requires --storage-type relational --orm prisma (HPRT Drizzle DS uses urql-based schema)");
+    fail(
+      "--ui standard requires --storage-type relational --orm prisma (HPRT Drizzle DS uses urql-based schema)",
+    );
   }
 
   const rawOutput = args.output ?? `./${name}`;
@@ -216,8 +282,8 @@ export async function buildConfig(args: ParsedArgs): Promise<ScaffoldConfig> {
   }
 
   const externalSdkPackage = await resolveExternalSdkPackage(ui, ds, args.sdk);
-  const selectedPackages = resolvePackages(ds, ui);
-  const projectType = ds === "none" && ui !== "none" ? "standalone" : "monorepo";
+  const optionalUiPackages = resolveOptionalUiPackages(ui, args.uiPackages);
+  const selectedPackages = resolvePackages(ds, ui, optionalUiPackages);
 
   return {
     projectName: name,
@@ -226,8 +292,8 @@ export async function buildConfig(args: ParsedArgs): Promise<ScaffoldConfig> {
     ds,
     db,
     ui,
+    optionalUiPackages,
     externalSdkPackage,
-    projectType,
     selectedPackages,
     generateEnv: args.env,
     initGit: args.git,
@@ -275,13 +341,16 @@ Required:
   --sdk  <pkg>   Published TypedDocumentNode SDK package (e.g. @acme/ds-sdk)
 
 ─── Common options ───────────────────────────────────────────────────────────
-  -o, --output   <dir>   Output directory (default: ./<name>)
-      --env              Generate .env from .env.example (default: on)
-      --no-env           Skip .env generation
-      --git              Init git repository (default: on)
-      --no-git           Skip git init
-  -y, --yes              Accept all defaults (still requires --name and --scope)
-  -h, --help             Show this help
+  -o, --output       <dir>   Output directory (default: ./<name>)
+      --ui-packages  <list>  Comma-separated optional UI packages (default: all)
+                             Values: ui-forms, ui-datagrid, ui-charts, ui-auth
+                             Use --ui-packages "" to include none
+      --env                  Generate .env from .env.example (default: on)
+      --no-env               Skip .env generation
+      --git                  Init git repository (default: on)
+      --no-git               Skip git init
+  -y, --yes                  Accept all defaults (still requires --name and --scope)
+  -h, --help                 Show this help
 
 Storage / UI compatibility:
   relational + prisma  →  standard UI only (Apollo-based schema)
@@ -308,7 +377,10 @@ Examples:
   # DS only — Relational, Drizzle, SQLite
   pnpm create-app --name my-api --scope myorg --storage-type relational --orm drizzle --db sqlite
 
-  # UI only — standalone Next.js with external published SDK
+  # Full-stack with specific UI packages only
+  pnpm create-app --name my-app --scope myorg --storage-type relational --ui standard --ui-packages ui-forms,ui-auth
+
+  # UI only with external published SDK
   pnpm create-app --name my-ui --scope myorg --ui standard --sdk @acme/ds-sdk
 `);
 }

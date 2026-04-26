@@ -3,6 +3,7 @@ import {
   confirm,
   intro,
   isCancel,
+  multiselect,
   note,
   select,
   spinner,
@@ -15,6 +16,7 @@ import type {
   DocumentProvider,
   DsChoice,
   OrmChoice,
+  PackageId,
   RelationalDbChoice,
   ScaffoldConfig,
   ScaffoldTarget,
@@ -46,20 +48,23 @@ async function checkOutputDir(outputDir: string): Promise<void> {
         await confirm({
           message: `Directory ${outputDir} already exists and is not empty. Continue anyway?`,
           initialValue: false,
-        })
+        }),
       );
       if (!proceed) bail("Aborted — choose an empty directory.");
     }
   }
 }
 
-async function promptExternalSdk(ui: UiChoice, ds: DsChoice): Promise<string | null> {
+async function promptExternalSdk(
+  ui: UiChoice,
+  ds: DsChoice,
+): Promise<string | null> {
   if (ui === "none" || ds !== "none") return null;
   note(
     "The UI package requires an SDK package.\n" +
       "Since no storage is included, provide the published npm package name\n" +
       "for the TypedDocumentNode SDK (e.g. @acme/ds-sdk).",
-    "External SDK required"
+    "External SDK required",
   );
   const sdkPkg = checkCancel(
     await text({
@@ -70,7 +75,7 @@ async function promptExternalSdk(ui: UiChoice, ds: DsChoice): Promise<string | n
         if (!v.startsWith("@"))
           return 'Expected a scoped package name like "@acme/ds-sdk"';
       },
-    })
+    }),
   );
   const s = spinner();
   s.start(`Checking if ${sdkPkg} is reachable`);
@@ -81,7 +86,7 @@ async function promptExternalSdk(ui: UiChoice, ds: DsChoice): Promise<string | n
     s.stop(`${sdkPkg} not found`);
     cancel(
       `Package "${sdkPkg}" is not reachable via pnpm.\n` +
-        "Publish it to Artifactory (or your npm registry) first, then re-run create-app."
+        "Publish it to Artifactory (or your npm registry) first, then re-run create-app.",
     );
     process.exit(1);
   }
@@ -97,17 +102,19 @@ function deriveDsChoice(
   storageType: StorageType,
   orm: OrmChoice | null,
   docProvider: DocumentProvider | null,
-  docImpl: DocumentImpl | null
+  docImpl: DocumentImpl | null,
 ): { ds: DsChoice; db: DbChoice | null } {
   if (storageType === "filebased") return { ds: "file", db: null };
 
   if (storageType === "document") {
-    if (docProvider === "couchbase" || !docProvider) return { ds: "cdb", db: null };
+    if (docProvider === "couchbase" || !docProvider)
+      return { ds: "cdb", db: null };
     if (docImpl === "hprt") {
       return { ds: docProvider === "documentdb" ? "ddb" : "mongo", db: null };
     }
     // Standard (Prisma): reuse "standard" ds with mongodb/documentdb as db
-    const db: DbChoice = docProvider === "documentdb" ? "documentdb" : "mongodb";
+    const db: DbChoice =
+      docProvider === "documentdb" ? "documentdb" : "mongodb";
     return { ds: "standard", db };
   }
 
@@ -116,28 +123,32 @@ function deriveDsChoice(
 }
 
 async function promptStorageAndDb(
-  storageType?: StorageType
+  storageType?: StorageType,
 ): Promise<{ ds: DsChoice; db: DbChoice | null }> {
   // 4a. Storage type
-  const selectedStorageType = storageType ?? checkCancel(
-    await select<StorageType>({
-      message: "Storage type",
-      options: [
-        {
-          value: "relational",
-          label: "Relational DB (SQL)  —  PostgreSQL · MySQL · SQLite · CockroachDB",
-        },
-        {
-          value: "document",
-          label: "Document DB (NoSQL)  —  Couchbase · MongoDB · DocumentDB",
-        },
-        {
-          value: "filebased",
-          label: "File-Based DB  —  JSON/YAML, zero dependencies, compatible abstraction with Document DB",
-        },
-      ],
-    })
-  );
+  const selectedStorageType =
+    storageType ??
+    checkCancel(
+      await select<StorageType>({
+        message: "Storage type",
+        options: [
+          {
+            value: "relational",
+            label:
+              "Relational DB (SQL)  —  PostgreSQL · MySQL · SQLite · CockroachDB",
+          },
+          {
+            value: "document",
+            label: "Document DB (NoSQL)  —  Couchbase · MongoDB · DocumentDB",
+          },
+          {
+            value: "filebased",
+            label:
+              "File-Based DB  —  JSON/YAML, zero dependencies, compatible abstraction with Document DB",
+          },
+        ],
+      }),
+    );
 
   // 4b. ORM (Relational only)
   let orm: OrmChoice | null = null;
@@ -152,10 +163,11 @@ async function promptStorageAndDb(
           },
           {
             value: "drizzle",
-            label: "Drizzle  —  high-performance real-time, all 4 relational databases",
+            label:
+              "Drizzle  —  high-performance real-time, all 4 relational databases",
           },
         ],
-      })
+      }),
     );
   }
 
@@ -166,14 +178,18 @@ async function promptStorageAndDb(
       await select<DocumentProvider>({
         message: "Document DB provider",
         options: [
-          { value: "couchbase", label: "Couchbase  —  Capella cloud or self-hosted" },
+          {
+            value: "couchbase",
+            label: "Couchbase  —  Capella cloud or self-hosted",
+          },
           { value: "mongodb", label: "MongoDB  —  Atlas or self-hosted" },
           {
             value: "documentdb",
-            label: "DocumentDB  —  documentdb.io open-source (MongoDB-compatible)",
+            label:
+              "DocumentDB  —  documentdb.io open-source (MongoDB-compatible)",
           },
         ],
-      })
+      }),
     );
   }
 
@@ -184,18 +200,26 @@ async function promptStorageAndDb(
       await select<DocumentImpl>({
         message: "Implementation",
         options: [
-          { value: "standard", label: "Standard  —  Prisma ORM (uses MongoDB connector)" },
+          {
+            value: "standard",
+            label: "Standard  —  Prisma ORM (uses MongoDB connector)",
+          },
           {
             value: "hprt",
             label: "HPRT  —  Native SDK, no ORM overhead",
           },
         ],
-      })
+      }),
     );
   }
 
   // Derive ds and initial db from the storage hierarchy
-  const { ds, db: derivedDb } = deriveDsChoice(selectedStorageType, orm, docProvider, docImpl);
+  const { ds, db: derivedDb } = deriveDsChoice(
+    selectedStorageType,
+    orm,
+    docProvider,
+    docImpl,
+  );
 
   // 5. DB selection (Relational only — db is derived for Document paths)
   let db: DbChoice | null = derivedDb;
@@ -209,7 +233,7 @@ async function promptStorageAndDb(
           label: o.label,
           hint: o.value === "postgresql" ? "default" : undefined,
         })),
-      })
+      }),
     );
   } else if (selectedStorageType === "relational" && orm === "drizzle") {
     db = checkCancel(
@@ -220,7 +244,7 @@ async function promptStorageAndDb(
           label: o.label,
           hint: o.value === "postgresql" ? "default" : undefined,
         })),
-      })
+      }),
     );
   }
 
@@ -240,7 +264,7 @@ export async function runPrompts(): Promise<ScaffoldConfig> {
         if (!/^[a-z][a-z0-9-]*$/.test(v))
           return "Use lowercase letters, numbers, and hyphens only (must start with a letter)";
       },
-    })
+    }),
   );
 
   // 2. Org scope
@@ -253,7 +277,7 @@ export async function runPrompts(): Promise<ScaffoldConfig> {
         if (!/^[a-z][a-z0-9-]*$/.test(v))
           return "Use lowercase letters, numbers, and hyphens only";
       },
-    })
+    }),
   );
 
   // 3. Scaffold target
@@ -261,11 +285,17 @@ export async function runPrompts(): Promise<ScaffoldConfig> {
     await select<ScaffoldTarget>({
       message: "What are you scaffolding?",
       options: [
-        { value: "ui-ds",   label: "Full-stack  —  UI + DS (GraphQL Yoga + chosen storage)" },
+        {
+          value: "ui-ds",
+          label: "Full-stack  —  UI + DS (GraphQL Yoga + chosen storage)",
+        },
         { value: "ds-only", label: "DS only  —  GraphQL Yoga backend" },
-        { value: "ui-only", label: "UI only  —  Next.js frontend (connects to an external DS)" },
+        {
+          value: "ui-only",
+          label: "UI only  —  Next.js frontend (connects to an external DS)",
+        },
       ],
-    })
+    }),
   );
 
   // 4. Output directory
@@ -276,7 +306,7 @@ export async function runPrompts(): Promise<ScaffoldConfig> {
       validate: (v) => {
         if (!v) return "Output directory is required";
       },
-    })
+    }),
   );
 
   const outputDir = path.resolve(rawOutputDir);
@@ -298,10 +328,13 @@ export async function runPrompts(): Promise<ScaffoldConfig> {
       await select<UiChoice>({
         message: "UI",
         options: [
-          { value: "standard", label: "Standard UI  —  Next.js + Apollo Client" },
-          { value: "hprt",     label: "HPRT UI  —  Next.js + urql + Graphcache" },
+          {
+            value: "standard",
+            label: "Standard UI  —  Next.js + Apollo Client",
+          },
+          { value: "hprt", label: "HPRT UI  —  Next.js + urql + Graphcache" },
         ],
-      })
+      }),
     );
   } else if (scaffoldTarget === "ui-ds") {
     // Filter UI options by DS compatibility
@@ -309,43 +342,70 @@ export async function runPrompts(): Promise<ScaffoldConfig> {
 
     // Standard UI: available with none, standard (prisma), cdb, mongo, ddb, file
     if (ds !== "hprt") {
-      uiOptions.push({ value: "standard", label: "Standard UI  —  Next.js + Apollo Client" });
+      uiOptions.push({
+        value: "standard",
+        label: "Standard UI  —  Next.js + Apollo Client",
+      });
     }
     // HPRT UI: available with none, hprt (drizzle), cdb, mongo, ddb, file
     if (ds !== "standard") {
-      uiOptions.push({ value: "hprt", label: "HPRT UI  —  Next.js + urql + Graphcache" });
+      uiOptions.push({
+        value: "hprt",
+        label: "HPRT UI  —  Next.js + urql + Graphcache",
+      });
     }
 
     ui = checkCancel(
       await select<UiChoice>({
         message: "UI",
         options: uiOptions,
-      })
+      }),
     );
   }
   // ds-only: ui stays "none"
 
-  // 7. External SDK (UI-only mode, no storage)
+  // 7. Optional UI packages
+  let optionalUiPackages: PackageId[] = [];
+  if (ui !== "none") {
+    const selection = await multiselect({
+      message: "Optional UI packages (space to toggle, enter to confirm):",
+      options: [
+        { value: "ui-forms", label: "ui-forms    — React Hook Form + Zod" },
+        {
+          value: "ui-datagrid",
+          label: "ui-datagrid — TanStack Table + virtualization",
+        },
+        { value: "ui-charts", label: "ui-charts   — D3.js charts" },
+        {
+          value: "ui-auth",
+          label: "ui-auth     — Auth UI components + BFF OAuth2/OIDC scaffold",
+        },
+      ],
+      required: false,
+    });
+    if (!isCancel(selection)) optionalUiPackages = selection as PackageId[];
+  }
+
+  // 8. External SDK (UI-only mode, no storage)
   const externalSdkPackage = await promptExternalSdk(ui, ds);
 
-  // 8 & 9. Env + git
+  // 9 & 10. Env + git
   const generateEnv = checkCancel(
     await confirm({
       message: "Generate .env files from .env.example?",
       initialValue: true,
-    })
+    }),
   );
 
   const initGit = checkCancel(
     await confirm({
       message: "Initialise git repository?",
       initialValue: true,
-    })
+    }),
   );
 
   // Resolve final package set
-  const selectedPackages = resolvePackages(ds, ui);
-  const projectType = ds === "none" && ui !== "none" ? "standalone" : "monorepo";
+  const selectedPackages = resolvePackages(ds, ui, optionalUiPackages);
 
   // Summary
   const pkgList =
@@ -354,11 +414,10 @@ export async function runPrompts(): Promise<ScaffoldConfig> {
       : "  (none — bare project)";
   note(
     `Project:  @${orgScope}/${projectName}\n` +
-      `Type:     ${projectType}\n` +
       `Output:   ${outputDir}\n` +
       (db ? `Database: ${db}\n` : "") +
       `\nPackages:\n${pkgList}`,
-    "Configuration summary"
+    "Configuration summary",
   );
 
   return {
@@ -368,8 +427,8 @@ export async function runPrompts(): Promise<ScaffoldConfig> {
     ds,
     db,
     ui,
+    optionalUiPackages,
     externalSdkPackage,
-    projectType,
     selectedPackages,
     generateEnv,
     initGit,

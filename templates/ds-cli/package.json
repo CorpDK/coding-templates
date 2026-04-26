@@ -1,0 +1,17 @@
+{
+  "name": "@corpdk/ds-cli",
+  "version": "2026.3.0-alpha.1",
+  "type": "module",
+  "publishConfig": {
+    "registry": "https://artifactory.corp.example.com/api/npm/npm-private/"
+  },
+  "bin": {
+    "ds-cli": "./src/generated/index.js"
+  },
+  "man": [
+    "./src/generated/man/ds-cli.1"
+  ],
+  "scripts": {
+    "clean": "rm -rf src/generated node_modules .turbo"
+  }
+}

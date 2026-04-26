@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.react.json",
+  "compilerOptions": {
+    "paths": {
+      "@corpdk/ui-auth": ["./src/index.ts"],
+      "@/*": ["./scaffold/*"]
+    }
+  },
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "scaffold/**/*.ts",
+    "scaffold/**/*.tsx",
+    "scaffold/**/*.d.ts"
+  ]
+}

@@ -1,8 +1,10 @@
 {
   "name": "@corpdk/ds-sdk",
-  "version": "0.1.0",
-  "private": true,
+  "version": "2026.3.0-alpha.1",
   "type": "module",
+  "publishConfig": {
+    "registry": "https://artifactory.corp.example.com/api/npm/npm-private/"
+  },
   "main": "./src/index.ts",
   "exports": {
     ".": "./src/index.ts"
@@ -16,7 +18,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.19.37",
-    "graphql": "^16.11.0",
-    "typescript": "^5.9.3"
+    "graphql": "^16.13.2",
+    "typescript": "^6.0.2"
   }
 }

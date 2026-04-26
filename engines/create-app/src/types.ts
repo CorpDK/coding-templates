@@ -7,13 +7,31 @@ export type PackageId =
   | "ds-ddb"
   | "ds-file"
   | "ui"
-  | "ui-hprt";
+  | "ui-hprt"
+  | "ui-core"
+  | "ui-feedback"
+  | "ui-forms"
+  | "ui-datagrid"
+  | "ui-charts"
+  | "ui-auth"
+  | "ds-cli";
 
-export type DsChoice = "none" | "standard" | "hprt" | "cdb" | "mongo" | "ddb" | "file";
+export type DsChoice =
+  | "none"
+  | "standard"
+  | "hprt"
+  | "cdb"
+  | "mongo"
+  | "ddb"
+  | "file";
 export type UiChoice = "none" | "standard" | "hprt";
 
 /** Relational DB choices — used with Prisma (standard) and Drizzle (hprt) */
-export type RelationalDbChoice = "postgresql" | "mysql" | "sqlite" | "cockroachdb";
+export type RelationalDbChoice =
+  | "postgresql"
+  | "mysql"
+  | "sqlite"
+  | "cockroachdb";
 /** Document DB choices when reusing the Prisma/standard template */
 export type DocumentDbChoice = "mongodb" | "documentdb";
 /** Union of all possible db values stored in ScaffoldConfig */
@@ -28,7 +46,6 @@ export type DocumentProvider = "couchbase" | "mongodb" | "documentdb";
 /** Implementation within MongoDB / DocumentDB */
 export type DocumentImpl = "standard" | "hprt";
 
-export type ProjectType = "monorepo" | "standalone";
 export type ScaffoldTarget = "ui-only" | "ds-only" | "ui-ds";
 
 export interface ScaffoldConfig {
@@ -38,8 +55,8 @@ export interface ScaffoldConfig {
   ds: DsChoice;
   db: DbChoice | null;
   ui: UiChoice;
+  optionalUiPackages: PackageId[];
   externalSdkPackage: string | null;
-  projectType: ProjectType;
   selectedPackages: Set<PackageId>;
   generateEnv: boolean;
   initGit: boolean;

@@ -1,0 +1,306 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "$id": "https://corpdk.dev/schemas/brand-config.schema.json",
+  "title": "BrandConfig",
+  "description": "Defines all visual tokens for a brand theme. Used by BrandProvider to inject CSS custom properties at runtime.",
+  "type": "object",
+  "required": ["name", "colors", "shape"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "JSON Schema reference for editor validation."
+    },
+    "name": {
+      "type": "string",
+      "description": "Human-readable brand name, displayed in the Storybook brand selector."
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional description of the brand or its design language."
+    },
+    "logoUrl": {
+      "type": "string",
+      "format": "uri",
+      "description": "URL to the brand logo. Used by showcase and documentation."
+    },
+    "colors": {
+      "type": "object",
+      "description": "Color tokens for light and dark modes. Values are CSS color strings (OKLCH recommended).",
+      "required": ["light", "dark"],
+      "additionalProperties": false,
+      "properties": {
+        "light": { "$ref": "#/$defs/BrandColorTokens" },
+        "dark": { "$ref": "#/$defs/BrandColorTokens" }
+      }
+    },
+    "shape": { "$ref": "#/$defs/BrandShape" },
+    "typography": { "$ref": "#/$defs/BrandTypography" },
+    "motion": { "$ref": "#/$defs/BrandMotion" }
+  },
+  "$defs": {
+    "BrandColorTokens": {
+      "type": "object",
+      "description": "Color palette for a single mode (light or dark).",
+      "required": [
+        "background",
+        "foreground",
+        "card",
+        "cardForeground",
+        "popover",
+        "popoverForeground",
+        "primary",
+        "primaryForeground",
+        "secondary",
+        "secondaryForeground",
+        "muted",
+        "mutedForeground",
+        "accent",
+        "accentForeground",
+        "destructive",
+        "border",
+        "input",
+        "ring"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "background": {
+          "type": "string",
+          "description": "Page background color. Maps to --background."
+        },
+        "foreground": {
+          "type": "string",
+          "description": "Default text color. Maps to --foreground."
+        },
+        "card": {
+          "type": "string",
+          "description": "Card surface color. Maps to --card."
+        },
+        "cardForeground": {
+          "type": "string",
+          "description": "Card text color. Maps to --card-foreground."
+        },
+        "popover": {
+          "type": "string",
+          "description": "Popover surface color. Maps to --popover."
+        },
+        "popoverForeground": {
+          "type": "string",
+          "description": "Popover text color. Maps to --popover-foreground."
+        },
+        "primary": {
+          "type": "string",
+          "description": "Primary action / brand color. Maps to --primary."
+        },
+        "primaryForeground": {
+          "type": "string",
+          "description": "Text on primary surfaces. Maps to --primary-foreground."
+        },
+        "secondary": {
+          "type": "string",
+          "description": "Secondary action color. Maps to --secondary."
+        },
+        "secondaryForeground": {
+          "type": "string",
+          "description": "Text on secondary surfaces. Maps to --secondary-foreground."
+        },
+        "muted": {
+          "type": "string",
+          "description": "Muted / disabled surface color. Maps to --muted."
+        },
+        "mutedForeground": {
+          "type": "string",
+          "description": "Text on muted surfaces. Maps to --muted-foreground."
+        },
+        "accent": {
+          "type": "string",
+          "description": "Accent highlight color. Maps to --accent."
+        },
+        "accentForeground": {
+          "type": "string",
+          "description": "Text on accent surfaces. Maps to --accent-foreground."
+        },
+        "destructive": {
+          "type": "string",
+          "description": "Error / destructive action color. Maps to --destructive."
+        },
+        "border": {
+          "type": "string",
+          "description": "Default border color. Maps to --border."
+        },
+        "input": {
+          "type": "string",
+          "description": "Input field border color. Maps to --input."
+        },
+        "ring": {
+          "type": "string",
+          "description": "Focus ring color. Maps to --ring."
+        },
+        "overlay": {
+          "type": "string",
+          "description": "Modal/dialog backdrop overlay color. Maps to --overlay.",
+          "examples": ["oklch(0 0 0 / 80%)", "oklch(0 0 0 / 60%)"]
+        },
+        "sidebar": {
+          "type": "string",
+          "description": "Sidebar background color. Maps to --sidebar."
+        },
+        "sidebarForeground": {
+          "type": "string",
+          "description": "Sidebar text color. Maps to --sidebar-foreground."
+        },
+        "sidebarBorder": {
+          "type": "string",
+          "description": "Sidebar border color. Maps to --sidebar-border."
+        },
+        "sidebarAccent": {
+          "type": "string",
+          "description": "Sidebar active/hover accent. Maps to --sidebar-accent."
+        },
+        "sidebarAccentForeground": {
+          "type": "string",
+          "description": "Text on sidebar accent. Maps to --sidebar-accent-foreground."
+        },
+        "sidebarRing": {
+          "type": "string",
+          "description": "Sidebar focus ring. Maps to --sidebar-ring."
+        },
+        "chart1": {
+          "type": "string",
+          "description": "First chart series color. Maps to --chart-1."
+        },
+        "chart2": {
+          "type": "string",
+          "description": "Second chart series color. Maps to --chart-2."
+        },
+        "chart3": {
+          "type": "string",
+          "description": "Third chart series color. Maps to --chart-3."
+        },
+        "chart4": {
+          "type": "string",
+          "description": "Fourth chart series color. Maps to --chart-4."
+        },
+        "chart5": {
+          "type": "string",
+          "description": "Fifth chart series color. Maps to --chart-5."
+        }
+      }
+    },
+    "BrandShape": {
+      "type": "object",
+      "description": "Controls border radius, border width, and shadow intensity.",
+      "required": ["radius"],
+      "additionalProperties": false,
+      "properties": {
+        "radius": {
+          "type": "string",
+          "description": "Base border radius. Set to \"0\" for sharp corners, \"0.625rem\" for default, \"1rem\" for pill-like. Derived radii (sm, md, lg, xl) are computed from this value.",
+          "examples": ["0", "0.25rem", "0.5rem", "0.625rem", "1rem"]
+        },
+        "borderWidth": {
+          "type": "string",
+          "description": "Default border thickness. Maps to --border-width.",
+          "default": "1px",
+          "examples": ["1px", "2px"]
+        },
+        "shadow": {
+          "type": "object",
+          "description": "Box shadow presets. Set values to \"none\" for a flat, shadow-free brand.",
+          "additionalProperties": false,
+          "properties": {
+            "sm": {
+              "type": "string",
+              "description": "Small shadow. Maps to --shadow-sm.",
+              "examples": ["0 1px 2px oklch(0 0 0 / 5%)", "none"]
+            },
+            "md": {
+              "type": "string",
+              "description": "Medium shadow. Maps to --shadow-md.",
+              "examples": ["0 4px 6px oklch(0 0 0 / 7%)", "none"]
+            },
+            "lg": {
+              "type": "string",
+              "description": "Large shadow. Maps to --shadow-lg.",
+              "examples": ["0 10px 15px oklch(0 0 0 / 10%)", "none"]
+            }
+          }
+        }
+      }
+    },
+    "BrandTypography": {
+      "type": "object",
+      "description": "Typography overrides. Font loading (e.g. next/font) remains app-level; these tokens override the CSS variable values.",
+      "additionalProperties": false,
+      "properties": {
+        "fontSans": {
+          "type": "string",
+          "description": "Sans-serif font stack. Maps to --font-sans.",
+          "examples": ["\"Inter\", sans-serif", "\"Roboto\", sans-serif"]
+        },
+        "fontMono": {
+          "type": "string",
+          "description": "Monospace font stack. Maps to --font-mono.",
+          "examples": [
+            "\"JetBrains Mono\", monospace",
+            "\"Fira Code\", monospace"
+          ]
+        },
+        "fontWeightNormal": {
+          "type": "string",
+          "description": "Normal text weight. Maps to --font-weight-normal.",
+          "default": "400",
+          "examples": ["300", "400"]
+        },
+        "fontWeightMedium": {
+          "type": "string",
+          "description": "Medium text weight (labels, subheadings). Maps to --font-weight-medium.",
+          "default": "500",
+          "examples": ["500", "600"]
+        },
+        "fontWeightBold": {
+          "type": "string",
+          "description": "Bold text weight (headings, emphasis). Maps to --font-weight-bold.",
+          "default": "700",
+          "examples": ["600", "700", "800"]
+        },
+        "letterSpacing": {
+          "type": "string",
+          "description": "Default letter spacing. Maps to --letter-spacing.",
+          "default": "0em",
+          "examples": ["-0.02em", "0em", "0.025em"]
+        },
+        "lineHeight": {
+          "type": "string",
+          "description": "Default line height. Maps to --line-height.",
+          "default": "1.5",
+          "examples": ["1.4", "1.5", "1.6"]
+        }
+      }
+    },
+    "BrandMotion": {
+      "type": "object",
+      "description": "Transition and animation preferences. Set transitionDuration to \"0ms\" for brands that prefer no animation.",
+      "additionalProperties": false,
+      "properties": {
+        "transitionDuration": {
+          "type": "string",
+          "description": "Default transition duration. Maps to --transition-duration.",
+          "default": "150ms",
+          "examples": ["0ms", "100ms", "150ms", "200ms"]
+        },
+        "transitionTimingFn": {
+          "type": "string",
+          "description": "Default easing function. Maps to --transition-timing-fn.",
+          "default": "cubic-bezier(0.4, 0, 0.2, 1)",
+          "examples": [
+            "ease",
+            "ease-in-out",
+            "cubic-bezier(0.4, 0, 0.2, 1)",
+            "linear"
+          ]
+        }
+      }
+    }
+  }
+}

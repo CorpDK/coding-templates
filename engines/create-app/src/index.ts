@@ -3,7 +3,12 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { runPrompts } from "./prompts.js";
 import { scaffold } from "./scaffold.js";
-import { isNonInteractive, parseCliArgs, buildConfig, printHelp } from "./args.js";
+import {
+  isNonInteractive,
+  parseCliArgs,
+  buildConfig,
+  printHelp,
+} from "./args.js";
 
 // engines/create-app/dist/index.js → engines/create-app → engines → repo root
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -21,23 +26,22 @@ async function main(): Promise<void> {
 
   await scaffold(config, TEMPLATE_ROOT);
 
-  const nextSteps: string[] = [
-    `  cd ${config.outputDir}`,
-    "  pnpm install",
-  ];
+  const nextSteps: string[] = [`  cd ${config.outputDir}`, "  pnpm install"];
 
   if (config.selectedPackages.size > 0) {
     if (config.generateEnv) {
-      nextSteps.push("  # Edit .env files in each package with your credentials");
+      nextSteps.push(
+        "  # Edit .env files in each package with your credentials",
+      );
     } else {
       nextSteps.push(
-        "  # Copy .env.example → .env in each package and fill in values"
+        "  # Copy .env.example → .env in each package and fill in values",
       );
     }
 
-    if (config.projectType === "monorepo") {
+    if (config.ds !== "none") {
       nextSteps.push(
-        "  pnpm codegen   # Generate TypedDocumentNode SDK and resolver types"
+        "  pnpm codegen   # Generate TypedDocumentNode SDK and resolver types",
       );
     }
 
@@ -45,7 +49,7 @@ async function main(): Promise<void> {
   }
 
   outro(
-    `Done! Your project is ready at:\n  ${config.outputDir}\n\nNext steps:\n${nextSteps.join("\n")}`
+    `Done! Your project is ready at:\n  ${config.outputDir}\n\nNext steps:\n${nextSteps.join("\n")}`,
   );
 }
 

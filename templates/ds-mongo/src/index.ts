@@ -1,6 +1,6 @@
 import { createServer } from "node:http";
 import { createYoga } from "graphql-yoga";
-import { useServer } from "graphql-ws/lib/use/ws";
+import { useServer } from "graphql-ws/use/ws";
 import { WebSocketServer } from "ws";
 import { schema } from "./schema.js";
 import { connectDb } from "./db/index.js";
@@ -13,10 +13,10 @@ try {
 } catch (err) {
   console.error(
     "\n❌  MongoDB connection failed.\n" +
-    "    Check:\n" +
-    "      1. DS_MONGO_URL is correct (e.g. mongodb://localhost:27017)\n" +
-    "      2. The MongoDB server is running and reachable\n" +
-    "      3. DS_MONGO_DB_NAME matches an existing database\n",
+      "    Check:\n" +
+      "      1. DS_MONGO_URL is correct (e.g. mongodb://localhost:27017)\n" +
+      "      2. The MongoDB server is running and reachable\n" +
+      "      3. DS_MONGO_DB_NAME matches an existing database\n",
     err,
   );
   process.exit(1);

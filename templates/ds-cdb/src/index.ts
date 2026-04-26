@@ -1,6 +1,6 @@
 import { createServer } from "node:http";
 import { createYoga } from "graphql-yoga";
-import { useServer } from "graphql-ws/lib/use/ws";
+import { useServer } from "graphql-ws/use/ws";
 import { WebSocketServer } from "ws";
 import { schema } from "./schema.js";
 import { connectDb } from "./db/index.js";
@@ -13,10 +13,10 @@ try {
 } catch (err) {
   console.error(
     "\n❌  Couchbase connection failed.\n" +
-    "    Check:\n" +
-    "      1. Your IP is allowlisted in Capella (Settings → Allowed IP Addresses)\n" +
-    "      2. DS_CDB_CONNECTION_STRING, DS_CDB_USERNAME, DS_CDB_PASSWORD are correct\n" +
-    "      3. The bucket and 'items' collection exist in the _default scope\n",
+      "    Check:\n" +
+      "      1. Your IP is allowlisted in Capella (Settings → Allowed IP Addresses)\n" +
+      "      2. DS_CDB_CONNECTION_STRING, DS_CDB_USERNAME, DS_CDB_PASSWORD are correct\n" +
+      "      3. The bucket and 'items' collection exist in the _default scope\n",
     err,
   );
   process.exit(1);

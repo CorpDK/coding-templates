@@ -30,7 +30,10 @@ export async function readJson<T>(filePath: string): Promise<T> {
   return JSON.parse(content) as T;
 }
 
-export async function writeJson(filePath: string, data: unknown): Promise<void> {
+export async function writeJson(
+  filePath: string,
+  data: unknown,
+): Promise<void> {
   await fs.mkdir(path.dirname(filePath), { recursive: true });
   await fs.writeFile(filePath, JSON.stringify(data, null, 2) + "\n", "utf8");
 }
@@ -89,10 +92,68 @@ function matchGlob(pattern: string, name: string): boolean {
   return name === pattern;
 }
 
+/**
+ * Merge src into dest — copies only files that don't already exist in dest.
+ * @param skipFiles - filenames to skip entirely (e.g. ".env.example.append")
+ */
+export async function mergeDir(
+  src: string,
+  dest: string,
+  skipFiles: string[] = [],
+): Promise<void> {
+  if (!(await pathExists(src))) return;
+  await fs.mkdir(dest, { recursive: true });
+  const entries = await fs.readdir(src, { withFileTypes: true });
+  const skipSet = new Set(skipFiles);
+
+  for (const entry of entries) {
+    if (skipSet.has(entry.name)) continue;
+    const srcPath = path.join(src, entry.name);
+    const destPath = path.join(dest, entry.name);
+
+    if (entry.isDirectory()) {
+      await mergeDirRecursive(srcPath, destPath, skipSet);
+    } else if (entry.isFile() && !(await pathExists(destPath))) {
+      await fs.copyFile(srcPath, destPath);
+    }
+  }
+}
+
+async function mergeDirRecursive(
+  src: string,
+  dest: string,
+  skipSet: Set<string>,
+): Promise<void> {
+  await fs.mkdir(dest, { recursive: true });
+  const entries = await fs.readdir(src, { withFileTypes: true });
+
+  for (const entry of entries) {
+    if (skipSet.has(entry.name)) continue;
+    const srcPath = path.join(src, entry.name);
+    const destPath = path.join(dest, entry.name);
+
+    if (entry.isDirectory()) {
+      await mergeDirRecursive(srcPath, destPath, skipSet);
+    } else if (entry.isFile() && !(await pathExists(destPath))) {
+      await fs.copyFile(srcPath, destPath);
+    }
+  }
+}
+
+/** Append the contents of srcFile to destFile (creates destFile if it doesn't exist) */
+export async function appendToFile(
+  srcFile: string,
+  destFile: string,
+): Promise<void> {
+  if (!(await pathExists(srcFile))) return;
+  const content = await fs.readFile(srcFile, "utf8");
+  await fs.appendFile(destFile, content, "utf8");
+}
+
 export async function copyDir(
   src: string,
   dest: string,
-  transform?: (content: string, relPath: string) => string
+  transform?: (content: string, relPath: string) => string,
 ): Promise<void> {
   await fs.mkdir(dest, { recursive: true });
   const entries = await fs.readdir(src, { withFileTypes: true });
@@ -116,7 +177,7 @@ async function copyDirRecursive(
   src: string,
   dest: string,
   relBase: string,
-  transform?: (content: string, relPath: string) => string
+  transform?: (content: string, relPath: string) => string,
 ): Promise<void> {
   if (isExcluded(relBase)) return;
 
@@ -142,7 +203,7 @@ async function copyFile(
   src: string,
   dest: string,
   relPath: string,
-  transform?: (content: string, relPath: string) => string
+  transform?: (content: string, relPath: string) => string,
 ): Promise<void> {
   if (isBinaryFile(src)) {
     await fs.copyFile(src, dest);
