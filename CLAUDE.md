@@ -8,7 +8,7 @@ This is a **pnpm + Turborepo monorepo** under the `@corpdk` org — a production
 
 ## Monorepo Layout
 
-```
+```text
 coding-templates/
 ├── package.json                    ← workspace root: turbo scripts + devDeps only
 ├── pnpm-workspace.yaml             ← packages: ["templates/*", "engines/*", "libraries/*", "packages/*"]

@@ -34,7 +34,10 @@ const FormField = <
 >({
   ...props
 }: ControllerProps<TFieldValues, TName>) => {
-  const contextValue = React.useMemo(() => ({ name: props.name }), [props.name]);
+  const contextValue = React.useMemo(
+    () => ({ name: props.name }),
+    [props.name],
+  );
   return (
     <FormFieldContext.Provider value={contextValue}>
       <Controller {...props} />
@@ -119,9 +122,7 @@ const FormControl = React.forwardRef<
       ref={ref}
       id={formItemId}
       aria-describedby={
-        error
-          ? `${formDescriptionId} ${formMessageId}`
-          : `${formDescriptionId}`
+        error ? `${formDescriptionId} ${formMessageId}` : `${formDescriptionId}`
       }
       aria-invalid={!!error}
       {...props}

@@ -1,0 +1,27 @@
+name: SonarQube Analysis
+
+# Thin caller — delegates to the org-wide reusable workflow at
+# CorpDK/.github/.github/workflows/sonar.yml. Repo-specific config
+# (paths, exclusions, project key) lives in ./sonar-project.properties.
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: sonar-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sonar:
+    uses: CorpDK/.github/.github/workflows/sonar.yml@main
+    with:
+      sonar-host-url: ${{ vars.SONAR_HOST_URL }}
+    secrets:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
