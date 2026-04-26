@@ -13,7 +13,7 @@ export function IfPermission({
   role,
   children,
   fallback = null,
-}: IfPermissionProps) {
+}: Readonly<IfPermissionProps>) {
   const { data: session } = useSession();
   const userRole = (session?.user as { role?: string })?.role;
   if (userRole === role) return <>{children}</>;

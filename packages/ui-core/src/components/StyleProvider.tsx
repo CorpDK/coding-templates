@@ -3,7 +3,7 @@
 import { useEffect, type ReactNode } from "react";
 import { ThemeProvider, useTheme, type ThemeProviderProps } from "next-themes";
 
-export { useTheme };
+export { useTheme } from "next-themes";
 import { TOKENS } from "../lib/tokens";
 import {
   type BrandConfig,
@@ -47,86 +47,48 @@ const COLOR_KEYS: Array<keyof BrandColorTokens> = [
 function BrandInjector({
   config,
   children,
-}: {
+}: Readonly<{
   config: BrandConfig;
   children: ReactNode;
-}) {
+}>) {
   const { resolvedTheme } = useTheme();
 
   useEffect(() => {
     const el = document.documentElement;
     const appliedVars: string[] = [];
 
+    const setVar = (cssVar: string, value: string | null | undefined) => {
+      if (value == null) return;
+      el.style.setProperty(cssVar, value);
+      appliedVars.push(cssVar);
+    };
+
     const mode = resolvedTheme === "dark" ? "dark" : "light";
     const colorSet = config.colors[mode];
-
     for (const key of COLOR_KEYS) {
-      const value = colorSet[key];
-      if (value != null) {
-        const cssVar = colorKeyToCssVar(key);
-        el.style.setProperty(cssVar, value);
-        appliedVars.push(cssVar);
-      }
+      setVar(colorKeyToCssVar(key), colorSet[key]);
     }
 
-    el.style.setProperty(TOKENS.radius, config.shape.radius);
-    appliedVars.push(TOKENS.radius);
+    setVar(TOKENS.radius, config.shape.radius);
+    setVar(TOKENS.shadowSm, config.shape.shadow?.sm);
+    setVar(TOKENS.shadowMd, config.shape.shadow?.md);
+    setVar(TOKENS.shadowLg, config.shape.shadow?.lg);
 
-    if (config.shape.shadow?.sm != null) {
-      el.style.setProperty(TOKENS.shadowSm, config.shape.shadow.sm);
-      appliedVars.push(TOKENS.shadowSm);
-    }
-    if (config.shape.shadow?.md != null) {
-      el.style.setProperty(TOKENS.shadowMd, config.shape.shadow.md);
-      appliedVars.push(TOKENS.shadowMd);
-    }
-    if (config.shape.shadow?.lg != null) {
-      el.style.setProperty(TOKENS.shadowLg, config.shape.shadow.lg);
-      appliedVars.push(TOKENS.shadowLg);
-    }
-
-    if (config.typography) {
-      const typo = config.typography;
-      if (typo.fontSans != null) {
-        el.style.setProperty(TOKENS.fontSans, typo.fontSans);
-        appliedVars.push(TOKENS.fontSans);
-      }
-      if (typo.fontMono != null) {
-        el.style.setProperty(TOKENS.fontMono, typo.fontMono);
-        appliedVars.push(TOKENS.fontMono);
-      }
-      if (typo.fontWeightNormal != null) {
-        el.style.setProperty(TOKENS.fontWeightNormal, typo.fontWeightNormal);
-        appliedVars.push(TOKENS.fontWeightNormal);
-      }
-      if (typo.fontWeightMedium != null) {
-        el.style.setProperty(TOKENS.fontWeightMedium, typo.fontWeightMedium);
-        appliedVars.push(TOKENS.fontWeightMedium);
-      }
-      if (typo.fontWeightBold != null) {
-        el.style.setProperty(TOKENS.fontWeightBold, typo.fontWeightBold);
-        appliedVars.push(TOKENS.fontWeightBold);
-      }
-      if (typo.letterSpacing != null) {
-        el.style.setProperty(TOKENS.letterSpacing, typo.letterSpacing);
-        appliedVars.push(TOKENS.letterSpacing);
-      }
-      if (typo.lineHeight != null) {
-        el.style.setProperty(TOKENS.lineHeight, typo.lineHeight);
-        appliedVars.push(TOKENS.lineHeight);
-      }
+    const typo = config.typography;
+    if (typo) {
+      setVar(TOKENS.fontSans, typo.fontSans);
+      setVar(TOKENS.fontMono, typo.fontMono);
+      setVar(TOKENS.fontWeightNormal, typo.fontWeightNormal);
+      setVar(TOKENS.fontWeightMedium, typo.fontWeightMedium);
+      setVar(TOKENS.fontWeightBold, typo.fontWeightBold);
+      setVar(TOKENS.letterSpacing, typo.letterSpacing);
+      setVar(TOKENS.lineHeight, typo.lineHeight);
     }
 
-    if (config.motion) {
-      const m = config.motion;
-      if (m.transitionDuration != null) {
-        el.style.setProperty(TOKENS.transitionDuration, m.transitionDuration);
-        appliedVars.push(TOKENS.transitionDuration);
-      }
-      if (m.transitionTimingFn != null) {
-        el.style.setProperty(TOKENS.transitionTimingFn, m.transitionTimingFn);
-        appliedVars.push(TOKENS.transitionTimingFn);
-      }
+    const m = config.motion;
+    if (m) {
+      setVar(TOKENS.transitionDuration, m.transitionDuration);
+      setVar(TOKENS.transitionTimingFn, m.transitionTimingFn);
     }
 
     return () => {
@@ -163,7 +125,7 @@ export function StyleProvider({
   brand,
   children,
   ...themeProps
-}: StyleProviderProps) {
+}: Readonly<StyleProviderProps>) {
   if (brand) {
     return (
       <ThemeProvider {...themeProps}>

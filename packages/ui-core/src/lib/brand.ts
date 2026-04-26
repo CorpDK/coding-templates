@@ -212,6 +212,6 @@ export function createBrandConfig(
 export function colorKeyToCssVar(key: keyof BrandColorTokens): string {
   return (
     TOKENS[key as keyof typeof TOKENS] ??
-    `--${key.replace(/([A-Z])/g, "-$1").toLowerCase()}`
+    `--${key.replaceAll(/([A-Z])/g, "-$1").toLowerCase()}`
   );
 }

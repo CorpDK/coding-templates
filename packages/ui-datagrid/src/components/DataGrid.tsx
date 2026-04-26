@@ -4,11 +4,17 @@ import { flexRender } from "@tanstack/react-table";
 import { useDataGrid } from "../hooks/useDataGrid";
 import { type DataGridProps } from "../types";
 
+function sortIndicator(direction: false | "asc" | "desc"): string {
+  if (direction === "asc") return " ↑";
+  if (direction === "desc") return " ↓";
+  return "";
+}
+
 export function DataGrid<TData>({
   data,
   columns,
   className,
-}: DataGridProps<TData>) {
+}: Readonly<DataGridProps<TData>>) {
   const { table, globalFilter, setGlobalFilter } = useDataGrid(data, columns);
 
   return (
@@ -38,11 +44,7 @@ export function DataGrid<TData>({
                           header.column.columnDef.header,
                           header.getContext(),
                         )}
-                    {header.column.getIsSorted() === "asc"
-                      ? " ↑"
-                      : header.column.getIsSorted() === "desc"
-                        ? " ↓"
-                        : ""}
+                    {sortIndicator(header.column.getIsSorted())}
                   </th>
                 ))}
               </tr>

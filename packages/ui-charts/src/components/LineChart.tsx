@@ -12,7 +12,7 @@ export function LineChart({
   height = 300,
   color = "#3b82f6",
   className,
-}: LineChartProps) {
+}: Readonly<LineChartProps>) {
   const innerWidth = width - MARGIN.left - MARGIN.right;
   const innerHeight = height - MARGIN.top - MARGIN.bottom;
 

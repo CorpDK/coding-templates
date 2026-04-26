@@ -13,7 +13,7 @@ export function BarChart({
   color = "#3b82f6",
   direction = "vertical",
   className,
-}: BarChartProps) {
+}: Readonly<BarChartProps>) {
   const innerWidth = width - MARGIN.left - MARGIN.right;
   const innerHeight = height - MARGIN.top - MARGIN.bottom;
 
