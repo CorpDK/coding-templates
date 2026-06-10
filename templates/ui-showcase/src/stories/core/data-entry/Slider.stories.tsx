@@ -8,7 +8,7 @@ const meta: Meta<typeof Slider> = {
   tags: ["autodocs"],
   decorators: [
     (Story) => (
-      <div className="w-64">
+      <div className="min-h-10 w-64">
         <Story />
       </div>
     ),
@@ -21,13 +21,29 @@ type Story = StoryObj<typeof meta>;
 export const Default: Story = {
   render: function Render() {
     const [value, setValue] = useState([50]);
-    return <Slider value={value} onValueChange={setValue} max={100} step={1} />;
+    return (
+      <Slider
+        value={value}
+        onValueChange={setValue}
+        max={100}
+        step={1}
+        className="w-full"
+      />
+    );
   },
 };
 
 export const Range: Story = {
   render: function Render() {
     const [value, setValue] = useState([25, 75]);
-    return <Slider value={value} onValueChange={setValue} max={100} step={1} />;
+    return (
+      <Slider
+        value={value}
+        onValueChange={setValue}
+        max={100}
+        step={1}
+        className="w-full"
+      />
+    );
   },
 };
