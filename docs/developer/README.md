@@ -17,6 +17,9 @@ Implementation guides, coding patterns, and standards for contributors to the co
 | [07-git-conventions.md](07-git-conventions.md)         | Conventional Commits format and examples                     |
 | [08-coding-guidelines.md](08-coding-guidelines.md)     | Code style, component patterns, review checklist             |
 | [09-enhancement-backlog.md](09-enhancement-backlog.md) | Future improvements for UI and DS packages                   |
+| [dal-entity-design.md](dal-entity-design.md)           | Drizzle entity table design — audit profiles, relations, indexes, schema scope |
+| [dal-pg-type-mapping.md](dal-pg-type-mapping.md)       | PostgreSQL → DAL type mapping — PG types, `ID` for uuid, custom scalars (`IntervalMs`, etc.), filters |
+| [graphql-dal-requirements.md](graphql-dal-requirements.md) | GraphQL DAL requirements — inference rules, queries, mutations, filters, pagination |
 
 ---
 
@@ -31,4 +34,4 @@ Implementation guides, coding patterns, and standards for contributors to the co
 
 **Related**: [Documentation Index](../00-index.md) | [Architecture](../architecture/README.md) | [Contributing](../10-contributing.md)
 
-**Last updated**: March 31, 2026
+**Last updated**: September 11, 2026
