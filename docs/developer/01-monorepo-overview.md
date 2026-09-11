@@ -29,8 +29,8 @@ coding-templates/
     ├── ui/          (@corpdk/ui)           Next.js + Apollo Client
     ├── ui-hprt/     (@corpdk/ui-hprt)      Next.js + urql + Graphcache
     ├── ui-showcase/ (@corpdk/ui-showcase)  Storybook showcase — visual testing for all shared packages
-    ├── ds/          (@corpdk/ds)           GraphQL Yoga + Prisma + PostgreSQL
-    ├── ds-hprt/     (@corpdk/ds-hprt)      GraphQL Yoga + Drizzle + PostgreSQL
+    ├── ds/          (@corpdk/ds)           GraphQL Yoga + Drizzle + PostgreSQL (primary/default DS)
+    ├── ds-no-sql/   (@corpdk/ds-no-sql)    GraphQL Yoga + Prisma (databases Drizzle does not support)
     ├── ds-cdb/      (@corpdk/ds-cdb)       GraphQL Yoga + Couchbase SDK + Zod
     ├── ds-mongo/    (@corpdk/ds-mongo)     GraphQL Yoga + MongoDB native driver + Zod
     ├── ds-ddb/      (@corpdk/ds-ddb)       GraphQL Yoga + DocumentDB + Zod
@@ -50,8 +50,8 @@ coding-templates/
 | `ui`          | `@corpdk/ui`          | Standard Next.js UI using Apollo Client for GraphQL                                                                       |
 | `ui-hprt`     | `@corpdk/ui-hprt`     | High-performance real-time UI using urql + Graphcache                                                                     |
 | `ui-showcase` | `@corpdk/ui-showcase` | Storybook showcase — visual testing for all 6 shared `packages/ui-*` components; `pnpm storybook`                         |
-| `ds`          | `@corpdk/ds`          | GraphQL Yoga + Prisma (PostgreSQL / MySQL / SQLite / CockroachDB)                                                         |
-| `ds-hprt`     | `@corpdk/ds-hprt`     | GraphQL Yoga + Drizzle, optimised for real-time workloads                                                                 |
+| `ds`          | `@corpdk/ds`          | GraphQL Yoga + Drizzle (PostgreSQL / MySQL / SQLite / CockroachDB) — primary/default relational DS                        |
+| `ds-no-sql`   | `@corpdk/ds-no-sql`   | GraphQL Yoga + Prisma for databases Drizzle does not support (e.g. MongoDB, DocumentDB via Prisma connector)              |
 | `ds-cdb`      | `@corpdk/ds-cdb`      | GraphQL Yoga + Couchbase SDK + Zod                                                                                        |
 | `ds-mongo`    | `@corpdk/ds-mongo`    | GraphQL Yoga + MongoDB native driver + Zod                                                                                |
 | `ds-ddb`      | `@corpdk/ds-ddb`      | GraphQL Yoga + DocumentDB + Zod                                                                                           |

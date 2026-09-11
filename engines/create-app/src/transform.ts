@@ -5,7 +5,9 @@ import type { DbChoice, DsChoice, UiChoice } from "./types.js";
 // ---------------------------------------------------------------------------
 
 function dsDirName(ds: DsChoice): string {
-  return ds === "standard" ? "ds" : `ds-${ds}`;
+  if (ds === "standard") return "ds-no-sql";
+  if (ds === "hprt") return "ds";
+  return `ds-${ds}`;
 }
 
 function uiDirName(ui: UiChoice): string {
@@ -184,8 +186,8 @@ export function transformDrizzleConfig(content: string, db: DbChoice): string {
   // For SQLite, dbCredentials uses a file path, not url
   if (db === "sqlite") {
     result = result.replace(
-      /dbCredentials:\s*\{\s*url: process\.env\.DS_HPRT_DATABASE_URL!,\s*\}/,
-      `dbCredentials: {\n    url: process.env.DS_HPRT_DATABASE_URL!,\n  }`,
+      /dbCredentials:\s*\{\s*url: process\.env\.DATABASE_URL!,\s*\}/,
+      `dbCredentials: {\n    url: process.env.DATABASE_URL!,\n  }`,
     );
   }
 
@@ -263,8 +265,8 @@ export function transformDrizzlePackageJson(
 
 export function transformDrizzleDotEnv(content: string, db: DbChoice): string {
   return content.replace(
-    /DS_HPRT_DATABASE_URL=postgresql:\/\/.*$/m,
-    `DS_HPRT_DATABASE_URL=${DRIZZLE_DATABASE_URL[db]}`,
+    /DATABASE_URL=postgresql:\/\/.*$/m,
+    `DATABASE_URL=${DRIZZLE_DATABASE_URL[db]}`,
   );
 }
 

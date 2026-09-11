@@ -82,7 +82,7 @@ tsconfig.base.json     ← strict, esModuleInterop, skipLibCheck, sourceMap, dec
 
 | Base config           | Target | Module         | Used by                                                                                                      |
 | --------------------- | ------ | -------------- | ------------------------------------------------------------------------------------------------------------ |
-| `tsconfig.node.json`  | ES2024 | NodeNext       | `ds`, `ds-hprt`, `ds-cdb`, `ds-ddb`, `ds-file`, `ds-mongo`, `ds-sdk`, `pub-sub`, `codegen-cli`, `create-app` |
+| `tsconfig.node.json`  | ES2024 | NodeNext       | `ds`, `ds-no-sql`, `ds-cdb`, `ds-ddb`, `ds-file`, `ds-mongo`, `ds-sdk`, `pub-sub`, `codegen-cli`, `create-app` |
 | `tsconfig.react.json` | ES2024 | esnext/bundler | `ui-core`, `ui-auth`, `ui-charts`, `ui-forms`, `ui-datagrid`, `ui-feedback`                                  |
 | `tsconfig.next.json`  | ES2024 | esnext/bundler | `ui`, `ui-hprt`                                                                                              |
 

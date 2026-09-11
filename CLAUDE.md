@@ -35,8 +35,8 @@ coding-templates/
     ├── ui/          (@corpdk/ui)           Next.js + Apollo Client
     ├── ui-hprt/     (@corpdk/ui-hprt)      Next.js + urql + Graphcache
     ├── ui-showcase/ (@corpdk/ui-showcase)  Storybook showcase — visual testing for all shared UI packages
-    ├── ds/          (@corpdk/ds)           GraphQL Yoga + Prisma + PostgreSQL
-    ├── ds-hprt/     (@corpdk/ds-hprt)      GraphQL Yoga + Drizzle + PostgreSQL
+    ├── ds/          (@corpdk/ds)           GraphQL Yoga + Drizzle + PostgreSQL (primary/default DS)
+    ├── ds-no-sql/   (@corpdk/ds-no-sql)    GraphQL Yoga + Prisma (databases Drizzle does not support)
     ├── ds-cdb/      (@corpdk/ds-cdb)       GraphQL Yoga + Couchbase SDK + Zod
     ├── ds-mongo/    (@corpdk/ds-mongo)     GraphQL Yoga + MongoDB native driver + Zod
     ├── ds-ddb/      (@corpdk/ds-ddb)       GraphQL Yoga + DocumentDB (documentdb.io) + Zod
@@ -51,8 +51,8 @@ coding-templates/
 | --------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------- |
 | `ui`            | `@corpdk/ui`            | Standard Next.js UI using Apollo Client for GraphQL                                                            |
 | `ui-hprt`       | `@corpdk/ui-hprt`       | High-performance real-time UI using urql + Graphcache                                                          |
-| `ds`            | `@corpdk/ds`            | GraphQL Yoga server with Prisma ORM (PostgreSQL/MySQL/SQLite/CockroachDB/MongoDB)                              |
-| `ds-hprt`       | `@corpdk/ds-hprt`       | GraphQL Yoga server with Drizzle ORM (PostgreSQL/MySQL/SQLite/CockroachDB), optimized for real-time            |
+| `ds`            | `@corpdk/ds`            | GraphQL Yoga server with Drizzle ORM (PostgreSQL/MySQL/SQLite/CockroachDB) — primary/default relational DS     |
+| `ds-no-sql`     | `@corpdk/ds-no-sql`     | GraphQL Yoga server with Prisma ORM for databases Drizzle does not support (MongoDB, DocumentDB, etc.)          |
 | `ds-cdb`        | `@corpdk/ds-cdb`        | GraphQL Yoga server with Couchbase SDK + Zod (cloud-agnostic NoSQL)                                            |
 | `ds-mongo`      | `@corpdk/ds-mongo`      | GraphQL Yoga server with MongoDB native driver + Zod (Atlas or self-hosted)                                    |
 | `ds-ddb`        | `@corpdk/ds-ddb`        | GraphQL Yoga server with DocumentDB (documentdb.io) + Zod (MongoDB-compatible wire protocol)                   |
@@ -77,7 +77,7 @@ coding-templates/
 - **HTTP via Next.js proxy, WS direct** — `rewrites()` handles queries/mutations; WebSocket connects directly via `NEXT_PUBLIC_DS_WS_URL` (avoids Next.js WS proxy limitations)
 - **SDK as workspace dependency** — `ui` depends on `@corpdk/ds-sdk: "workspace:*"`; Turbo ensures codegen runs before build
 - **All ports from env, no defaults** — prevents port collision surprises; each package has `.env.example`
-- **`.js` extension on imports in DS server packages** — all DS packages (`ds`, `ds-hprt`, `ds-cdb`, `ds-mongo`, `ds-ddb`, `ds-file`) use `module: NodeNext` (pure ESM Node.js runtime); explicit `.js` is required even for `.ts` source files. `ds-sdk` uses `module: ESNext / moduleResolution: bundler` (consumed by Next.js bundler) and must omit the `.js` extension.
+- **`.js` extension on imports in DS server packages** — all DS packages (`ds`, `ds-no-sql`, `ds-cdb`, `ds-mongo`, `ds-ddb`, `ds-file`) use `module: NodeNext` (pure ESM Node.js runtime); explicit `.js` is required even for `.ts` source files. `ds-sdk` uses `module: ESNext / moduleResolution: bundler` (consumed by Next.js bundler) and must omit the `.js` extension.
 - **Single shared SDK** — all DS variants codegen into `@corpdk/ds-sdk` (one package, schema-identical output); the consolidated SDK replaced the former per-variant `ds-sdk-hprt` and `ds-sdk-cdb` packages.
 - **`dev` depends on `^build`** — Turbo's `dev` task declares `dependsOn: ["^build"]` so codegen and upstream builds complete before Next.js starts, preventing missing-type errors on first launch.
 - **Repository Pattern in all DS packages** — every DS package exposes `src/db/repository.ts` with an `IItemRepository` interface. GraphQL resolvers in `schema.ts` call only `itemRepository.*` — never DB-specific APIs directly.

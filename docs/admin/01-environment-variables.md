@@ -6,23 +6,23 @@ Each package reads from its own `.env` file. Copy `.env.example` to `.env` in ea
 
 ## Data Service Packages
 
-### `ds` (GraphQL Yoga + Prisma)
+### `ds` (GraphQL Yoga + Drizzle — primary/default DS)
 
 | Variable       | Description                                                             |
 | -------------- | ----------------------------------------------------------------------- |
 | `DS_PORT`      | Port the GraphQL Yoga server listens on                                 |
-| `DATABASE_URL` | Prisma connection string (PostgreSQL, MySQL, SQLite, CockroachDB)       |
+| `DATABASE_URL` | Drizzle connection string (PostgreSQL, MySQL, SQLite, CockroachDB)      |
 | `REDIS_URL`    | _(optional)_ Redis/Valkey URL — enables Redis pub/sub for subscriptions |
 
 ---
 
-### `ds-hprt` (GraphQL Yoga + Drizzle)
+### `ds-no-sql` (GraphQL Yoga + Prisma)
 
-| Variable               | Description                                                             |
-| ---------------------- | ----------------------------------------------------------------------- |
-| `DS_HPRT_PORT`         | Port the GraphQL Yoga server listens on                                 |
-| `DS_HPRT_DATABASE_URL` | Drizzle connection string                                               |
-| `REDIS_URL`            | _(optional)_ Redis/Valkey URL — enables Redis pub/sub for subscriptions |
+| Variable         | Description                                                             |
+| ---------------- | ----------------------------------------------------------------------- |
+| `DS_NO_SQL_PORT` | Port the GraphQL Yoga server listens on                                 |
+| `DATABASE_URL`   | Prisma connection string (PostgreSQL, MySQL, SQLite, CockroachDB, MongoDB) |
+| `REDIS_URL`      | _(optional)_ Redis/Valkey URL — enables Redis pub/sub for subscriptions |
 
 ---
 

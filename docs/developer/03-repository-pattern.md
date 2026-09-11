@@ -45,8 +45,8 @@ export type CreateOrderInput = z.infer<typeof CreateOrderInputSchema>;
 
 | Package              | Action                                                                          |
 | -------------------- | ------------------------------------------------------------------------------- |
-| `ds` (Prisma)        | Add the model to `prisma/schema.prisma`, run `pnpm db:migrate`                  |
-| `ds-hprt` (Drizzle)  | Add the table to `drizzle/schema.ts`, run `pnpm db:generate && pnpm db:migrate` |
+| `ds-no-sql` (Prisma) | Add the model to `prisma/schema.prisma`, run `pnpm db:migrate`                  |
+| `ds` (Drizzle)       | Add the table to `drizzle/schema.ts`, run `pnpm db:generate && pnpm db:migrate` |
 | `ds-mongo`, `ds-ddb` | Add a typed collection to `src/db/index.ts`                                     |
 | `ds-cdb`             | Use the existing cluster/scope, add a collection if needed                      |
 | `ds-file`            | Add `getOrders()`/`saveOrders()` pair to `src/storage/index.ts`                 |

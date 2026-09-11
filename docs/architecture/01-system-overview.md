@@ -13,8 +13,8 @@
               └──────┬───────────────────┬────────────────────┘
                      │ HTTP + WS         │ HTTP + WS
               ┌──────▼──────┐    ┌───────▼───────────┐
-              │ @corpdk/ds  │    │ @corpdk/ds-hprt    │
-              │ Yoga+Prisma │    │ Yoga+Drizzle       │
+              │ @corpdk/ds  │    │ @corpdk/ds-no-sql  │
+              │ Yoga+Drizzle│    │ Yoga+Prisma        │
               └──────┬──────┘    └───────┬────────────┘
                      └─────────┬─────────┘
               ┌────────────────▼────────────────────────────┐
@@ -116,7 +116,7 @@ Each package category has a different module system, driven by its runtime envir
 
 | Package type                      | `module` setting     | Import extension | Reason                                            |
 | --------------------------------- | -------------------- | ---------------- | ------------------------------------------------- |
-| DS server (`ds`, `ds-hprt`, etc.) | `NodeNext`           | Must use `.js`   | Node.js ESM runtime; explicit extensions required |
+| DS server (`ds`, `ds-no-sql`, etc.) | `NodeNext`         | Must use `.js`   | Node.js ESM runtime; explicit extensions required |
 | `ds-sdk`                          | `ESNext` / `bundler` | Must omit `.js`  | Consumed by Next.js bundler, not Node.js directly |
 | UI apps (`ui`, `ui-hprt`)         | Next.js managed      | N/A              | Next.js controls compilation                      |
 | Shared packages (`packages/ui-*`) | `ESNext` / `bundler` | Must omit `.js`  | Consumed by Next.js bundler                       |

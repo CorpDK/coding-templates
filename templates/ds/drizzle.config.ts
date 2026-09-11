@@ -5,6 +5,6 @@ export default {
   out: "./drizzle/migrations",
   dialect: "postgresql",
   dbCredentials: {
-    url: process.env.DS_HPRT_DATABASE_URL!,
+    url: process.env.DATABASE_URL!,
   },
 } satisfies Config;

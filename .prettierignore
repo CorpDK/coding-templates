@@ -15,7 +15,7 @@ dist
 packages/ds-sdk/src/generated/
 packages/ds-sdk-hprt/src/generated/
 packages/ds/src/types/resolvers.generated.ts
-packages/ds-hprt/src/types/resolvers.generated.ts
+packages/ds-no-sql/src/types/resolvers.generated.ts
 
 # Environment
 .env

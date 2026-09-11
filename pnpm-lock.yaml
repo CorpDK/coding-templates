@@ -456,15 +456,9 @@ importers:
       '@graphql-yoga/redis-event-target':
         specifier: ^3.0.0
         version: 3.0.3(ioredis@5.10.1)
-      '@prisma/adapter-pg':
-        specifier: ^7.6.0
-        version: 7.8.0
-      '@prisma/client':
-        specifier: ^7.6.0
-        version: 7.6.0(prisma@7.6.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.2))(typescript@6.0.2)
-      '@prisma/client-runtime-utils':
-        specifier: ^7.6.0
-        version: 7.6.0
+      drizzle-orm:
+        specifier: ^0.45.2
+        version: 0.45.2(@electric-sql/pglite@0.4.1)(@prisma/client@7.6.0(prisma@7.6.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.2))(typescript@6.0.2))(@types/pg@8.18.0)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.6.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.2))
       graphql:
         specifier: ^16.13.2
         version: 16.13.2
@@ -477,6 +471,9 @@ importers:
       ioredis:
         specifier: ^5.10.1
         version: 5.10.1
+      pg:
+        specifier: ^8.20.0
+        version: 8.20.0
       ws:
         specifier: ^8.20.0
         version: 8.20.0
@@ -502,12 +499,15 @@ importers:
       '@types/node':
         specifier: ^20.19.37
         version: 20.19.37
+      '@types/pg':
+        specifier: ^8.11.14
+        version: 8.18.0
       '@types/ws':
         specifier: ^8.18.1
         version: 8.18.1
-      prisma:
-        specifier: ^7.6.0
-        version: 7.6.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.2)
+      drizzle-kit:
+        specifier: ^0.31.10
+        version: 0.31.10
       tsx:
         specifier: ^4.21.0
         version: 4.21.0
@@ -694,73 +694,6 @@ importers:
         specifier: ^6.0.2
         version: 6.0.2
 
-  templates/ds-hprt:
-    dependencies:
-      '@corpdk/pub-sub':
-        specifier: workspace:*
-        version: link:../../libraries/pub-sub
-      '@graphql-yoga/redis-event-target':
-        specifier: ^3.0.0
-        version: 3.0.3(ioredis@5.10.1)
-      drizzle-orm:
-        specifier: ^0.45.2
-        version: 0.45.2(@electric-sql/pglite@0.4.1)(@prisma/client@7.6.0(prisma@7.6.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.2))(typescript@6.0.2))(@types/pg@8.18.0)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.6.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.2))
-      graphql:
-        specifier: ^16.13.2
-        version: 16.13.2
-      graphql-ws:
-        specifier: ^6.0.8
-        version: 6.0.8(graphql@16.13.2)(ws@8.20.0)
-      graphql-yoga:
-        specifier: ^5.18.1
-        version: 5.18.1(graphql@16.13.2)
-      ioredis:
-        specifier: ^5.10.1
-        version: 5.10.1
-      pg:
-        specifier: ^8.20.0
-        version: 8.20.0
-      ws:
-        specifier: ^8.20.0
-        version: 8.20.0
-      zod:
-        specifier: ^4.3.6
-        version: 4.3.6
-    devDependencies:
-      '@corpdk/codegen-cli':
-        specifier: workspace:*
-        version: link:../../libraries/codegen-cli
-      '@graphql-codegen/cli':
-        specifier: ^6.2.1
-        version: 6.2.1(@parcel/watcher@2.5.6)(@types/node@20.19.37)(graphql@16.13.2)(typescript@6.0.2)
-      '@graphql-codegen/client-preset':
-        specifier: ^5.2.4
-        version: 5.2.4(graphql@16.13.2)
-      '@graphql-codegen/typescript':
-        specifier: ^5.0.9
-        version: 5.0.9(graphql@16.13.2)
-      '@graphql-codegen/typescript-resolvers':
-        specifier: ^5.1.7
-        version: 5.1.7(graphql@16.13.2)
-      '@types/node':
-        specifier: ^20.19.37
-        version: 20.19.37
-      '@types/pg':
-        specifier: ^8.11.14
-        version: 8.18.0
-      '@types/ws':
-        specifier: ^8.18.1
-        version: 8.18.1
-      drizzle-kit:
-        specifier: ^0.31.10
-        version: 0.31.10
-      tsx:
-        specifier: ^4.21.0
-        version: 4.21.0
-      typescript:
-        specifier: ^6.0.2
-        version: 6.0.2
-
   templates/ds-mongo:
     dependencies:
       '@corpdk/pub-sub':
@@ -812,6 +745,73 @@ importers:
       '@types/ws':
         specifier: ^8.18.1
         version: 8.18.1
+      tsx:
+        specifier: ^4.21.0
+        version: 4.21.0
+      typescript:
+        specifier: ^6.0.2
+        version: 6.0.2
+
+  templates/ds-no-sql:
+    dependencies:
+      '@corpdk/pub-sub':
+        specifier: workspace:*
+        version: link:../../libraries/pub-sub
+      '@graphql-yoga/redis-event-target':
+        specifier: ^3.0.0
+        version: 3.0.3(ioredis@5.10.1)
+      '@prisma/adapter-pg':
+        specifier: ^7.6.0
+        version: 7.8.0
+      '@prisma/client':
+        specifier: ^7.6.0
+        version: 7.6.0(prisma@7.6.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.2))(typescript@6.0.2)
+      '@prisma/client-runtime-utils':
+        specifier: ^7.6.0
+        version: 7.6.0
+      graphql:
+        specifier: ^16.13.2
+        version: 16.13.2
+      graphql-ws:
+        specifier: ^6.0.8
+        version: 6.0.8(graphql@16.13.2)(ws@8.20.0)
+      graphql-yoga:
+        specifier: ^5.18.1
+        version: 5.18.1(graphql@16.13.2)
+      ioredis:
+        specifier: ^5.10.1
+        version: 5.10.1
+      ws:
+        specifier: ^8.20.0
+        version: 8.20.0
+      zod:
+        specifier: ^4.3.6
+        version: 4.3.6
+    devDependencies:
+      '@corpdk/codegen-cli':
+        specifier: workspace:*
+        version: link:../../libraries/codegen-cli
+      '@graphql-codegen/cli':
+        specifier: ^6.2.1
+        version: 6.2.1(@parcel/watcher@2.5.6)(@types/node@20.19.37)(graphql@16.13.2)(typescript@6.0.2)
+      '@graphql-codegen/client-preset':
+        specifier: ^5.2.4
+        version: 5.2.4(graphql@16.13.2)
+      '@graphql-codegen/typescript':
+        specifier: ^5.0.9
+        version: 5.0.9(graphql@16.13.2)
+      '@graphql-codegen/typescript-resolvers':
+        specifier: ^5.1.7
+        version: 5.1.7(graphql@16.13.2)
+      '@types/node':
+        specifier: ^20.19.37
+        version: 20.19.37
+      '@types/ws':
+        specifier: ^8.18.1
+        version: 8.18.1
+      prisma:
+        specifier: ^7.6.0
+        version: 7.6.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.2)
       tsx:
         specifier: ^4.21.0
         version: 4.21.0
@@ -1414,11 +1414,11 @@ packages:
 
   '@esbuild-kit/core-utils@3.3.2':
     resolution: {integrity: sha512-sPRAnw9CdSsRmEtnsl2WXWdyquogVpB3yZ3dgwJfe8zrOzTsV7cJvmwrKVa+0ma5BoiGJ+BoqkMvawbayKUsqQ==}
-    deprecated: 'Merged into tsx: https://tsx.is'
+    deprecated: 'Merged into tsx: https://tsx.hirok.io'
 
   '@esbuild-kit/esm-loader@2.6.5':
     resolution: {integrity: sha512-FxEMIkJKnodyA1OaCUoEvbYRkoZlLZ4d/eXFu9Fh8CbBBgP5EmZxrfTRyN0qpXZ4vOvqnE5YdRdcrmUUXuU+dA==}
-    deprecated: 'Merged into tsx: https://tsx.is'
+    deprecated: 'Merged into tsx: https://tsx.hirok.io'
 
   '@esbuild/aix-ppc64@0.25.12':
     resolution: {integrity: sha512-Hhmwd6CInZ3dwpuGTF8fJG6yoWmsToE+vYgD4nytZVxcu1ulHpUQRAB1UJ8+N1Am3Mz4+xOByoQoSZf4D+CpkA==}

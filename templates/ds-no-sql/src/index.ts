@@ -4,8 +4,8 @@ import { useServer } from "graphql-ws/use/ws";
 import { WebSocketServer } from "ws";
 import { schema } from "./schema.js";
 
-const PORT = Number(process.env.DS_HPRT_PORT);
-if (!PORT) throw new Error("DS_HPRT_PORT env var is required");
+const PORT = Number(process.env.DS_NO_SQL_PORT);
+if (!PORT) throw new Error("DS_NO_SQL_PORT env var is required");
 
 const yoga = createYoga({
   schema,
@@ -23,6 +23,6 @@ const wsServer = new WebSocketServer({ server });
 useServer({ schema }, wsServer as any);
 
 server.listen(PORT, () => {
-  console.log(`@corpdk/ds-hprt  HTTP  http://localhost:${PORT}/graphql`);
-  console.log(`@corpdk/ds-hprt  WS    ws://localhost:${PORT}/graphql`);
+  console.log(`@corpdk/ds-no-sql  HTTP  http://localhost:${PORT}/graphql`);
+  console.log(`@corpdk/ds-no-sql  WS    ws://localhost:${PORT}/graphql`);
 });

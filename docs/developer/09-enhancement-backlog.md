@@ -30,7 +30,7 @@ Add `.github/workflows/ci.yml`: lint + typecheck + `pnpm build` on every PR. Tur
 
 ## DS Enhancements
 
-Items below apply to `ds`, `ds-hprt`, `ds-cdb`, `ds-mongo`, `ds-ddb`, and `ds-file` unless noted.
+Items below apply to `ds`, `ds-no-sql`, `ds-cdb`, `ds-mongo`, `ds-ddb`, and `ds-file` unless noted.
 
 ### 1. Shared Zod Schemas for GraphQL Input Types
 
@@ -75,7 +75,7 @@ DS packages currently have no `eslint.config.mjs`. Add `@corpdk/eslint-config` a
 
 ### 10. Subscription Durability (HPRT)
 
-For `ds-hprt`, investigate durable subscriptions: if a client disconnects and reconnects, it should be able to resume from a checkpoint rather than missing events that arrived during the gap. Options: event sourcing with a Drizzle-backed event log, or a Redis Streams approach via `@corpdk/pub-sub`.
+For `ds`, investigate durable subscriptions: if a client disconnects and reconnects, it should be able to resume from a checkpoint rather than missing events that arrived during the gap. Options: event sourcing with a Drizzle-backed event log, or a Redis Streams approach via `@corpdk/pub-sub`.
 
 ---
 

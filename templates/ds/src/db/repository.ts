@@ -1,5 +1,6 @@
-import { PrismaPg } from "@prisma/adapter-pg";
-import { PrismaClient } from "../../generated/prisma/index.js";
+import { eq } from "drizzle-orm";
+import { db } from "./index.js";
+import { items } from "../../drizzle/schema.js";
 import { ItemSchema, type Item } from "./schemas.js";
 
 /**
@@ -16,26 +17,21 @@ export interface IItemRepository {
   create(item: Item): Promise<Item>;
 }
 
-const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL,
-});
-const prisma = new PrismaClient({ adapter });
-
-/** Prisma implementation — delegates to the generated client. */
+/** Drizzle implementation — delegates to the ORM via the db instance. */
 export const itemRepository: IItemRepository = {
   findAll: async (): Promise<Item[]> => {
-    const rows = await prisma.item.findMany();
+    const rows = await db.select().from(items);
     return rows.map((row) => ItemSchema.parse(row));
   },
 
   findOne: async (id: string): Promise<Item | null> => {
-    const row = await prisma.item.findUnique({ where: { id } });
-    if (!row) return null;
-    return ItemSchema.parse(row);
+    const rows = await db.select().from(items).where(eq(items.id, id));
+    if (rows.length === 0) return null;
+    return ItemSchema.parse(rows[0]);
   },
 
   create: async (item: Item): Promise<Item> => {
-    const row = await prisma.item.create({ data: item });
-    return ItemSchema.parse(row);
+    await db.insert(items).values(item);
+    return item;
   },
 };

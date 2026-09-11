@@ -3,9 +3,9 @@ import { z } from "zod";
 /**
  * Zod schema for an Item.
  *
- * Serves the same purpose as Prisma models or MongoDB document schemas
- * in the other DS packages — defines the data shape and provides runtime
- * validation at the mutation boundary.
+ * Serves the same purpose as Drizzle table definitions or MongoDB document
+ * schemas in the other DS packages — defines the data shape and provides
+ * runtime validation at the mutation boundary.
  *
  * Add new schemas here as your data model grows.
  */
