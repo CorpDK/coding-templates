@@ -220,12 +220,23 @@ Database object comments are **schema author responsibility** — declared in Dr
 
 | Concern | Rule |
 | ------- | ---- |
-| **Source of truth** | Drizzle schema comments only — no parallel comment metadata files |
-| **Codegen validation** | Every PersistedEntity **table** and **column** must have a non-empty comment; default mode **warns**, **`strict: true`** in `dal/dal.config.yaml` **fails codegen** (same config flag as index enforcement — §17.1) |
-| **GraphQL SDL (v1)** | Comments are **not** exposed as GraphQL field or type descriptions |
-| **GraphQL SDL (planned)** | Optional future: map Drizzle table/column comments to generated `description` directives on output types and filter inputs |
+| **Source of truth** | Drizzle schema comments only — no parallel comment metadata files or separate GraphQL-only description files for generated entities |
+| **Codegen validation** | Every PersistedEntity **table** and **column** must have a non-empty comment; default mode **warns**, **`strict: true`** in `dal/dal.config.yaml` **fails codegen** (same config flag as index enforcement — §17.1). Missing comments = missing GraphQL schema documentation |
+| **GraphQL SDL output** | Codegen **auto-generates** GraphQL schema documentation from Drizzle DB object comments — embedded as `"""…"""` docstrings in generated SDL under **`src/generated/dal/`** |
+| **Hand-written SDL** | Non-generated extensions in `src/schema/` still require manual docstrings per [GraphQL Schema docstrings](02-graphql-schema.md) |
 
-Index, view, enum, and schema comments are enforced by author review and the entity-design pre-codegen checklist — custom migration `COMMENT ON …` SQL is not parsed by codegen in v1.
+**Comment → GraphQL documentation mapping (codegen):**
+
+| Source (Drizzle) | Generated GraphQL documentation |
+| ---------------- | ------------------------------- |
+| PersistedEntity table `comment()` | `"""…"""` on GraphQL **object type** (e.g. `type Order`) |
+| Column `.comment('…')` | `"""…"""` on GraphQL **output fields**, and on corresponding **filter input fields**, **sort enum** (if applicable), **create/update input fields** |
+| `pgEnum` type comment (migration `COMMENT ON TYPE` or future Drizzle API) | `"""…"""` on GraphQL **enum type** and optionally enum value descriptions if stored |
+| Operations (list, get, mutations) | Codegen-generated operation docstrings derived from entity/table comment + operation verb (e.g. "Returns a paginated list of Order entities.") |
+
+Index, view, enum, and schema comments are enforced by author review and the entity-design pre-codegen checklist — custom migration `COMMENT ON …` SQL is not parsed by codegen in v1 except where noted for `pgEnum` type comments above.
+
+GraphQL introspection, GraphiQL, and Altair display descriptions sourced from DB object comments on generated types, fields, and operations.
 
 ### 2.12 Application access boundary (GraphQL-only)
 
@@ -509,7 +520,7 @@ Per entity, codegen emits:
 | **Turbo pipeline** | `dal:codegen` is a dependency of DS `codegen` and `build` tasks |
 | **Local dev** | Optional **`--watch`** on the Drizzle schema directory for iterative regen |
 
-Codegen parses Drizzle tables, enums, indexes, and relations, validates entity shape (UUID `id`, audit/delete column rules, database object comments — §2.11), emits GraphQL SDL fragments, GeneratedDataAccess, default repository implementations, resolver stubs, and cursor codec version constants per entity. Re-running codegen with unchanged schema produces byte-identical output (idempotent).
+Codegen parses Drizzle tables, enums, indexes, and relations, validates entity shape (UUID `id`, audit/delete column rules, database object comments — §2.11), emits GraphQL SDL fragments with docstrings from DB object comments (§2.11), GeneratedDataAccess, default repository implementations, resolver stubs, and cursor codec version constants per entity. Re-running codegen with unchanged schema produces byte-identical output (idempotent).
 
 **`dal/dal.config.yaml` example:**
 
@@ -2129,7 +2140,7 @@ This system provides:
 * Configurable bulk atomicity with filter-based safety guards
 * Inferred audit profiles (**`full`**, **`append-only`**) — required on every entity; invalid combinations fail codegen — and soft delete from Drizzle column presence
 * A reusable **dal-core + codegen-cli** architecture for Drizzle-backed services
-* Committed **`src/generated/dal/`** output via `pnpm dal:codegen` for reviewable, idempotent regen
+* Committed **`src/generated/dal/`** output via `pnpm dal:codegen` for reviewable, idempotent regen — including GraphQL SDL with **`"""…"""` descriptions** auto-generated from Drizzle DB object comments (§2.11)
 * Mandatory **`count<Entity>`** sugar alongside strongly typed **`aggregate<Entity>`**
 * Tamper-evident cursor signing (HMAC-SHA256) when `DAL_CURSOR_SECRET` is configured
 * **All scalar columns** filterable and sortable by default

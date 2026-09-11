@@ -363,7 +363,7 @@ Enum types should be documented in a **custom migration** with `COMMENT ON TYPE`
 
 ## Database Object Comments (required)
 
-Every **commentable** database object in the Drizzle schema **must** have a descriptive comment before applying migrations. Comments are the authoritative in-repo documentation for DBAs, operators, and schema authors — there are no parallel comment YAML files.
+Every **commentable** database object in the Drizzle schema **must** have a descriptive comment before applying migrations. Comments are the authoritative in-repo documentation for DBAs, operators, and schema authors — there are no parallel comment YAML files. Comments are also consumed by downstream DAL codegen for public API documentation.
 
 ### Rule
 
