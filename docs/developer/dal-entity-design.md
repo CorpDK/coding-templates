@@ -253,7 +253,7 @@ Supported and unsupported PostgreSQL column types for entity tables. Entity desi
 | `bigint` | `bigint()` | Large integers, counters exceeding 32-bit | Yes |
 | `numeric`, `decimal` | `numeric()`, `decimal()` | Monetary amounts, rates, fixed-precision decimals | Yes |
 | `real`, `double precision` | `real()`, `doublePrecision()` | Measurements, scientific values | Yes |
-| `boolean` | `boolean()` | Flags | Optional |
+| `boolean` | `boolean()` | Flags — **must** use `is_*` / `has_*` physical names (§ Boolean columns) | Optional |
 | `date` | `date()` | Calendar dates without time (birthdays, effective dates) | Yes — when used in sort/filter |
 | `timestamp with time zone` (`timestamptz`) | `timestamp(..., { withTimezone: true })` | All instant timestamps (audit, soft-delete, business events) — **only** instant timestamp type allowed | Yes — when used in sort/filter |
 | `time with time zone` (`timetz`) | `time(..., { withTimezone: true })` | Time-of-day with offset (business hours, daily cutoff) — **not** for instants | Yes — when used in sort/filter |
@@ -261,6 +261,17 @@ Supported and unsupported PostgreSQL column types for entity tables. Entity desi
 | `bigint` (duration) | `bigint()` | Durations stored as **milliseconds** (preferred over `interval` for new schemas) | Optional |
 | `uuid` | `uuid()` | Primary keys, foreign keys — opaque identifiers | Yes — FK columns always indexed |
 | `pgEnum(...)` | `pgEnum()` | Constrained string values | Yes — when filtered or sorted |
+
+### Boolean columns
+
+All boolean columns **must** use **`is_*` / `has_*` snake_case** physical names when the flag represents semantic state — e.g. `isActive: boolean('is_active')`. Unprefixed physical names (e.g. `active`, `archived`) **fail entity design validation**. GraphQL codegen maps these to camelCase **`isActive`** without adding a second prefix (§7.1 no double-prefix rule in [GraphQL DAL Requirements](graphql-dal-requirements.md#71-naming-convention)).
+
+| Drizzle column | GraphQL field |
+| -------------- | ------------- |
+| `is_active` | `isActive` |
+| `has_attachments` | `hasAttachments` |
+
+Do **not** use negated boolean names (`is_not_archived`, `has_no_lines`) — express negation at query time via `BooleanFilter.eq: false` or filter `not { … }` (§7.1 boolean negation ban).
 
 **Primary keys:** always **`uuid`** with `.defaultRandom()`. Do **not** use `serial` or `bigserial` as PK — validation fails.
 
@@ -609,6 +620,7 @@ Entity design lint validates sort-field index coverage during schema validation.
 | **Session tables in domain schema** | Auth session stores belong in **auth infrastructure** (§ [Session storage](#session-storage-schema-placement)) — not alongside domain entity tables |
 | **Infrastructure tables mixed with domain entities** | If a table is not business domain data → place it outside the domain schema path; if it is domain data → conform to entity shape requirements |
 | **Lowercase enum member values** (`pending`, `in_progress`) | Entity design validation rejects — use `PENDING`, `IN_PROGRESS` (§ Enums) |
+| **Unprefixed boolean physical names** (`active`, `archived`) | Entity design validation rejects — use `is_*` / `has_*` snake_case (§ Boolean columns) |
 | **Implicit or uniqueness-free one-to-one relation** | Declare Drizzle `relations()`, put a UUID FK on the owning/dependent table, and enforce the FK with a unique constraint/index |
 | **Shared-primary-key one-to-one entity table** | Keep a normal UUID `id` primary key on every entity table; use a distinct UUID FK plus uniqueness |
 
@@ -631,6 +643,7 @@ Before applying migrations or opening a schema review PR, verify:
 - [ ] Durations use **`bigint` milliseconds** (preferred) or **`interval`** — not float
 - [ ] Bounded intervals use **two scalar columns** — not PG range types (§ Range normalization)
 - [ ] All business columns use **supported Drizzle types** (§ Column Types)
+- [ ] All boolean columns use **`is_*` / `has_*` snake_case** physical names (§ Boolean columns)
 - [ ] **No PostgreSQL `money` columns** — use `integer` cents or `numeric`/`decimal` with explicit scale (§ Column Types)
 - [ ] Enums use **`pgEnum`** with **UPPERCASE** / **SCREAMING_SNAKE_CASE** member values and `.default()` where defaults are required (§ Enums)
 - [ ] **`relations()`** defined for every association between entities
