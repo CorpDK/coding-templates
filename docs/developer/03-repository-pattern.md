@@ -4,9 +4,26 @@ All DS packages use a Repository Pattern to keep GraphQL resolvers decoupled fro
 
 ---
 
-## Required Structure
+## DAL-automated `templates/ds` (Drizzle primary template)
 
-Every DS package must maintain this layout in `src/db/`:
+The primary `@corpdk/ds` template uses **DAL automation** — no hand-written entity repositories, Zod schemas, or domain SDL.
+
+| Concern | Location |
+| ------- | -------- |
+| **Authoring surface** | Drizzle entity tables in `src/db/schema/` (UUID PK, audit columns, JSDoc comments) |
+| **Codegen command** | `pnpm dal:codegen` → `src/generated/dal/` (committed) |
+| **Generated repos** | `src/generated/dal/repositories/generated-<entity>.repository.ts` |
+| **Bootstrap wiring** | `src/schema.ts` imports from `src/generated/dal/index.ts` barrel (`typeDefs`, `generatedResolvers`, `createDalContext`, `pubsub`); bootstrap SDL/resolvers/pubsub topics are emitted by `@corpdk/dal-codegen` |
+
+Adding an entity: add a Drizzle table to `src/db/schema/`, run `pnpm dal:codegen`, then `pnpm codegen` for SDK/CLI. See [GraphQL DAL Requirements](graphql-dal-requirements.md) and [DAL Entity Design Guidelines](dal-entity-design.md).
+
+The sections below describe the **manual repository pattern** used by other DS variants (`ds-no-sql`, `ds-mongo`, etc.).
+
+---
+
+## Required Structure (manual DS variants)
+
+Every non-DAL DS package must maintain this layout in `src/db/`:
 
 ```text
 src/

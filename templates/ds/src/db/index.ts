@@ -1,13 +1,13 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
-import * as schema from "../../drizzle/schema.js";
+import * as schema from "./schema/index.js";
 
 /**
  * Drizzle database instance.
  *
  * The connection string is read from DATABASE_URL at startup.
  * When create-app scaffolds with a different SQL dialect (MySQL, SQLite,
- * CockroachDB), it updates drizzle.config.ts, drizzle/schema.ts, and
+ * CockroachDB), it updates drizzle.config.ts, src/db/schema/, and
  * swaps the driver package in package.json — update this file accordingly.
  */
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });

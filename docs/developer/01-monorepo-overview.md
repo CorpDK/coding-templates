@@ -15,6 +15,8 @@ coding-templates/
 │   └── create-app/  (@corpdk/create-app)   Interactive CLI scaffolding tool
 ├── libraries/
 │   ├── codegen-cli/ (@corpdk/codegen-cli)   GraphQL codegen plugin for resolver types + SDK generation
+│   ├── dal-core/    (@corpdk/dal-core)      DAL shared types, filters, scalars, mutation error taxonomy
+│   ├── dal-codegen/ (@corpdk/dal-codegen)   Drizzle → GraphQL SDL + repositories + resolvers codegen CLI
 │   └── pub-sub/     (@corpdk/pub-sub)       Plugin-style GraphQL pub/sub factory
 ├── packages/
 │   ├── ui-core/     (@corpdk/ui-core)       Design system foundation

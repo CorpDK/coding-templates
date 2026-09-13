@@ -8,9 +8,10 @@
   },
   "scripts": {
     "dev": "node --env-file .env --import tsx/esm --watch src/index.ts",
-    "build": "tsc && cp -r src/schema dist/",
+    "build": "tsc",
     "codegen": "graphql-codegen",
-    "start": "node dist/index.js",
+    "dal:codegen": "node --import tsx/esm ../../libraries/dal-codegen/dist/cli.js",
+    "start": "node dist/src/index.js",
     "lint": "eslint src/",
     "typecheck": "tsc --noEmit",
     "db:up": "docker compose up postgres -d",
@@ -24,11 +25,11 @@
     "clean": "rm -rf dist node_modules .turbo *.tsbuildinfo"
   },
   "dependencies": {
+    "@corpdk/dal-core": "workspace:*",
     "@corpdk/pub-sub": "workspace:*",
     "@graphql-yoga/redis-event-target": "^3.0.0",
     "drizzle-orm": "^0.45.2",
     "graphql": "^16.13.2",
-    "zod": "^4.3.6",
     "graphql-ws": "^6.0.8",
     "graphql-yoga": "^5.18.1",
     "ioredis": "^5.10.1",
@@ -37,6 +38,7 @@
   },
   "devDependencies": {
     "@corpdk/codegen-cli": "workspace:*",
+    "@corpdk/dal-codegen": "workspace:*",
     "@graphql-codegen/cli": "^6.2.1",
     "@graphql-codegen/client-preset": "^5.2.4",
     "@graphql-codegen/typescript": "^5.0.9",

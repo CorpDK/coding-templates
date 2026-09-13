@@ -79,7 +79,9 @@ Consequence: all TypeScript imports within DS packages must use explicit `.js` e
 
 ## Why the Repository Pattern
 
-The Repository Pattern (`IItemRepository` interface + `itemRepository` implementation in `src/db/repository.ts`) is mandatory in all DS packages because:
+**`templates/ds`** uses DAL automation: repositories are generated under `src/generated/dal/repositories/` from Drizzle schema (`pnpm dal:codegen`). Bootstrap `schema.ts` wires generated resolver stubs — no hand-written `IItemRepository`.
+
+Other DS variants use the manual Repository Pattern (`IItemRepository` interface + `itemRepository` implementation in `src/db/repository.ts`) because:
 
 1. **Storage-agnostic resolvers** — resolvers in `schema.ts` call `itemRepository.findAll()` regardless of whether the backend is Prisma, Drizzle, MongoDB, or a file. This makes the GraphQL layer identical across all DS variants.
 2. **Testability** — the interface can be stubbed in tests without hitting a database.
