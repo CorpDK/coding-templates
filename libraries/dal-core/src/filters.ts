@@ -53,6 +53,18 @@ export interface IdFilter {
   notIn?: string[] | null;
 }
 
+export interface EnumFilter<T extends string = string> {
+  eq?: T | null;
+  neq?: T | null;
+  in?: T[] | null;
+  notIn?: T[] | null;
+}
+
+export interface FilterBudgetLimits {
+  maxDepth: number;
+  maxNodes: number;
+}
+
 export interface LogicalFilter<T> {
   and?: T[] | null;
   or?: T[] | null;
@@ -156,6 +168,100 @@ export function buildIdFilter(column: Column, filter: IdFilter | null | undefine
   if (filter.notIn?.length) parts.push(notInArray(column, filter.notIn));
   if (parts.length === 0) return undefined;
   return parts.length === 1 ? parts[0] : and(...parts);
+}
+
+export function buildEnumFilter<T extends string>(
+  column: Column,
+  filter: EnumFilter<T> | null | undefined,
+): SQL | undefined {
+  if (!filter) return undefined;
+  const parts: SQL[] = [];
+  if (filter.eq != null) parts.push(eq(column, filter.eq));
+  if (filter.neq != null) parts.push(ne(column, filter.neq));
+  if (filter.in?.length) parts.push(inArray(column, filter.in));
+  if (filter.notIn?.length) parts.push(notInArray(column, filter.notIn));
+  if (parts.length === 0) return undefined;
+  return parts.length === 1 ? parts[0] : and(...parts);
+}
+
+function measureFilterDepth(filter: Record<string, unknown>): number {
+  let maxChild = 0;
+  if (Array.isArray(filter.and)) {
+    const childDepths = filter.and.map((node) =>
+      measureFilterDepth(node as Record<string, unknown>),
+    );
+    maxChild = Math.max(maxChild, 1 + Math.max(0, ...childDepths));
+  }
+  if (Array.isArray(filter.or)) {
+    const childDepths = filter.or.map((node) =>
+      measureFilterDepth(node as Record<string, unknown>),
+    );
+    maxChild = Math.max(maxChild, 1 + Math.max(0, ...childDepths));
+  }
+  if (filter.not && typeof filter.not === "object") {
+    maxChild = Math.max(maxChild, 1 + measureFilterDepth(filter.not as Record<string, unknown>));
+  }
+  return maxChild;
+}
+
+function countFilterNodes(filter: Record<string, unknown>): number {
+  let count = 0;
+  for (const [key, value] of Object.entries(filter)) {
+    if (key === "and" || key === "or" || key === "not") continue;
+    if (value != null) count += 1;
+  }
+  if (Array.isArray(filter.and)) {
+    for (const child of filter.and) {
+      count += countFilterNodes(child as Record<string, unknown>);
+    }
+  }
+  if (Array.isArray(filter.or)) {
+    for (const child of filter.or) {
+      count += countFilterNodes(child as Record<string, unknown>);
+    }
+  }
+  if (filter.not && typeof filter.not === "object") {
+    count += countFilterNodes(filter.not as Record<string, unknown>);
+  }
+  return count;
+}
+
+/** Resolve filter budget limits from config with optional env overrides. */
+export function resolveFilterBudget(config: FilterBudgetLimits): FilterBudgetLimits {
+  const depthEnv = process.env.DAL_FILTER_MAX_DEPTH;
+  const nodesEnv = process.env.DAL_FILTER_MAX_NODES;
+  return {
+    maxDepth:
+      depthEnv != null && depthEnv !== "" ?
+        Number.parseInt(depthEnv, 10)
+      : config.maxDepth,
+    maxNodes:
+      nodesEnv != null && nodesEnv !== "" ?
+        Number.parseInt(nodesEnv, 10)
+      : config.maxNodes,
+  };
+}
+
+/** Enforce filterMaxDepth / filterMaxNodes before SQL compilation. */
+export function validateFilterBudget(
+  filter: unknown,
+  limits: FilterBudgetLimits,
+): void {
+  if (filter == null || typeof filter !== "object") return;
+  const depth = measureFilterDepth(filter as Record<string, unknown>);
+  const nodes = countFilterNodes(filter as Record<string, unknown>);
+  if (depth > limits.maxDepth) {
+    throw new ValidationError(
+      `Filter exceeds maximum depth of ${limits.maxDepth}`,
+      ["filter"],
+    );
+  }
+  if (nodes > limits.maxNodes) {
+    throw new ValidationError(
+      `Filter exceeds maximum node count of ${limits.maxNodes}`,
+      ["filter"],
+    );
+  }
 }
 
 export function combineLogical<T>(

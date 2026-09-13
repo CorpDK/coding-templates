@@ -524,6 +524,8 @@ Per entity, codegen emits:
 
 Codegen parses Drizzle tables, enums, indexes, and relations, validates entity shape (UUID `id`, audit/delete column rules, database object comments — §2.11), emits a committed **`generated-schema.ts`** module exporting merged GraphQL SDL as `typeDefs` (with docstrings from DB object comments — §2.11), GeneratedDataAccess, default repository implementations, resolver stubs, and cursor codec version constants per entity. Re-running codegen with unchanged schema produces byte-identical output (idempotent). Physical `.graphqls` files are not emitted — SDL is merged in-memory during codegen and written as a TypeScript string export for runtime and graphql-codegen consumption.
 
+**Phase 1 runtime (current `@corpdk/dal-codegen`):** generated repositories compile scalar filters via `@corpdk/dal-core` (`buildEnumFilter`, `validateFilterBudget`, keyset cursors without HMAC signing), apply enum Drizzle defaults on create, honor connection `sort` with `id` tie-breaker, forward/backward paging (`first`/`after`, `last`/`before`), wire `orderAggregate` count with optional filter, filter subscriptions by `subscribeTo`, and accept optional `actorId` via `createDalContext`. FilterAST / QueryEngine / relations remain Phase 2+.
+
 **`dal/dal.config.yaml` example:**
 
 ```yaml

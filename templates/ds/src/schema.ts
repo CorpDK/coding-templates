@@ -11,6 +11,11 @@ export const schema = createSchema({
   resolvers: generatedResolvers,
 });
 
-export function createRequestContext() {
-  return createDalContext(pubsub);
+export interface RequestContextOptions {
+  /** Set by auth plugin from session/token; null until auth is wired. */
+  actorId?: string | null;
+}
+
+export function createRequestContext(options?: RequestContextOptions) {
+  return createDalContext(pubsub, { actorId: options?.actorId ?? null });
 }

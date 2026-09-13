@@ -1,8 +1,7 @@
+import type { DalConfig } from "../config.js";
 import type { ColumnModel, EntityModel } from "../model.js";
 
-function pascal(s: string): string {
-  return s.charAt(0).toUpperCase() + s.slice(1);
-}
+type ResolvedDalConfig = Required<DalConfig>;
 
 function tsTypeForColumn(col: ColumnModel): string {
   if (col.kind === "boolean") return "boolean";
@@ -12,14 +11,22 @@ function tsTypeForColumn(col: ColumnModel): string {
   return "string";
 }
 
+function inputRef(col: ColumnModel): string {
+  if (col.defaultValue !== undefined) {
+    return `input.${col.graphqlName} ?? ${JSON.stringify(col.defaultValue)}`;
+  }
+  return `input.${col.graphqlName}`;
+}
+
 function assignCreateValue(col: ColumnModel): string {
+  const ref = inputRef(col);
   if (col.kind === "timestamptz") {
-    return `      ${col.drizzleKey}: input.${col.graphqlName} ? parseDateTime(input.${col.graphqlName}) : undefined,`;
+    return `      ${col.drizzleKey}: ${ref} ? parseDateTime(${ref}) : undefined,`;
   }
   if (col.kind === "enum") {
-    return `      ${col.drizzleKey}: input.${col.graphqlName} as (typeof table.$inferInsert)["${col.drizzleKey}"],`;
+    return `      ${col.drizzleKey}: (${ref}) as (typeof table.$inferInsert)["${col.drizzleKey}"],`;
   }
-  return `      ${col.drizzleKey}: input.${col.graphqlName},`;
+  return `      ${col.drizzleKey}: ${ref},`;
 }
 
 function assignUpdateValue(col: ColumnModel): string {
@@ -43,7 +50,97 @@ function assignUpdateValue(col: ColumnModel): string {
     }`;
 }
 
-export function generateRepository(entity: EntityModel): string {
+const FILTER_BUILDERS = [
+  "buildBooleanFilter",
+  "buildDateTimeFilter",
+  "buildEnumFilter",
+  "buildIdFilter",
+  "buildStringFilter",
+] as const;
+
+function filterBuilderForColumn(col: ColumnModel): string {
+  switch (col.kind) {
+    case "boolean":
+      return "buildBooleanFilter";
+    case "timestamptz":
+      return "buildDateTimeFilter";
+    case "uuid":
+      return "buildIdFilter";
+    case "enum":
+      return "buildEnumFilter";
+    default:
+      return "buildStringFilter";
+  }
+}
+
+function requiredFilterBuilders(entity: EntityModel): Set<string> {
+  const builders = new Set<string>();
+  for (const col of entity.columns) {
+    if (!col.isServerManaged || col.drizzleKey === "id") {
+      builders.add(filterBuilderForColumn(col));
+    }
+  }
+  return builders;
+}
+
+function buildDalCoreImportBlock(entity: EntityModel): string {
+  const filterBuilders = requiredFilterBuilders(entity);
+  const valueImports = [
+    "assertCursorSortMatches",
+    "assertValidUuid",
+    ...FILTER_BUILDERS.filter((name) => filterBuilders.has(name)),
+    "buildKeysetSeek",
+    "buildOrderClauses",
+    "CHANGE_EVENT_ID_CAP",
+    "combineLogical",
+    "createUserError",
+    "CURSOR_VERSION",
+    "decodeCursor",
+    "DEFAULT_LIST_LIMIT",
+    "encodeCursor",
+    "errorPayload",
+    "mapDriverError",
+    "MAX_LIST_LIMIT",
+    "parseDateTime",
+    "resolveActorId",
+    "resolveFilterBudget",
+    "resolveSortWithTieBreaker",
+    "reverseOrderClauses",
+    "serializeDateTime",
+    "successPayload",
+    "validateConnectionPagingArgs",
+    "validateFilterBudget",
+    "ValidationError",
+  ];
+  const typeImports = [
+    "EntityChangeEventPayload",
+    "RepositoryContext",
+    "ResolvedSortKey",
+    "SortInput",
+  ];
+  return `import {
+${valueImports.map((name) => `  ${name},`).join("\n")}
+${typeImports.map((name) => `  type ${name},`).join("\n")}
+} from "@corpdk/dal-core";`;
+}
+
+function cursorSerializeCase(col: ColumnModel): string {
+  if (col.kind === "timestamptz") {
+    return `      case "${col.drizzleKey}":
+        return serializeDateTime(row.${col.drizzleKey})!;`;
+  }
+  return "";
+}
+
+function cursorDeserializeCase(col: ColumnModel): string {
+  if (col.kind === "timestamptz") {
+    return `      case "${col.drizzleKey}":
+        return new Date(value as string);`;
+  }
+  return "";
+}
+
+export function generateRepository(entity: EntityModel, config: ResolvedDalConfig): string {
   const E = entity.graphqlType;
   const e = entity.fieldBasename;
   const exportName = entity.exportName;
@@ -54,6 +151,7 @@ export function generateRepository(entity: EntityModel): string {
   const outputCols = entity.columns.filter(
     (c) => c.drizzleKey !== "deletedAt" && c.drizzleKey !== "deletedBy",
   );
+  const sortCols = outputCols;
 
   const mapRowFields = outputCols
     .map((col) => {
@@ -69,14 +167,7 @@ export function generateRepository(entity: EntityModel): string {
   const filterCases = entity.columns
     .filter((c) => !c.isServerManaged || c.drizzleKey === "id")
     .map((col) => {
-      const builder =
-        col.kind === "boolean"
-          ? "buildBooleanFilter"
-          : col.kind === "timestamptz"
-            ? "buildDateTimeFilter"
-            : col.kind === "uuid"
-              ? "buildIdFilter"
-              : "buildStringFilter";
+      const builder = filterBuilderForColumn(col);
       return `    if (node.${col.graphqlName} !== undefined) {
       const part = ${builder}(table.${col.drizzleKey}, node.${col.graphqlName});
       if (part) leafParts.push(part);
@@ -85,37 +176,28 @@ export function generateRepository(entity: EntityModel): string {
     .join("\n");
 
   const createValues = businessCols.map((col) => assignCreateValue(col)).join("\n");
-
   const updateSet = full ? businessCols.map((col) => assignUpdateValue(col)).join("\n") : "";
 
+  const cursorSerializeCases = sortCols
+    .filter((c) => c.kind === "timestamptz")
+    .map((c) => cursorSerializeCase(c))
+    .filter(Boolean)
+    .join("\n");
+
+  const cursorDeserializeCases = sortCols
+    .filter((c) => c.kind === "timestamptz")
+    .map((c) => cursorDeserializeCase(c))
+    .filter(Boolean)
+    .join("\n");
+
   return `// AUTO-GENERATED by @corpdk/dal-codegen — do not edit
-import { and, asc, count, desc, eq, gt, lt, sql, type SQL } from "drizzle-orm";
-import {
-  assertValidUuid,
-  buildBooleanFilter,
-  buildDateTimeFilter,
-  buildIdFilter,
-  buildStringFilter,
-  combineLogical,
-  createUserError,
-  DEFAULT_LIST_LIMIT,
-  errorPayload,
-  mapDriverError,
-  MAX_LIST_LIMIT,
-  NotFoundError,
-  parseDateTime,
-  resolveActorId,
-  serializeDateTime,
-  successPayload,
-  ValidationError,
-  type EntityChangeEventPayload,
-  type RepositoryContext,
-  type SortInput,
-} from "@corpdk/dal-core";
+import { and, count, eq, sql, type SQL } from "drizzle-orm";
+${buildDalCoreImportBlock(entity)}
 import { db } from "../../../db/index.js";
 import { ${exportName} } from "../../../db/schema/index.js";
 
 const table = ${exportName};
+const FILTER_BUDGET = resolveFilterBudget({ maxDepth: ${config.filterMaxDepth}, maxNodes: ${config.filterMaxNodes} });
 
 export type ${E}Record = {
 ${outputCols.map((c) => `  ${c.graphqlName}: ${tsTypeForColumn(c)}${c.notNull ? "" : " | null"};`).join("\n")}
@@ -140,6 +222,7 @@ ${mapRowFields}
 }
 
 function buildWhere(filter: ${E}Filter | null | undefined, includeDeleted?: boolean | null): SQL | undefined {
+  validateFilterBudget(filter, FILTER_BUDGET);
   const parts: SQL[] = [];
   ${soft ? `if (!includeDeleted) {
     parts.push(sql\`\${table.deletedAt} IS NULL\`);
@@ -159,8 +242,7 @@ ${filterCases}
 }
 
 const SORT_FIELD_MAP: Record<string, keyof typeof table.$inferSelect> = {
-${entity.columns
-  .filter((c) => c.drizzleKey !== "deletedAt" && c.drizzleKey !== "deletedBy")
+${sortCols
   .map(
     (c) =>
       `  ${c.graphqlName.replace(/([A-Z])/g, "_$1").toUpperCase()}: "${c.drizzleKey}",`,
@@ -168,20 +250,61 @@ ${entity.columns
   .join("\n")}
 };
 
-function buildOrder(sort?: SortInput[] | null): SQL[] {
-  if (!sort?.length) return [asc(table.id)];
-  return sort.map((s) => {
-    const dir = s.direction === "DESC" ? desc : asc;
-    const drizzleKey = SORT_FIELD_MAP[s.field];
-    if (!drizzleKey) throw new ValidationError(\`Invalid sort field: \${s.field}\`, ["sort"]);
-    const col = table[drizzleKey as keyof typeof table];
-    return dir(col as typeof table.id);
+function resolveSort(sort?: SortInput[] | null): ResolvedSortKey[] {
+  return resolveSortWithTieBreaker(sort, SORT_FIELD_MAP as Record<string, string>);
+}
+
+function cursorValuesFromRow(row: typeof table.$inferSelect, resolvedSort: ResolvedSortKey[]): unknown[] {
+  return resolvedSort.map((s) => {
+    switch (s.drizzleKey) {
+${cursorSerializeCases}
+      default:
+        return row[s.drizzleKey as keyof typeof row];
+    }
   });
 }
 
-function clampLimit(limit?: number | null): number {
+function cursorValuesToDb(values: unknown[], resolvedSort: ResolvedSortKey[]): unknown[] {
+  return values.map((value, index) => {
+    switch (resolvedSort[index]?.drizzleKey) {
+${cursorDeserializeCases}
+      default:
+        return value;
+    }
+  });
+}
+
+function edgeCursor(
+  row: typeof table.$inferSelect,
+  resolvedSort: ResolvedSortKey[],
+  includeDeleted?: boolean | null,
+): string {
+  return encodeCursor({
+    version: CURSOR_VERSION,
+    entity: "${E}",
+    sort: resolvedSort.map((s) => ({ field: s.field, direction: s.direction })),
+    values: cursorValuesFromRow(row, resolvedSort),
+    includeDeleted: includeDeleted ?? false,
+  });
+}
+
+function emptyConnection() {
+  return {
+    edges: [],
+    nodes: [],
+    pageInfo: {
+      hasNextPage: false,
+      hasPreviousPage: false,
+      startCursor: null,
+      endCursor: null,
+    },
+  };
+}
+
+function clampLimit(limit: number | null | undefined, field: string): number {
   const n = limit ?? DEFAULT_LIST_LIMIT;
-  if (n > MAX_LIST_LIMIT) throw new ValidationError(\`limit must be <= \${MAX_LIST_LIMIT}\`, ["limit"]);
+  if (n < 0) throw new ValidationError(\`\${field} must be >= 0\`, [field]);
+  if (n > MAX_LIST_LIMIT) throw new ValidationError(\`\${field} must be <= \${MAX_LIST_LIMIT}\`, [field]);
   return n;
 }
 
@@ -203,8 +326,13 @@ export class Generated${E}Repository {
     includeDeleted?: boolean | null;
   }): Promise<${E}Record[]> {
     const where = buildWhere(args.filter, args.includeDeleted);
-    const limit = clampLimit(args.limit);
-    let q = db.select().from(table).orderBy(...buildOrder(args.sort)).limit(limit);
+    const limit = clampLimit(args.limit, "limit");
+    const resolvedSort = resolveSort(args.sort);
+    let q = db
+      .select()
+      .from(table)
+      .orderBy(...buildOrderClauses(table as unknown as Record<string, unknown>, resolvedSort))
+      .limit(limit);
     if (where) q = q.where(where) as typeof q;
     const rows = await q;
     return rows.map(mapRow);
@@ -226,27 +354,91 @@ export class Generated${E}Repository {
     sort?: SortInput[] | null;
     first?: number | null;
     after?: string | null;
+    last?: number | null;
+    before?: string | null;
     includeDeleted?: boolean | null;
   }) {
-    const first = clampLimit(args.first ?? DEFAULT_LIST_LIMIT);
+    validateConnectionPagingArgs(args);
+    if (args.first === 0 || args.last === 0) return emptyConnection();
+
+    const resolvedSort = resolveSort(args.sort);
     const whereParts: SQL[] = [];
     const baseWhere = buildWhere(args.filter, args.includeDeleted);
     if (baseWhere) whereParts.push(baseWhere);
+
+    const seekColumns = resolvedSort.map((s) => table[s.drizzleKey as keyof typeof table] as typeof table.id);
+    const seekDirections = resolvedSort.map((s) => s.direction);
+
     if (args.after) {
-      assertValidUuid(args.after, "after");
-      whereParts.push(gt(table.id, args.after));
+      const decoded = decodeCursor(args.after, "${E}", "after");
+      assertCursorSortMatches(decoded, resolvedSort, "after");
+      whereParts.push(
+        buildKeysetSeek(
+          seekColumns,
+          seekDirections,
+          cursorValuesToDb(decoded.values, resolvedSort),
+          "after",
+        ),
+      );
+    } else if (args.before) {
+      const decoded = decodeCursor(args.before, "${E}", "before");
+      assertCursorSortMatches(decoded, resolvedSort, "before");
+      whereParts.push(
+        buildKeysetSeek(
+          seekColumns,
+          seekDirections,
+          cursorValuesToDb(decoded.values, resolvedSort),
+          "before",
+        ),
+      );
     }
+
     const where = whereParts.length ? and(...whereParts) : undefined;
-    let q = db.select().from(table).orderBy(asc(table.id)).limit(first + 1);
+
+    if (args.last != null) {
+      const last = clampLimit(args.last, "last");
+      let q = db
+        .select()
+        .from(table)
+        .orderBy(...reverseOrderClauses(table as unknown as Record<string, unknown>, resolvedSort))
+        .limit(last + 1);
+      if (where) q = q.where(where) as typeof q;
+      const rows = await q;
+      const hasPreviousPage = rows.length > last;
+      const slice = (hasPreviousPage ? rows.slice(0, last) : rows).reverse();
+      const edges = slice.map((row) => ({
+        node: mapRow(row),
+        cursor: edgeCursor(row, resolvedSort, args.includeDeleted),
+      }));
+      return {
+        edges,
+        nodes: edges.map((edge) => edge.node),
+        pageInfo: {
+          hasNextPage: Boolean(args.before),
+          hasPreviousPage,
+          startCursor: edges[0]?.cursor ?? null,
+          endCursor: edges[edges.length - 1]?.cursor ?? null,
+        },
+      };
+    }
+
+    const first = clampLimit(args.first, "first");
+    let q = db
+      .select()
+      .from(table)
+      .orderBy(...buildOrderClauses(table as unknown as Record<string, unknown>, resolvedSort))
+      .limit(first + 1);
     if (where) q = q.where(where) as typeof q;
     const rows = await q;
     const hasNextPage = rows.length > first;
     const slice = hasNextPage ? rows.slice(0, first) : rows;
-    const nodes = slice.map(mapRow);
-    const edges = nodes.map((node) => ({ node, cursor: node.id }));
+    const edges = slice.map((row) => ({
+      node: mapRow(row),
+      cursor: edgeCursor(row, resolvedSort, args.includeDeleted),
+    }));
     return {
       edges,
-      nodes,
+      nodes: edges.map((edge) => edge.node),
       pageInfo: {
         hasNextPage,
         hasPreviousPage: Boolean(args.after),
@@ -318,7 +510,7 @@ ${updateSet}
 
   toChangeEvent(operation: EntityChangeEventPayload["operation"], ids: string[]): EntityChangeEventPayload {
     const count = ids.length;
-    const isTruncated = count > 100;
+    const isTruncated = count > CHANGE_EVENT_ID_CAP;
     return {
       operation,
       ids: isTruncated ? [] : ids,

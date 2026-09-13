@@ -151,6 +151,9 @@ export function buildEntitySchema(entity: EntityModel, registry: SchemaRegistry)
         {
           type: columnInputType(registry, col, col.notNull && !col.hasDefault),
           description: col.comment || undefined,
+          ...(col.kind === "enum" && col.defaultValue !== undefined ?
+            { defaultValue: col.defaultValue }
+          : {}),
         },
       ]),
     ),

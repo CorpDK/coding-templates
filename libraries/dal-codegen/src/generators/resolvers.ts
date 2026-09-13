@@ -29,6 +29,8 @@ export function generateResolvers(entities: EntityModel[]): string {
         sort: args.sort as never,
         first: args.first as number | null,
         after: args.after as string | null,
+        last: args.last as number | null,
+        before: args.before as string | null,
         includeDeleted: args.includeDeleted as boolean | null,
       }),
 
@@ -75,8 +77,16 @@ export function generateResolvers(entities: EntityModel[]): string {
     },`);
 
     subscriptionFields.push(`    ${e}Changed: {
-      subscribe: (_: unknown, _args: { subscribeTo?: string[] | null }, ctx: DalContext) =>
-        ctx.pubsub.subscribe("${topic}"),
+      subscribe: async function* (_: unknown, args: { subscribeTo?: string[] | null }, ctx: DalContext) {
+        const allowed =
+          args.subscribeTo?.length ? new Set(args.subscribeTo) : null;
+        for await (const payload of ctx.pubsub.subscribe("${topic}")) {
+          const event = payload.${e}Changed;
+          if (allowed === null || allowed.has(event.operation)) {
+            yield payload;
+          }
+        }
+      },
     },`);
   }
 
@@ -118,9 +128,14 @@ ${repoTypeFields}
   };
 }
 
-export function createDalContext(pubsub: PubSub): DalContext {
+export interface CreateDalContextOptions {
+  /** Actor ID from auth context; null uses repository "system" fallback. */
+  actorId?: string | null;
+}
+
+export function createDalContext(pubsub: PubSub, options?: CreateDalContextOptions): DalContext {
   return {
-    actorId: null,
+    actorId: options?.actorId ?? null,
     pubsub,
     repositories: {
 ${repoInitFields}

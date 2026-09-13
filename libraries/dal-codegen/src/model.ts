@@ -28,6 +28,8 @@ export interface ColumnModel {
   kind: ColumnKind;
   notNull: boolean;
   hasDefault: boolean;
+  /** Static Drizzle `.default()` value when inferrable (enum/string/boolean). */
+  defaultValue?: string | boolean | number;
   comment: string;
   enumName?: string;
   enumValues?: string[];
@@ -165,6 +167,15 @@ export async function loadEntities(schemaPath: string, strict: boolean): Promise
             );
           }
         }
+        const colWithDefault = col as typeof col & { default?: unknown; defaultFn?: unknown };
+        let defaultValue: string | boolean | number | undefined;
+        if (col.hasDefault && colWithDefault.default !== undefined && colWithDefault.defaultFn === undefined) {
+          const dv = colWithDefault.default;
+          if (typeof dv === "string" || typeof dv === "boolean" || typeof dv === "number") {
+            defaultValue = dv;
+          }
+        }
+
         colModels.push({
           drizzleKey,
           physicalName: col.name,
@@ -172,6 +183,7 @@ export async function loadEntities(schemaPath: string, strict: boolean): Promise
           kind,
           notNull: col.notNull,
           hasDefault: col.hasDefault,
+          defaultValue,
           comment,
           enumName,
           enumValues,
