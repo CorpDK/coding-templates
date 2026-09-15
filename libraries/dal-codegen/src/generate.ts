@@ -38,7 +38,7 @@ export async function runDalCodegen(options: CodegenOptions): Promise<void> {
   for (const entity of entities) {
     writeFile(
       join(repoDir, `generated-${entity.fieldBasename}.repository.ts`),
-      generateRepository(entity, config),
+      generateRepository(entity, entities, config),
     );
   }
   writeFile(join(repoDir, "index.ts"), generateRepositoryIndex(entities));

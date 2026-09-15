@@ -123,4 +123,5 @@ export const itemFixture: EntityModel = {
       isBusiness: false,
     },
   ],
+  relations: [],
 };

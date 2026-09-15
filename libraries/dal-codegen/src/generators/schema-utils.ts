@@ -36,10 +36,21 @@ export function filterForColumn(col: ColumnModel): string {
 
 export function visibleOutputColumns(entity: EntityModel): ColumnModel[] {
   return entity.columns.filter(
-    (c) => c.drizzleKey !== "deletedAt" && c.drizzleKey !== "deletedBy",
+    (c) =>
+      c.drizzleKey !== "deletedAt" &&
+      c.drizzleKey !== "deletedBy" &&
+      !c.omitFromOutput,
   );
 }
 
 export function filterableColumns(entity: EntityModel): ColumnModel[] {
-  return entity.columns.filter((c) => !(c.isServerManaged && c.drizzleKey !== "id"));
+  return entity.columns.filter(
+    (c) => !(c.isServerManaged && c.drizzleKey !== "id") && !c.omitFromOutput,
+  );
+}
+
+export function internalRecordColumns(entity: EntityModel): ColumnModel[] {
+  return entity.columns.filter(
+    (c) => c.drizzleKey !== "deletedAt" && c.drizzleKey !== "deletedBy",
+  );
 }

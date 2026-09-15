@@ -193,18 +193,18 @@ describe("Phase 1 codegen output", () => {
         isBusiness: false,
       },
     ],
+    relations: [],
   };
 
   const config = { strict: false, filterMaxDepth: 2, filterMaxNodes: 50 };
 
-  it("repository generator uses buildEnumFilter and enum create default", () => {
-    const source = generateRepository(orderEntity, config);
-    expect(source).toContain("buildEnumFilter");
+  it("repository generator uses QueryEngine and enum create default", () => {
+    const source = generateRepository(orderEntity, [orderEntity], config);
+    expect(source).toContain("QueryEngine");
     expect(source).toContain('input.status ?? "PENDING"');
-    expect(source).toContain("validateFilterBudget");
-    expect(source).toContain("resolveSortWithTieBreaker");
-    expect(source).toContain("encodeCursor");
-    expect(source).toContain("args.last != null");
+    expect(source).toContain("resolveFilterBudget");
+    expect(source).toContain("bulkCreate");
+    expect(source).toContain("listConnection");
   });
 
   it("resolver generator filters subscribeTo and accepts actorId", () => {

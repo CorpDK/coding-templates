@@ -1,5 +1,91 @@
 import type { EntityModel } from "../model.js";
 
+function targetRepoBasename(rel: EntityModel["relations"][number], entities: EntityModel[]): string {
+  const target = entities.find((e) => e.exportName === rel.targetExportName);
+  return target?.fieldBasename ?? rel.targetExportName;
+}
+
+function generateLoaderSetup(entities: EntityModel[]): string {
+  const setupLines: string[] = [];
+
+  for (const entity of entities) {
+    for (const rel of entity.relations) {
+      const loaderKey = `${entity.fieldBasename}_${rel.fieldName}`;
+
+      if ((rel.kind === "many-to-one" || rel.kind === "one-to-one") && rel.ownerFkDrizzleKey) {
+        const targetRepo = targetRepoBasename(rel, entities);
+        setupLines.push(`  ctxRef.loaders.${loaderKey} = new DataLoader<string, unknown>(async (ids) => {
+    const rows = await ctxRef.repositories.${targetRepo}.findByIds([...ids]);
+    const map = new Map<string, unknown>();
+    for (const row of rows) map.set(row.id as string, row);
+    return map;
+  });`);
+      } else if (rel.kind === "one-to-many") {
+        const childRepo = targetRepoBasename(rel, entities);
+        const parentType = entity.graphqlType;
+        setupLines.push(`  ctxRef.loaders.${loaderKey} = new DataLoader<string, unknown[]>(async (parentIds) => {
+    const grouped = await ctxRef.repositories.${childRepo}.findBy${parentType}Ids([...parentIds]);
+    const map = new Map<string, unknown[]>();
+    for (const pid of parentIds) map.set(pid, grouped.get(pid) ?? []);
+    return map;
+  });`);
+      } else if (rel.kind === "one-to-one" && !rel.ownerFkDrizzleKey) {
+        const childRepo = targetRepoBasename(rel, entities);
+        const parentType = entity.graphqlType;
+        setupLines.push(`  ctxRef.loaders.${loaderKey} = new DataLoader<string, unknown>(async (parentIds) => {
+    const grouped = await ctxRef.repositories.${childRepo}.findOneBy${parentType}Ids([...parentIds]);
+    const map = new Map<string, unknown>();
+    for (const pid of parentIds) map.set(pid, grouped.get(pid) ?? null);
+    return map;
+  });`);
+      }
+    }
+  }
+
+  return setupLines.join("\n\n");
+}
+
+function generateFieldResolvers(entities: EntityModel[]): string {
+  const blocks: string[] = [];
+
+  for (const entity of entities) {
+    if (entity.relations.length === 0) continue;
+    const resolverFields: string[] = [];
+
+    for (const rel of entity.relations) {
+      const loaderKey = `${entity.fieldBasename}_${rel.fieldName}`;
+      if (rel.kind === "many-to-one" || rel.kind === "one-to-one") {
+        const fkField =
+          rel.ownerFkGraphqlName ??
+          entity.columns.find((c) => c.drizzleKey === rel.ownerFkDrizzleKey)?.graphqlName;
+        if (!fkField && rel.kind === "many-to-one") continue;
+        if (rel.kind === "one-to-one" && !fkField) {
+          resolverFields.push(`    ${rel.fieldName}: (parent: Record<string, unknown>, _: unknown, ctx: DalContext) =>
+      ctx.loaders.${loaderKey}!.load(parent.id as string),`);
+          continue;
+        }
+        resolverFields.push(`    ${rel.fieldName}: (parent: Record<string, unknown>, _: unknown, ctx: DalContext) => {
+      const fk = parent.${fkField} as string | null | undefined;
+      if (fk == null) return null;
+      return ctx.loaders.${loaderKey}!.load(fk);
+    },`);
+      } else if (rel.kind === "one-to-many") {
+        resolverFields.push(`    ${rel.fieldName}: (parent: Record<string, unknown>, _: unknown, ctx: DalContext) => {
+      const id = parent.id as string;
+      return ctx.loaders.${loaderKey}!.load(id);
+    },`);
+      }
+    }
+
+    if (resolverFields.length === 0) continue;
+    blocks.push(`  ${entity.graphqlType}: {
+${resolverFields.join("\n")}
+  },`);
+  }
+
+  return blocks.join("\n\n");
+}
+
 export function generateResolvers(entities: EntityModel[]): string {
   const queryFields: string[] = [];
   const mutationFields: string[] = [];
@@ -54,7 +140,28 @@ export function generateResolvers(entities: EntityModel[]): string {
         ctx.pubsub.publish("${topic}", { ${e}Changed: event });
       }
       return result;
-    },`);
+    },
+
+    bulkCreate${E}: async (_: unknown, args: { inputs: Record<string, unknown>[]; atomic?: boolean | null }, ctx: DalContext) => {
+      const result = await ctx.repositories.${e}.bulkCreate(args.inputs as never, { actorId: ctx.actorId }, args.atomic);
+      if ("items" in result && result.items.length > 0) {
+        const event = ctx.repositories.${e}.toChangeEvent("CREATED", result.items.map((row) => row.id));
+        ctx.pubsub.publish("${topic}", { ${e}Changed: event });
+      }
+      return result;
+    },
+
+    bulkDelete${E}: async (_: unknown, args: { ids: string[]; atomic?: boolean | null }, ctx: DalContext) => {
+      const result = await ctx.repositories.${e}.bulkDelete(args.ids, { actorId: ctx.actorId }, args.atomic);
+      if ("count" in result && result.count > 0) {
+        const event = ctx.repositories.${e}.toChangeEvent("DELETED", args.ids);
+        ctx.pubsub.publish("${topic}", { ${e}Changed: event });
+      }
+      return result;
+    },
+
+    bulkDelete${E}ByFilter: async (_: unknown, args: { filter: Record<string, unknown>; confirmDeleteAll?: boolean | null }, ctx: DalContext) =>
+      ctx.repositories.${e}.bulkDeleteByFilter(args.filter as never, { actorId: ctx.actorId }, args.confirmDeleteAll),`);
 
     if (full) {
       mutationFields.push(`    update${E}: async (_: unknown, args: { id: string; input: Record<string, unknown> }, ctx: DalContext) => {
@@ -64,7 +171,19 @@ export function generateResolvers(entities: EntityModel[]): string {
         ctx.pubsub.publish("${topic}", { ${e}Changed: event });
       }
       return result;
-    },`);
+    },
+
+    bulkUpdate${E}: async (_: unknown, args: { updates: Array<{ id: string; input: Record<string, unknown> }>; atomic?: boolean | null }, ctx: DalContext) => {
+      const result = await ctx.repositories.${e}.bulkUpdate(args.updates as never, { actorId: ctx.actorId }, args.atomic);
+      if ("items" in result && result.items.length > 0) {
+        const event = ctx.repositories.${e}.toChangeEvent("UPDATED", result.items.map((row) => row.id));
+        ctx.pubsub.publish("${topic}", { ${e}Changed: event });
+      }
+      return result;
+    },
+
+    bulkUpdate${E}ByFilter: async (_: unknown, args: { filter: Record<string, unknown>; input: Record<string, unknown>; confirmUpdateAll?: boolean | null }, ctx: DalContext) =>
+      ctx.repositories.${e}.bulkUpdateByFilter(args.filter as never, args.input as never, { actorId: ctx.actorId }, args.confirmUpdateAll),`);
     }
 
     mutationFields.push(`    delete${E}: async (_: unknown, args: { id: string }, ctx: DalContext) => {
@@ -89,6 +208,9 @@ export function generateResolvers(entities: EntityModel[]): string {
       },
     },`);
   }
+
+  const loaderSetup = generateLoaderSetup(entities);
+  const fieldResolvers = generateFieldResolvers(entities);
 
   const repoImports =
     entities.length === 0
@@ -117,6 +239,7 @@ export function generateResolvers(entities: EntityModel[]): string {
 
   return `// AUTO-GENERATED by @corpdk/dal-codegen — do not edit
 import { Kind } from "graphql";
+import { DataLoader } from "@corpdk/dal-core";
 import type { PubSub } from "../generated-pubsub.js";
 ${repoImports}
 
@@ -126,6 +249,7 @@ export interface DalContext {
   repositories: {
 ${repoTypeFields}
   };
+  loaders: Record<string, DataLoader<string, unknown> | DataLoader<string, unknown[]>>;
 }
 
 export interface CreateDalContextOptions {
@@ -134,13 +258,19 @@ export interface CreateDalContextOptions {
 }
 
 export function createDalContext(pubsub: PubSub, options?: CreateDalContextOptions): DalContext {
-  return {
+  const repositories = {
+${repoInitFields}
+  };
+  const ctxRef = {
     actorId: options?.actorId ?? null,
     pubsub,
-    repositories: {
-${repoInitFields}
-    },
-  };
+    repositories,
+    loaders: {} as DalContext["loaders"],
+  } as DalContext;
+
+${loaderSetup}
+
+  return ctxRef;
 }
 
 export const generatedResolvers = {
@@ -177,6 +307,8 @@ ${mutationFields.join("\n\n")}
 
 ${subscriptionFields.join("\n\n")}
   },
+
+${fieldResolvers}
 };
 `;
 }

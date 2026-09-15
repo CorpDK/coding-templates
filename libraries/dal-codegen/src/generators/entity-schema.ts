@@ -8,13 +8,14 @@ import {
   GraphQLObjectType,
   GraphQLEnumType,
   GraphQLString,
+  GraphQLUnionType,
   type GraphQLFieldConfigMap,
   type GraphQLInputFieldConfigMap,
   type GraphQLInputType,
   type GraphQLNamedType,
   type GraphQLOutputType,
 } from "graphql";
-import type { ColumnModel, EntityModel } from "../model.js";
+import type { ColumnModel, EntityModel, RelationModel } from "../model.js";
 import {
   filterForColumn,
   filterableColumns,
@@ -62,6 +63,32 @@ function buildSortEnum(entity: EntityModel, outputCols: ColumnModel[]): GraphQLE
   });
 }
 
+function buildAssociationFilter(
+  rel: RelationModel,
+  registry: SchemaRegistry,
+): GraphQLInputObjectType {
+  const name = `${rel.targetGraphqlType}AssociationFilter`;
+  const targetFilterName = `${rel.targetGraphqlType}Filter`;
+  return new GraphQLInputObjectType({
+    name,
+    description: `Association filter for ${rel.fieldName} (${rel.kind}).`,
+    fields: {
+      some: {
+        type: registryType(registry, targetFilterName) as GraphQLInputObjectType,
+        description: "At least one related row matches.",
+      },
+      every: {
+        type: registryType(registry, targetFilterName) as GraphQLInputObjectType,
+        description: "All related rows match.",
+      },
+      none: {
+        type: registryType(registry, targetFilterName) as GraphQLInputObjectType,
+        description: "No related rows match.",
+      },
+    },
+  });
+}
+
 function buildEntityFilter(
   entity: EntityModel,
   registry: SchemaRegistry,
@@ -79,6 +106,24 @@ function buildEntityFilter(
           type: registryType(registry, filterForColumn(col)) as GraphQLInputObjectType,
           description: col.comment || undefined,
         };
+      }
+      for (const rel of entity.relations) {
+        if (!rel.filterable) continue;
+        if (rel.kind === "many-to-one" || rel.kind === "one-to-one") {
+          columnFields[rel.fieldName] = {
+            type: registryType(registry, `${rel.targetGraphqlType}Filter`) as GraphQLInputObjectType,
+            description: `Filter via ${rel.fieldName} relation.`,
+          };
+        } else if (rel.kind === "one-to-many" || rel.kind === "many-to-many") {
+          const assocName = `${rel.targetGraphqlType}AssociationFilter`;
+          if (!registry.types.has(assocName)) {
+            registry.types.set(assocName, buildAssociationFilter(rel, registry));
+          }
+          columnFields[rel.fieldName] = {
+            type: registryType(registry, assocName) as GraphQLInputObjectType,
+            description: `Association filter on ${rel.fieldName}.`,
+          };
+        }
       }
       return {
         and: {
@@ -98,10 +143,15 @@ function buildEntityFilter(
     },
   });
 
+  registry.types.set(filterName, filterType);
   return filterType;
 }
 
-export function buildEntitySchema(entity: EntityModel, registry: SchemaRegistry): EntitySchemaBundle {
+export function buildEntitySchema(
+  entity: EntityModel,
+  registry: SchemaRegistry,
+  options?: { scalarsOnly?: boolean },
+): EntitySchemaBundle {
   const outputCols = visibleOutputColumns(entity);
   const businessCols = entity.columns.filter((c) => c.isBusiness);
   const types: GraphQLNamedType[] = [];
@@ -109,8 +159,8 @@ export function buildEntitySchema(entity: EntityModel, registry: SchemaRegistry)
   const objectType = new GraphQLObjectType({
     name: entity.graphqlType,
     description: entity.tableComment || undefined,
-    fields: () =>
-      Object.fromEntries(
+    fields: () => {
+      const scalarFields = Object.fromEntries(
         outputCols.map((col) => [
           col.graphqlName,
           {
@@ -118,9 +168,33 @@ export function buildEntitySchema(entity: EntityModel, registry: SchemaRegistry)
             description: col.comment || undefined,
           },
         ]),
-      ),
+      );
+      if (options?.scalarsOnly) return scalarFields;
+      const navFields = Object.fromEntries(
+        (entity.relations ?? []).map((rel) => {
+          const targetType = registryType(registry, rel.targetGraphqlType);
+          const outputType = rel.navigationList
+            ? new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(targetType)))
+            : rel.navigationNullable
+              ? targetType
+              : new GraphQLNonNull(targetType);
+          return [
+            rel.fieldName,
+            {
+              type: outputType as GraphQLOutputType,
+              description: `Navigate to related ${rel.targetGraphqlType}.`,
+            },
+          ];
+        }),
+      );
+      return { ...scalarFields, ...navFields };
+    },
   });
   types.push(objectType);
+
+  if (options?.scalarsOnly) {
+    return { types, queryFields: {}, mutationFields: {}, subscriptionFields: {} };
+  }
 
   const sortEnum = buildSortEnum(entity, outputCols);
   types.push(sortEnum);
@@ -344,6 +418,109 @@ export function buildEntitySchema(entity: EntityModel, registry: SchemaRegistry)
       },
     };
   }
+
+  const listPayload = new GraphQLObjectType({
+    name: `${entity.graphqlType}ListPayload`,
+    description: `Bulk create/update success payload for ${entity.graphqlType}.`,
+    fields: {
+      items: { type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(objectType))) },
+    },
+  });
+  types.push(listPayload);
+
+  const bulkDeleteCountPayload = new GraphQLObjectType({
+    name: `BulkDelete${entity.graphqlType}CountPayload`,
+    description: `Bulk delete success count for ${entity.graphqlType}.`,
+    fields: {
+      count: { type: new GraphQLNonNull(GraphQLInt) },
+    },
+  });
+  types.push(bulkDeleteCountPayload);
+
+  const bulkCreateUnion = new GraphQLUnionType({
+    name: `BulkCreate${entity.graphqlType}Result`,
+    description: `Bulk create result for ${entity.graphqlType}.`,
+    types: [listPayload, registry.bulkMutationResult],
+    resolveType: (value: { items?: unknown[]; successCount?: number }) =>
+      value.items ? `${entity.graphqlType}ListPayload` : "BulkMutationResult",
+  });
+  types.push(bulkCreateUnion);
+
+  const bulkUpdateUnion = new GraphQLUnionType({
+    name: `BulkUpdate${entity.graphqlType}Result`,
+    description: `Bulk update result for ${entity.graphqlType}.`,
+    types: [listPayload, registry.bulkMutationResult],
+    resolveType: (value: { items?: unknown[]; successCount?: number }) =>
+      value.items ? `${entity.graphqlType}ListPayload` : "BulkMutationResult",
+  });
+  types.push(bulkUpdateUnion);
+
+  const bulkDeleteUnion = new GraphQLUnionType({
+    name: `BulkDelete${entity.graphqlType}Result`,
+    description: `Bulk delete result for ${entity.graphqlType}.`,
+    types: [bulkDeleteCountPayload, registry.bulkMutationResult],
+    resolveType: (value: { count?: number; successCount?: number }) =>
+      value.count != null ? `BulkDelete${entity.graphqlType}CountPayload` : "BulkMutationResult",
+  });
+  types.push(bulkDeleteUnion);
+
+  if (updateInput) {
+    const updateEntry = new GraphQLInputObjectType({
+      name: `${entity.graphqlType}UpdateEntry`,
+      description: `Single row update entry for bulk update.`,
+      fields: {
+        id: { type: new GraphQLNonNull(GraphQLID) },
+        input: { type: new GraphQLNonNull(updateInput) },
+      },
+    });
+    types.push(updateEntry);
+
+    mutationFields[`bulkUpdate${entity.graphqlType}`] = {
+      type: new GraphQLNonNull(bulkUpdateUnion),
+      description: `Bulk update ${entity.listField} by ID list.`,
+      args: {
+        updates: { type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(updateEntry))) },
+        atomic: { type: GraphQLBoolean },
+      },
+    };
+
+    mutationFields[`bulkUpdate${entity.graphqlType}ByFilter`] = {
+      type: new GraphQLNonNull(registry.bulkMutationResult),
+      description: `Bulk update ${entity.listField} matching filter (always atomic).`,
+      args: {
+        filter: { type: new GraphQLNonNull(filterInput) },
+        input: { type: new GraphQLNonNull(updateInput) },
+        confirmUpdateAll: { type: GraphQLBoolean },
+      },
+    };
+  }
+
+  mutationFields[`bulkCreate${entity.graphqlType}`] = {
+    type: new GraphQLNonNull(bulkCreateUnion),
+    description: `Bulk create ${entity.listField}.`,
+    args: {
+      inputs: { type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(createInput))) },
+      atomic: { type: GraphQLBoolean },
+    },
+  };
+
+  mutationFields[`bulkDelete${entity.graphqlType}`] = {
+    type: new GraphQLNonNull(bulkDeleteUnion),
+    description: `Bulk delete ${entity.listField} by ID list.`,
+    args: {
+      ids: { type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(GraphQLID))) },
+      atomic: { type: GraphQLBoolean },
+    },
+  };
+
+  mutationFields[`bulkDelete${entity.graphqlType}ByFilter`] = {
+    type: new GraphQLNonNull(registry.bulkMutationResult),
+    description: `Bulk delete ${entity.listField} matching filter (always atomic).`,
+    args: {
+      filter: { type: new GraphQLNonNull(filterInput) },
+      confirmDeleteAll: { type: GraphQLBoolean },
+    },
+  };
 
   const subscriptionFields: GraphQLFieldConfigMap<unknown, unknown> = {
     [`${entity.fieldBasename}Changed`]: {

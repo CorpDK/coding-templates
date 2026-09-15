@@ -321,6 +321,7 @@ export interface SchemaRegistry {
   changeOperation: GraphQLEnumType;
   pageInfo: GraphQLObjectType;
   mutationUserError: GraphQLObjectType;
+  bulkMutationResult: GraphQLObjectType;
 }
 
 const BUILTIN_TYPES = new Map<string, GraphQLNamedType>([
@@ -407,6 +408,21 @@ export function buildSchemaRegistry(entities: EntityModel[]): SchemaRegistry {
   });
   types.set("MutationUserError", mutationUserError);
 
+  const bulkMutationResult = new GraphQLObjectType({
+    name: "BulkMutationResult",
+    description: "Partial or failed bulk mutation outcome with per-row errors.",
+    fields: {
+      successCount: { type: new GraphQLNonNull(GraphQLInt) },
+      failureCount: { type: new GraphQLNonNull(GraphQLInt) },
+      userErrors: {
+        type: new GraphQLNonNull(
+          new GraphQLList(new GraphQLNonNull(mutationUserError)),
+        ),
+      },
+    },
+  });
+  types.set("BulkMutationResult", bulkMutationResult);
+
   const changeOperation = new GraphQLEnumType({
     name: "ChangeOperation",
     description: "Lifecycle operation for subscription change events.",
@@ -473,5 +489,5 @@ export function buildSchemaRegistry(entities: EntityModel[]): SchemaRegistry {
     }
   }
 
-  return { types, sortDirection, changeOperation, pageInfo, mutationUserError };
+  return { types, sortDirection, changeOperation, pageInfo, mutationUserError, bulkMutationResult };
 }

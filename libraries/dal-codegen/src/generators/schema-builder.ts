@@ -45,10 +45,22 @@ export function buildDalGraphQLSchema(entities: EntityModel[]): GraphQLSchema {
     typeMap.set(type.name, type);
   }
 
-  for (const entity of sortedEntities(entities)) {
+  const sorted = sortedEntities(entities);
+  for (const entity of sorted) {
+    const bundle = buildEntitySchema(entity, registry, { scalarsOnly: true });
+    for (const type of bundle.types) {
+      if (type.name === entity.graphqlType) {
+        typeMap.set(type.name, type);
+        registry.types.set(type.name, type);
+      }
+    }
+  }
+
+  for (const entity of sorted) {
     const bundle = buildEntitySchema(entity, registry);
     for (const type of bundle.types) {
       typeMap.set(type.name, type);
+      registry.types.set(type.name, type);
     }
     queryFields.push(bundle.queryFields);
     mutationFields.push(bundle.mutationFields);

@@ -6,6 +6,27 @@ input BooleanFilter {
   eq: Boolean
 }
 
+"""Bulk create result for Item."""
+union BulkCreateItemResult = BulkMutationResult | ItemListPayload
+
+"""Bulk delete success count for Item."""
+type BulkDeleteItemCountPayload {
+  count: Int!
+}
+
+"""Bulk delete result for Item."""
+union BulkDeleteItemResult = BulkDeleteItemCountPayload | BulkMutationResult
+
+"""Partial or failed bulk mutation outcome with per-row errors."""
+type BulkMutationResult {
+  failureCount: Int!
+  successCount: Int!
+  userErrors: [MutationUserError!]!
+}
+
+"""Bulk update result for Item."""
+union BulkUpdateItemResult = BulkMutationResult | ItemListPayload
+
 """Lifecycle operation for subscription change events."""
 enum ChangeOperation {
   CREATED
@@ -154,11 +175,22 @@ input ItemFilter {
   or: [ItemFilter!]
 }
 
+"""Bulk create/update success payload for Item."""
+type ItemListPayload {
+  items: [Item!]!
+}
+
 """Sort specification for Item list queries."""
 input ItemSortInput {
   """Sort direction; defaults to ascending."""
   direction: SortDirection = ASC
   field: ItemField!
+}
+
+"""Single row update entry for bulk update."""
+input ItemUpdateEntry {
+  id: ID!
+  input: ItemUpdateInput!
 }
 
 """Input for updating an existing Item; all fields optional."""
@@ -175,6 +207,21 @@ input ItemUpdateInput {
 
 """Entry points for data mutations that trigger side effects."""
 type Mutation {
+  """Bulk create items."""
+  bulkCreateItem(atomic: Boolean, inputs: [ItemCreateInput!]!): BulkCreateItemResult!
+
+  """Bulk delete items by ID list."""
+  bulkDeleteItem(atomic: Boolean, ids: [ID!]!): BulkDeleteItemResult!
+
+  """Bulk delete items matching filter (always atomic)."""
+  bulkDeleteItemByFilter(confirmDeleteAll: Boolean, filter: ItemFilter!): BulkMutationResult!
+
+  """Bulk update items by ID list."""
+  bulkUpdateItem(atomic: Boolean, updates: [ItemUpdateEntry!]!): BulkUpdateItemResult!
+
+  """Bulk update items matching filter (always atomic)."""
+  bulkUpdateItemByFilter(confirmUpdateAll: Boolean, filter: ItemFilter!, input: ItemUpdateInput!): BulkMutationResult!
+
   """Creates a new Item."""
   createItem(input: ItemCreateInput!): CreateItemPayload!
 

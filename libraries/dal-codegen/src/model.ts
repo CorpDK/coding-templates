@@ -11,6 +11,7 @@ import {
   toGraphqlTypeName,
 } from "@corpdk/dal-core";
 import { parseCommentsFromSource } from "./comments.js";
+import { attachRelations } from "./relations.js";
 
 export type ColumnKind =
   | "uuid"
@@ -20,6 +21,24 @@ export type ColumnKind =
   | "timestamptz"
   | "enum"
   | "unsupported";
+
+export type RelationKind = "many-to-one" | "one-to-many" | "many-to-many" | "one-to-one";
+
+export interface RelationModel {
+  fieldName: string;
+  kind: RelationKind;
+  targetExportName: string;
+  targetGraphqlType: string;
+  ownerFkDrizzleKey?: string;
+  ownerFkGraphqlName?: string;
+  childFkDrizzleKey?: string;
+  joinTableExportName?: string;
+  joinOwnerFkDrizzleKey?: string;
+  joinTargetFkDrizzleKey?: string;
+  filterable: boolean;
+  navigationList: boolean;
+  navigationNullable: boolean;
+}
 
 export interface ColumnModel {
   drizzleKey: string;
@@ -36,6 +55,8 @@ export interface ColumnModel {
   /** Audit / soft-delete / server-managed columns excluded from create/update inputs. */
   isServerManaged: boolean;
   isBusiness: boolean;
+  /** FK scalars omitted from GraphQL output (Phase 2 — §2.7). */
+  omitFromOutput?: boolean;
 }
 
 export interface EntityModel {
@@ -48,6 +69,7 @@ export interface EntityModel {
   deleteStrategy: DeleteStrategy;
   tableComment: string;
   columns: ColumnModel[];
+  relations: RelationModel[];
   sourceFile: string;
 }
 
@@ -129,9 +151,11 @@ async function importSchemaModule(file: string): Promise<Record<string, unknown>
 export async function loadEntities(schemaPath: string, strict: boolean): Promise<EntityModel[]> {
   const files = collectSchemaFiles(schemaPath);
   const entities: EntityModel[] = [];
+  const schemaModules: Record<string, unknown>[] = [];
 
   for (const file of files) {
     const mod = await importSchemaModule(file);
+    schemaModules.push(mod);
     const { tableComments, columnComments } = parseCommentsFromSource(file);
 
     for (const [exportName, value] of Object.entries(mod)) {
@@ -212,10 +236,12 @@ export async function loadEntities(schemaPath: string, strict: boolean): Promise
         deleteStrategy: inferDeleteStrategy(colModels),
         tableComment,
         columns: colModels,
+        relations: [],
         sourceFile: file,
       });
     }
   }
 
+  attachRelations(entities, schemaModules);
   return entities.sort((a, b) => a.exportName.localeCompare(b.exportName));
 }
