@@ -11,6 +11,7 @@
     "build": "tsc",
     "codegen": "graphql-codegen",
     "dal:codegen": "node --import tsx/esm ../../libraries/dal-codegen/dist/cli.js",
+    "entity:lint": "node --import tsx/esm ../../libraries/dal-codegen/dist/lint-cli.js",
     "start": "node dist/src/index.js",
     "lint": "eslint src/",
     "typecheck": "tsc --noEmit",

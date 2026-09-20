@@ -8,4 +8,6 @@ export * from "./query-engine.js";
 export * from "./bulk.js";
 export * from "./dataloader.js";
 export * from "./pagination.js";
+export * from "./cursor-signing.js";
+export * from "./column-projection.js";
 export * from "./naming.js";

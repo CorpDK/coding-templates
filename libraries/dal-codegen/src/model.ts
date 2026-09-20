@@ -138,7 +138,7 @@ export function collectSchemaFiles(schemaPath: string): string[] {
   return nonIndex.length > 0 ? nonIndex : files;
 }
 
-async function importSchemaModule(file: string): Promise<Record<string, unknown>> {
+export async function importSchemaModule(file: string): Promise<Record<string, unknown>> {
   try {
     return (await import(pathToFileURL(file).href)) as Record<string, unknown>;
   } catch {

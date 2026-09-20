@@ -1,5 +1,9 @@
 import { and, asc, desc, eq, gt, lt, or, type SQL } from "drizzle-orm";
 import type { Column } from "drizzle-orm";
+import {
+  decodeSignedCursorPayload,
+  encodeSignedCursorPayload,
+} from "./cursor-signing.js";
 import { ValidationError } from "./errors.js";
 import type { SortDirection, SortInput } from "./types.js";
 
@@ -55,15 +59,22 @@ export function resolveSortWithTieBreaker<TField extends string>(
 }
 
 export function encodeCursor(payload: CursorPayload): string {
-  return Buffer.from(JSON.stringify(payload), "utf-8").toString("base64url");
+  const payloadBase64 = Buffer.from(JSON.stringify(payload), "utf-8").toString("base64url");
+  return encodeSignedCursorPayload(payloadBase64);
 }
 
-export function decodeCursor(cursor: string, entity: string, field: "after" | "before"): CursorPayload {
+export function decodeCursor(
+  cursor: string,
+  entity: string,
+  field: "after" | "before",
+  expectedVersion: number = CURSOR_VERSION,
+): CursorPayload {
   try {
+    const payloadBase64 = decodeSignedCursorPayload(cursor);
     const payload = JSON.parse(
-      Buffer.from(cursor, "base64url").toString("utf-8"),
+      Buffer.from(payloadBase64, "base64url").toString("utf-8"),
     ) as CursorPayload;
-    if (payload.version !== CURSOR_VERSION || payload.entity !== entity) {
+    if (payload.version !== expectedVersion || payload.entity !== entity) {
       throw new ValidationError("Invalid or stale cursor", [field]);
     }
     if (!Array.isArray(payload.sort) || !Array.isArray(payload.values)) {
@@ -72,6 +83,14 @@ export function decodeCursor(cursor: string, entity: string, field: "after" | "b
     return payload;
   } catch (err) {
     if (err instanceof ValidationError) throw err;
+    if (err instanceof Error) {
+      if (err.message === "CURSOR_INVALID_SIGNATURE") {
+        throw new ValidationError("Invalid cursor signature", [field]);
+      }
+      if (err.message === "CURSOR_SIGNATURE_REQUIRED") {
+        throw new ValidationError("Cursor signature required", [field]);
+      }
+    }
     throw new ValidationError("Malformed cursor", [field]);
   }
 }

@@ -45,8 +45,6 @@ pnpm --filter @corpdk/ds dal:codegen
 pnpm --filter @corpdk/ds codegen
 ```
 
-## Out of scope (Phase 3)
+## Phase 3
 
-- HMAC cursor signing
-- ColumnProjection from GraphQL selection sets
-- `entity:lint` CLI
+See [dal-phase3.md](dal-phase3.md) — HMAC cursors, ColumnProjection, `entity:lint`.

@@ -1,6 +1,10 @@
 import { and, count, inArray, type Column, type SQL } from "drizzle-orm";
 import type { PgDatabase } from "drizzle-orm/pg-core";
 import {
+  buildProjectedSelectShape,
+  type ColumnProjection,
+} from "./column-projection.js";
+import {
   assertCursorSortMatches,
   buildKeysetSeek,
   buildOrderClauses,
@@ -67,17 +71,22 @@ export class QueryEngine<TRow> {
     return n;
   }
 
+  private selectFromTable(projection: ColumnProjection | null | undefined) {
+    const shape = buildProjectedSelectShape(this.config.table, projection ?? null);
+    return shape ? this.db.select(shape as never) : this.db.select();
+  }
+
   async list(
     args: ListArgs,
     mapRow: (row: TRow) => unknown,
+    projection?: ColumnProjection | null,
   ): Promise<unknown[]> {
     const where = this.buildWhere(args.filter, args.includeDeleted);
     const limit = this.clampLimit(args.limit, "limit");
     const resolvedSort = this.resolveSort(args.sort);
     const table = this.config.table;
 
-    let q = this.db
-      .select()
+    let q = this.selectFromTable(projection)
       .from(table)
       .orderBy(...buildOrderClauses(table as unknown as Record<string, unknown>, resolvedSort))
       .limit(limit);
@@ -99,6 +108,7 @@ export class QueryEngine<TRow> {
     mapRow: (row: TRow) => unknown,
     cursorValuesFromRow: (row: TRow, sort: ResolvedSortKey[]) => unknown[],
     cursorValuesToDb: (values: unknown[], sort: ResolvedSortKey[]) => unknown[],
+    projection?: ColumnProjection | null,
   ) {
     validateConnectionPagingArgs(args);
     if (args.first === 0 || args.last === 0) {
@@ -117,13 +127,23 @@ export class QueryEngine<TRow> {
     const seekDirections = resolvedSort.map((s) => s.direction);
 
     if (args.after) {
-      const decoded = decodeCursor(args.after, this.config.entityGraphqlName, "after");
+      const decoded = decodeCursor(
+        args.after,
+        this.config.entityGraphqlName,
+        "after",
+        this.config.cursorVersion,
+      );
       assertCursorSortMatches(decoded, resolvedSort, "after");
       whereParts.push(
         buildKeysetSeek(seekColumns, seekDirections, cursorValuesToDb(decoded.values, resolvedSort), "after"),
       );
     } else if (args.before) {
-      const decoded = decodeCursor(args.before, this.config.entityGraphqlName, "before");
+      const decoded = decodeCursor(
+        args.before,
+        this.config.entityGraphqlName,
+        "before",
+        this.config.cursorVersion,
+      );
       assertCursorSortMatches(decoded, resolvedSort, "before");
       whereParts.push(
         buildKeysetSeek(seekColumns, seekDirections, cursorValuesToDb(decoded.values, resolvedSort), "before"),
@@ -142,8 +162,7 @@ export class QueryEngine<TRow> {
 
     if (args.last != null) {
       const last = this.clampLimit(args.last, "last");
-      let q = this.db
-        .select()
+      let q = this.selectFromTable(projection)
         .from(table)
         .orderBy(...reverseOrderClauses(table as unknown as Record<string, unknown>, resolvedSort))
         .limit(last + 1);
@@ -165,8 +184,7 @@ export class QueryEngine<TRow> {
     }
 
     const first = this.clampLimit(args.first, "first");
-    let q = this.db
-      .select()
+    let q = this.selectFromTable(projection)
       .from(table)
       .orderBy(...buildOrderClauses(table as unknown as Record<string, unknown>, resolvedSort))
       .limit(first + 1);
@@ -200,7 +218,11 @@ export class QueryEngine<TRow> {
     };
   }
 
-  async findByIds(ids: string[], includeDeleted?: boolean | null): Promise<TRow[]> {
+  async findByIds(
+    ids: string[],
+    includeDeleted?: boolean | null,
+    projection?: ColumnProjection | null,
+  ): Promise<TRow[]> {
     if (ids.length === 0) return [];
     const unique = [...new Set(ids)];
     const idCol = (this.config.table as unknown as Record<string, Column>).id;
@@ -210,7 +232,9 @@ export class QueryEngine<TRow> {
         ? this.translator.translateFilter({}, false)
         : undefined;
     if (softPart) parts.push(softPart);
-    let q = this.db.select().from(this.config.table).where(and(...parts)!);
+    let q = this.selectFromTable(projection)
+      .from(this.config.table)
+      .where(and(...parts)!);
     return (await q) as TRow[];
   }
 }
