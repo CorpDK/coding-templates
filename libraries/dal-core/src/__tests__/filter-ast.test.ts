@@ -5,9 +5,13 @@ import {
   scalarFilterKeys,
 } from "../filter-ast.js";
 import {
+  assertFilterBulkCap,
   assertFilterBulkConfirm,
+  DEFAULT_BULK_FILTER_MAX,
   isEmptyFilter,
+  isExistenceOnlyFilter,
   resolveBulkAtomic,
+  resolveBulkFilterMax,
 } from "../bulk.js";
 import { ValidationError } from "../errors.js";
 
@@ -38,5 +42,26 @@ describe("bulk helpers", () => {
   it("isEmptyFilter is consistent", () => {
     expect(isEmptyFilter({})).toBe(true);
     expect(isEmptyFilter({ id: { eq: "x" } })).toBe(false);
+  });
+
+  it("isExistenceOnlyFilter treats empty scalar leaves as existence-only", () => {
+    expect(isExistenceOnlyFilter({ lines: { some: { name: {} } } })).toBe(true);
+    expect(isExistenceOnlyFilter({ lines: { some: { name: { eq: "x" } } } })).toBe(false);
+    expect(isExistenceOnlyFilter({ or: [{ name: {} }, { sku: { eq: "a" } }] })).toBe(false);
+  });
+
+  it("assertFilterBulkCap rejects matches above the cap", () => {
+    expect(() => assertFilterBulkCap(1001, 1000)).toThrow(ValidationError);
+    expect(() => assertFilterBulkCap(10, 1000)).not.toThrow();
+  });
+
+  it("resolveBulkFilterMax reads DAL_BULK_FILTER_MAX when valid", () => {
+    const previous = process.env.DAL_BULK_FILTER_MAX;
+    process.env.DAL_BULK_FILTER_MAX = "250";
+    expect(resolveBulkFilterMax()).toBe(250);
+    process.env.DAL_BULK_FILTER_MAX = "nope";
+    expect(resolveBulkFilterMax()).toBe(DEFAULT_BULK_FILTER_MAX);
+    if (previous === undefined) delete process.env.DAL_BULK_FILTER_MAX;
+    else process.env.DAL_BULK_FILTER_MAX = previous;
   });
 });

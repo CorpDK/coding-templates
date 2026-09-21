@@ -1,0 +1,11 @@
+{
+  "generatedAt": "2026-09-21T20:05:27.931Z",
+  "entities": [
+    {
+      "exportName": "phase5Widgets",
+      "graphqlType": "Phase5Widget",
+      "auditProfile": "full",
+      "deleteStrategy": "hard"
+    }
+  ]
+}

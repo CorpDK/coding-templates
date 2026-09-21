@@ -1,6 +1,6 @@
 /** Storybook docs URL for a story title such as `ui-core/Data Entry/Button`. */
 export function storyDocsHref(storyTitle: string): string {
-  const id = storyTitle.toLowerCase().replace(/\//g, "-").replace(/\s/g, "");
+  const id = storyTitle.toLowerCase().replaceAll("/", "-").replaceAll(" ", "");
   return `/?path=/docs/${id}--docs`;
 }
 

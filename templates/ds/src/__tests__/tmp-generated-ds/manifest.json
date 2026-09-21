@@ -1,0 +1,53 @@
+{
+  "generatedAt": "2026-09-21T20:05:27.986Z",
+  "entities": [
+    {
+      "exportName": "auditEvents",
+      "graphqlType": "AuditEvent",
+      "auditProfile": "append-only",
+      "deleteStrategy": "hard"
+    },
+    {
+      "exportName": "categories",
+      "graphqlType": "Category",
+      "auditProfile": "full",
+      "deleteStrategy": "hard"
+    },
+    {
+      "exportName": "itemDetails",
+      "graphqlType": "ItemDetail",
+      "auditProfile": "full",
+      "deleteStrategy": "hard"
+    },
+    {
+      "exportName": "items",
+      "graphqlType": "Item",
+      "auditProfile": "full",
+      "deleteStrategy": "soft"
+    },
+    {
+      "exportName": "itemTags",
+      "graphqlType": "ItemTag",
+      "auditProfile": "full",
+      "deleteStrategy": "hard"
+    },
+    {
+      "exportName": "orderLines",
+      "graphqlType": "OrderLine",
+      "auditProfile": "full",
+      "deleteStrategy": "hard"
+    },
+    {
+      "exportName": "orders",
+      "graphqlType": "Order",
+      "auditProfile": "full",
+      "deleteStrategy": "soft"
+    },
+    {
+      "exportName": "tags",
+      "graphqlType": "Tag",
+      "auditProfile": "append-only",
+      "deleteStrategy": "soft"
+    }
+  ]
+}

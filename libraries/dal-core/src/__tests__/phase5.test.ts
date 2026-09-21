@@ -7,7 +7,22 @@ import {
   buildIntFilter,
   buildDateFilter,
   parseBigInt,
+  parseDate,
+  parseDateTime,
+  parseDecimal,
+  parseIntervalMs,
+  parseTimeTz,
+  resolveActorId,
+  serializeBigInt,
   serializeDate,
+  serializeDateTime,
+  serializeDecimal,
+  serializeIntervalMs,
+  serializeTimeTz,
+  toGraphqlFieldBasename,
+  toGraphqlFieldName,
+  toGraphqlListField,
+  toGraphqlTypeName,
 } from "@corpdk/dal-core";
 import { GraphQLObjectType, GraphQLSchema, GraphQLString, parse } from "graphql";
 import type { GraphQLResolveInfo } from "graphql";
@@ -37,6 +52,18 @@ describe("SQLSTATE driver mappers (P1)", () => {
 
   it("falls back to message heuristic without code", () => {
     expect(mapDriverError(new Error("duplicate key value")).code).toBe("UNIQUE_VIOLATION");
+  });
+
+  it("maps MySQL duplicate and FK codes", () => {
+    expect(mapDriverError({ code: "ER_DUP_ENTRY", message: "dup" }, "mysql").code).toBe(
+      "UNIQUE_VIOLATION",
+    );
+    expect(mapDriverError({ code: "ER_NO_REFERENCED_ROW_2", message: "fk" }, "mysql").code).toBe(
+      "FK_VIOLATION",
+    );
+    expect(
+      mapDriverError({ code: "SQLITE_CONSTRAINT_CHECK", message: "check" }, "sqlite").code,
+    ).toBe("CONSTRAINT_VIOLATION");
   });
 });
 
@@ -125,6 +152,28 @@ describe("PostgreSQL type filters and scalars (P5)", () => {
   it("parseBigInt and serializeDate round-trip wire formats", () => {
     expect(parseBigInt("9223372036854775807")).toBe("9223372036854775807");
     expect(serializeDate("2026-09-21")).toBe("2026-09-21");
+    expect(parseDate("2026-09-21")).toBe("2026-09-21");
+    expect(serializeDateTime(new Date("2026-09-21T12:00:00.000Z"))).toBe("2026-09-21T12:00:00.000Z");
+    expect(parseDateTime("2026-09-21T12:00:00.000Z").toISOString()).toBe("2026-09-21T12:00:00.000Z");
+    expect(serializeTimeTz("12:30:00Z")).toBe("12:30:00Z");
+    expect(parseTimeTz("12:30:00+05:30")).toBe("12:30:00+05:30");
+    expect(serializeBigInt(42n)).toBe("42");
+    expect(serializeDecimal("12.5")).toBe("12.5");
+    expect(parseDecimal("12.5")).toBe("12.5");
+    expect(serializeIntervalMs(1500)).toBe("1500");
+    expect(parseIntervalMs("1500")).toBe("1500");
+    expect(resolveActorId("  alice ")).toBe("alice");
+    expect(resolveActorId(undefined)).toBe("system");
+  });
+
+  it("maps Drizzle export and column names to GraphQL conventions", () => {
+    expect(toGraphqlTypeName("categories")).toBe("Category");
+    expect(toGraphqlTypeName("companies")).toBe("Company");
+    expect(toGraphqlFieldBasename("items")).toBe("item");
+    expect(toGraphqlListField("items")).toBe("items");
+    expect(toGraphqlFieldName("isActive", "is_active")).toBe("isActive");
+    expect(toGraphqlFieldName("hasTags", "has_tags")).toBe("hasTags");
+    expect(toGraphqlFieldName("sku", "sku")).toBe("sku");
   });
 
   it("buildDateFilter compiles range operators", () => {

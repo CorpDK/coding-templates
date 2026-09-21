@@ -45,7 +45,7 @@ export function collectScalarImports(entity: EntityModel): string[] {
     if (parse) names.add(parse);
     if (ser) names.add(ser);
   }
-  return [...names].sort();
+  return [...names].sort((a, b) => a.localeCompare(b));
 }
 
 export function inputRef(col: ColumnModel): string {
@@ -167,8 +167,8 @@ export function dalCoreImportBlock(entity: EntityModel): string {
     "ResolvedSortKey",
     "SortInput",
   ];
-  valueImports.sort();
-  typeImports.sort();
+  valueImports.sort((a, b) => a.localeCompare(b));
+  typeImports.sort((a, b) => a.localeCompare(b));
   return `import {
   ${valueImports.join(",\n  ")},
   type ${typeImports.join(",\n  type ")},

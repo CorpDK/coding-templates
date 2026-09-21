@@ -14,7 +14,7 @@ export function parseCommentsFromSource(sourcePath: string): {
   while ((tableMatch = tableRe.exec(source)) !== null) {
     const exportName = tableMatch[1];
     const preface = source.slice(Math.max(0, tableMatch.index - 300), tableMatch.index);
-    const tableJsdoc = preface.match(/\/\*\*\s*([^*]+?)\s*\*\/\s*$/);
+    const tableJsdoc = preface.match(/\/\*\*\s*([^*]+)\s*\*\/\s*$/);
     if (tableJsdoc) {
       tableComments.set(exportName, tableJsdoc[1].trim());
     }
@@ -29,13 +29,13 @@ export function parseCommentsFromSource(sourcePath: string): {
       tableComments.set(exportName, tableCommentMatch[1]);
     }
 
-    const jsdocColRe = /\/\*\*\s*([^*]+?)\s*\*\/\s*\n\s*(\w+)\s*:/g;
+    const jsdocColRe = /\/\*\*\s*([^*]+)\s*\*\/\s*\n\s*(\w+)\s*:/g;
     let jsdocMatch: RegExpExecArray | null;
     while ((jsdocMatch = jsdocColRe.exec(block)) !== null) {
       columnComments.get(exportName)!.set(jsdocMatch[2], jsdocMatch[1].trim());
     }
 
-    const inlineColRe = /(\w+)\s*:\s*[\w.]+\([^)]*\)[^,\n]*\.comment\s*\(\s*['"]([^'"]+)['"]\s*\)/g;
+    const inlineColRe = /(\w+)\s*:[^\n]*\.comment\s*\(\s*['"]([^'"]+)['"]\s*\)/g;
     let colMatch: RegExpExecArray | null;
     while ((colMatch = inlineColRe.exec(block)) !== null) {
       columnComments.get(exportName)!.set(colMatch[1], colMatch[2]);
