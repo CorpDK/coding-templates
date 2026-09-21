@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { resolveFilterBudget, validateFilterBudget, ValidationError } from "../filters.js";
+import { resolveFilterBudget, validateFilterBudget } from "../filters.js";
+import { ValidationError } from "../errors.js";
 
 describe("validateFilterBudget association depth", () => {
   it("counts one-to-many some as depth 1", () => {

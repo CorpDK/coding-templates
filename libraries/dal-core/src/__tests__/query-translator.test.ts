@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { SQL } from "drizzle-orm";
 import { integer, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { PgDialect } from "drizzle-orm/pg-core";
-import { QueryTranslator } from "../query-translator.js";
+import { QueryTranslator, type RelationDescriptor } from "../query-translator.js";
 
 const dialect = new PgDialect();
 
@@ -207,7 +207,7 @@ describe("QueryTranslator nested relation filters", () => {
     { graphqlName: "name", drizzleKey: "name", kind: "text" as const, column: nestedItems.name },
   ];
 
-  const categoriesRelations = [
+  const categoriesRelations: RelationDescriptor[] = [
     {
       fieldName: "items",
       kind: "one-to-many" as const,
@@ -220,7 +220,7 @@ describe("QueryTranslator nested relation filters", () => {
     },
   ];
 
-  const itemsRelations = [
+  const itemsRelations: RelationDescriptor[] = [
     {
       fieldName: "category",
       kind: "many-to-one" as const,
