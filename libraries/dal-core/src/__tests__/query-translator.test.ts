@@ -481,6 +481,119 @@ describe("QueryTranslator association soft-delete filters", () => {
   });
 });
 
+describe("QueryTranslator one-to-many none and every filters", () => {
+  it("compiles none association filters", () => {
+    const translator = new QueryTranslator({
+      db: mockDb as never,
+      table: orders,
+      columns: [],
+      relations: [
+        {
+          fieldName: "lines",
+          kind: "one-to-many",
+          childFkDrizzleKey: "orderId",
+          targetTable: orderLines,
+          childTable: orderLines,
+          childColumns: [
+            {
+              graphqlName: "quantity",
+              drizzleKey: "quantity",
+              kind: "integer",
+              column: orderLines.quantity,
+            },
+          ],
+          targetColumns: [],
+          filterable: true,
+        },
+      ],
+      softDelete: false,
+      filterBudget: { maxDepth: 2, maxNodes: 50 },
+    });
+
+    expect(translator.translateFilter({ lines: { none: { quantity: { gt: 10 } } } })).toBeDefined();
+  });
+
+  it("compiles every association filters with scalar predicates", () => {
+    const translator = new QueryTranslator({
+      db: mockDb as never,
+      table: orders,
+      columns: [],
+      relations: [
+        {
+          fieldName: "lines",
+          kind: "one-to-many",
+          childFkDrizzleKey: "orderId",
+          targetTable: orderLines,
+          childTable: orderLines,
+          childColumns: [
+            {
+              graphqlName: "quantity",
+              drizzleKey: "quantity",
+              kind: "integer",
+              column: orderLines.quantity,
+            },
+          ],
+          targetColumns: [],
+          filterable: true,
+        },
+      ],
+      softDelete: false,
+      filterBudget: { maxDepth: 2, maxNodes: 50 },
+    });
+
+    expect(translator.translateFilter({ lines: { every: { quantity: { gt: 0 } } } })).toBeDefined();
+  });
+});
+
+const mnItemColumns = [
+  { graphqlName: "name", drizzleKey: "name", kind: "text" as const, column: items.name },
+];
+
+const tags = pgTable("tags", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  label: text("label").notNull(),
+});
+
+const itemTags = pgTable("item_tags", {
+  itemId: uuid("item_id")
+    .notNull()
+    .references(() => items.id),
+  tagId: uuid("tag_id")
+    .notNull()
+    .references(() => tags.id),
+});
+
+describe("QueryTranslator many-to-many filters", () => {
+  it("compiles some, none, and every M:N association filters", () => {
+    const translator = new QueryTranslator({
+      db: mockDb as never,
+      table: items,
+      columns: mnItemColumns,
+      relations: [
+        {
+          fieldName: "tags",
+          kind: "many-to-many",
+          joinTable: itemTags,
+          joinOwnerFkDrizzleKey: "itemId",
+          joinTargetFkDrizzleKey: "tagId",
+          targetTable: tags,
+          targetColumns: [
+            { graphqlName: "label", drizzleKey: "label", kind: "text", column: tags.label },
+          ],
+          filterable: true,
+        },
+      ],
+      softDelete: false,
+      filterBudget: { maxDepth: 2, maxNodes: 50 },
+    });
+
+    expect(translator.translateFilter({ tags: { some: { label: { eq: "sale" } } } })).toBeDefined();
+    expect(translator.translateFilter({ tags: { none: { label: { eq: "sale" } } } })).toBeDefined();
+    expect(translator.translateFilter({ tags: { every: { label: { eq: "sale" } } } })).toBeDefined();
+    expect(translator.translateFilter({ tags: { every: { label: {} } } })).toBeDefined();
+  });
+});
+
 describe("QueryTranslator every existence-only filters", () => {
   it("compiles every nested empty scalar filters as tautologies", () => {
     const translator = new QueryTranslator({

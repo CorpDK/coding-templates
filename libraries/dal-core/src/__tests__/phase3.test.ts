@@ -1,11 +1,13 @@
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
 import {
   buildColumnProjection,
+  buildProjectedSelectShape,
   collectEntityFieldSelection,
   CURSOR_VERSION,
   decodeCursor,
   encodeCursor,
   resetCursorSigningSecretCache,
+  resolveColumnProjectionFromInfo,
 } from "@corpdk/dal-core";
 import { GraphQLObjectType, GraphQLSchema, GraphQLString, parse } from "graphql";
 import type { GraphQLResolveInfo } from "graphql";
@@ -127,5 +129,107 @@ describe("ColumnProjection", () => {
     });
     const selected = collectEntityFieldSelection(info, "Item");
     expect(selected).toEqual(new Set(["id", "name"]));
+  });
+
+  it("collectEntityFieldSelection unwraps connection edges.node selections", () => {
+    const ItemType = new GraphQLObjectType({
+      name: "Item",
+      fields: {
+        id: { type: GraphQLString },
+        name: { type: GraphQLString },
+      },
+    });
+    const EdgeType = new GraphQLObjectType({
+      name: "ItemEdge",
+      fields: {
+        node: { type: ItemType },
+      },
+    });
+    const ConnectionType = new GraphQLObjectType({
+      name: "ItemConnection",
+      fields: {
+        edges: { type: EdgeType },
+        pageInfo: { type: GraphQLString },
+      },
+    });
+    const schema = new GraphQLSchema({
+      query: new GraphQLObjectType({
+        name: "Query",
+        fields: {
+          items: { type: ConnectionType, resolve: () => ({}) },
+        },
+      }),
+    });
+    const doc = parse(`{ items { edges { node { id name } } pageInfo } }`);
+    const info = {} as GraphQLResolveInfo;
+    const op = doc.definitions[0];
+    if (op.kind !== "OperationDefinition" || !op.selectionSet) throw new Error("bad doc");
+    const itemsField = op.selectionSet.selections[0];
+    if (itemsField.kind !== "Field") throw new Error("bad field");
+    Object.assign(info, { fieldNodes: [itemsField], schema });
+    expect(collectEntityFieldSelection(info, "Item")).toEqual(new Set(["id", "name"]));
+  });
+
+  it("defaults to id when only pageInfo is selected on a connection", () => {
+    const ConnectionType = new GraphQLObjectType({
+      name: "ItemConnection",
+      fields: {
+        pageInfo: { type: GraphQLString },
+      },
+    });
+    const schema = new GraphQLSchema({
+      query: new GraphQLObjectType({
+        name: "Query",
+        fields: {
+          items: { type: ConnectionType, resolve: () => ({}) },
+        },
+      }),
+    });
+    const doc = parse(`{ items { pageInfo } }`);
+    const info = {} as GraphQLResolveInfo;
+    const op = doc.definitions[0];
+    if (op.kind !== "OperationDefinition" || !op.selectionSet) throw new Error("bad doc");
+    const itemsField = op.selectionSet.selections[0];
+    if (itemsField.kind !== "Field") throw new Error("bad field");
+    Object.assign(info, { fieldNodes: [itemsField], schema });
+    expect(collectEntityFieldSelection(info, "Item")).toEqual(new Set(["id"]));
+  });
+
+  it("buildProjectedSelectShape maps drizzle keys to table columns", () => {
+    const projection = buildColumnProjection({
+      columns,
+      softDelete: false,
+      relations: [],
+      selectedGraphqlFields: new Set(["name"]),
+    });
+    const shape = buildProjectedSelectShape(table, projection);
+    expect(shape).toEqual({ id: table.id, name: table.name });
+  });
+
+  it("resolveColumnProjectionFromInfo combines selection and projection", () => {
+    const ItemType = new GraphQLObjectType({
+      name: "Item",
+      fields: {
+        id: { type: GraphQLString },
+        sku: { type: GraphQLString },
+      },
+    });
+    const schema = new GraphQLSchema({
+      query: new GraphQLObjectType({
+        name: "Query",
+        fields: {
+          items: { type: ItemType, resolve: () => ({}) },
+        },
+      }),
+    });
+    const doc = parse(`{ items { sku } }`);
+    const info = {} as GraphQLResolveInfo;
+    const op = doc.definitions[0];
+    if (op.kind !== "OperationDefinition" || !op.selectionSet) throw new Error("bad doc");
+    const itemsField = op.selectionSet.selections[0];
+    if (itemsField.kind !== "Field") throw new Error("bad field");
+    Object.assign(info, { fieldNodes: [itemsField], schema });
+    const projection = resolveColumnProjectionFromInfo(info, "Item", columns, false, []);
+    expect(projection?.drizzleKeys).toEqual(new Set(["id", "sku"]));
   });
 });

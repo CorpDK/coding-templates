@@ -52,6 +52,18 @@ describe("SQLSTATE driver mappers (P1)", () => {
 
   it("falls back to message heuristic without code", () => {
     expect(mapDriverError(new Error("duplicate key value")).code).toBe("UNIQUE_VIOLATION");
+    expect(mapDriverError(new Error("foreign key constraint failed")).code).toBe("FK_VIOLATION");
+    expect(mapDriverError(new Error("violates check constraint")).code).toBe("CONSTRAINT_VIOLATION");
+    expect(mapDriverError(new Error("something else")).code).toBe("UNKNOWN");
+  });
+
+  it("maps PostgreSQL class 23 codes and CockroachDB the same way", () => {
+    expect(mapDriverError({ code: "23502", message: "not null" }, "postgresql").code).toBe(
+      "CONSTRAINT_VIOLATION",
+    );
+    expect(mapDriverError({ code: "23999", message: "other 23" }, "cockroachdb").code).toBe(
+      "CONSTRAINT_VIOLATION",
+    );
   });
 
   it("maps MySQL duplicate and FK codes", () => {
@@ -64,6 +76,18 @@ describe("SQLSTATE driver mappers (P1)", () => {
     expect(
       mapDriverError({ code: "SQLITE_CONSTRAINT_CHECK", message: "check" }, "sqlite").code,
     ).toBe("CONSTRAINT_VIOLATION");
+    expect(
+      mapDriverError({ code: "SQLITE_CONSTRAINT_FOREIGNKEY", message: "fk" }, "sqlite").code,
+    ).toBe("FK_VIOLATION");
+    expect(mapDriverError({ code: "SQLITE_CONSTRAINT_UNIQUE", message: "dup" }, "sqlite").code).toBe(
+      "UNIQUE_VIOLATION",
+    );
+  });
+
+  it("extracts sqlState and errno from nested driver records", () => {
+    const err = new Error("wrapper", { cause: { sqlState: "23505", message: "dup" } });
+    expect(extractDriverErrorDetails(err).code).toBe("23505");
+    expect(extractDriverErrorDetails({ errno: "1062", message: "dup" }).code).toBe("1062");
   });
 });
 
@@ -86,6 +110,23 @@ describe("Column constraints (P2)", () => {
         "create",
       ),
     ).toThrow(/greater than 0/);
+  });
+
+  it("enforces minInclusive and numeric string bounds", () => {
+    const meta = [{ graphqlName: "qty", drizzleKey: "qty", minInclusive: 5 }];
+    expect(() => validateColumnConstraints({ qty: 4 }, meta, "create")).toThrow(/at least 5/);
+    expect(() => validateColumnConstraints({ qty: "4" }, meta, "create")).toThrow(/at least 5/);
+    expect(() => validateColumnConstraints({ qty: "6" }, meta, "create")).not.toThrow();
+  });
+
+  it("skips undefined fields on update", () => {
+    expect(() =>
+      validateColumnConstraints(
+        {},
+        [{ graphqlName: "qty", drizzleKey: "qty", minExclusive: 0 }],
+        "update",
+      ),
+    ).not.toThrow();
   });
 });
 
@@ -147,6 +188,19 @@ describe("PostgreSQL type filters and scalars (P5)", () => {
   it("buildIntFilter compiles eq", () => {
     const sql = buildIntFilter(table.qty, { eq: 3 });
     expect(sql).toBeDefined();
+  });
+
+  it("rejects invalid scalar wire values", () => {
+    expect(() => parseBigInt("not-a-number")).toThrow(/decimal integer string/i);
+    expect(() => parseBigInt("9223372036854775808")).toThrow(/out of range/i);
+    expect(() => parseDate("2026-13-40")).toThrow(/Invalid Date/i);
+    expect(() => parseDate("bad")).toThrow(/YYYY-MM-DD/i);
+    expect(() => parseDateTime(123)).toThrow(/ISO-8601 string/i);
+    expect(() => parseDateTime("not-a-date")).toThrow(/Invalid DateTime/i);
+    expect(() => parseTimeTz("25:99:00")).toThrow(/ISO-8601 time with offset/i);
+    expect(() => parseDecimal("12.5.1")).toThrow(/decimal string/i);
+    expect(() => parseIntervalMs("abc")).toThrow(/milliseconds/i);
+    expect(() => parseIntervalMs(Number.NaN)).toThrow(/milliseconds/i);
   });
 
   it("parseBigInt and serializeDate round-trip wire formats", () => {
