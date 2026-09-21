@@ -91,6 +91,8 @@ function buildRelationDescriptorObject(
     childColumns: ${childEntity ? `[\n      ${columnDescriptorLines(childEntity.exportName, childEntity)}\n    ]` : "undefined"},
     joinTable: ${rel.joinTableExportName ?? "undefined"},
     joinColumns: undefined,
+    targetSoftDelete: ${targetEntity?.deleteStrategy === "soft"},
+    childSoftDelete: ${childEntity?.deleteStrategy === "soft"},
     filterable: true,
   }`;
 }
@@ -197,6 +199,11 @@ function buildRelationProjectionHints(entity: EntityModel): string {
 }
 
 function parentBatchMethods(entity: EntityModel, entities: EntityModel[]): string {
+  const soft = entity.deleteStrategy === "soft";
+  const batchWhere = (fk: string) =>
+    soft
+      ? `and(inArray(table.${fk}, unique), isNull(table.deletedAt))!`
+      : `inArray(table.${fk}, unique)`;
   const methods: string[] = [];
   for (const parent of entities) {
     for (const rel of parent.relations) {
@@ -208,7 +215,7 @@ function parentBatchMethods(entity: EntityModel, entities: EntityModel[]): strin
         methods.push(`  async findBy${parentType}Ids(${parent.fieldBasename}Ids: string[]): Promise<Map<string, ${entity.graphqlType}Record[]>> {
     if (${parent.fieldBasename}Ids.length === 0) return new Map();
     const unique = [...new Set(${parent.fieldBasename}Ids)];
-    const rows = await db.select().from(table).where(inArray(table.${fk}, unique));
+    const rows = await db.select().from(table).where(${batchWhere(fk)});
     const map = new Map<string, ${entity.graphqlType}Record[]>();
     for (const id of unique) map.set(id, []);
     for (const row of rows) {
@@ -223,7 +230,7 @@ function parentBatchMethods(entity: EntityModel, entities: EntityModel[]): strin
         methods.push(`  async findOneBy${parentType}Ids(${parent.fieldBasename}Ids: string[]): Promise<Map<string, ${entity.graphqlType}Record | undefined>> {
     if (${parent.fieldBasename}Ids.length === 0) return new Map();
     const unique = [...new Set(${parent.fieldBasename}Ids)];
-    const rows = await db.select().from(table).where(inArray(table.${fk}, unique));
+    const rows = await db.select().from(table).where(${batchWhere(fk)});
     const map = new Map<string, ${entity.graphqlType}Record | undefined>();
     for (const id of unique) map.set(id, undefined);
     for (const row of rows) {

@@ -69,7 +69,19 @@ export interface RelationDescriptor {
   targetRelations?: RelationDescriptor[];
   /** Relations on childTable for nested 1:M association filters. */
   childRelations?: RelationDescriptor[];
+  /** Target entity uses soft delete (codegen sets this when deletedAt is omitted from targetColumns). */
+  targetSoftDelete?: boolean;
+  /** Child entity uses soft delete (codegen sets this when deletedAt is omitted from childColumns). */
+  childSoftDelete?: boolean;
   filterable: boolean;
+}
+
+function relationTargetSoftDelete(rel: RelationDescriptor): boolean {
+  return rel.targetSoftDelete ?? rel.targetColumns.some((c) => c.drizzleKey === "deletedAt");
+}
+
+function relationChildSoftDelete(rel: RelationDescriptor): boolean {
+  return rel.childSoftDelete ?? rel.childColumns?.some((c) => c.drizzleKey === "deletedAt") ?? false;
 }
 
 export interface QueryTranslatorConfig {
@@ -198,13 +210,13 @@ export class QueryTranslator {
       table: rel.targetTable,
       columns: rel.targetColumns,
       relations: rel.targetRelations ?? [],
-      softDelete: rel.targetColumns.some((c) => c.drizzleKey === "deletedAt"),
+      softDelete: relationTargetSoftDelete(rel),
       filterBudget: this.config.filterBudget,
     });
     const innerWhere = nested.translateFilter(targetFilter, false, true);
     if (!innerWhere && !isExistenceOnlyFilter(targetFilter)) return undefined;
 
-    const targetSoftDelete = rel.targetColumns.some((c) => c.drizzleKey === "deletedAt");
+    const targetSoftDelete = relationTargetSoftDelete(rel);
     const existsParts: SQL[] = [eq(childFk, parentId)];
     if (innerWhere) {
       existsParts.push(innerWhere);
@@ -232,14 +244,14 @@ export class QueryTranslator {
       table: rel.targetTable,
       columns: rel.targetColumns,
       relations: rel.targetRelations ?? [],
-      softDelete: rel.targetColumns.some((c) => c.drizzleKey === "deletedAt"),
+      softDelete: relationTargetSoftDelete(rel),
       filterBudget: this.config.filterBudget,
     });
     const innerWhere = nested.translateFilter(targetFilter, false, true);
     if (!innerWhere && !isExistenceOnlyFilter(targetFilter)) return undefined;
 
     const targetId = (rel.targetTable as unknown as Record<string, Column>).id;
-    const targetSoftDelete = rel.targetColumns.some((c) => c.drizzleKey === "deletedAt");
+    const targetSoftDelete = relationTargetSoftDelete(rel);
     const existsParts: SQL[] = [eq(targetId, ownerFk)];
     if (innerWhere) {
       existsParts.push(innerWhere);
@@ -284,12 +296,12 @@ export class QueryTranslator {
           table: rel.childTable!,
           columns: rel.childColumns,
           relations: rel.childRelations ?? [],
-          softDelete: rel.childColumns.some((c) => c.drizzleKey === "deletedAt"),
+          softDelete: relationChildSoftDelete(rel),
           filterBudget: this.config.filterBudget,
         })
       : null;
 
-    const childSoftDelete = rel.childColumns?.some((c) => c.drizzleKey === "deletedAt") ?? false;
+    const childSoftDelete = relationChildSoftDelete(rel);
     const childDeletedAt = childSoftDelete
       ? (rel.childTable as unknown as Record<string, Column>).deletedAt
       : undefined;
@@ -369,11 +381,11 @@ export class QueryTranslator {
       table: rel.targetTable,
       columns: rel.targetColumns,
       relations: rel.targetRelations ?? [],
-      softDelete: rel.targetColumns.some((c) => c.drizzleKey === "deletedAt"),
+      softDelete: relationTargetSoftDelete(rel),
       filterBudget: this.config.filterBudget,
     });
 
-    const targetSoftDelete = rel.targetColumns.some((c) => c.drizzleKey === "deletedAt");
+    const targetSoftDelete = relationTargetSoftDelete(rel);
     const targetDeletedAt = targetSoftDelete
       ? (rel.targetTable as unknown as Record<string, Column>).deletedAt
       : undefined;

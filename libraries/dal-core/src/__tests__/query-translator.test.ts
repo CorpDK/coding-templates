@@ -385,6 +385,100 @@ describe("QueryTranslator association soft-delete filters", () => {
     translator.translateFilter({ category: { name: { eq: "Tools" } } }, false);
     expect(sqlText(capturedWhere)).toMatch(/deleted_at" IS NULL/i);
   });
+
+  it("honors childSoftDelete flag when deletedAt is omitted from childColumns", () => {
+    let capturedWhere: SQL | undefined;
+    const db = {
+      select: () => ({
+        from: () => ({
+          where: (where: SQL) => {
+            capturedWhere = where;
+            return {};
+          },
+        }),
+      }),
+    };
+
+    const translator = new QueryTranslator({
+      db: db as never,
+      table: softOrders,
+      columns: [],
+      relations: [
+        {
+          fieldName: "lines",
+          kind: "one-to-many",
+          childFkDrizzleKey: "orderId",
+          targetTable: softOrderLines,
+          childTable: softOrderLines,
+          childColumns: [
+            {
+              graphqlName: "quantity",
+              drizzleKey: "quantity",
+              kind: "integer",
+              column: softOrderLines.quantity,
+            },
+          ],
+          targetColumns: [],
+          childSoftDelete: true,
+          filterable: true,
+        },
+      ],
+      softDelete: true,
+      filterBudget: { maxDepth: 2, maxNodes: 50 },
+    });
+
+    translator.translateFilter({ lines: { some: { quantity: { gt: 10 } } } }, false);
+    expect(sqlText(capturedWhere)).toMatch(/deleted_at" IS NULL/i);
+  });
+
+  it("honors targetSoftDelete flag when deletedAt is omitted from targetColumns", () => {
+    const softCategories = pgTable("soft_categories_flag", {
+      id: uuid("id").primaryKey().defaultRandom(),
+      name: text("name").notNull(),
+      deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    });
+
+    const softItems = pgTable("soft_items_flag", {
+      id: uuid("id").primaryKey().defaultRandom(),
+      categoryId: uuid("category_id").references(() => softCategories.id),
+    });
+
+    let capturedWhere: SQL | undefined;
+    const db = {
+      select: () => ({
+        from: () => ({
+          where: (where: SQL) => {
+            capturedWhere = where;
+            return {};
+          },
+        }),
+      }),
+    };
+
+    const translator = new QueryTranslator({
+      db: db as never,
+      table: softItems,
+      columns: [],
+      relations: [
+        {
+          fieldName: "category",
+          kind: "many-to-one",
+          ownerFkDrizzleKey: "categoryId",
+          targetTable: softCategories,
+          targetColumns: [
+            { graphqlName: "name", drizzleKey: "name", kind: "text", column: softCategories.name },
+          ],
+          targetSoftDelete: true,
+          filterable: true,
+        },
+      ],
+      softDelete: false,
+      filterBudget: { maxDepth: 2, maxNodes: 50 },
+    });
+
+    translator.translateFilter({ category: { name: { eq: "Tools" } } }, false);
+    expect(sqlText(capturedWhere)).toMatch(/deleted_at" IS NULL/i);
+  });
 });
 
 describe("QueryTranslator every existence-only filters", () => {
