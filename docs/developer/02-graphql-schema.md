@@ -8,8 +8,8 @@ Domain GraphQL SDL is **generated** from Drizzle schema — not hand-written.
 
 ```text
 src/generated/dal/index.ts               ← barrel: typeDefs, pubsub, repositories, resolvers
-src/generated/dal/generated-schema.ts    ← auto-generated merged SDL (entities + bootstrap) as `typeDefs` export (committed)
-src/generated/dal/generated-pubsub.ts    ← auto-generated PubSubTopics + pubsub instance (committed)
+src/generated/dal/generated-schema.ts    ← auto-generated merged SDL (entities + bootstrap) as `typeDefs` export (gitignored)
+src/generated/dal/generated-pubsub.ts    ← auto-generated PubSubTopics + pubsub instance (gitignored)
 src/generated/dal/manifest.json          ← entity metadata (audit profile, delete strategy)
 src/schema.ts                            ← imports from generated/dal barrel only
 ```

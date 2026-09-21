@@ -12,7 +12,7 @@ DAL automation codegen produces:
 - **Association filters** — field names match output navigation fields (`lines`, `tags`); `some`/`every`/`none` on 1:M and M:N; M:1 uses nested entity filters — see [§10.6 Association filters](docs/developer/graphql-dal-requirements.md#106-association-filters)
 - **Null filters** — `isNull: Boolean` on nullable scalar/enum filters (mutually exclusive with other operators) — see [§10.4.1 Null filter operator](docs/developer/graphql-dal-requirements.md#1041-null-filter-operator-isnull)
 - Typed repositories, resolver stubs, and filter/sort/pagination inputs derived from Drizzle schema
-- Idempotent output committed under `src/generated/dal/` via `pnpm dal:codegen`
+- Idempotent output under `src/generated/dal/` via `pnpm dal:codegen` (gitignored; Turbo runs before dev)
 
 ## Split docs
 

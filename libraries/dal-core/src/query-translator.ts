@@ -19,7 +19,7 @@ import {
   type FilterBudgetLimits,
 } from "./filters.js";
 import type { FilterAST } from "./filter-ast.js";
-import { isEmptyFilter } from "./bulk.js";
+import { isEmptyFilter, isExistenceOnlyFilter } from "./bulk.js";
 import { extractAssociationFilter, scalarFilterKeys } from "./filter-ast.js";
 
 export type ColumnKind =
@@ -198,7 +198,7 @@ export class QueryTranslator {
       filterBudget: this.config.filterBudget,
     });
     const innerWhere = nested.translateFilter(targetFilter, false, true);
-    if (!innerWhere && !isEmptyFilter(targetFilter)) return undefined;
+    if (!innerWhere && !isExistenceOnlyFilter(targetFilter)) return undefined;
 
     const targetSoftDelete = rel.targetColumns.some((c) => c.drizzleKey === "deletedAt");
     const existsParts: SQL[] = [eq(childFk, parentId)];
@@ -231,7 +231,7 @@ export class QueryTranslator {
       filterBudget: this.config.filterBudget,
     });
     const innerWhere = nested.translateFilter(targetFilter, false, true);
-    if (!innerWhere && !isEmptyFilter(targetFilter)) return undefined;
+    if (!innerWhere && !isExistenceOnlyFilter(targetFilter)) return undefined;
 
     const targetId = (rel.targetTable as unknown as Record<string, Column>).id;
     const targetSoftDelete = rel.targetColumns.some((c) => c.drizzleKey === "deletedAt");
@@ -299,12 +299,12 @@ export class QueryTranslator {
     };
 
     const childPredicate = (childFilter: FilterAST): SQL | undefined => {
-      if (isEmptyFilter(childFilter)) return undefined;
+      if (isExistenceOnlyFilter(childFilter)) return undefined;
       return childTranslator?.translateFilter(childFilter, false, true);
     };
 
     if (assoc.some) {
-      if (!isEmptyFilter(assoc.some)) {
+      if (!isExistenceOnlyFilter(assoc.some)) {
         const inner = childPredicate(assoc.some);
         if (!inner) return undefined;
       }
@@ -316,7 +316,7 @@ export class QueryTranslator {
       );
     }
     if (assoc.none) {
-      if (!isEmptyFilter(assoc.none)) {
+      if (!isExistenceOnlyFilter(assoc.none)) {
         const inner = childPredicate(assoc.none);
         if (!inner) return undefined;
       }
@@ -365,10 +365,10 @@ export class QueryTranslator {
       : undefined;
 
     const buildExists = (targetFilter: FilterAST, negate = false): SQL | undefined => {
-      const inner = isEmptyFilter(targetFilter)
+      const inner = isExistenceOnlyFilter(targetFilter)
         ? undefined
         : targetTranslator.translateFilter(targetFilter, false, true);
-      if (!inner && !isEmptyFilter(targetFilter)) return undefined;
+      if (!inner && !isExistenceOnlyFilter(targetFilter)) return undefined;
       const existsParts: SQL[] = [eq(joinOwnerFk, parentId)];
       if (inner) {
         existsParts.push(inner);

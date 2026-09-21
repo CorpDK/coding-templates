@@ -11,7 +11,7 @@ The primary `@corpdk/ds` template uses **DAL automation** — no hand-written en
 | Concern | Location |
 | ------- | -------- |
 | **Authoring surface** | Drizzle entity tables in `src/db/schema/` (UUID PK, audit columns, JSDoc comments) |
-| **Codegen command** | `pnpm dal:codegen` → `src/generated/dal/` (committed) |
+| **Codegen command** | `pnpm dal:codegen` → `src/generated/dal/` (gitignored; Turbo runs before dev) |
 | **Generated repos** | `src/generated/dal/repositories/generated-<entity>.repository.ts` |
 | **Bootstrap wiring** | `src/schema.ts` imports from `src/generated/dal/index.ts` barrel (`typeDefs`, `generatedResolvers`, `createDalContext`, `pubsub`); bootstrap SDL/resolvers/pubsub topics are emitted by `@corpdk/dal-codegen` |
 

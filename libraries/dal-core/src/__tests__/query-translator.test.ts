@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pgTable, text, uuid } from "drizzle-orm/pg-core";
+import { integer, pgTable, text, uuid } from "drizzle-orm/pg-core";
 import { QueryTranslator } from "../query-translator.js";
 
 const items = pgTable("items", {
@@ -91,5 +91,90 @@ describe("QueryTranslator inverse one-to-one filters", () => {
     });
 
     expect(translator.translateFilter({ detail: {} })).toBeDefined();
+    expect(translator.translateFilter({ detail: { specifications: {} } })).toBeDefined();
+  });
+});
+
+const categories = pgTable("categories", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+});
+
+const orders = pgTable("orders", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  categoryId: uuid("category_id").references(() => categories.id),
+});
+
+const orderLines = pgTable("order_lines", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  orderId: uuid("order_id")
+    .notNull()
+    .references(() => orders.id),
+  quantity: integer("quantity").notNull(),
+});
+
+const mockDb = {
+  select: () => ({
+    from: () => ({
+      where: () => ({}),
+      innerJoin: () => ({ where: () => ({}) }),
+    }),
+  }),
+};
+
+describe("QueryTranslator nested empty scalar filters", () => {
+  it("compiles M:1 nested empty scalar filters as existence predicates", () => {
+    const translator = new QueryTranslator({
+      db: mockDb as never,
+      table: orders,
+      columns: [],
+      relations: [
+        {
+          fieldName: "category",
+          kind: "many-to-one",
+          ownerFkDrizzleKey: "categoryId",
+          targetTable: categories,
+          targetColumns: [
+            { graphqlName: "name", drizzleKey: "name", kind: "text", column: categories.name },
+          ],
+          filterable: true,
+        },
+      ],
+      softDelete: false,
+      filterBudget: { maxDepth: 2, maxNodes: 50 },
+    });
+
+    expect(translator.translateFilter({ category: { name: {} } })).toBeDefined();
+  });
+
+  it("compiles 1:M some nested empty scalar filters as existence predicates", () => {
+    const translator = new QueryTranslator({
+      db: mockDb as never,
+      table: orders,
+      columns: [],
+      relations: [
+        {
+          fieldName: "lines",
+          kind: "one-to-many",
+          childFkDrizzleKey: "orderId",
+          targetTable: orderLines,
+          childTable: orderLines,
+          childColumns: [
+            {
+              graphqlName: "quantity",
+              drizzleKey: "quantity",
+              kind: "integer",
+              column: orderLines.quantity,
+            },
+          ],
+          targetColumns: [],
+          filterable: true,
+        },
+      ],
+      softDelete: false,
+      filterBudget: { maxDepth: 2, maxNodes: 50 },
+    });
+
+    expect(translator.translateFilter({ lines: { some: { quantity: {} } } })).toBeDefined();
   });
 });

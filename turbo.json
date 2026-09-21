@@ -24,7 +24,7 @@
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
     "dev": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "dal:codegen"],
       "cache": false,
       "persistent": true
     },

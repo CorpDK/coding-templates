@@ -517,12 +517,12 @@ Per entity, codegen emits:
 | **Schema input** | Configured Drizzle schema path(s) — not metadata YAML |
 | **Workspace config** | Optional **`dal/dal.config.yaml`** for workspace-wide settings (e.g. index **`strict`** mode — §17.1; filter complexity limits — §10.7) |
 | **Command** | `pnpm dal:codegen` |
-| **Output** | Full idempotent regen into **`src/generated/dal/`** — **committed to version control** for reviewability |
+| **Output** | Full idempotent regen into **`src/generated/dal/`** — **gitignored** (run `pnpm dal:codegen` locally; Turbo `dev`/`build` depend on it) |
 | **Invalid schema** | **Fails codegen** (non-zero exit); CI treats this as a gate |
-| **Turbo pipeline** | `dal:codegen` is a dependency of DS `codegen` and `build` tasks |
+| **Turbo pipeline** | `dal:codegen` is a dependency of DS `dev`, `codegen`, and `build` tasks |
 | **Local dev** | Optional **`--watch`** on the Drizzle schema directory for iterative regen |
 
-Codegen parses Drizzle tables, enums, indexes, and relations, validates entity shape (UUID `id`, audit/delete column rules, database object comments — §2.11), emits a committed **`generated-schema.ts`** module exporting merged GraphQL SDL as `typeDefs` (with docstrings from DB object comments — §2.11), GeneratedDataAccess, default repository implementations, resolver stubs, and cursor codec version constants per entity. Re-running codegen with unchanged schema produces byte-identical output (idempotent). Physical `.graphqls` files are not emitted — SDL is merged in-memory during codegen and written as a TypeScript string export for runtime and graphql-codegen consumption.
+Codegen parses Drizzle tables, enums, indexes, and relations, validates entity shape (UUID `id`, audit/delete column rules, database object comments — §2.11), emits a **`generated-schema.ts`** module exporting merged GraphQL SDL as `typeDefs` (with docstrings from DB object comments — §2.11), GeneratedDataAccess, default repository implementations, resolver stubs, and cursor codec version constants per entity. Re-running codegen with unchanged schema produces byte-identical output (idempotent). Physical `.graphqls` files are not emitted — SDL is merged in-memory during codegen and written as a TypeScript string export for runtime and graphql-codegen consumption.
 
 **Phase 1 runtime:** keyset cursors (no HMAC signing), enum Drizzle defaults on create, connection `sort` with `id` tie-breaker, forward/backward paging, aggregate count sugar, subscription `subscribeTo` filtering, and `createDalContext` actor wiring.
 
@@ -2386,7 +2386,7 @@ This system provides:
 * Configurable bulk atomicity with filter-based safety guards
 * Inferred audit profiles (**`full`**, **`append-only`**) — required on every entity; invalid combinations fail codegen — and soft delete from Drizzle column presence
 * A reusable **dal-core + codegen-cli** architecture for Drizzle-backed services
-* Committed **`src/generated/dal/`** output via `pnpm dal:codegen` for reviewable, idempotent regen — including GraphQL SDL with **`"""…"""` descriptions** auto-generated from Drizzle DB object comments (§2.11)
+* Gitignored **`src/generated/dal/`** output via `pnpm dal:codegen` (idempotent regen before dev/build) — including GraphQL SDL with **`"""…"""` descriptions** auto-generated from Drizzle DB object comments (§2.11)
 * Mandatory **`<entities>Count`** sugar alongside strongly typed **`<entity>Aggregate`**
 * Tamper-evident cursor signing (HMAC-SHA256) when `DAL_CURSOR_SECRET` is configured
 * **All scalar columns** filterable and sortable by default
