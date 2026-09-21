@@ -326,7 +326,7 @@ ${dalCoreImportBlock(entity)}
 import type { GraphQLResolveInfo } from "graphql";
 import { db } from "../../../db/index.js";
 import { ${schemaImports} } from "../../../db/schema/index.js";
-import { RELATION_DESCRIPTORS_BY_TABLE } from "../generated-relation-descriptors.js";
+import { RELATION_DESCRIPTORS_BY_TABLE } from "./generated-relation-descriptors.js";
 
 const table = ${exportName};
 const FILTER_BUDGET = resolveFilterBudget({ maxDepth: ${config.filterMaxDepth}, maxNodes: ${config.filterMaxNodes} });
