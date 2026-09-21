@@ -4,7 +4,11 @@ import { loadDalConfig, type CodegenOptions } from "./config.js";
 import { formatLintViolations, lintExitCode, runEntityLint } from "./entity-lint.js";
 import { loadEntities } from "./model.js";
 import { generateSchemaModule } from "./generators/sdl.js";
-import { generateRepository, generateRepositoryIndex } from "./generators/repository.js";
+import {
+  generateRelationDescriptorsModule,
+  generateRepository,
+  generateRepositoryIndex,
+} from "./generators/repository.js";
 import { generatePubSub } from "./generators/pubsub.js";
 import { generateResolvers } from "./generators/resolvers.js";
 
@@ -48,6 +52,10 @@ export async function runDalCodegen(options: CodegenOptions): Promise<void> {
 
   writeFile(join(outputDir, "generated-schema.ts"), generateSchemaModule(entities));
   writeFile(join(outputDir, "generated-pubsub.ts"), generatePubSub(entities));
+  writeFile(
+    join(outputDir, "repositories", "generated-relation-descriptors.ts"),
+    generateRelationDescriptorsModule(entities),
+  );
 
   for (const entity of entities) {
     writeFile(

@@ -65,6 +65,10 @@ export interface RelationDescriptor {
   childColumns?: ColumnDescriptor[];
   joinTable?: Table;
   joinColumns?: ColumnDescriptor[];
+  /** Relations on targetTable for nested M:1 / M:N / inverse 1:1 filters. */
+  targetRelations?: RelationDescriptor[];
+  /** Relations on childTable for nested 1:M association filters. */
+  childRelations?: RelationDescriptor[];
   filterable: boolean;
 }
 
@@ -193,7 +197,7 @@ export class QueryTranslator {
       db: this.config.db,
       table: rel.targetTable,
       columns: rel.targetColumns,
-      relations: [],
+      relations: rel.targetRelations ?? [],
       softDelete: rel.targetColumns.some((c) => c.drizzleKey === "deletedAt"),
       filterBudget: this.config.filterBudget,
     });
@@ -226,7 +230,7 @@ export class QueryTranslator {
       db: this.config.db,
       table: rel.targetTable,
       columns: rel.targetColumns,
-      relations: [],
+      relations: rel.targetRelations ?? [],
       softDelete: rel.targetColumns.some((c) => c.drizzleKey === "deletedAt"),
       filterBudget: this.config.filterBudget,
     });
@@ -277,7 +281,7 @@ export class QueryTranslator {
           db: this.config.db,
           table: rel.childTable!,
           columns: rel.childColumns,
-          relations: [],
+          relations: rel.childRelations ?? [],
           softDelete: rel.childColumns.some((c) => c.drizzleKey === "deletedAt"),
           filterBudget: this.config.filterBudget,
         })
@@ -329,6 +333,9 @@ export class QueryTranslator {
     }
     if (assoc.every) {
       if (isEmptyFilter(assoc.every)) return undefined;
+      if (isExistenceOnlyFilter(assoc.every)) {
+        return sql`true`;
+      }
       const inner = childPredicate(assoc.every);
       if (!inner) return undefined;
       return notExists(
@@ -354,7 +361,7 @@ export class QueryTranslator {
       db: this.config.db,
       table: rel.targetTable,
       columns: rel.targetColumns,
-      relations: [],
+      relations: rel.targetRelations ?? [],
       softDelete: rel.targetColumns.some((c) => c.drizzleKey === "deletedAt"),
       filterBudget: this.config.filterBudget,
     });
@@ -389,6 +396,9 @@ export class QueryTranslator {
     if (assoc.none) return buildExists(assoc.none, true);
     if (assoc.every) {
       if (isEmptyFilter(assoc.every)) return undefined;
+      if (isExistenceOnlyFilter(assoc.every)) {
+        return sql`true`;
+      }
       const inner = targetTranslator.translateFilter(assoc.every, false, true);
       if (!inner) return undefined;
       return notExists(

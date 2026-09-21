@@ -40,27 +40,43 @@ function columnDescriptorLines(entityExport: string, entity: EntityModel): strin
     .join(",\n      ");
 }
 
-function buildRelationDescriptors(entity: EntityModel, entities: EntityModel[]): string {
-  if (entity.relations.length === 0) return "[]";
+function relationsVarName(exportName: string): string {
+  return `${exportName}Relations`;
+}
 
+function relVarName(exportName: string, fieldName: string): string {
+  return `${exportName}_${fieldName}Rel`;
+}
+
+function resolveRelationTargets(
+  rel: EntityModel["relations"][number],
+  entities: EntityModel[],
+): {
+  targetEntity: EntityModel | undefined;
+  childEntity: EntityModel | undefined;
+} {
   const entityByExport = new Map(entities.map((e) => [e.exportName, e]));
+  const target = entityByExport.get(rel.targetExportName);
+  const child =
+    rel.kind === "one-to-many"
+      ? target
+      : rel.kind === "many-to-many" && rel.joinTableExportName
+        ? entityByExport.get(rel.joinTableExportName)
+        : undefined;
+  const m2mTarget = rel.kind === "many-to-many" ? target : undefined;
+  const targetExport =
+    rel.kind === "many-to-many" ? (m2mTarget?.exportName ?? rel.targetExportName) : rel.targetExportName;
+  const targetEntity = entityByExport.get(targetExport) ?? target;
+  return { targetEntity, childEntity: child };
+}
 
-  const lines = entity.relations
-    .filter((r) => r.filterable)
-    .map((rel) => {
-      const target = entityByExport.get(rel.targetExportName);
-      const child =
-        rel.kind === "one-to-many"
-          ? target
-          : rel.kind === "many-to-many" && rel.joinTableExportName
-            ? entityByExport.get(rel.joinTableExportName)
-            : undefined;
-      const m2mTarget = rel.kind === "many-to-many" ? target : undefined;
+function buildRelationDescriptorObject(
+  rel: EntityModel["relations"][number],
+  entities: EntityModel[],
+): string {
+  const { targetEntity, childEntity } = resolveRelationTargets(rel, entities);
 
-      const targetExport = rel.kind === "many-to-many" ? (m2mTarget?.exportName ?? rel.targetExportName) : rel.targetExportName;
-      const targetEntity = entityByExport.get(targetExport) ?? target;
-
-      return `  {
+  return `{
     fieldName: "${rel.fieldName}",
     kind: "${rel.kind}" as const,
     ownerFkDrizzleKey: ${rel.ownerFkDrizzleKey ? `"${rel.ownerFkDrizzleKey}"` : "undefined"},
@@ -71,15 +87,79 @@ function buildRelationDescriptors(entity: EntityModel, entities: EntityModel[]):
     targetColumns: [
       ${targetEntity ? columnDescriptorLines(targetEntity.exportName, targetEntity) : ""}
     ],
-    childTable: ${child ? child.exportName : "undefined"},
-    childColumns: ${child ? `[\n      ${columnDescriptorLines(child.exportName, child)}\n    ]` : "undefined"},
+    childTable: ${childEntity ? childEntity.exportName : "undefined"},
+    childColumns: ${childEntity ? `[\n      ${columnDescriptorLines(childEntity.exportName, childEntity)}\n    ]` : "undefined"},
     joinTable: ${rel.joinTableExportName ?? "undefined"},
     joinColumns: undefined,
     filterable: true,
   }`;
-    });
+}
 
-  return `[\n${lines.join(",\n")}\n]`;
+export function generateRelationDescriptorsModule(entities: EntityModel[]): string {
+  const schemaImports = new Set<string>();
+  for (const entity of entities) {
+    schemaImports.add(entity.exportName);
+    for (const rel of entity.relations) {
+      if (rel.targetExportName) schemaImports.add(rel.targetExportName);
+      if (rel.joinTableExportName) schemaImports.add(rel.joinTableExportName);
+    }
+  }
+
+  const relDecls: string[] = [];
+  const arrayDecls: string[] = [];
+  const wiring: string[] = [];
+  const mapEntries: string[] = [];
+
+  for (const entity of entities) {
+    const filterable = entity.relations.filter((r) => r.filterable);
+    const relVars: string[] = [];
+
+    for (const rel of filterable) {
+      const varName = relVarName(entity.exportName, rel.fieldName);
+      relDecls.push(`const ${varName}: RelationDescriptor = ${buildRelationDescriptorObject(rel, entities)};`);
+      relVars.push(varName);
+
+      const { targetEntity, childEntity } = resolveRelationTargets(rel, entities);
+      if (
+        (rel.kind === "many-to-one" ||
+          rel.kind === "many-to-many" ||
+          (rel.kind === "one-to-one" && rel.ownerFkDrizzleKey)) &&
+        targetEntity
+      ) {
+        wiring.push(`${varName}.targetRelations = ${relationsVarName(targetEntity.exportName)};`);
+      }
+      if (rel.kind === "one-to-many" && childEntity) {
+        wiring.push(`${varName}.childRelations = ${relationsVarName(childEntity.exportName)};`);
+      }
+      if (rel.kind === "one-to-one" && rel.childFkDrizzleKey && targetEntity) {
+        wiring.push(`${varName}.targetRelations = ${relationsVarName(targetEntity.exportName)};`);
+      }
+    }
+
+    const arrayName = relationsVarName(entity.exportName);
+    if (relVars.length === 0) {
+      arrayDecls.push(`const ${arrayName}: RelationDescriptor[] = [];`);
+    } else {
+      arrayDecls.push(`const ${arrayName}: RelationDescriptor[] = [\n  ${relVars.join(",\n  ")},\n];`);
+    }
+    mapEntries.push(`  [${entity.exportName}, ${arrayName}],`);
+  }
+
+  return `// AUTO-GENERATED by @corpdk/dal-codegen — do not edit
+import type { RelationDescriptor } from "@corpdk/dal-core";
+import type { Table } from "drizzle-orm";
+import { ${[...schemaImports].sort().join(", ")} } from "../../../db/schema/index.js";
+
+${relDecls.join("\n\n")}
+
+${arrayDecls.join("\n\n")}
+
+${wiring.join("\n")}
+
+export const RELATION_DESCRIPTORS_BY_TABLE = new Map<Table, RelationDescriptor[]>([
+${mapEntries.join("\n")}
+]);
+`;
 }
 
 function hasParentBatchMethods(entity: EntityModel, entities: EntityModel[]): boolean {
@@ -239,6 +319,7 @@ ${dalCoreImportBlock(entity)}
 import type { GraphQLResolveInfo } from "graphql";
 import { db } from "../../../db/index.js";
 import { ${schemaImports} } from "../../../db/schema/index.js";
+import { RELATION_DESCRIPTORS_BY_TABLE } from "../generated-relation-descriptors.js";
 
 const table = ${exportName};
 const FILTER_BUDGET = resolveFilterBudget({ maxDepth: ${config.filterMaxDepth}, maxNodes: ${config.filterMaxNodes} });
@@ -248,7 +329,7 @@ const COLUMN_DESCRIPTORS: ColumnDescriptor[] = [
 ${columnDescriptors}
 ];
 
-const RELATION_DESCRIPTORS: RelationDescriptor[] = ${buildRelationDescriptors(entity, entities)};
+const RELATION_DESCRIPTORS = RELATION_DESCRIPTORS_BY_TABLE.get(table)!;
 
 const RELATION_PROJECTION_HINTS: RelationProjectionHint[] = ${buildRelationProjectionHints(entity)};
 
