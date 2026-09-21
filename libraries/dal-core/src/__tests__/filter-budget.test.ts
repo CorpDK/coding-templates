@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { validateFilterBudget, ValidationError } from "../filters.js";
+import { afterEach, describe, expect, it } from "vitest";
+import { resolveFilterBudget, validateFilterBudget, ValidationError } from "../filters.js";
 
 describe("validateFilterBudget association depth", () => {
   it("counts one-to-many some as depth 1", () => {
@@ -30,6 +30,27 @@ describe("validateFilterBudget association depth", () => {
       ValidationError,
     );
     expect(() => validateFilterBudget(filter, { maxDepth: 3, maxNodes: 50 })).not.toThrow();
+  });
+});
+
+describe("resolveFilterBudget env overrides", () => {
+  const defaults = { maxDepth: 2, maxNodes: 50 };
+
+  afterEach(() => {
+    delete process.env.DAL_FILTER_MAX_DEPTH;
+    delete process.env.DAL_FILTER_MAX_NODES;
+  });
+
+  it("falls back to config defaults when env values are non-numeric", () => {
+    process.env.DAL_FILTER_MAX_DEPTH = "not-a-number";
+    process.env.DAL_FILTER_MAX_NODES = "abc";
+    expect(resolveFilterBudget(defaults)).toEqual(defaults);
+  });
+
+  it("falls back when env values are zero or negative", () => {
+    process.env.DAL_FILTER_MAX_DEPTH = "0";
+    process.env.DAL_FILTER_MAX_NODES = "-3";
+    expect(resolveFilterBudget(defaults)).toEqual(defaults);
   });
 });
 

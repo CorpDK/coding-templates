@@ -208,7 +208,8 @@ export class QueryTranslator {
     const existsParts: SQL[] = [eq(childFk, parentId)];
     if (innerWhere) {
       existsParts.push(innerWhere);
-    } else if (targetSoftDelete) {
+    }
+    if (targetSoftDelete) {
       const deletedAt = (rel.targetTable as unknown as Record<string, Column>).deletedAt;
       if (deletedAt) existsParts.push(sql`${deletedAt} IS NULL`);
     }
@@ -242,7 +243,8 @@ export class QueryTranslator {
     const existsParts: SQL[] = [eq(targetId, ownerFk)];
     if (innerWhere) {
       existsParts.push(innerWhere);
-    } else if (targetSoftDelete) {
+    }
+    if (targetSoftDelete) {
       const deletedAt = (rel.targetTable as unknown as Record<string, Column>).deletedAt;
       if (deletedAt) existsParts.push(sql`${deletedAt} IS NULL`);
     }
@@ -296,7 +298,8 @@ export class QueryTranslator {
       const parts: SQL[] = [eq(childFk, parentId)];
       if (inner) {
         parts.push(inner);
-      } else if (childDeletedAt) {
+      }
+      if (childDeletedAt) {
         parts.push(sql`${childDeletedAt} IS NULL`);
       }
       return parts.length === 1 ? parts[0]! : and(...parts)!;
@@ -338,11 +341,15 @@ export class QueryTranslator {
       }
       const inner = childPredicate(assoc.every);
       if (!inner) return undefined;
+      const everyParts: SQL[] = [eq(childFk, parentId), not(inner)];
+      if (childDeletedAt) {
+        everyParts.push(sql`${childDeletedAt} IS NULL`);
+      }
       return notExists(
         this.config.db
           .select({ one: sql`1` })
           .from(rel.childTable!)
-          .where(and(eq(childFk, parentId), not(inner))!),
+          .where(everyParts.length === 1 ? everyParts[0] : and(...everyParts)!),
       );
     }
     return undefined;
@@ -379,7 +386,8 @@ export class QueryTranslator {
       const existsParts: SQL[] = [eq(joinOwnerFk, parentId)];
       if (inner) {
         existsParts.push(inner);
-      } else if (targetDeletedAt) {
+      }
+      if (targetDeletedAt) {
         existsParts.push(sql`${targetDeletedAt} IS NULL`);
       }
       const existsSql = exists(
@@ -401,12 +409,16 @@ export class QueryTranslator {
       }
       const inner = targetTranslator.translateFilter(assoc.every, false, true);
       if (!inner) return undefined;
+      const everyParts: SQL[] = [eq(joinOwnerFk, parentId), not(inner)];
+      if (targetDeletedAt) {
+        everyParts.push(sql`${targetDeletedAt} IS NULL`);
+      }
       return notExists(
         this.config.db
           .select({ one: sql`1` })
           .from(rel.joinTable!)
           .innerJoin(rel.targetTable, eq(joinTargetFk, targetId))
-          .where(and(eq(joinOwnerFk, parentId), not(inner))!),
+          .where(everyParts.length === 1 ? everyParts[0] : and(...everyParts)!),
       );
     }
     return undefined;

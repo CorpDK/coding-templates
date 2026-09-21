@@ -485,6 +485,12 @@ function countFilterNodes(filter: Record<string, unknown>): number {
   return count;
 }
 
+function parsePositiveInt(value: string, fallback: number): number {
+  const parsed = Number.parseInt(value, 10);
+  if (!Number.isNaN(parsed) && parsed > 0) return parsed;
+  return fallback;
+}
+
 /** Resolve filter budget limits from config with optional env overrides. */
 export function resolveFilterBudget(config: FilterBudgetLimits): FilterBudgetLimits {
   const depthEnv = process.env.DAL_FILTER_MAX_DEPTH;
@@ -492,11 +498,11 @@ export function resolveFilterBudget(config: FilterBudgetLimits): FilterBudgetLim
   return {
     maxDepth:
       depthEnv != null && depthEnv !== "" ?
-        Number.parseInt(depthEnv, 10)
+        parsePositiveInt(depthEnv, config.maxDepth)
       : config.maxDepth,
     maxNodes:
       nodesEnv != null && nodesEnv !== "" ?
-        Number.parseInt(nodesEnv, 10)
+        parsePositiveInt(nodesEnv, config.maxNodes)
       : config.maxNodes,
   };
 }
