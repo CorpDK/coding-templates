@@ -10,8 +10,8 @@ import {
 
 describe("mutation error helpers", () => {
   it("builds user errors and payloads", () => {
-    expect(createUserError("VALIDATION_ERROR", "bad", { field: ["name"] })).toEqual({
-      code: "VALIDATION_ERROR",
+    expect(createUserError("VALIDATION_FAILED", "bad", { field: ["name"] })).toEqual({
+      code: "VALIDATION_FAILED",
       message: "bad",
       field: ["name"],
       id: null,
