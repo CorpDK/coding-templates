@@ -52,17 +52,9 @@ export class NotFoundError extends Error {
   }
 }
 
-export function mapDriverError(err: unknown): MutationUserError {
-  const message = err instanceof Error ? err.message : "Unknown error";
-  const lower = message.toLowerCase();
-  if (lower.includes("unique") || lower.includes("duplicate")) {
-    return createUserError("UNIQUE_VIOLATION", "A record with this value already exists");
-  }
-  if (lower.includes("foreign key") || lower.includes("fk_")) {
-    return createUserError("FK_VIOLATION", "Referenced record does not exist");
-  }
-  if (lower.includes("check constraint")) {
-    return createUserError("CONSTRAINT_VIOLATION", "Constraint violation");
-  }
-  return createUserError("UNKNOWN", "Operation failed");
-}
+export {
+  extractDriverErrorDetails,
+  mapDriverError,
+  type DriverErrorDetails,
+  type SqlDialect,
+} from "./driver-errors.js";

@@ -10,4 +10,6 @@ export * from "./dataloader.js";
 export * from "./pagination.js";
 export * from "./cursor-signing.js";
 export * from "./column-projection.js";
+export * from "./constraints.js";
+export * from "./driver-errors.js";
 export * from "./naming.js";

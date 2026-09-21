@@ -60,6 +60,87 @@ export interface EnumFilter<T extends string = string> {
   notIn?: T[] | null;
 }
 
+export interface IntFilter {
+  eq?: number | null;
+  neq?: number | null;
+  gt?: number | null;
+  gte?: number | null;
+  lt?: number | null;
+  lte?: number | null;
+  in?: number[] | null;
+  notIn?: number[] | null;
+  isNull?: boolean | null;
+}
+
+export interface FloatFilter {
+  eq?: number | null;
+  neq?: number | null;
+  gt?: number | null;
+  gte?: number | null;
+  lt?: number | null;
+  lte?: number | null;
+  in?: number[] | null;
+  notIn?: number[] | null;
+  isNull?: boolean | null;
+}
+
+export interface BigIntFilter {
+  eq?: string | null;
+  neq?: string | null;
+  gt?: string | null;
+  gte?: string | null;
+  lt?: string | null;
+  lte?: string | null;
+  in?: string[] | null;
+  notIn?: string[] | null;
+}
+
+export interface DecimalFilter {
+  eq?: string | null;
+  neq?: string | null;
+  gt?: string | null;
+  gte?: string | null;
+  lt?: string | null;
+  lte?: string | null;
+  in?: string[] | null;
+  notIn?: string[] | null;
+}
+
+export interface DateFilter {
+  eq?: string | null;
+  neq?: string | null;
+  gt?: string | null;
+  gte?: string | null;
+  lt?: string | null;
+  lte?: string | null;
+  in?: string[] | null;
+  notIn?: string[] | null;
+  isNull?: boolean | null;
+}
+
+export interface TimeTzFilter {
+  eq?: string | null;
+  neq?: string | null;
+  gt?: string | null;
+  gte?: string | null;
+  lt?: string | null;
+  lte?: string | null;
+  in?: string[] | null;
+  notIn?: string[] | null;
+  isNull?: boolean | null;
+}
+
+export interface IntervalMsFilter {
+  eq?: string | null;
+  neq?: string | null;
+  gt?: string | null;
+  gte?: string | null;
+  lt?: string | null;
+  lte?: string | null;
+  in?: string[] | null;
+  notIn?: string[] | null;
+}
+
 export interface FilterBudgetLimits {
   maxDepth: number;
   maxNodes: number;
@@ -182,6 +263,137 @@ export function buildEnumFilter<T extends string>(
   if (filter.notIn?.length) parts.push(notInArray(column, filter.notIn));
   if (parts.length === 0) return undefined;
   return parts.length === 1 ? parts[0] : and(...parts);
+}
+
+function buildComparableNumberFilter(
+  column: Column,
+  filter:
+    | IntFilter
+    | FloatFilter
+    | null
+    | undefined,
+  keys: string[],
+): SQL | undefined {
+  if (!filter) return undefined;
+  assertExclusiveIsNull(filter, keys);
+  if (filter.isNull === true) return isNull(column);
+  if (filter.isNull === false) return isNotNull(column);
+  const parts: SQL[] = [];
+  if (filter.eq != null) parts.push(eq(column, filter.eq));
+  if (filter.neq != null) parts.push(ne(column, filter.neq));
+  if (filter.gt != null) parts.push(gt(column, filter.gt));
+  if (filter.gte != null) parts.push(gte(column, filter.gte));
+  if (filter.lt != null) parts.push(lt(column, filter.lt));
+  if (filter.lte != null) parts.push(lte(column, filter.lte));
+  if (filter.in?.length) parts.push(inArray(column, filter.in));
+  if (filter.notIn?.length) parts.push(notInArray(column, filter.notIn));
+  if (parts.length === 0) return undefined;
+  return parts.length === 1 ? parts[0] : and(...parts);
+}
+
+export function buildIntFilter(column: Column, filter: IntFilter | null | undefined): SQL | undefined {
+  return buildComparableNumberFilter(column, filter, [
+    "eq",
+    "neq",
+    "gt",
+    "gte",
+    "lt",
+    "lte",
+    "in",
+    "notIn",
+    "isNull",
+  ]);
+}
+
+export function buildFloatFilter(
+  column: Column,
+  filter: FloatFilter | null | undefined,
+): SQL | undefined {
+  return buildComparableNumberFilter(column, filter, [
+    "eq",
+    "neq",
+    "gt",
+    "gte",
+    "lt",
+    "lte",
+    "in",
+    "notIn",
+    "isNull",
+  ]);
+}
+
+function buildStringComparableFilter(
+  column: Column,
+  filter:
+    | BigIntFilter
+    | DecimalFilter
+    | DateFilter
+    | TimeTzFilter
+    | IntervalMsFilter
+    | null
+    | undefined,
+  withIsNull: boolean,
+): SQL | undefined {
+  if (!filter) return undefined;
+  if (withIsNull) {
+    assertExclusiveIsNull(filter as { isNull?: boolean | null }, [
+      "eq",
+      "neq",
+      "gt",
+      "gte",
+      "lt",
+      "lte",
+      "in",
+      "notIn",
+      "isNull",
+    ]);
+    const f = filter as DateFilter;
+    if (f.isNull === true) return isNull(column);
+    if (f.isNull === false) return isNotNull(column);
+  }
+  const parts: SQL[] = [];
+  if (filter.eq != null) parts.push(eq(column, filter.eq));
+  if (filter.neq != null) parts.push(ne(column, filter.neq));
+  if (filter.gt != null) parts.push(gt(column, filter.gt));
+  if (filter.gte != null) parts.push(gte(column, filter.gte));
+  if (filter.lt != null) parts.push(lt(column, filter.lt));
+  if (filter.lte != null) parts.push(lte(column, filter.lte));
+  if (filter.in?.length) parts.push(inArray(column, filter.in));
+  if (filter.notIn?.length) parts.push(notInArray(column, filter.notIn));
+  if (parts.length === 0) return undefined;
+  return parts.length === 1 ? parts[0] : and(...parts);
+}
+
+export function buildBigIntFilter(
+  column: Column,
+  filter: BigIntFilter | null | undefined,
+): SQL | undefined {
+  return buildStringComparableFilter(column, filter, false);
+}
+
+export function buildDecimalFilter(
+  column: Column,
+  filter: DecimalFilter | null | undefined,
+): SQL | undefined {
+  return buildStringComparableFilter(column, filter, false);
+}
+
+export function buildDateFilter(column: Column, filter: DateFilter | null | undefined): SQL | undefined {
+  return buildStringComparableFilter(column, filter, true);
+}
+
+export function buildTimeTzFilter(
+  column: Column,
+  filter: TimeTzFilter | null | undefined,
+): SQL | undefined {
+  return buildStringComparableFilter(column, filter, true);
+}
+
+export function buildIntervalMsFilter(
+  column: Column,
+  filter: IntervalMsFilter | null | undefined,
+): SQL | undefined {
+  return buildStringComparableFilter(column, filter, false);
 }
 
 function measureFilterDepth(filter: Record<string, unknown>): number {

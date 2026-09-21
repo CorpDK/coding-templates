@@ -1,6 +1,7 @@
 import {
   GraphQLBoolean,
   GraphQLEnumType,
+  GraphQLFloat,
   GraphQLID,
   GraphQLInputObjectType,
   GraphQLInt,
@@ -22,6 +23,8 @@ type FilterInputName =
   | "BooleanFilter"
   | "DateTimeFilter"
   | "IDFilter"
+  | "IntFilter"
+  | "FloatFilter"
   | "BigIntFilter"
   | "DecimalFilter"
   | "DateFilter"
@@ -56,6 +59,16 @@ function customScalarForColumn(col: ColumnModel): CustomScalar | null {
   switch (col.kind) {
     case "timestamptz":
       return "DateTime";
+    case "bigint":
+      return "BigInt";
+    case "decimal":
+      return "Decimal";
+    case "date":
+      return "Date";
+    case "timetz":
+      return "TimeTz";
+    case "interval":
+      return "IntervalMs";
     default:
       return null;
   }
@@ -72,6 +85,21 @@ function filterForColumnKind(col: ColumnModel): FilterInputName | null {
     case "text":
     case "varchar":
       return "StringFilter";
+    case "smallint":
+    case "integer":
+      return "IntFilter";
+    case "float":
+      return "FloatFilter";
+    case "bigint":
+      return "BigIntFilter";
+    case "decimal":
+      return "DecimalFilter";
+    case "date":
+      return "DateFilter";
+    case "timetz":
+      return "TimeTzFilter";
+    case "interval":
+      return "IntervalMsFilter";
     case "enum":
       return null;
     default:
@@ -129,6 +157,8 @@ function collectUsedTypes(entities: EntityModel[]): {
     "BooleanFilter",
     "DateTimeFilter",
     "IDFilter",
+    "IntFilter",
+    "FloatFilter",
     "BigIntFilter",
     "DecimalFilter",
     "DateFilter",
@@ -205,6 +235,48 @@ function buildIdFilter(): GraphQLInputObjectType {
       neq: { type: GraphQLID },
       in: { type: new GraphQLList(new GraphQLNonNull(GraphQLID)) },
       notIn: { type: new GraphQLList(new GraphQLNonNull(GraphQLID)) },
+    },
+  });
+}
+
+function buildIntFilter(): GraphQLInputObjectType {
+  return new GraphQLInputObjectType({
+    name: "IntFilter",
+    description: "Filter operators for integer columns.",
+    fields: {
+      eq: { type: GraphQLInt },
+      neq: { type: GraphQLInt },
+      gt: { type: GraphQLInt },
+      gte: { type: GraphQLInt },
+      lt: { type: GraphQLInt },
+      lte: { type: GraphQLInt },
+      in: { type: new GraphQLList(new GraphQLNonNull(GraphQLInt)) },
+      notIn: { type: new GraphQLList(new GraphQLNonNull(GraphQLInt)) },
+      isNull: {
+        type: GraphQLBoolean,
+        description: "True = IS NULL; false = IS NOT NULL; nullable columns only.",
+      },
+    },
+  });
+}
+
+function buildFloatFilter(): GraphQLInputObjectType {
+  return new GraphQLInputObjectType({
+    name: "FloatFilter",
+    description: "Filter operators for floating-point columns.",
+    fields: {
+      eq: { type: GraphQLFloat },
+      neq: { type: GraphQLFloat },
+      gt: { type: GraphQLFloat },
+      gte: { type: GraphQLFloat },
+      lt: { type: GraphQLFloat },
+      lte: { type: GraphQLFloat },
+      in: { type: new GraphQLList(new GraphQLNonNull(GraphQLFloat)) },
+      notIn: { type: new GraphQLList(new GraphQLNonNull(GraphQLFloat)) },
+      isNull: {
+        type: GraphQLBoolean,
+        description: "True = IS NULL; false = IS NOT NULL; nullable columns only.",
+      },
     },
   });
 }
@@ -459,6 +531,8 @@ export function buildSchemaRegistry(entities: EntityModel[]): SchemaRegistry {
       return buildDateTimeFilter(dateTime);
     },
     IDFilter: buildIdFilter,
+    IntFilter: buildIntFilter,
+    FloatFilter: buildFloatFilter,
     BigIntFilter: () => {
       if (!bigInt) throw new Error("BigIntFilter requires BigInt scalar");
       return buildBigIntFilter(bigInt);

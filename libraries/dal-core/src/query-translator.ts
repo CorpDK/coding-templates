@@ -3,10 +3,17 @@ import type { Column, Table } from "drizzle-orm";
 import type { PgDatabase } from "drizzle-orm/pg-core";
 import {
   buildBooleanFilter,
+  buildBigIntFilter,
+  buildDateFilter,
   buildDateTimeFilter,
+  buildDecimalFilter,
   buildEnumFilter,
+  buildFloatFilter,
   buildIdFilter,
+  buildIntFilter,
+  buildIntervalMsFilter,
   buildStringFilter,
+  buildTimeTzFilter,
   combineLogical,
   validateFilterBudget,
   type FilterBudgetLimits,
@@ -20,7 +27,15 @@ export type ColumnKind =
   | "varchar"
   | "boolean"
   | "timestamptz"
-  | "enum";
+  | "enum"
+  | "smallint"
+  | "integer"
+  | "bigint"
+  | "decimal"
+  | "float"
+  | "date"
+  | "timetz"
+  | "interval";
 
 export interface ColumnDescriptor {
   graphqlName: string;
@@ -71,6 +86,21 @@ function filterBuilderForKind(kind: ColumnKind) {
       return buildIdFilter;
     case "enum":
       return buildEnumFilter;
+    case "smallint":
+    case "integer":
+      return buildIntFilter;
+    case "float":
+      return buildFloatFilter;
+    case "bigint":
+      return buildBigIntFilter;
+    case "decimal":
+      return buildDecimalFilter;
+    case "date":
+      return buildDateFilter;
+    case "timetz":
+      return buildTimeTzFilter;
+    case "interval":
+      return buildIntervalMsFilter;
     default:
       return buildStringFilter;
   }

@@ -1,5 +1,11 @@
 import type { Column, Table } from "drizzle-orm";
-import { Kind, type GraphQLResolveInfo, type SelectionNode, type SelectionSetNode } from "graphql";
+import {
+  Kind,
+  type FragmentDefinitionNode,
+  type GraphQLResolveInfo,
+  type SelectionNode,
+  type SelectionSetNode,
+} from "graphql";
 import type { ColumnDescriptor } from "./query-translator.js";
 
 export interface RelationProjectionHint {
@@ -15,24 +21,49 @@ const CONNECTION_WRAPPER_FIELDS = new Set(["edges", "nodes", "pageInfo"]);
 
 function fieldNamesFromSelectionSet(
   selectionSet: SelectionSetNode | undefined | null,
+  info: GraphQLResolveInfo,
+  typeCondition?: string | null,
 ): Set<string> | null {
   if (!selectionSet?.selections?.length) return null;
   const names = new Set<string>();
   for (const sel of selectionSet.selections) {
-    collectFieldNames(sel, names);
+    collectFieldNames(sel, names, info, typeCondition);
   }
   return names.size > 0 ? names : null;
 }
 
-function collectFieldNames(node: SelectionNode, names: Set<string>): void {
+function resolveFragmentDefinition(
+  info: GraphQLResolveInfo,
+  name: string,
+): FragmentDefinitionNode | undefined {
+  return info.fragments?.[name];
+}
+
+function collectFieldNames(
+  node: SelectionNode,
+  names: Set<string>,
+  info: GraphQLResolveInfo,
+  typeCondition?: string | null,
+): void {
   if (node.kind === Kind.FIELD) {
     if (node.name.value === "__typename") return;
     names.add(node.name.value);
     return;
   }
   if (node.kind === Kind.INLINE_FRAGMENT) {
+    const fragmentType = node.typeCondition?.name.value ?? typeCondition ?? null;
     for (const inner of node.selectionSet.selections) {
-      collectFieldNames(inner, names);
+      collectFieldNames(inner, names, info, fragmentType);
+    }
+    return;
+  }
+  if (node.kind === Kind.FRAGMENT_SPREAD) {
+    const frag = resolveFragmentDefinition(info, node.name.value);
+    if (!frag) return;
+    const fragmentType = frag.typeCondition.name.value;
+    if (typeCondition && fragmentType !== typeCondition) return;
+    for (const inner of frag.selectionSet.selections) {
+      collectFieldNames(inner, names, info, fragmentType);
     }
   }
 }
@@ -75,7 +106,7 @@ export function collectEntityFieldSelection(
     selectionSet = nested;
   }
 
-  const direct = fieldNamesFromSelectionSet(selectionSet);
+  const direct = fieldNamesFromSelectionSet(selectionSet, info, entityGraphqlType);
   if (!direct) return null;
 
   const filtered = new Set<string>();
@@ -89,7 +120,6 @@ export function collectEntityFieldSelection(
     return new Set(["id"]);
   }
 
-  void entityGraphqlType;
   return filtered.size > 0 ? filtered : null;
 }
 

@@ -202,7 +202,7 @@ Inferred from Drizzle column constraints:
 
 **No length, range, or regex constraints in v1.** Drizzle column length limits are not mirrored into GraphQL validation in v1.
 
-**Planned v2:** constraint metadata from Drizzle column definitions (`length`, `check` constraints where expressible) enforced at GraphQL input validation and repository pre-write.
+**v2 (Phase 5+):** constraint metadata from Drizzle column definitions (`length`, simple `check` constraints where expressible) enforced at GraphQL input validation and repository pre-write — see [dal-phase5.md](dal-phase5.md).
 
 ### 2.10 Enum defaults on create
 

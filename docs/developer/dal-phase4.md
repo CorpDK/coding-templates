@@ -49,10 +49,10 @@ When **`strict: true`** in `dal/dal.config.yaml`, `dal:codegen` runs the same **
 
 Workflow [`.github/workflows/dal.yml`](../../.github/workflows/dal.yml) runs `@corpdk/dal-core` and `@corpdk/dal-codegen` tests plus `@corpdk/ds entity:lint`.
 
-## Out of scope (Phase 5+)
+## Out of scope (Phase 6+)
 
-- SQLSTATE driver mappers, constraint metadata v2
-- `@src/db` path aliases, fragment projection extensions
-- New PostgreSQL types beyond current mapping
+- `@src/db` path aliases
+- Auth actor hook (P6)
+- Multi-backend DAL
 
-See [Phase 3](dal-phase3.md) for cursor signing, ColumnProjection, and baseline entity lint.
+See [Phase 5](dal-phase5.md) for SQLSTATE mappers, constraint metadata v2, fragment projection, and extended PG types delivered in Phase 5.

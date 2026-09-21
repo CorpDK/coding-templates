@@ -1,55 +1,18 @@
 import type { DalConfig } from "../config.js";
-import type { ColumnModel, EntityModel } from "../model.js";
+import type { EntityModel } from "../model.js";
 import { internalRecordColumns } from "./schema-utils.js";
+import {
+  assignCreateValue,
+  assignUpdateValue,
+  constraintMetadataBlock,
+  cursorDeserializeBody,
+  cursorSerializeBody,
+  dalCoreImportBlock,
+  mapRowFieldLine,
+  tsTypeForColumn,
+} from "./repository-scalars.js";
 
 type ResolvedDalConfig = Required<DalConfig>;
-
-function tsTypeForColumn(col: ColumnModel): string {
-  if (col.kind === "boolean") return "boolean";
-  if (col.kind === "enum" && col.enumValues?.length) {
-    return col.enumValues.map((value) => JSON.stringify(value)).join(" | ");
-  }
-  return "string";
-}
-
-function inputRef(col: ColumnModel): string {
-  if (col.defaultValue !== undefined) {
-    return `input.${col.graphqlName} ?? ${JSON.stringify(col.defaultValue)}`;
-  }
-  return `input.${col.graphqlName}`;
-}
-
-function assignCreateValue(col: ColumnModel): string {
-  const ref = inputRef(col);
-  if (col.kind === "timestamptz") {
-    return `      ${col.drizzleKey}: ${ref} ? parseDateTime(${ref}) : undefined,`;
-  }
-  if (col.kind === "enum") {
-    return `      ${col.drizzleKey}: (${ref}) as (typeof table.$inferInsert)["${col.drizzleKey}"],`;
-  }
-  return `      ${col.drizzleKey}: ${ref},`;
-}
-
-function assignUpdateValue(col: ColumnModel): string {
-  if (col.kind === "timestamptz") {
-    if (col.notNull) {
-      return `    if (input.${col.graphqlName} !== undefined && input.${col.graphqlName} !== null) {
-      set.${col.drizzleKey} = parseDateTime(input.${col.graphqlName});
-    }`;
-    }
-    return `    if (input.${col.graphqlName} !== undefined) {
-      set.${col.drizzleKey} = input.${col.graphqlName} === null ? null : parseDateTime(input.${col.graphqlName});
-    }`;
-  }
-  if (col.kind === "enum") {
-    return `    if (input.${col.graphqlName} !== undefined) {
-      set.${col.drizzleKey} = input.${col.graphqlName} as (typeof table.$inferInsert)["${col.drizzleKey}"];
-    }`;
-  }
-  return `    if (input.${col.graphqlName} !== undefined) {
-      set.${col.drizzleKey} = input.${col.graphqlName};
-    }`;
-}
 
 function collectRelationTableImports(entity: EntityModel, entities: EntityModel[]): Set<string> {
   const imports = new Set<string>();
@@ -148,104 +111,6 @@ function buildRelationProjectionHints(entity: EntityModel): string {
   return `[\n${hints.join("\n")}\n]`;
 }
 
-function dalCoreImportBlock(_entity: EntityModel): string {
-  const valueImports = [
-    "assertFilterBulkCap",
-    "assertFilterBulkConfirm",
-    "assertValidUuid",
-    "createUserError",
-    "CHANGE_EVENT_ID_CAP",
-    "CURSOR_VERSION",
-    "errorPayload",
-    "mapDriverError",
-    "parseDateTime",
-    "QueryEngine",
-    "resolveActorId",
-    "resolveBulkAtomic",
-    "resolveBulkFilterMax",
-    "resolveColumnProjectionFromInfo",
-    "resolveFilterBudget",
-    "serializeDateTime",
-    "successPayload",
-    "ValidationError",
-  ];
-  const typeImports = [
-    "BulkMutationResult",
-    "ColumnDescriptor",
-    "EntityChangeEventPayload",
-    "FilterAST",
-    "RelationDescriptor",
-    "RelationProjectionHint",
-    "RepositoryContext",
-    "ResolvedSortKey",
-    "SortInput",
-  ];
-  valueImports.sort();
-  typeImports.sort();
-  return `import {
-  ${valueImports.join(",\n  ")},
-  type ${typeImports.join(",\n  type ")},
-} from "@corpdk/dal-core";`;
-}
-
-function cursorSerializeBody(sortCols: ColumnModel[]): string {
-  const tzCols = sortCols.filter((c) => c.kind === "timestamptz");
-  if (tzCols.length === 0) {
-    return `  return resolvedSort.map((s) => row[s.drizzleKey as keyof typeof row]);`;
-  }
-  if (tzCols.length === 1) {
-    const c = tzCols[0]!;
-    const expr = c.notNull
-      ? `serializeDateTime(row.${c.drizzleKey})!`
-      : `row.${c.drizzleKey} != null ? serializeDateTime(row.${c.drizzleKey}) : null`;
-    return `  return resolvedSort.map((s) => {
-    if (s.drizzleKey === "${c.drizzleKey}") return ${expr};
-    return row[s.drizzleKey as keyof typeof row];
-  });`;
-  }
-  const cases = tzCols
-    .map((c) => {
-      const expr = c.notNull
-        ? `return serializeDateTime(row.${c.drizzleKey})!;`
-        : `return row.${c.drizzleKey} != null ? serializeDateTime(row.${c.drizzleKey}) : null;`;
-      return `      case "${c.drizzleKey}":
-        ${expr}`;
-    })
-    .join("\n");
-  return `  return resolvedSort.map((s) => {
-    switch (s.drizzleKey) {
-${cases}
-      default:
-        return row[s.drizzleKey as keyof typeof row];
-    }
-  });`;
-}
-
-function cursorDeserializeBody(sortCols: ColumnModel[]): string {
-  const tzCols = sortCols.filter((c) => c.kind === "timestamptz");
-  if (tzCols.length === 0) {
-    return `  return values;`;
-  }
-  if (tzCols.length === 1) {
-    const c = tzCols[0]!;
-    return `  return values.map((value, index) => {
-    if (resolvedSort[index]?.drizzleKey === "${c.drizzleKey}") return new Date(value as string);
-    return value;
-  });`;
-  }
-  const cases = tzCols
-    .map((c) => `      case "${c.drizzleKey}":
-        return new Date(value as string);`)
-    .join("\n");
-  return `  return values.map((value, index) => {
-    switch (resolvedSort[index]?.drizzleKey) {
-${cases}
-      default:
-        return value;
-    }
-  });`;
-}
-
 function parentBatchMethods(entity: EntityModel, entities: EntityModel[]): string {
   const methods: string[] = [];
   for (const parent of entities) {
@@ -305,16 +170,7 @@ export function generateRepository(
   const extraTableImports = collectRelationTableImports(entity, entities);
   extraTableImports.delete(exportName);
 
-  const mapRowFields = recordCols
-    .map((col) => {
-      if (col.kind === "timestamptz") {
-        return col.notNull
-          ? `    ${col.graphqlName}: serializeDateTime(row.${col.drizzleKey})!,`
-          : `    ${col.graphqlName}: row.${col.drizzleKey} != null ? serializeDateTime(row.${col.drizzleKey}) : null,`;
-      }
-      return `    ${col.graphqlName}: row.${col.drizzleKey},`;
-    })
-    .join("\n");
+  const mapRowFields = recordCols.map((col) => mapRowFieldLine(col)).join("\n");
 
   const columnDescriptors = recordCols
     .map(
@@ -327,8 +183,9 @@ export function generateRepository(
   const updateSet = full ? businessCols.map((col) => assignUpdateValue(col)).join("\n") : "";
 
   const needsInArray = hasParentBatchMethods(entity, entities);
-  const cursorSerializeFn = cursorSerializeBody(sortCols);
-  const cursorDeserializeFn = cursorDeserializeBody(sortCols);
+  const cursorSerializeFn = cursorSerializeBody(entity, sortCols);
+  const cursorDeserializeFn = cursorDeserializeBody(entity, sortCols);
+  const constraintsBlock = constraintMetadataBlock(entity);
 
   const schemaImports = [exportName, ...extraTableImports].sort().join(", ");
   const bulkFilterBlock = full
@@ -414,6 +271,17 @@ ${businessCols.map((c) => `  ${c.graphqlName}${c.notNull && !c.hasDefault ? "" :
 ${full ? `export type ${E}UpdateInput = Partial<${E}CreateInput>;` : ""}
 
 export type ${E}Filter = FilterAST;
+
+${constraintsBlock}
+
+function validateCreateInput(input: ${E}CreateInput) {
+  validateColumnConstraints(input as Record<string, unknown>, COLUMN_CONSTRAINTS, "create");
+}
+
+${full ? `function validateUpdateInput(input: ${E}UpdateInput) {
+  validateColumnConstraints(input as Record<string, unknown>, COLUMN_CONSTRAINTS, "update");
+}
+` : ""}
 
 function mapRow(row: typeof table.$inferSelect): ${E}Record {
   return {
@@ -518,6 +386,7 @@ ${parentBatchMethods(entity, entities)}
 
   async create(input: ${E}CreateInput, ctx: RepositoryContext) {
     try {
+      validateCreateInput(input);
       const actor = resolveActorId(ctx.actorId);
       const now = new Date();
       const values = {
@@ -534,13 +403,14 @@ ${createValues}
       if (err instanceof ValidationError) {
         return errorPayload({ ${e}: null }, [createUserError("VALIDATION_FAILED", err.message, { field: err.field })]);
       }
-      return errorPayload({ ${e}: null }, [mapDriverError(err)]);
+      return errorPayload({ ${e}: null }, [mapDriverError(err, "postgresql")]);
     }
   }
 
   ${full ? `async update(id: string, input: ${E}UpdateInput, ctx: RepositoryContext) {
     try {
       assertValidUuid(id);
+      validateUpdateInput(input);
       const existing = await this.findById(id);
       if (!existing) {
         return errorPayload({ ${e}: null }, [createUserError("NOT_FOUND", "${E} not found", { id })]);
@@ -557,7 +427,7 @@ ${updateSet}
       if (err instanceof ValidationError) {
         return errorPayload({ ${e}: null }, [createUserError("VALIDATION_FAILED", err.message, { field: err.field })]);
       }
-      return errorPayload({ ${e}: null }, [mapDriverError(err)]);
+      return errorPayload({ ${e}: null }, [mapDriverError(err, "postgresql")]);
     }
   }` : ""}
 
@@ -572,7 +442,7 @@ ${updateSet}
       await db.update(table).set({ deletedAt: new Date(), deletedBy: actor }).where(eq(table.id, id));` : `await db.delete(table).where(eq(table.id, id));`}
       return successPayload({ success: true });
     } catch (err) {
-      return errorPayload({ success: false }, [mapDriverError(err)]);
+      return errorPayload({ success: false }, [mapDriverError(err, "postgresql")]);
     }
   }
 

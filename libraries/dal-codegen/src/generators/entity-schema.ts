@@ -19,6 +19,7 @@ import type { ColumnModel, EntityModel, RelationModel } from "../model.js";
 import {
   filterForColumn,
   filterableColumns,
+  columnGraphqlDescription,
   scalarForColumn,
   toSortEnumMember,
   visibleOutputColumns,
@@ -57,7 +58,7 @@ function buildSortEnum(entity: EntityModel, outputCols: ColumnModel[]): GraphQLE
     values: Object.fromEntries(
       outputCols.map((col) => [
         toSortEnumMember(col.graphqlName),
-        { value: toSortEnumMember(col.graphqlName), description: col.comment || undefined },
+        { value: toSortEnumMember(col.graphqlName), description: columnGraphqlDescription(col) },
       ]),
     ),
   });
@@ -104,7 +105,7 @@ function buildEntityFilter(
       for (const col of filterableColumns(entity)) {
         columnFields[col.graphqlName] = {
           type: registryType(registry, filterForColumn(col)) as GraphQLInputObjectType,
-          description: col.comment || undefined,
+          description: columnGraphqlDescription(col),
         };
       }
       for (const rel of entity.relations) {
@@ -165,7 +166,7 @@ export function buildEntitySchema(
           col.graphqlName,
           {
             type: columnOutputType(registry, col),
-            description: col.comment || undefined,
+            description: columnGraphqlDescription(col),
           },
         ]),
       );
@@ -224,7 +225,7 @@ export function buildEntitySchema(
         col.graphqlName,
         {
           type: columnInputType(registry, col, col.notNull && !col.hasDefault),
-          description: col.comment || undefined,
+          description: columnGraphqlDescription(col),
           ...(col.kind === "enum" && col.defaultValue !== undefined ?
             { defaultValue: col.defaultValue }
           : {}),
@@ -244,7 +245,7 @@ export function buildEntitySchema(
           col.graphqlName,
           {
             type: columnInputType(registry, col, false),
-            description: col.comment || undefined,
+            description: columnGraphqlDescription(col),
           },
         ]),
       ),

@@ -11,6 +11,10 @@ import {
   toGraphqlTypeName,
 } from "@corpdk/dal-core";
 import { parseCommentsFromSource } from "./comments.js";
+import {
+  inferCheckConstraintsForTable,
+  inferLengthConstraint,
+} from "./constraint-infer.js";
 import { attachRelations } from "./relations.js";
 
 export type ColumnKind =
@@ -20,6 +24,14 @@ export type ColumnKind =
   | "boolean"
   | "timestamptz"
   | "enum"
+  | "smallint"
+  | "integer"
+  | "bigint"
+  | "decimal"
+  | "float"
+  | "date"
+  | "timetz"
+  | "interval"
   | "unsupported";
 
 export type RelationKind = "many-to-one" | "one-to-many" | "many-to-many" | "one-to-one";
@@ -57,6 +69,9 @@ export interface ColumnModel {
   isBusiness: boolean;
   /** FK scalars omitted from GraphQL output (Phase 2 — §2.7). */
   omitFromOutput?: boolean;
+  maxLength?: number;
+  minExclusive?: number;
+  minInclusive?: number;
 }
 
 export interface EntityModel {
@@ -76,12 +91,48 @@ export interface EntityModel {
 const AUDIT_COLS = ["createdAt", "updatedAt", "createdBy", "updatedBy"] as const;
 const SOFT_DELETE_COLS = ["deletedAt", "deletedBy"] as const;
 
-function inferColumnKind(columnType: string): ColumnKind {
+interface DrizzleColumnWithTz {
+  withTimezone?: boolean;
+}
+
+function inferColumnKind(
+  exportName: string,
+  drizzleKey: string,
+  col: { columnType: string } & DrizzleColumnWithTz,
+): ColumnKind {
+  const columnType = col.columnType;
   if (columnType === "PgUUID") return "uuid";
   if (columnType === "PgText" || columnType === "PgChar") return "text";
   if (columnType === "PgVarchar") return "varchar";
   if (columnType === "PgBoolean") return "boolean";
-  if (columnType === "PgTimestamp") return "timestamptz";
+  if (columnType === "PgSmallInt") return "smallint";
+  if (columnType === "PgInteger") return "integer";
+  if (columnType === "PgBigInt53" || columnType === "PgBigInt64") return "bigint";
+  if (columnType === "PgNumeric") return "decimal";
+  if (columnType === "PgReal" || columnType === "PgDoublePrecision") return "float";
+  if (columnType === "PgDateString" || columnType === "PgDate") return "date";
+  if (columnType === "PgInterval") return "interval";
+  if (columnType === "PgMoney") {
+    throw new Error(
+      `Column '${exportName}.${drizzleKey}' uses banned PostgreSQL type 'money'. Use integer cents or numeric/decimal.`,
+    );
+  }
+  if (columnType === "PgTimestamp") {
+    if (!col.withTimezone) {
+      throw new Error(
+        `Column '${exportName}.${drizzleKey}' uses timestamp without time zone — use timestamptz only.`,
+      );
+    }
+    return "timestamptz";
+  }
+  if (columnType === "PgTime") {
+    if (!col.withTimezone) {
+      throw new Error(
+        `Column '${exportName}.${drizzleKey}' uses time without time zone — use timetz only.`,
+      );
+    }
+    return "timetz";
+  }
   if (columnType.startsWith("PgEnum")) return "enum";
   return "unsupported";
 }
@@ -164,9 +215,13 @@ export async function loadEntities(schemaPath: string, strict: boolean): Promise
       const config = getTableConfig(value);
       const cols = getTableColumns(value);
       const colModels: ColumnModel[] = [];
+      const checkConstraints = inferCheckConstraintsForTable(
+        config.checks,
+        Object.keys(cols),
+      );
 
       for (const [drizzleKey, col] of Object.entries(cols)) {
-        const kind = inferColumnKind(col.columnType);
+        const kind = inferColumnKind(exportName, drizzleKey, col);
         if (kind === "unsupported") {
           throw new Error(
             `Column '${exportName}.${drizzleKey}' uses unsupported type '${col.columnType}'. See dal-pg-type-mapping.md`,
@@ -200,6 +255,9 @@ export async function loadEntities(schemaPath: string, strict: boolean): Promise
           }
         }
 
+        const lengthMeta = inferLengthConstraint(col);
+        const checkMeta = checkConstraints.get(drizzleKey);
+
         colModels.push({
           drizzleKey,
           physicalName: col.name,
@@ -213,6 +271,9 @@ export async function loadEntities(schemaPath: string, strict: boolean): Promise
           enumValues,
           isServerManaged: isServerManaged(drizzleKey),
           isBusiness: !isServerManaged(drizzleKey),
+          maxLength: lengthMeta,
+          minExclusive: checkMeta?.minExclusive,
+          minInclusive: checkMeta?.minInclusive,
         });
       }
 
