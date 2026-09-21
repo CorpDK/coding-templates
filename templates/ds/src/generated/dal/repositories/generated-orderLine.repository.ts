@@ -305,10 +305,6 @@ export class GeneratedOrderLineRepository {
     try {
       assertValidUuid(id);
       validateUpdateInput(input);
-      const existing = await this.findById(id);
-      if (!existing) {
-        return errorPayload({ orderLine: null }, [createUserError("NOT_FOUND", "OrderLine not found", { id })]);
-      }
       const actor = resolveActorId(ctx.actorId);
       const set: Partial<typeof table.$inferInsert> = {
         updatedAt: new Date(),
@@ -324,6 +320,9 @@ export class GeneratedOrderLineRepository {
     set.description = input.description;
   }
       const updated = await conn.update(table).set(set).where(eq(table.id, id)).returning();
+      if (updated.length === 0) {
+        return errorPayload({ orderLine: null }, [createUserError("NOT_FOUND", "OrderLine not found", { id })]);
+      }
       return successPayload({ orderLine: mapRow(updated[0]) });
     } catch (err) {
       if (err instanceof ValidationError) {
@@ -336,11 +335,10 @@ export class GeneratedOrderLineRepository {
   async delete(id: string, ctx: RepositoryContext, conn: typeof db = db) {
     try {
       assertValidUuid(id);
-      const existing = await this.findById(id);
-      if (!existing) {
+      const deleted = await conn.delete(table).where(eq(table.id, id)).returning({ id: table.id });
+      if (deleted.length === 0) {
         return errorPayload({ success: false }, [createUserError("NOT_FOUND", "OrderLine not found", { id })]);
       }
-      await conn.delete(table).where(eq(table.id, id));
       return successPayload({ success: true });
     } catch (err) {
       return errorPayload({ success: false }, [mapDriverError(err, "postgresql")]);

@@ -304,10 +304,6 @@ export class GeneratedItemDetailRepository {
     try {
       assertValidUuid(id);
       validateUpdateInput(input);
-      const existing = await this.findById(id);
-      if (!existing) {
-        return errorPayload({ itemDetail: null }, [createUserError("NOT_FOUND", "ItemDetail not found", { id })]);
-      }
       const actor = resolveActorId(ctx.actorId);
       const set: Partial<typeof table.$inferInsert> = {
         updatedAt: new Date(),
@@ -323,6 +319,9 @@ export class GeneratedItemDetailRepository {
     set.warrantyNotes = input.warrantyNotes;
   }
       const updated = await conn.update(table).set(set).where(eq(table.id, id)).returning();
+      if (updated.length === 0) {
+        return errorPayload({ itemDetail: null }, [createUserError("NOT_FOUND", "ItemDetail not found", { id })]);
+      }
       return successPayload({ itemDetail: mapRow(updated[0]) });
     } catch (err) {
       if (err instanceof ValidationError) {
@@ -335,11 +334,10 @@ export class GeneratedItemDetailRepository {
   async delete(id: string, ctx: RepositoryContext, conn: typeof db = db) {
     try {
       assertValidUuid(id);
-      const existing = await this.findById(id);
-      if (!existing) {
+      const deleted = await conn.delete(table).where(eq(table.id, id)).returning({ id: table.id });
+      if (deleted.length === 0) {
         return errorPayload({ success: false }, [createUserError("NOT_FOUND", "ItemDetail not found", { id })]);
       }
-      await conn.delete(table).where(eq(table.id, id));
       return successPayload({ success: true });
     } catch (err) {
       return errorPayload({ success: false }, [mapDriverError(err, "postgresql")]);

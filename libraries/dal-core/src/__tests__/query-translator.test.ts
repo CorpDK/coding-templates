@@ -55,4 +55,41 @@ describe("QueryTranslator inverse one-to-one filters", () => {
     });
     expect(sql).toBeDefined();
   });
+
+  it("compiles empty nested filters as existence predicates", () => {
+    const mockDb = {
+      select: () => ({
+        from: () => ({
+          where: () => ({}),
+          innerJoin: () => ({ where: () => ({}) }),
+        }),
+      }),
+    };
+    const translator = new QueryTranslator({
+      db: mockDb as never,
+      table: items,
+      columns: [{ graphqlName: "name", drizzleKey: "name", kind: "text", column: items.name }],
+      relations: [
+        {
+          fieldName: "detail",
+          kind: "one-to-one",
+          childFkDrizzleKey: "itemId",
+          targetTable: itemDetails,
+          targetColumns: [
+            {
+              graphqlName: "specifications",
+              drizzleKey: "specifications",
+              kind: "text",
+              column: itemDetails.specifications,
+            },
+          ],
+          filterable: true,
+        },
+      ],
+      softDelete: false,
+      filterBudget: { maxDepth: 2, maxNodes: 50 },
+    });
+
+    expect(translator.translateFilter({ detail: {} })).toBeDefined();
+  });
 });

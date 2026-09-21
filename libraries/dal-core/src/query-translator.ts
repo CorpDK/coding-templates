@@ -19,6 +19,7 @@ import {
   type FilterBudgetLimits,
 } from "./filters.js";
 import type { FilterAST } from "./filter-ast.js";
+import { isEmptyFilter } from "./bulk.js";
 import { extractAssociationFilter, scalarFilterKeys } from "./filter-ast.js";
 
 export type ColumnKind =
@@ -197,13 +198,22 @@ export class QueryTranslator {
       filterBudget: this.config.filterBudget,
     });
     const innerWhere = nested.translateFilter(targetFilter, false, true);
-    if (!innerWhere) return undefined;
+    if (!innerWhere && !isEmptyFilter(targetFilter)) return undefined;
+
+    const targetSoftDelete = rel.targetColumns.some((c) => c.drizzleKey === "deletedAt");
+    const existsParts: SQL[] = [eq(childFk, parentId)];
+    if (innerWhere) {
+      existsParts.push(innerWhere);
+    } else if (targetSoftDelete) {
+      const deletedAt = (rel.targetTable as unknown as Record<string, Column>).deletedAt;
+      if (deletedAt) existsParts.push(sql`${deletedAt} IS NULL`);
+    }
 
     return exists(
       this.config.db
         .select({ one: sql`1` })
         .from(rel.targetTable)
-        .where(and(eq(childFk, parentId), innerWhere)!),
+        .where(existsParts.length === 1 ? existsParts[0] : and(...existsParts)!),
     );
   }
 
@@ -221,14 +231,23 @@ export class QueryTranslator {
       filterBudget: this.config.filterBudget,
     });
     const innerWhere = nested.translateFilter(targetFilter, false, true);
-    if (!innerWhere) return undefined;
+    if (!innerWhere && !isEmptyFilter(targetFilter)) return undefined;
 
     const targetId = (rel.targetTable as unknown as Record<string, Column>).id;
+    const targetSoftDelete = rel.targetColumns.some((c) => c.drizzleKey === "deletedAt");
+    const existsParts: SQL[] = [eq(targetId, ownerFk)];
+    if (innerWhere) {
+      existsParts.push(innerWhere);
+    } else if (targetSoftDelete) {
+      const deletedAt = (rel.targetTable as unknown as Record<string, Column>).deletedAt;
+      if (deletedAt) existsParts.push(sql`${deletedAt} IS NULL`);
+    }
+
     return exists(
       this.config.db
         .select({ one: sql`1` })
         .from(rel.targetTable)
-        .where(and(eq(targetId, ownerFk), innerWhere)!),
+        .where(existsParts.length === 1 ? existsParts[0] : and(...existsParts)!),
     );
   }
 
@@ -264,30 +283,52 @@ export class QueryTranslator {
         })
       : null;
 
-    const childPredicate = (childFilter: FilterAST): SQL | undefined =>
-      childTranslator?.translateFilter(childFilter, false, true);
+    const childSoftDelete = rel.childColumns?.some((c) => c.drizzleKey === "deletedAt") ?? false;
+    const childDeletedAt = childSoftDelete
+      ? (rel.childTable as unknown as Record<string, Column>).deletedAt
+      : undefined;
+
+    const childExistsWhere = (inner?: SQL): SQL => {
+      const parts: SQL[] = [eq(childFk, parentId)];
+      if (inner) {
+        parts.push(inner);
+      } else if (childDeletedAt) {
+        parts.push(sql`${childDeletedAt} IS NULL`);
+      }
+      return parts.length === 1 ? parts[0]! : and(...parts)!;
+    };
+
+    const childPredicate = (childFilter: FilterAST): SQL | undefined => {
+      if (isEmptyFilter(childFilter)) return undefined;
+      return childTranslator?.translateFilter(childFilter, false, true);
+    };
 
     if (assoc.some) {
-      const inner = childPredicate(assoc.some);
-      if (!inner) return undefined;
+      if (!isEmptyFilter(assoc.some)) {
+        const inner = childPredicate(assoc.some);
+        if (!inner) return undefined;
+      }
       return exists(
         this.config.db
           .select({ one: sql`1` })
           .from(rel.childTable!)
-          .where(and(eq(childFk, parentId), inner)!),
+          .where(childExistsWhere(childPredicate(assoc.some))),
       );
     }
     if (assoc.none) {
-      const inner = childPredicate(assoc.none);
-      if (!inner) return undefined;
+      if (!isEmptyFilter(assoc.none)) {
+        const inner = childPredicate(assoc.none);
+        if (!inner) return undefined;
+      }
       return notExists(
         this.config.db
           .select({ one: sql`1` })
           .from(rel.childTable!)
-          .where(and(eq(childFk, parentId), inner)!),
+          .where(childExistsWhere(childPredicate(assoc.none))),
       );
     }
     if (assoc.every) {
+      if (isEmptyFilter(assoc.every)) return undefined;
       const inner = childPredicate(assoc.every);
       if (!inner) return undefined;
       return notExists(
@@ -318,15 +359,28 @@ export class QueryTranslator {
       filterBudget: this.config.filterBudget,
     });
 
+    const targetSoftDelete = rel.targetColumns.some((c) => c.drizzleKey === "deletedAt");
+    const targetDeletedAt = targetSoftDelete
+      ? (rel.targetTable as unknown as Record<string, Column>).deletedAt
+      : undefined;
+
     const buildExists = (targetFilter: FilterAST, negate = false): SQL | undefined => {
-      const inner = targetTranslator.translateFilter(targetFilter, false, true);
-      if (!inner) return undefined;
+      const inner = isEmptyFilter(targetFilter)
+        ? undefined
+        : targetTranslator.translateFilter(targetFilter, false, true);
+      if (!inner && !isEmptyFilter(targetFilter)) return undefined;
+      const existsParts: SQL[] = [eq(joinOwnerFk, parentId)];
+      if (inner) {
+        existsParts.push(inner);
+      } else if (targetDeletedAt) {
+        existsParts.push(sql`${targetDeletedAt} IS NULL`);
+      }
       const existsSql = exists(
         this.config.db
           .select({ one: sql`1` })
           .from(rel.joinTable!)
           .innerJoin(rel.targetTable, eq(joinTargetFk, targetId))
-          .where(and(eq(joinOwnerFk, parentId), inner)!),
+          .where(existsParts.length === 1 ? existsParts[0] : and(...existsParts)!),
       );
       return negate ? not(existsSql) : existsSql;
     };
@@ -334,6 +388,7 @@ export class QueryTranslator {
     if (assoc.some) return buildExists(assoc.some);
     if (assoc.none) return buildExists(assoc.none, true);
     if (assoc.every) {
+      if (isEmptyFilter(assoc.every)) return undefined;
       const inner = targetTranslator.translateFilter(assoc.every, false, true);
       if (!inner) return undefined;
       return notExists(
