@@ -389,6 +389,10 @@ export class QueryTranslator {
     const targetDeletedAt = targetSoftDelete
       ? (rel.targetTable as unknown as Record<string, Column>).deletedAt
       : undefined;
+    const joinSoftDelete = relationChildSoftDelete(rel);
+    const joinDeletedAt = joinSoftDelete
+      ? (rel.joinTable as unknown as Record<string, Column>).deletedAt
+      : undefined;
 
     const buildExists = (targetFilter: FilterAST, negate = false): SQL | undefined => {
       const inner = isExistenceOnlyFilter(targetFilter)
@@ -398,6 +402,9 @@ export class QueryTranslator {
       const existsParts: SQL[] = [eq(joinOwnerFk, parentId)];
       if (inner) {
         existsParts.push(inner);
+      }
+      if (joinDeletedAt) {
+        existsParts.push(sql`${joinDeletedAt} IS NULL`);
       }
       if (targetDeletedAt) {
         existsParts.push(sql`${targetDeletedAt} IS NULL`);
@@ -422,6 +429,9 @@ export class QueryTranslator {
       const inner = targetTranslator.translateFilter(assoc.every, false, true);
       if (!inner) return undefined;
       const everyParts: SQL[] = [eq(joinOwnerFk, parentId), not(inner)];
+      if (joinDeletedAt) {
+        everyParts.push(sql`${joinDeletedAt} IS NULL`);
+      }
       if (targetDeletedAt) {
         everyParts.push(sql`${targetDeletedAt} IS NULL`);
       }

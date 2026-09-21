@@ -184,9 +184,14 @@ function drizzleImportLine(entity: EntityModel, entities: EntityModel[]): string
     const target = entities.find((e) => e.exportName === r.targetExportName);
     return target?.deleteStrategy === "soft";
   });
+  const m2mJoinSoft = entity.relations.some((r) => {
+    if (r.kind !== "many-to-many" || !r.joinTableExportName) return false;
+    const join = entities.find((e) => e.exportName === r.joinTableExportName);
+    return join?.deleteStrategy === "soft";
+  });
   const parts = ["eq", "inArray"];
-  if (soft || m2mTargetSoft || hasM2m) parts.push("and");
-  if (soft || m2mTargetSoft) parts.push("isNull");
+  if (soft || m2mTargetSoft || m2mJoinSoft || hasM2m) parts.push("and");
+  if (soft || m2mTargetSoft || m2mJoinSoft) parts.push("isNull");
   if (hasM2m) parts.push("innerJoin");
   return `import { ${parts.join(", ")} } from "drizzle-orm";`;
 }
@@ -265,6 +270,7 @@ function manyToManyBatchMethods(entity: EntityModel, entities: EntityModel[]): s
     }
     const targetEntity = entities.find((e) => e.exportName === rel.targetExportName);
     if (!targetEntity) continue;
+    const joinEntity = entities.find((e) => e.exportName === rel.joinTableExportName);
 
     const joinTable = rel.joinTableExportName;
     const targetExport = rel.targetExportName;
@@ -272,15 +278,18 @@ function manyToManyBatchMethods(entity: EntityModel, entities: EntityModel[]): s
     const targetFk = rel.joinTargetFkDrizzleKey;
     const targetType = rel.targetGraphqlType;
     const targetSoft = targetEntity.deleteStrategy === "soft";
+    const joinSoft = joinEntity?.deleteStrategy === "soft";
     const targetCols = internalRecordColumns(targetEntity);
     const selectFields = [
       `ownerId: ${joinTable}.${ownerFk}`,
       ...targetCols.map((c) => `${c.drizzleKey}: ${targetExport}.${c.drizzleKey}`),
     ].join(",\n      ");
     const mapFields = targetCols.map((c) => mapRowFieldLine(c)).join("\n");
-    const whereClause = targetSoft
-      ? `and(inArray(${joinTable}.${ownerFk}, unique), isNull(${targetExport}.deletedAt))!`
-      : `inArray(${joinTable}.${ownerFk}, unique)`;
+    const whereParts = [`inArray(${joinTable}.${ownerFk}, unique)`];
+    if (joinSoft) whereParts.push(`isNull(${joinTable}.deletedAt)`);
+    if (targetSoft) whereParts.push(`isNull(${targetExport}.deletedAt)`);
+    const whereClause =
+      whereParts.length === 1 ? whereParts[0]! : `and(${whereParts.join(", ")})!`;
 
     methods.push(`  async find${targetType}sBy${entity.graphqlType}Ids(${entity.fieldBasename}Ids: string[]): Promise<Map<string, ${targetType}Record[]>> {
     if (${entity.fieldBasename}Ids.length === 0) return new Map();

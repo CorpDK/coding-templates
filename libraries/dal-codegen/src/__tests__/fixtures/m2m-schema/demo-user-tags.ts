@@ -17,6 +17,8 @@ export const demoUserTags = pgTable(
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     createdBy: text("created_by").notNull().default("system"),
     updatedBy: text("updated_by").notNull().default("system"),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    deletedBy: text("deleted_by"),
   },
   (table) => [
     index("demo_user_tags_demo_user_id_idx").on(table.demoUserId),

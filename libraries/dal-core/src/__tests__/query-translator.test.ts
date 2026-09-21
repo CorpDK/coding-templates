@@ -563,6 +563,16 @@ const itemTags = pgTable("item_tags", {
     .references(() => tags.id),
 });
 
+const softItemTags = pgTable("soft_item_tags", {
+  itemId: uuid("item_id")
+    .notNull()
+    .references(() => items.id),
+  tagId: uuid("tag_id")
+    .notNull()
+    .references(() => tags.id),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+});
+
 describe("QueryTranslator many-to-many filters", () => {
   it("compiles some, none, and every M:N association filters", () => {
     const translator = new QueryTranslator({
@@ -591,6 +601,48 @@ describe("QueryTranslator many-to-many filters", () => {
     expect(translator.translateFilter({ tags: { none: { label: { eq: "sale" } } } })).toBeDefined();
     expect(translator.translateFilter({ tags: { every: { label: { eq: "sale" } } } })).toBeDefined();
     expect(translator.translateFilter({ tags: { every: { label: {} } } })).toBeDefined();
+  });
+
+  it("excludes soft-deleted junction rows in M:N association filters", () => {
+    let capturedWhere: SQL | undefined;
+    const db = {
+      select: () => ({
+        from: () => ({
+          innerJoin: () => ({
+            where: (where: SQL) => {
+              capturedWhere = where;
+              return {};
+            },
+          }),
+        }),
+      }),
+    };
+
+    const translator = new QueryTranslator({
+      db: db as never,
+      table: items,
+      columns: mnItemColumns,
+      relations: [
+        {
+          fieldName: "tags",
+          kind: "many-to-many",
+          joinTable: softItemTags,
+          joinOwnerFkDrizzleKey: "itemId",
+          joinTargetFkDrizzleKey: "tagId",
+          targetTable: tags,
+          targetColumns: [
+            { graphqlName: "label", drizzleKey: "label", kind: "text", column: tags.label },
+          ],
+          childSoftDelete: true,
+          filterable: true,
+        },
+      ],
+      softDelete: false,
+      filterBudget: { maxDepth: 2, maxNodes: 50 },
+    });
+
+    translator.translateFilter({ tags: { some: { label: { eq: "sale" } } } });
+    expect(sqlText(capturedWhere)).toMatch(/soft_item_tags"\.\"deleted_at" IS NULL/i);
   });
 });
 
