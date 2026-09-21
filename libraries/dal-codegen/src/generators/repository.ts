@@ -330,6 +330,9 @@ import { db } from "../../../db/index.js";
 import { ${schemaImports} } from "../../../db/schema/index.js";
 import { RELATION_DESCRIPTORS_BY_TABLE } from "./generated-relation-descriptors.js";
 
+type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
+type DbConn = typeof db | DbTransaction;
+
 const table = ${exportName};
 const FILTER_BUDGET = resolveFilterBudget({ maxDepth: ${config.filterMaxDepth}, maxNodes: ${config.filterMaxNodes} });
 const BULK_FILTER_MAX = resolveBulkFilterMax();
@@ -488,7 +491,7 @@ ${parentBatchMethods(entity, entities)}
     );
   }
 
-  async create(input: ${E}CreateInput, ctx: RepositoryContext, conn: typeof db = db) {
+  async create(input: ${E}CreateInput, ctx: RepositoryContext, conn: DbConn = db) {
     try {
       validateCreateInput(input);
       const actor = resolveActorId(ctx.actorId);
@@ -511,7 +514,7 @@ ${createValues}
     }
   }
 
-  ${full ? `async update(id: string, input: ${E}UpdateInput, ctx: RepositoryContext, conn: typeof db = db) {
+  ${full ? `async update(id: string, input: ${E}UpdateInput, ctx: RepositoryContext, conn: DbConn = db) {
     try {
       assertValidUuid(id);
       validateUpdateInput(input);
@@ -534,7 +537,7 @@ ${updateSet}
     }
   }` : ""}
 
-  async delete(id: string, ctx: RepositoryContext, conn: typeof db = db) {
+  async delete(id: string, ctx: RepositoryContext, conn: DbConn = db) {
     try {
       assertValidUuid(id);
       ${soft ? `const actor = resolveActorId(ctx.actorId);
