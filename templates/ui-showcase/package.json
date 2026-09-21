@@ -13,12 +13,14 @@
     "clean": "rm -rf node_modules .turbo *.tsbuildinfo storybook-static"
   },
   "dependencies": {
+    "@corpdk/ui-auth": "workspace:*",
+    "@corpdk/ui-charts": "workspace:*",
     "@corpdk/ui-core": "workspace:*",
+    "@corpdk/ui-datagrid": "workspace:*",
+    "@corpdk/ui-feedback": "workspace:*",
+    "@corpdk/ui-forms": "workspace:*",
     "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "react-hook-form": "^7.72.0",
-    "recharts": "2.15.4",
-    "sonner": "^2.0.7"
+    "react-dom": "19.2.4"
   },
   "devDependencies": {
     "@chromatic-com/storybook": "^5.1.1",

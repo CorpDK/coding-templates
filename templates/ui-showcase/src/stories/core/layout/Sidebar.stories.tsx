@@ -27,7 +27,6 @@ const meta: Meta<typeof Sidebar> = {
   title: "ui-core/Layout/Sidebar",
   component: Sidebar,
   tags: ["autodocs"],
-  parameters: { layout: "fullscreen" },
   decorators: [
     (Story) => (
       <div className="h-[500px] w-full">

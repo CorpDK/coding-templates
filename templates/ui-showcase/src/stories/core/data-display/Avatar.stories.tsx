@@ -14,10 +14,7 @@ export const WithImage: Story = {
   render: function Render() {
     return (
       <Avatar>
-        <AvatarImage
-          src="https://avatars.githubusercontent.com/u/124599?v=4"
-          alt="Demo user"
-        />
+        <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
         <AvatarFallback>CN</AvatarFallback>
       </Avatar>
     );

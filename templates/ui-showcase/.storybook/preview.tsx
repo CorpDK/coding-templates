@@ -2,7 +2,6 @@ import type { Preview } from "@storybook/nextjs-vite";
 import {
   StyleProvider,
   SonnerToaster,
-  Toaster,
   type BrandConfig,
   defaultNeutralBrand,
   corporateBlueBrand,
@@ -20,7 +19,6 @@ const BRAND_MAP: Record<string, BrandConfig> = {
 
 const preview: Preview = {
   parameters: {
-    layout: "padded",
     controls: {
       matchers: {
         color: /(background|color)$/i,
@@ -60,7 +58,6 @@ const preview: Preview = {
     (Story, context) => {
       const brandKey = (context.globals.brand as string) || "default-neutral";
       const brandConfig = BRAND_MAP[brandKey] ?? BRAND_MAP["default-neutral"];
-      const layout = context.parameters.layout as string | undefined;
 
       return (
         <StyleProvider
@@ -69,15 +66,8 @@ const preview: Preview = {
           enableSystem={false}
           brand={brandConfig}
         >
-          {layout === "fullscreen" ? (
-            <Story />
-          ) : (
-            <div className="p-4">
-              <Story />
-            </div>
-          )}
+          <Story />
           <SonnerToaster />
-          <Toaster />
         </StyleProvider>
       );
     },
