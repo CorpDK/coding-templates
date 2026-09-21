@@ -30,4 +30,6 @@ jobs:
 
       - run: pnpm --filter @corpdk/dal-core test
       - run: pnpm --filter @corpdk/dal-codegen test
+      - run: pnpm --filter @corpdk/ds dal:codegen
+      - run: pnpm --filter @corpdk/ds build
       - run: pnpm --filter @corpdk/ds entity:lint
