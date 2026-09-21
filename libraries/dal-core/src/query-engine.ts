@@ -5,6 +5,7 @@ import {
   type ColumnProjection,
 } from "./column-projection.js";
 import {
+  assertCursorIncludeDeletedMatches,
   assertCursorSortMatches,
   buildKeysetSeek,
   buildOrderClauses,
@@ -134,6 +135,7 @@ export class QueryEngine<TRow> {
         this.config.cursorVersion,
       );
       assertCursorSortMatches(decoded, resolvedSort, "after");
+      assertCursorIncludeDeletedMatches(decoded, args.includeDeleted, "after");
       whereParts.push(
         buildKeysetSeek(seekColumns, seekDirections, cursorValuesToDb(decoded.values, resolvedSort), "after"),
       );
@@ -145,6 +147,7 @@ export class QueryEngine<TRow> {
         this.config.cursorVersion,
       );
       assertCursorSortMatches(decoded, resolvedSort, "before");
+      assertCursorIncludeDeletedMatches(decoded, args.includeDeleted, "before");
       whereParts.push(
         buildKeysetSeek(seekColumns, seekDirections, cursorValuesToDb(decoded.values, resolvedSort), "before"),
       );

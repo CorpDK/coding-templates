@@ -176,10 +176,18 @@ function hasParentBatchMethods(entity: EntityModel, entities: EntityModel[]): bo
   return false;
 }
 
-function drizzleImportLine(needsInArray: boolean, soft: boolean): string {
-  const parts = ["eq"];
-  if (needsInArray) parts.push("inArray");
-  if (soft) parts.push("and", "isNull");
+function drizzleImportLine(entity: EntityModel, entities: EntityModel[]): string {
+  const soft = entity.deleteStrategy === "soft";
+  const hasM2m = entity.relations.some((r) => r.kind === "many-to-many");
+  const m2mTargetSoft = entity.relations.some((r) => {
+    if (r.kind !== "many-to-many") return false;
+    const target = entities.find((e) => e.exportName === r.targetExportName);
+    return target?.deleteStrategy === "soft";
+  });
+  const parts = ["eq", "inArray"];
+  if (soft || m2mTargetSoft || hasM2m) parts.push("and");
+  if (soft || m2mTargetSoft) parts.push("isNull");
+  if (hasM2m) parts.push("innerJoin");
   return `import { ${parts.join(", ")} } from "drizzle-orm";`;
 }
 
@@ -244,6 +252,60 @@ function parentBatchMethods(entity: EntityModel, entities: EntityModel[]): strin
   return methods.join("\n\n");
 }
 
+function manyToManyBatchMethods(entity: EntityModel, entities: EntityModel[]): string {
+  const methods: string[] = [];
+  for (const rel of entity.relations) {
+    if (rel.kind !== "many-to-many") continue;
+    if (
+      !rel.joinTableExportName ||
+      !rel.joinOwnerFkDrizzleKey ||
+      !rel.joinTargetFkDrizzleKey
+    ) {
+      continue;
+    }
+    const targetEntity = entities.find((e) => e.exportName === rel.targetExportName);
+    if (!targetEntity) continue;
+
+    const joinTable = rel.joinTableExportName;
+    const targetExport = rel.targetExportName;
+    const ownerFk = rel.joinOwnerFkDrizzleKey;
+    const targetFk = rel.joinTargetFkDrizzleKey;
+    const targetType = rel.targetGraphqlType;
+    const targetSoft = targetEntity.deleteStrategy === "soft";
+    const targetCols = internalRecordColumns(targetEntity);
+    const selectFields = [
+      `ownerId: ${joinTable}.${ownerFk}`,
+      ...targetCols.map((c) => `${c.drizzleKey}: ${targetExport}.${c.drizzleKey}`),
+    ].join(",\n      ");
+    const mapFields = targetCols.map((c) => mapRowFieldLine(c)).join("\n");
+    const whereClause = targetSoft
+      ? `and(inArray(${joinTable}.${ownerFk}, unique), isNull(${targetExport}.deletedAt))!`
+      : `inArray(${joinTable}.${ownerFk}, unique)`;
+
+    methods.push(`  async find${targetType}sBy${entity.graphqlType}Ids(${entity.fieldBasename}Ids: string[]): Promise<Map<string, ${targetType}Record[]>> {
+    if (${entity.fieldBasename}Ids.length === 0) return new Map();
+    const unique = [...new Set(${entity.fieldBasename}Ids)];
+    const rows = await db
+      .select({
+      ${selectFields}
+      })
+      .from(${joinTable})
+      .innerJoin(${targetExport}, eq(${joinTable}.${targetFk}, ${targetExport}.id))
+      .where(${whereClause});
+    const map = new Map<string, ${targetType}Record[]>();
+    for (const id of unique) map.set(id, []);
+    for (const row of rows) {
+      const ownerId = row.ownerId as string;
+      map.get(ownerId)?.push({
+${mapFields}
+      });
+    }
+    return map;
+  }`);
+  }
+  return methods.join("\n\n");
+}
+
 export function generateRepository(
   entity: EntityModel,
   entities: EntityModel[],
@@ -274,7 +336,6 @@ export function generateRepository(
   const createValues = businessCols.map((col) => assignCreateValue(col)).join("\n");
   const updateSet = full ? businessCols.map((col) => assignUpdateValue(col)).join("\n") : "";
 
-  const needsInArray = true;
   const activeIdWhere = activeRowWhere("id", soft);
   const cursorSerializeFn = cursorSerializeBody(entity, sortCols);
   const cursorDeserializeFn = cursorDeserializeBody(entity, sortCols);
@@ -299,10 +360,10 @@ ${updateSet}
       assertFilterBulkCap(matched.length, BULK_FILTER_MAX);
       const ids = matched.map((row) => row.id);
       if (ids.length === 0) {
-        return { successCount: 0, failureCount: 0, userErrors: [] };
+        return { successCount: 0, failureCount: 0, userErrors: [], matchedIds: [] };
       }
       const updated = await tx.update(table).set(set).where(inArray(table.id, ids)).returning({ id: table.id });
-      return { successCount: updated.length, failureCount: 0, userErrors: [] };
+      return { successCount: updated.length, failureCount: 0, userErrors: [], matchedIds: ids };
     });`
     : "";
 
@@ -315,15 +376,15 @@ ${updateSet}
       assertFilterBulkCap(matched.length, BULK_FILTER_MAX);
       const ids = matched.map((row) => row.id);
       if (ids.length === 0) {
-        return { successCount: 0, failureCount: 0, userErrors: [] };
+        return { successCount: 0, failureCount: 0, userErrors: [], matchedIds: [] };
       }
       ${soft ? `const actor = resolveActorId(ctx.actorId);
       const updated = await tx.update(table).set({ deletedAt: new Date(), deletedBy: actor }).where(inArray(table.id, ids)).returning({ id: table.id });` : `const deleted = await tx.delete(table).where(inArray(table.id, ids)).returning({ id: table.id });`}
-      return { successCount: ${soft ? "updated" : "deleted"}.length, failureCount: 0, userErrors: [] };
+      return { successCount: ${soft ? "updated" : "deleted"}.length, failureCount: 0, userErrors: [], matchedIds: ids };
     });`;
 
   return `// AUTO-GENERATED by @corpdk/dal-codegen — do not edit
-${drizzleImportLine(needsInArray, soft)}
+${drizzleImportLine(entity, entities)}
 ${dalCoreImportBlock(entity)}
 import type { GraphQLResolveInfo } from "graphql";
 import { db } from "../../../db/index.js";
@@ -440,6 +501,8 @@ export class Generated${E}Repository {
   }
 
 ${parentBatchMethods(entity, entities)}
+
+${manyToManyBatchMethods(entity, entities)}
 
   async list(
     args: {

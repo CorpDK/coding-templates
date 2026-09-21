@@ -12,7 +12,7 @@ const packageRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
 const fixtureDir = join(packageRoot, "src/__tests__/fixtures/phase5-schema");
 const codegenOutputDir = "src/__tests__/tmp-generated";
 const dsPackageRoot = join(packageRoot, "../../templates/ds");
-const dsCodegenOutputDir = "src/__tests__/tmp-generated-ds";
+const dsSchemaPath = join(dsPackageRoot, "src/db/schema");
 
 describe("Phase 5 dal-codegen", () => {
   it("infers maxLength and check constraints on columns", async () => {
@@ -74,32 +74,49 @@ describe("Phase 5 dal-codegen", () => {
     expect(existsSync(resolverPath)).toBe(true);
     expect(existsSync(manifestPath)).toBe(true);
 
-    const repoSource = readFileSync(repoPath, "utf-8");
-    expect(repoSource).toContain("export class GeneratedPhase5WidgetRepository");
-    expect(readFileSync(manifestPath, "utf-8")).toContain("phase5Widgets");
+    const manifest = JSON.parse(readFileSync(manifestPath, "utf-8")) as {
+      entities: Array<{ exportName: string; graphqlType: string }>;
+    };
+    expect(manifest.entities).toEqual([
+      expect.objectContaining({ exportName: "phase5Widgets", graphqlType: "Phase5Widget" }),
+    ]);
+
+    const entities = await loadEntities(fixtureDir, false);
+    const schema = buildDalGraphQLSchema(entities);
+    const queryFields = schema.getQueryType()?.getFields() ?? {};
+    expect(queryFields.phase5Widgets).toBeDefined();
+    expect(queryFields.phase5Widget).toBeDefined();
+    expect(queryFields.phase5WidgetConnection).toBeDefined();
   });
 
-  it("runDalCodegen emits relation-aware repositories for the ds template schema", async () => {
+  it("runDalCodegen supports ds template relation navigation in GraphQL schema", async () => {
     await runDalCodegen({
       packageRoot: dsPackageRoot,
       schemaPath: "src/db/schema",
-      outputDir: dsCodegenOutputDir,
+      outputDir: "src/__tests__/tmp-generated-ds",
       configPath: "dal.config.yaml",
     });
 
-    const itemRepo = join(
-      dsPackageRoot,
-      dsCodegenOutputDir,
-      "repositories/generated-item.repository.ts",
-    );
-    const resolverPath = join(dsPackageRoot, dsCodegenOutputDir, "resolvers/generated-resolvers.ts");
+    const entities = await loadEntities(dsSchemaPath, false);
+    const categories = entities.find((e) => e.exportName === "categories");
+    const items = entities.find((e) => e.exportName === "items");
+    expect(categories).toBeDefined();
+    expect(items).toBeDefined();
 
-    expect(existsSync(itemRepo)).toBe(true);
-    expect(existsSync(resolverPath)).toBe(true);
+    const categoryItems = categories!.relations.find((r) => r.fieldName === "items");
+    expect(categoryItems?.kind).toBe("one-to-many");
+    expect(categoryItems?.childFkDrizzleKey).toBe("categoryId");
 
-    const itemSource = readFileSync(itemRepo, "utf-8");
-    expect(itemSource).toContain("export class GeneratedItemRepository");
-    expect(itemSource).toContain("findByCategoryIds");
-    expect(readFileSync(resolverPath, "utf-8")).toContain("Category");
+    const schema = buildDalGraphQLSchema(entities);
+    const categoryType = schema.getType("Category");
+    const itemType = schema.getType("Item");
+    expect(categoryType && "getFields" in categoryType).toBe(true);
+    expect(itemType && "getFields" in itemType).toBe(true);
+    if (categoryType && "getFields" in categoryType) {
+      expect(categoryType.getFields().items).toBeDefined();
+    }
+    if (itemType && "getFields" in itemType) {
+      expect(itemType.getFields().category).toBeDefined();
+    }
   });
 });

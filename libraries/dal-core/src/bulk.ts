@@ -13,6 +13,7 @@ export interface BulkMutationResult {
   successCount: number;
   failureCount: number;
   userErrors: import("./types.js").MutationUserError[];
+  matchedIds?: string[];
 }
 
 export function resolveBulkFilterMax(): number {

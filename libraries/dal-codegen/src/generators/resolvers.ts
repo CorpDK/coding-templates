@@ -29,6 +29,14 @@ function generateLoaderSetup(entities: EntityModel[]): string {
     for (const pid of parentIds) map.set(pid, grouped.get(pid) ?? []);
     return map;
   });`);
+      } else if (rel.kind === "many-to-many") {
+        const targetType = rel.targetGraphqlType;
+        setupLines.push(`  ctxRef.loaders.${loaderKey} = new DataLoader<string, unknown[]>(async (parentIds) => {
+    const grouped = await ctxRef.repositories.${entity.fieldBasename}.find${targetType}sBy${entity.graphqlType}Ids([...parentIds]);
+    const map = new Map<string, unknown[]>();
+    for (const pid of parentIds) map.set(pid, grouped.get(pid) ?? []);
+    return map;
+  });`);
       } else if (rel.kind === "one-to-one" && !rel.ownerFkDrizzleKey) {
         const childRepo = targetRepoBasename(rel, entities);
         const parentType = entity.graphqlType;
@@ -69,7 +77,7 @@ function generateFieldResolvers(entities: EntityModel[]): string {
       if (fk == null) return null;
       return ctx.loaders.${loaderKey}!.load(fk);
     },`);
-      } else if (rel.kind === "one-to-many") {
+      } else if (rel.kind === "one-to-many" || rel.kind === "many-to-many") {
         resolverFields.push(`    ${rel.fieldName}: (parent: Record<string, unknown>, _: unknown, ctx: DalContext) => {
       const id = parent.id as string;
       return ctx.loaders.${loaderKey}!.load(id);
@@ -166,8 +174,14 @@ export function generateResolvers(entities: EntityModel[]): string {
       return result;
     },
 
-    bulkDelete${E}ByFilter: async (_: unknown, args: { filter: Record<string, unknown>; confirmDeleteAll?: boolean | null }, ctx: DalContext) =>
-      ctx.repositories.${e}.bulkDeleteByFilter(args.filter as never, { actorId: ctx.actorId }, args.confirmDeleteAll),`);
+    bulkDelete${E}ByFilter: async (_: unknown, args: { filter: Record<string, unknown>; confirmDeleteAll?: boolean | null }, ctx: DalContext) => {
+      const result = await ctx.repositories.${e}.bulkDeleteByFilter(args.filter as never, { actorId: ctx.actorId }, args.confirmDeleteAll);
+      if (result.successCount > 0 && result.matchedIds?.length) {
+        const event = ctx.repositories.${e}.toChangeEvent("DELETED", result.matchedIds);
+        ctx.pubsub.publish("${topic}", { ${e}Changed: event });
+      }
+      return result;
+    },`);
 
     if (full) {
       mutationFields.push(`    update${E}: async (_: unknown, args: { id: string; input: Record<string, unknown> }, ctx: DalContext) => {
@@ -188,8 +202,14 @@ export function generateResolvers(entities: EntityModel[]): string {
       return result;
     },
 
-    bulkUpdate${E}ByFilter: async (_: unknown, args: { filter: Record<string, unknown>; input: Record<string, unknown>; confirmUpdateAll?: boolean | null }, ctx: DalContext) =>
-      ctx.repositories.${e}.bulkUpdateByFilter(args.filter as never, args.input as never, { actorId: ctx.actorId }, args.confirmUpdateAll),`);
+    bulkUpdate${E}ByFilter: async (_: unknown, args: { filter: Record<string, unknown>; input: Record<string, unknown>; confirmUpdateAll?: boolean | null }, ctx: DalContext) => {
+      const result = await ctx.repositories.${e}.bulkUpdateByFilter(args.filter as never, args.input as never, { actorId: ctx.actorId }, args.confirmUpdateAll);
+      if (result.successCount > 0 && result.matchedIds?.length) {
+        const event = ctx.repositories.${e}.toChangeEvent("UPDATED", result.matchedIds);
+        ctx.pubsub.publish("${topic}", { ${e}Changed: event });
+      }
+      return result;
+    },`);
     }
 
     mutationFields.push(`    delete${E}: async (_: unknown, args: { id: string }, ctx: DalContext) => {

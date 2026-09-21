@@ -3,6 +3,7 @@ import { asc, desc } from "drizzle-orm";
 import { integer, pgTable, text, uuid } from "drizzle-orm/pg-core";
 import { PgDialect } from "drizzle-orm/pg-core";
 import {
+  assertCursorIncludeDeletedMatches,
   assertCursorSortMatches,
   buildKeysetSeek,
   buildOrderClauses,
@@ -84,6 +85,30 @@ describe("assertCursorSortMatches", () => {
       values: ["hammer"],
     };
     expect(() => assertCursorSortMatches(cursor, resolved, "after")).toThrow(/sort contract mismatch/i);
+  });
+});
+
+describe("assertCursorIncludeDeletedMatches", () => {
+  const cursor: CursorPayload = {
+    version: CURSOR_VERSION,
+    entity: "Item",
+    sort: [{ field: "ID", direction: "ASC" }],
+    values: ["00000000-0000-4000-8000-000000000001"],
+    includeDeleted: true,
+  };
+
+  it("accepts matching includeDeleted contracts", () => {
+    expect(() => assertCursorIncludeDeletedMatches(cursor, true, "after")).not.toThrow();
+    expect(() => assertCursorIncludeDeletedMatches({ ...cursor, includeDeleted: false }, false, "after")).not.toThrow();
+  });
+
+  it("rejects mismatched includeDeleted contracts", () => {
+    expect(() => assertCursorIncludeDeletedMatches(cursor, false, "after")).toThrow(
+      /includeDeleted contract mismatch/i,
+    );
+    expect(() => assertCursorIncludeDeletedMatches({ ...cursor, includeDeleted: false }, true, "before")).toThrow(
+      /includeDeleted contract mismatch/i,
+    );
   });
 });
 

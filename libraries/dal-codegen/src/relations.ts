@@ -149,7 +149,9 @@ export function attachRelations(entities: EntityModel[], schemaModules: Record<s
           };
         }
       } else if (is(relation, Many)) {
-        const junctionBusinessCols = targetEntity.columns.filter((c) => c.isBusiness);
+        const junctionBusinessCols = targetEntity.columns.filter(
+          (c) => c.isBusiness && !(c.drizzleKey.endsWith("Id") && c.drizzleKey !== "id"),
+        );
         const m2m =
           junctionBusinessCols.length === 0
             ? inferManyToMany(targetExport, entity.exportName, tables)

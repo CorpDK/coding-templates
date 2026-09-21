@@ -113,6 +113,19 @@ export function assertCursorSortMatches(
   }
 }
 
+/** Verify cursor includeDeleted contract matches the active request. */
+export function assertCursorIncludeDeletedMatches(
+  cursor: CursorPayload,
+  includeDeleted: boolean | null | undefined,
+  field: "after" | "before",
+): void {
+  const cursorIncludeDeleted = cursor.includeDeleted ?? false;
+  const activeIncludeDeleted = includeDeleted ?? false;
+  if (cursorIncludeDeleted !== activeIncludeDeleted) {
+    throw new ValidationError("Cursor includeDeleted contract mismatch", [field]);
+  }
+}
+
 export function validateConnectionPagingArgs(args: ConnectionPagingArgs): void {
   if (args.first != null && args.last != null) {
     throw new ValidationError("Cannot specify both first and last", ["first", "last"]);
