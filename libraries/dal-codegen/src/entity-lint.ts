@@ -1,45 +1,15 @@
-import { getTableColumns, isTable } from "drizzle-orm";
-import { getTableConfig } from "drizzle-orm/pg-core";
-import type { Column } from "drizzle-orm";
 import { join } from "node:path";
 import { loadDalConfig, type DalConfig } from "./config.js";
+import { lintFilterIndexCoverage } from "./filter-index-lint.js";
+import { hasIndexCoverage } from "./index-coverage.js";
 import { collectSchemaFiles, importSchemaModule } from "./model.js";
 import type { EntityModel } from "./model.js";
 import { loadEntities } from "./model.js";
 
-export type LintSeverity = "error" | "warn";
-
-export interface LintViolation {
-  severity: LintSeverity;
-  code: string;
-  message: string;
-  entity?: string;
-  column?: string;
-}
+export type { LintSeverity, LintViolation } from "./lint-types.js";
+import type { LintSeverity, LintViolation } from "./lint-types.js";
 
 const ENUM_VALUE_RE = /^[A-Z][A-Z0-9_]*$/;
-
-function columnCoversIndex(
-  indexColumns: readonly Column[],
-  drizzleKey: string,
-  tableColumns: Record<string, Column>,
-): boolean {
-  const col = tableColumns[drizzleKey];
-  if (!col) return false;
-  return indexColumns.some((c) => c === col);
-}
-
-function hasCoveringIndex(tableExport: string, drizzleKey: string, combined: Record<string, unknown>): boolean {
-  if (drizzleKey === "id") return true;
-  const table = combined[tableExport];
-  if (!isTable(table)) return false;
-  const config = getTableConfig(table);
-  const cols = getTableColumns(table) as Record<string, Column>;
-  for (const idx of config.indexes) {
-    if (columnCoversIndex(idx.config.columns as Column[], drizzleKey, cols)) return true;
-  }
-  return false;
-}
 
 function lintEntityModel(entity: EntityModel, combined: Record<string, unknown>, strict: boolean): LintViolation[] {
   const violations: LintViolation[] = [];
@@ -88,8 +58,12 @@ function lintEntityModel(entity: EntityModel, combined: Record<string, unknown>,
     ? entity.columns.filter((c) => c.drizzleKey !== "id")
     : entity.columns.filter((c) => c.drizzleKey === "createdAt" || c.drizzleKey === "updatedAt");
 
+  violations.push(...lintFilterIndexCoverage(entity, combined, strict));
+
   for (const col of indexCheckColumns) {
-    const covered = hasCoveringIndex(entity.exportName, col.drizzleKey, combined);
+    const covered = hasIndexCoverage(entity.exportName, col.drizzleKey, combined, {
+      leadingOnly: false,
+    });
     if (covered) continue;
     const severity: LintSeverity = strict ? "error" : "warn";
     violations.push({

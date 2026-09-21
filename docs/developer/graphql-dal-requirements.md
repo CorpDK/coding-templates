@@ -2266,9 +2266,7 @@ Index validation runs **at codegen time only** — not at query runtime. Indexes
 
 **Multi-sort rules:** when the client provides multiple sort keys, a composite index must cover the sort **prefix through the last client-provided key**. The implicit **`id` tie-breaker** is assumed indexed (primary key) and is not validated separately.
 
-**Out of scope for v1:** filter-field index enforcement — only sort-field coverage is checked (see planned v2 below).
-
-**Planned v2 — filter-field index enforcement (codegen gate only, no runtime enforcement):**
+**Filter-field index enforcement (v2 — implemented in [DAL Phase 4](dal-phase4.md); codegen / lint gate only, no runtime enforcement):**
 
 | Mode | Behavior |
 | ---- | -------- |

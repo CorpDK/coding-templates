@@ -42,13 +42,17 @@ Validates Drizzle domain entities per [DAL Entity Design Guidelines](dal-entity-
 - Enum member casing (UPPERCASE / SCREAMING_SNAKE_CASE)
 - Soft-delete column shape (`deletedBy` requires `deletedAt`)
 - Sort index hints: **warn** on `createdAt` / `updatedAt` without covering indexes; **`strict: true`** in `dal/dal.config.yaml` treats all sort columns (except `id`) as errors and enforces comment rules at load time
+- Filter / association index hints (Phase 4): **warn** on filterable scalars and association FK columns without a leading or single-column Drizzle index; **`strict: true`** promotes these to errors — see [dal-phase4.md](dal-phase4.md)
 
 Exit code **1** when any **error**-severity violation is present; warnings alone exit **0**.
 
 Bin: `dal-entity-lint` (`templates/ds` script: `entity:lint`).
 
-## Out of scope (Phase 4+)
+## Phase 4+
 
-- Filter-field index enforcement v2
+Filter-field index enforcement v2, strict codegen lint gate, and CI — see [DAL Phase 4](dal-phase4.md).
+
+## Out of scope (Phase 5+)
+
 - Full SQLSTATE driver mappers beyond current
 - `@src/db` path aliases

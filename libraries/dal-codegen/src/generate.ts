@@ -1,6 +1,7 @@
 import { mkdirSync, writeFileSync, rmSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { loadDalConfig, type CodegenOptions } from "./config.js";
+import { formatLintViolations, lintExitCode, runEntityLint } from "./entity-lint.js";
 import { loadEntities } from "./model.js";
 import { generateSchemaModule } from "./generators/sdl.js";
 import { generateRepository, generateRepositoryIndex } from "./generators/repository.js";
@@ -21,6 +22,19 @@ export async function runDalCodegen(options: CodegenOptions): Promise<void> {
   const entities = await loadEntities(schemaPath, config.strict);
   if (entities.length === 0) {
     throw new Error(`No PersistedEntity tables found in ${schemaPath}`);
+  }
+
+  if (config.strict) {
+    const lintResult = await runEntityLint({
+      packageRoot: options.packageRoot,
+      schemaPath: options.schemaPath,
+      configPath: options.configPath,
+    });
+    if (lintExitCode(lintResult.violations) !== 0) {
+      throw new Error(
+        `entity lint failed (strict mode):\n${formatLintViolations(lintResult.violations)}`,
+      );
+    }
   }
 
   if (existsSync(outputDir)) {
