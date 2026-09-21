@@ -528,7 +528,11 @@ Codegen parses Drizzle tables, enums, indexes, and relations, validates entity s
 
 **Phase 2 runtime:** `@corpdk/dal-core` **FilterAST**, **QueryTranslator**, and per-entity **QueryEngine** power list/count/connection/aggregate and filter-based bulk mutations. Drizzle `relations()` inference emits **navigation fields** on output types (FK scalars omitted from output; retained on create/update inputs and internal records for DataLoaders). **AssociationFilter** (`some` / `every` / `none`) and nested M:1 filters compile through QueryTranslator. **Per-request DataLoaders** resolve all navigation fields. **Bulk mutations** (`bulkCreate`, `bulkUpdate`, `bulkDelete`, `*ByFilter`) with atomic/partial semantics and filter-based safety guards (`confirmDeleteAll` / `confirmUpdateAll`, row cap via `DAL_BULK_FILTER_MAX`, default 1000).
 
-**Phase 3 runtime (current `@corpdk/dal-codegen`):** optional **HMAC-SHA256** cursor signing when `DAL_CURSOR_SECRET` is set (§13); **ColumnProjection** on list/get/connection reads from GraphQL selection sets (§17.2); **`entity:lint`** CLI for Drizzle entity design validation. See [dal-phase3.md](dal-phase3.md).
+**Phase 3 runtime:** optional **HMAC-SHA256** cursor signing when `DAL_CURSOR_SECRET` is set (§13); **ColumnProjection** on list/get/connection reads from GraphQL selection sets (§17.2); **`entity:lint`** CLI for Drizzle entity design validation. See [dal-phase3.md](dal-phase3.md).
+
+**Phase 4 runtime:** filter-field **index coverage** enforcement via `entity:lint` and optional `strict: true` in `dal/dal.config.yaml` (§17.1). See [dal-phase4.md](dal-phase4.md).
+
+**Phase 5 runtime (current `@corpdk/dal-codegen`):** dialect **SQLSTATE driver error mapping**, Drizzle **constraint metadata v2**, **fragment-aware ColumnProjection**, and extended PostgreSQL scalar mappings. See [dal-phase5.md](dal-phase5.md).
 
 **`dal/dal.config.yaml` example:**
 

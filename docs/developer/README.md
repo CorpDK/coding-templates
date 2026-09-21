@@ -20,6 +20,7 @@ Implementation guides, coding patterns, and standards for contributors to the co
 | [dal-entity-design.md](dal-entity-design.md)           | Drizzle entity table design — audit profiles, relations, indexes, schema scope |
 | [dal-pg-type-mapping.md](dal-pg-type-mapping.md)       | PostgreSQL → DAL type mapping — PG types, `ID` for uuid, custom scalars (`IntervalMs`, etc.), filters |
 | [graphql-dal-requirements.md](graphql-dal-requirements.md) | GraphQL DAL requirements — inference rules, queries, mutations, filters, pagination |
+| [dal-phase2.md](dal-phase2.md) … [dal-phase5.md](dal-phase5.md) | Phase delivery notes — filters, cursors, index lint, driver errors |
 
 ---
 

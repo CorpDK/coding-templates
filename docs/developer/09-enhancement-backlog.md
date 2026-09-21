@@ -42,11 +42,11 @@ Add `@opentelemetry/sdk-node` instrumentation to DS packages for distributed req
 
 ### 3. DataLoader Batching
 
-Add `dataloader` to the resolver layer to batch and deduplicate N+1 DB calls. GraphQL resolvers that load related entities (e.g. fetching a user for each item in a list) currently issue one query per item. DataLoader coalesces these into a single batched query per tick.
+**`templates/ds` (DAL):** per-request DataLoaders for all navigation fields are generated — see [GraphQL DAL Requirements §6.6](graphql-dal-requirements.md#66-association-output-fields-and-dataloaders). **Manual DS variants:** add `dataloader` to the resolver layer to batch and deduplicate N+1 DB calls. GraphQL resolvers that load related entities (e.g. fetching a user for each item in a list) currently issue one query per item. DataLoader coalesces these into a single batched query per tick.
 
 ### 4. Cursor-Based Pagination
 
-Replace offset pagination with connection-spec (Relay-style) cursor pagination across all DS variants. Cursor pagination is stable under concurrent writes — offset pagination skips or duplicates rows when the dataset changes between pages. The GraphQL SDL change is backward-compatible: add `Connection` / `Edge` types alongside existing list fields.
+**`templates/ds` (DAL):** Relay-style `<entity>Connection` fields with keyset cursors are generated — see [GraphQL DAL Requirements §13](graphql-dal-requirements.md#13-cursor-pagination). **Manual DS variants:** replace offset pagination with connection-spec cursor pagination. Cursor pagination is stable under concurrent writes — offset pagination skips or duplicates rows when the dataset changes between pages. The GraphQL SDL change is backward-compatible: add `Connection` / `Edge` types alongside existing list fields.
 
 ### 5. Health Check Endpoint
 

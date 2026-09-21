@@ -177,7 +177,7 @@ type Subscription {
 ## Code Review Checklist
 
 - [ ] All GraphQL types, fields, and arguments have `"""docstrings"""`
-- [ ] GraphQL SDL is in `src/schema/*.graphqls`, not inline in TypeScript
+- [ ] **`templates/ds`:** Drizzle JSDoc on tables/columns; run `pnpm dal:codegen` after schema changes — **manual DS variants:** SDL in `src/schema/*.graphqls`, not inline in TypeScript
 - [ ] Every mutation has a corresponding subscription
 - [ ] Subscription field name matches the publish payload key (see [PubSub Internals](04-pubsub-internals.md))
 

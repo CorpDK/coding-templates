@@ -53,7 +53,7 @@ Dependencies used across multiple workspace packages.
 
 | Package | Version | Used by                                                  |
 | ------- | ------- | -------------------------------------------------------- |
-| zod     | ^4.3.6  | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file, ui-forms |
+| zod     | ^4.3.6  | ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file, ui-forms |
 
 ### Infrastructure
 
@@ -80,9 +80,9 @@ Dependencies used across multiple workspace packages.
 
 | Package        | Version  | Used by          |
 | -------------- | -------- | ---------------- |
-| @prisma/client | ^7.6.0   | ds               |
-| prisma         | ^7.6.0   | ds (devDep)      |
-| drizzle-orm    | ^0.45.2  | ds               |
+| @prisma/client | ^7.6.0   | ds-no-sql        |
+| prisma         | ^7.6.0   | ds-no-sql (devDep) |
+| drizzle-orm    | ^0.45.2  | ds, dal-core, dal-codegen |
 | drizzle-kit    | ^0.31.10 | ds (devDep)      |
 | pg             | ^8.20.0  | ds               |
 | couchbase      | ^4.6.1   | ds-cdb           |
@@ -161,6 +161,24 @@ Dependencies used across multiple workspace packages.
 | @graphql-yoga/redis-event-target | ^3.0.0  | runtime |
 | graphql-yoga                     | ^5.18.1 | runtime |
 | ioredis                          | ^5.10.1 | runtime |
+
+### dal-core (@corpdk/dal-core)
+
+| Package     | Version  | Type    |
+| ----------- | -------- | ------- |
+| drizzle-orm | ^0.45.2  | runtime |
+| graphql     | ^16.13.2 | runtime |
+| vitest      | ^4.1.2   | dev     |
+
+### dal-codegen (@corpdk/dal-codegen)
+
+| Package           | Version  | Type    |
+| ----------------- | -------- | ------- |
+| @corpdk/dal-core  | workspace:* | runtime |
+| drizzle-orm       | ^0.45.2  | runtime |
+| graphql           | ^16.13.2 | runtime |
+| yaml              | ^2.8.3   | runtime |
+| vitest            | ^4.1.2   | dev     |
 
 ### create-app (@corpdk/create-app)
 

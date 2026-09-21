@@ -17,8 +17,10 @@ export const fullHeightCanvas: Decorator = (Story) => (
 /** Width-constrained canvas for form controls and inputs. */
 export const narrowCanvas =
   (width = "20rem"): Decorator =>
-  (Story) => (
-    <div className="w-80 max-w-full p-4">
-      <Story />
-    </div>
-  );
+  function NarrowCanvasDecorator(Story) {
+    return (
+      <div className="max-w-full p-4" style={{ width }}>
+        <Story />
+      </div>
+    );
+  };

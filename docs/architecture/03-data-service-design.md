@@ -138,7 +138,7 @@ Variable merging order: `--input <file>` → piped stdin → explicit flags (fla
 },
 ```
 
-The preset lives in `libraries/codegen-cli/` and is compiled with `tsup`. The `codegen` Turbo task declares `dependsOn: ["@corpdk/codegen-cli#build"]` so the preset is always compiled before any DS runs codegen.
+The preset lives in `libraries/codegen-cli/` and is compiled with `tsup`. The `codegen` Turbo task declares `dependsOn: ["@corpdk/codegen-cli#build", "dal:codegen"]` on `@corpdk/ds` so DAL SDL exists before graphql-codegen runs.
 
 ### Scaffolded binary name
 

@@ -346,13 +346,11 @@ Before committing, verify:
 - [ ] No `any` types used
 - [ ] Imports organized (external, internal, types)
 - [ ] All GraphQL types, fields, and arguments have `"""docstrings"""`
-- [ ] GraphQL SDL is in `src/schema/*.graphqls`, not inline in TypeScript
+- [ ] **`templates/ds`:** Drizzle entity in `src/db/schema/` + `pnpm dal:codegen` — **manual DS variants:** SDL in `src/schema/*.graphqls`, not inline in TypeScript
 - [ ] Every mutation has a corresponding subscription that publishes the result
 - [ ] GraphQL subscription publish payload is wrapped as `{ fieldName: payload }`
-- [ ] `PubSubTopics` defined in `src/pubsub/index.ts`; pub/sub instance created via `createAppPubSub<PubSubTopics>()`
-- [ ] New entities have a Zod schema in `src/db/schemas.ts`
-- [ ] New entities have a repository interface + implementation in `src/db/repository.ts`
-- [ ] Resolvers import from `./db/repository.js`, not `./db/index.js` or `../storage/index.js`
+- [ ] **`templates/ds`:** pubsub topics generated under `src/generated/dal/` — **manual DS variants:** `PubSubTopics` in `src/pubsub/index.ts`; pub/sub via `createAppPubSub<PubSubTopics>()`
+- [ ] **`templates/ds`:** entity tables in `src/db/schema/` only — **manual DS variants:** Zod schema in `src/db/schemas.ts`; repository interface + impl in `src/db/repository.ts`; resolvers import `./db/repository.js`
 - [ ] Component exported as default
 - [ ] File name matches component name
 - [ ] Docs updated for any new packages, templates, scripts, env vars, or architecture changes

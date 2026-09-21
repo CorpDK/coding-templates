@@ -140,7 +140,7 @@ docker build -f packages/ui/Dockerfile -t my-app-ui .     # Build UI image
 
 - Build context is always the monorepo root (needed for `pnpm-lock.yaml` and workspace manifests)
 - `@corpdk/ds-sdk` is resolved at build time; Docker's `COPY` dereferences pnpm symlinks so it is self-contained in `node_modules` at runtime
-- SDL schema files are copied to `dist/` by the DS build script — no extra step needed
+- **`templates/ds` (DAL):** Docker build runs `dal:codegen` then `tsc` — generated SDL lives under `src/generated/dal/` (gitignored). Manual DS variants copy `src/schema/*.graphqls` to `dist/` — see [docs/admin/02-docker-deployment.md](docs/admin/02-docker-deployment.md)
 
 ## Code Quality Requirements
 

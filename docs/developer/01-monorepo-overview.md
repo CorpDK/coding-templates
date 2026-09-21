@@ -79,6 +79,8 @@ coding-templates/
 | ------------- | --------------------- | ----------------------------------------------------------- |
 | `create-app`  | `@corpdk/create-app`  | Interactive CLI scaffolding tool                            |
 | `codegen-cli` | `@corpdk/codegen-cli` | GraphQL codegen plugin for resolver types + SDK generation  |
+| `dal-core`    | `@corpdk/dal-core`    | DAL shared types, filters, query translation, mutation errors |
+| `dal-codegen` | `@corpdk/dal-codegen` | Drizzle → GraphQL SDL + repositories + resolvers codegen    |
 | `pub-sub`     | `@corpdk/pub-sub`     | `createAppPubSub<T>()` — selects Redis or in-memory pub/sub |
 
 For versioning strategy and key design decisions (module system, HTTP/WS routing, SDK strategy, repository pattern, pub/sub), see [Monorepo Design](../architecture/02-monorepo-design.md).
