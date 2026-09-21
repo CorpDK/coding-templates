@@ -566,13 +566,11 @@ ${updateSet}
         throw err;
       });
     }
-    const items: ${E}Record[] = [];
     const userErrors: BulkMutationResult["userErrors"] = [];
     let successCount = 0;
     for (const input of inputs) {
       const result = await this.create(input, ctx);
       if (result.${e} && result.userErrors.length === 0) {
-        items.push(result.${e});
         successCount += 1;
       } else {
         userErrors.push(...result.userErrors);
@@ -603,13 +601,11 @@ ${updateSet}
         throw err;
       });
     }
-    const items: ${E}Record[] = [];
     const userErrors: BulkMutationResult["userErrors"] = [];
     let successCount = 0;
     for (const entry of updates) {
       const result = await this.update(entry.id, entry.input, ctx);
       if (result.${e} && result.userErrors.length === 0) {
-        items.push(result.${e});
         successCount += 1;
       } else {
         userErrors.push(...result.userErrors.map((e) => ({ ...e, id: e.id ?? entry.id })));

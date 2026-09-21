@@ -10,7 +10,7 @@ import { CreateItemInputSchema, ItemSchema, type Item } from "./db/schemas.js";
 const schemaDir = fileURLToPath(new URL("./schema/", import.meta.url));
 const typeDefs = readdirSync(schemaDir)
   .filter((f) => f.endsWith(".graphqls"))
-  .sort()
+  .sort((a, b) => a.localeCompare(b))
   .map((f) => readFileSync(join(schemaDir, f), "utf-8"))
   .join("\n");
 
