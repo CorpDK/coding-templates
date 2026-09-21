@@ -95,7 +95,7 @@ function hasParentBatchMethods(entity: EntityModel, entities: EntityModel[]): bo
 }
 
 function drizzleImportLine(needsInArray: boolean): string {
-  const parts = ["eq"];
+  const parts = ["count", "eq"];
   if (needsInArray) parts.push("inArray");
   return `import { ${parts.join(", ")} } from "drizzle-orm";`;
 }
@@ -191,8 +191,6 @@ export function generateRepository(
   const bulkFilterBlock = full
     ? `
     assertFilterBulkConfirm(filter, confirmUpdateAll, "confirmUpdateAll");
-    const matched = await this.count({ filter });
-    assertFilterBulkCap(matched, BULK_FILTER_MAX);
     const where = queryEngine.buildWhere(filter);
     if (!where) throw new ValidationError("Filter required", ["filter"]);
     const actor = resolveActorId(ctx.actorId);
@@ -201,21 +199,23 @@ export function generateRepository(
       updatedBy: actor,
     };
 ${updateSet}
-    return db.transaction(async () => {
-      const updated = await db.update(table).set(set).where(where).returning({ id: table.id });
+    return db.transaction(async (tx) => {
+      const [{ value: matched }] = await tx.select({ value: count() }).from(table).where(where);
+      assertFilterBulkCap(matched ?? 0, BULK_FILTER_MAX);
+      const updated = await tx.update(table).set(set).where(where).returning({ id: table.id });
       return { successCount: updated.length, failureCount: 0, userErrors: [] };
     });`
     : "";
 
   const bulkDeleteByFilterBlock = `
     assertFilterBulkConfirm(filter, confirmDeleteAll, "confirmDeleteAll");
-    const matched = await this.count({ filter });
-    assertFilterBulkCap(matched, BULK_FILTER_MAX);
     const where = queryEngine.buildWhere(filter);
     if (!where) throw new ValidationError("Filter required", ["filter"]);
-    return db.transaction(async () => {
+    return db.transaction(async (tx) => {
+      const [{ value: matched }] = await tx.select({ value: count() }).from(table).where(where);
+      assertFilterBulkCap(matched ?? 0, BULK_FILTER_MAX);
       ${soft ? `const actor = resolveActorId(ctx.actorId);
-      const updated = await db.update(table).set({ deletedAt: new Date(), deletedBy: actor }).where(where).returning({ id: table.id });` : `const deleted = await db.delete(table).where(where).returning({ id: table.id });`}
+      const updated = await tx.update(table).set({ deletedAt: new Date(), deletedBy: actor }).where(where).returning({ id: table.id });` : `const deleted = await tx.delete(table).where(where).returning({ id: table.id });`}
       return { successCount: ${soft ? "updated" : "deleted"}.length, failureCount: 0, userErrors: [] };
     });`;
 

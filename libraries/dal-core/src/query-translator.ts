@@ -155,7 +155,7 @@ export class QueryTranslator {
     }
 
     for (const [fieldName, value] of Object.entries(node)) {
-      if (scalarFilterKeys(node).includes(fieldName)) continue;
+      if (this.columnByGraphql.has(fieldName)) continue;
       if (fieldName === "and" || fieldName === "or" || fieldName === "not") continue;
       const rel = this.relationByField.get(fieldName);
       if (!rel || !rel.filterable || value == null || typeof value !== "object") continue;
@@ -164,14 +164,47 @@ export class QueryTranslator {
       if (assoc) {
         const part = this.translateAssociation(rel, assoc);
         if (part) parts.push(part);
-      } else if (rel.kind === "many-to-one" || rel.kind === "one-to-one") {
+      } else if (rel.kind === "many-to-one") {
         const part = this.translateManyToOne(rel, relFilter);
+        if (part) parts.push(part);
+      } else if (rel.kind === "one-to-one") {
+        const part = rel.ownerFkDrizzleKey
+          ? this.translateManyToOne(rel, relFilter)
+          : this.translateInverseOneToOne(rel, relFilter);
         if (part) parts.push(part);
       }
     }
 
     if (parts.length === 0) return undefined;
     return parts.length === 1 ? parts[0] : and(...parts)!;
+  }
+
+  private translateInverseOneToOne(
+    rel: RelationDescriptor,
+    targetFilter: FilterAST,
+  ): SQL | undefined {
+    if (!rel.childFkDrizzleKey) return undefined;
+    const parentId = (this.config.table as unknown as Record<string, Column>).id;
+    const childFk = (rel.targetTable as unknown as Record<string, Column>)[rel.childFkDrizzleKey];
+    if (!parentId || !childFk) return undefined;
+
+    const nested = new QueryTranslator({
+      db: this.config.db,
+      table: rel.targetTable,
+      columns: rel.targetColumns,
+      relations: [],
+      softDelete: rel.targetColumns.some((c) => c.drizzleKey === "deletedAt"),
+      filterBudget: this.config.filterBudget,
+    });
+    const innerWhere = nested.translateFilter(targetFilter, false, true);
+    if (!innerWhere) return undefined;
+
+    return exists(
+      this.config.db
+        .select({ one: sql`1` })
+        .from(rel.targetTable)
+        .where(and(eq(childFk, parentId), innerWhere)!),
+    );
   }
 
   private translateManyToOne(rel: RelationDescriptor, targetFilter: FilterAST): SQL | undefined {

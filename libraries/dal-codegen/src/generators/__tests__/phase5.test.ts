@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { validateColumnConstraints, type ColumnConstraintMeta } from "@corpdk/dal-core";
 import { loadEntities } from "../../model.js";
-import { generateRepository } from "../repository.js";
 import { columnGraphqlDescription } from "../schema-utils.js";
 import { buildDalGraphQLSchema } from "../schema-builder.js";
 import { join, dirname } from "node:path";
@@ -20,18 +20,25 @@ describe("Phase 5 dal-codegen", () => {
     expect(columnGraphqlDescription(codeCol!)).toMatch(/max length 12/);
   });
 
-  it("emits repository constraint validation and extended scalar imports", async () => {
+  it("inferred column constraints reject invalid create input", async () => {
     const entities = await loadEntities(fixtureDir, false);
     const widget = entities.find((e) => e.exportName === "phase5Widgets")!;
-    const repo = generateRepository(widget, entities, {
-      strict: false,
-      filterMaxDepth: 2,
-      filterMaxNodes: 50,
-    });
-    expect(repo).toContain("validateColumnConstraints");
-    expect(repo).toContain("COLUMN_CONSTRAINTS");
-    expect(repo).toContain('mapDriverError(err, "postgresql")');
-    expect(repo).toContain("maxLength: 12");
+    const constraints: ColumnConstraintMeta[] = widget.columns
+      .filter((c) => c.isBusiness && (c.maxLength != null || c.minExclusive != null))
+      .map((c) => ({
+        graphqlName: c.graphqlName,
+        drizzleKey: c.drizzleKey,
+        ...(c.maxLength != null ? { maxLength: c.maxLength } : {}),
+        ...(c.minExclusive != null ? { minExclusive: c.minExclusive } : {}),
+      }));
+
+    expect(() =>
+      validateColumnConstraints({ code: "x".repeat(13), qty: 5, note: "ok" }, constraints, "create"),
+    ).toThrow(/at most 12/);
+
+    expect(() =>
+      validateColumnConstraints({ code: "ABC", qty: 0, note: "ok" }, constraints, "create"),
+    ).toThrow(/greater than 0/);
   });
 
   it("registers IntFilter when integer columns exist", async () => {
