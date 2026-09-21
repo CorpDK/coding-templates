@@ -19,6 +19,7 @@ import {
 } from "drizzle-orm";
 import type { Column } from "drizzle-orm";
 import { ValidationError } from "./errors.js";
+import { extractAssociationFilter, scalarFilterKeys } from "./filter-ast.js";
 
 export interface StringFilter {
   eq?: string | null;
@@ -396,6 +397,27 @@ export function buildIntervalMsFilter(
   return buildStringComparableFilter(column, filter, false);
 }
 
+function isScalarPredicateNode(value: Record<string, unknown>): boolean {
+  const keys = scalarFilterKeys(value);
+  if (keys.length === 0) return false;
+  return keys.every((key) => {
+    const entry = value[key];
+    return entry == null || typeof entry !== "object";
+  });
+}
+
+function measureAssociationDepth(value: Record<string, unknown>): number {
+  const assoc = extractAssociationFilter(value);
+  if (!assoc) return 0;
+  let payloadDepth = 0;
+  for (const payload of [assoc.some, assoc.every, assoc.none]) {
+    if (payload) {
+      payloadDepth = Math.max(payloadDepth, measureFilterDepth(payload));
+    }
+  }
+  return 1 + payloadDepth;
+}
+
 function measureFilterDepth(filter: Record<string, unknown>): number {
   let maxChild = 0;
   if (Array.isArray(filter.and)) {
@@ -413,14 +435,39 @@ function measureFilterDepth(filter: Record<string, unknown>): number {
   if (filter.not && typeof filter.not === "object") {
     maxChild = Math.max(maxChild, 1 + measureFilterDepth(filter.not as Record<string, unknown>));
   }
+  for (const key of scalarFilterKeys(filter)) {
+    const value = filter[key];
+    if (value == null || typeof value !== "object") continue;
+    const obj = value as Record<string, unknown>;
+    if (isScalarPredicateNode(obj)) continue;
+    if (extractAssociationFilter(obj)) {
+      maxChild = Math.max(maxChild, measureAssociationDepth(obj));
+    } else {
+      maxChild = Math.max(maxChild, 1 + measureFilterDepth(obj));
+    }
+  }
   return maxChild;
+}
+
+function countRelationNodes(value: Record<string, unknown>): number {
+  const assoc = extractAssociationFilter(value);
+  if (assoc) {
+    let count = 1;
+    for (const payload of [assoc.some, assoc.every, assoc.none]) {
+      if (payload) count += countFilterNodes(payload);
+    }
+    return count;
+  }
+  if (isScalarPredicateNode(value)) return 1;
+  return 1 + countFilterNodes(value);
 }
 
 function countFilterNodes(filter: Record<string, unknown>): number {
   let count = 0;
-  for (const [key, value] of Object.entries(filter)) {
-    if (key === "and" || key === "or" || key === "not") continue;
-    if (value != null) count += 1;
+  for (const key of scalarFilterKeys(filter)) {
+    const value = filter[key];
+    if (value == null || typeof value !== "object") continue;
+    count += countRelationNodes(value as Record<string, unknown>);
   }
   if (Array.isArray(filter.and)) {
     for (const child of filter.and) {
