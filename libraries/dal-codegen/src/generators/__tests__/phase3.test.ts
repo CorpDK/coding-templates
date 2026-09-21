@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { generateRepository } from "../repository.js";
-import { generateResolvers } from "../resolvers.js";
+import {
+  buildColumnProjection,
+  collectEntityFieldSelection,
+  resolveColumnProjectionFromInfo,
+} from "@corpdk/dal-core";
+import { GraphQLObjectType, GraphQLSchema, GraphQLString, parse } from "graphql";
+import type { GraphQLResolveInfo } from "graphql";
+import { pgTable, text, uuid } from "drizzle-orm/pg-core";
+import { buildDalGraphQLSchema } from "../schema-builder.js";
 import { lintExitCode, type LintViolation } from "../../entity-lint.js";
 import type { EntityModel } from "../../model.js";
 
@@ -108,20 +115,84 @@ const orderEntity: EntityModel = {
 };
 
 describe("Phase 3 codegen output", () => {
-  const config = { strict: false, filterMaxDepth: 2, filterMaxNodes: 50 };
-
-  it("repository generator wires column projection and GraphQL resolve info", () => {
-    const source = generateRepository(orderEntity, [orderEntity], config);
-    expect(source).toContain("resolveColumnProjectionFromInfo");
-    expect(source).toContain("columnProjectionFromInfo");
-    expect(source).toContain("GraphQLResolveInfo");
-    expect(source).toContain("queryEngine.list(args, mapRow, projection)");
+  it("column projection narrows list selections to requested scalars", () => {
+    const table = pgTable("orders", {
+      id: uuid("id").primaryKey(),
+      customerName: text("customer_name").notNull(),
+      status: text("status").notNull(),
+    });
+    const columns = [
+      { graphqlName: "id", drizzleKey: "id", kind: "uuid" as const, column: table.id },
+      {
+        graphqlName: "customerName",
+        drizzleKey: "customerName",
+        kind: "text" as const,
+        column: table.customerName,
+      },
+      { graphqlName: "status", drizzleKey: "status", kind: "text" as const, column: table.status },
+    ];
+    const projection = buildColumnProjection({
+      columns,
+      softDelete: true,
+      relations: [],
+      selectedGraphqlFields: new Set(["customerName"]),
+      sortDrizzleKeys: ["createdAt"],
+    });
+    expect(projection?.drizzleKeys.has("customerName")).toBe(true);
+    expect(projection?.drizzleKeys.has("status")).toBe(false);
+    expect(projection?.drizzleKeys.has("id")).toBe(true);
+    expect(projection?.drizzleKeys.has("deletedAt")).toBe(true);
   });
 
-  it("resolver generator passes resolve info to list/get/connection", () => {
-    const source = generateResolvers([orderEntity]);
-    expect(source).toContain("info: GraphQLResolveInfo");
-    expect(source).toContain("findById(args.id, { includeDeleted: args.includeDeleted }, info)");
+  it("resolveColumnProjectionFromInfo reads nested entity selections", () => {
+    const OrderType = new GraphQLObjectType({
+      name: "Order",
+      fields: {
+        id: { type: GraphQLString },
+        customerName: { type: GraphQLString },
+      },
+    });
+    const schema = new GraphQLSchema({
+      query: new GraphQLObjectType({
+        name: "Query",
+        fields: {
+          orders: {
+            type: OrderType,
+            resolve: () => ({}),
+          },
+        },
+      }),
+    });
+    const doc = parse(`{ orders { id customerName } }`);
+    const info = {} as GraphQLResolveInfo;
+    const op = doc.definitions[0];
+    if (op.kind !== "OperationDefinition" || !op.selectionSet) throw new Error("bad doc");
+    const ordersField = op.selectionSet.selections[0];
+    if (ordersField.kind !== "Field") throw new Error("bad field");
+    Object.assign(info, {
+      fieldNodes: [ordersField],
+      schema,
+    });
+    const selected = collectEntityFieldSelection(info, "Order");
+    const projection = resolveColumnProjectionFromInfo(
+      info,
+      "Order",
+      [
+        { graphqlName: "id", drizzleKey: "id", kind: "uuid" },
+        { graphqlName: "customerName", drizzleKey: "customerName", kind: "text" },
+      ],
+      true,
+      [],
+    );
+    expect(selected).toEqual(new Set(["id", "customerName"]));
+    expect(projection?.drizzleKeys.has("customerName")).toBe(true);
+  });
+
+  it("schema query fields expose includeDeleted for get-by-id reads", () => {
+    const schema = buildDalGraphQLSchema([orderEntity]);
+    const orderField = schema.getQueryType()?.getFields()?.order;
+    expect(orderField?.args.some((arg) => arg.name === "includeDeleted")).toBe(true);
+    expect(schema.getQueryType()?.getFields()?.orders).toBeDefined();
   });
 });
 

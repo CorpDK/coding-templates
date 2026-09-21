@@ -10,8 +10,7 @@ import {
   CURSOR_VERSION,
 } from "@corpdk/dal-core";
 import { pgEnum, pgTable, text, uuid } from "drizzle-orm/pg-core";
-import { generateRepository } from "../repository.js";
-import { generateResolvers } from "../resolvers.js";
+import { buildDalGraphQLSchema } from "../schema-builder.js";
 import type { EntityModel } from "../../model.js";
 
 const statusEnum = pgEnum("order_status", ["PENDING", "ACTIVE"]);
@@ -196,22 +195,25 @@ describe("Phase 1 codegen output", () => {
     relations: [],
   };
 
-  const config = { strict: false, filterMaxDepth: 2, filterMaxNodes: 50 };
-
-  it("repository generator uses QueryEngine and enum create default", () => {
-    const source = generateRepository(orderEntity, [orderEntity], config);
-    expect(source).toContain("QueryEngine");
-    expect(source).toContain('input.status ?? "PENDING"');
-    expect(source).toContain("resolveFilterBudget");
-    expect(source).toContain("bulkCreate");
-    expect(source).toContain("listConnection");
+  it("schema exposes list, connection, bulk mutations, and enum default metadata", () => {
+    const schema = buildDalGraphQLSchema([orderEntity]);
+    const query = schema.getQueryType()?.getFields() ?? {};
+    expect(query.orders).toBeDefined();
+    expect(query.orderConnection).toBeDefined();
+    const mutations = schema.getMutationType()?.getFields() ?? {};
+    expect(mutations.createOrder).toBeDefined();
+    expect(mutations.bulkCreateOrder).toBeDefined();
+    const statusCol = orderEntity.columns.find((c) => c.drizzleKey === "status");
+    expect(statusCol?.defaultValue).toBe("PENDING");
   });
 
-  it("resolver generator filters subscribeTo and accepts actorId", () => {
-    const source = generateResolvers([orderEntity]);
-    expect(source).toContain("allowed.has(event.operation)");
-    expect(source).toContain("CreateDalContextOptions");
-    expect(source).toContain("last: args.last");
-    expect(source).toContain("before: args.before");
+  it("subscription and connection fields accept paging and subscribeTo args", () => {
+    const schema = buildDalGraphQLSchema([orderEntity]);
+    const orderChanged = schema.getSubscriptionType()?.getFields()?.orderChanged;
+    expect(orderChanged?.args.some((arg) => arg.name === "subscribeTo")).toBe(true);
+    const connection = schema.getQueryType()?.getFields()?.orderConnection;
+    const argNames = connection?.args.map((arg) => arg.name) ?? [];
+    expect(argNames).toContain("last");
+    expect(argNames).toContain("before");
   });
 });

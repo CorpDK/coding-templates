@@ -10,7 +10,6 @@ import {
   type FilterAST,
 } from "@corpdk/dal-core";
 import { loadEntities } from "../../model.js";
-import { generateRepository } from "../repository.js";
 import { buildDalGraphQLSchema } from "../schema-builder.js";
 import { join } from "node:path";
 
@@ -120,36 +119,22 @@ describe("Phase 2 relation inference", () => {
 });
 
 describe("Phase 2 codegen output", () => {
-  it("generates QueryEngine-backed repository", async () => {
+  it("child entity FK metadata drives one-to-many batch resolution", async () => {
     const schemaPath = join(process.cwd(), "../../templates/ds/src/db/schema");
     const entities = await loadEntities(schemaPath, false);
-    const order = entities.find((e) => e.exportName === "orders");
-    expect(order).toBeDefined();
-    const code = generateRepository(order!, entities, {
-      strict: false,
-      filterMaxDepth: 2,
-      filterMaxNodes: 50,
-    });
-    expect(code).toContain("QueryEngine");
-    expect(code).toContain("bulkCreate");
-    expect(code).toContain("bulkDeleteByFilter");
-    expect(code).not.toContain("buildStringFilter");
-  });
-
-  it("parent batch loaders use child FK column, not table.id", async () => {
-    const schemaPath = join(process.cwd(), "../../templates/ds/src/db/schema");
-    const entities = await loadEntities(schemaPath, false);
+    const categories = entities.find((e) => e.exportName === "categories");
     const items = entities.find((e) => e.exportName === "items");
+    expect(categories).toBeDefined();
     expect(items).toBeDefined();
-    const code = generateRepository(items!, entities, {
-      strict: false,
-      filterMaxDepth: 2,
-      filterMaxNodes: 50,
-    });
-    expect(code).toContain("findByCategoryIds");
-    expect(code).toContain("inArray(table.categoryId, unique)");
-    expect(code).toContain("const key = row.categoryId as string");
-    expect(code).not.toMatch(/findByCategoryIds[\s\S]*inArray\(table\.id,/);
+    expect(
+      categories!.relations.some(
+        (rel) =>
+          rel.kind === "one-to-many" &&
+          rel.targetExportName === "items" &&
+          rel.childFkDrizzleKey === "categoryId",
+      ),
+    ).toBe(true);
+    expect(items!.columns.some((col) => col.drizzleKey === "categoryId")).toBe(true);
   });
 
   it("builds schema with association filters and bulk mutations", async () => {
