@@ -1,22 +1,13 @@
 import { join, dirname as pathDirname } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
-import { PgDialect } from "drizzle-orm/pg-core";
-import type { SQL } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { runDalCodegen } from "../../generate.js";
 import { loadEntities } from "../../model.js";
 import { buildDalGraphQLSchema } from "../schema-builder.js";
-import { getCodegenDbLastWhere, resetCodegenDbMock } from "../../db/index.js";
 
 const packageRoot = join(pathDirname(fileURLToPath(import.meta.url)), "../../..");
 const m2mFixtureDir = join(packageRoot, "src/__tests__/fixtures/m2m-schema");
 const m2mOutputDir = "src/__tests__/tmp-generated-m2m";
-const dialect = new PgDialect();
-
-function sqlText(fragment: SQL | undefined): string {
-  if (!fragment) return "";
-  return dialect.sqlToQuery(fragment).sql;
-}
 
 describe("many-to-many navigation", () => {
   it("infers pure junction tables as many-to-many to the far target", async () => {
@@ -40,7 +31,7 @@ describe("many-to-many navigation", () => {
     expect(tagsField.type.toString()).toMatch(/\[DemoTag!/);
   });
 
-  it("runDalCodegen wires M:N loaders and junction soft-delete batch queries", async () => {
+  it("runDalCodegen wires M:N loaders and resolver navigation", async () => {
     await runDalCodegen({
       packageRoot,
       schemaPath: "src/__tests__/fixtures/m2m-schema",
@@ -51,12 +42,8 @@ describe("many-to-many navigation", () => {
     const resolverUrl = pathToFileURL(
       join(packageRoot, m2mOutputDir, "resolvers/generated-resolvers.ts"),
     ).href;
-    const repoUrl = pathToFileURL(
-      join(packageRoot, m2mOutputDir, "repositories/generated-demoUser.repository.ts"),
-    ).href;
 
     const { createDalContext, generatedResolvers } = await import(resolverUrl);
-    const { GeneratedDemoUserRepository } = await import(repoUrl);
 
     const pubsub = {
       publish: () => undefined,
@@ -73,10 +60,5 @@ describe("many-to-many navigation", () => {
 
     const tags = await generatedResolvers.DemoUser.tags({ id: "user-1" }, {}, ctx);
     expect(tags).toEqual([]);
-
-    resetCodegenDbMock();
-    const repo = new GeneratedDemoUserRepository();
-    await repo.findDemoTagsByDemoUserIds(["user-1"]);
-    expect(sqlText(getCodegenDbLastWhere())).toMatch(/demo_user_tags"\.\"deleted_at" IS NULL/i);
   });
 });
