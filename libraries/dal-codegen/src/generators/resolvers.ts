@@ -161,9 +161,12 @@ export function generateResolvers(entities: EntityModel[]): string {
       if ("items" in result && result.items.length > 0) {
         const event = ctx.repositories.${e}.toChangeEvent("CREATED", result.items.map((row) => row.id));
         ctx.pubsub.publish("${topic}", { ${e}Changed: event });
-      } else if ("successCount" in result && result.successCount > 0 && result.matchedIds?.length) {
-        const event = ctx.repositories.${e}.toChangeEvent("CREATED", result.matchedIds);
-        ctx.pubsub.publish("${topic}", { ${e}Changed: event });
+      } else if ("successCount" in result && result.successCount > 0 && "matchedIds" in result) {
+        const matchedIds = result.matchedIds;
+        if (matchedIds.length > 0) {
+          const event = ctx.repositories.${e}.toChangeEvent("CREATED", matchedIds);
+          ctx.pubsub.publish("${topic}", { ${e}Changed: event });
+        }
       }
       return result;
     },
@@ -173,17 +176,21 @@ export function generateResolvers(entities: EntityModel[]): string {
       if ("count" in result && result.count > 0) {
         const event = ctx.repositories.${e}.toChangeEvent("DELETED", args.ids);
         ctx.pubsub.publish("${topic}", { ${e}Changed: event });
-      } else if ("successCount" in result && result.successCount > 0 && result.matchedIds?.length) {
-        const event = ctx.repositories.${e}.toChangeEvent("DELETED", result.matchedIds);
-        ctx.pubsub.publish("${topic}", { ${e}Changed: event });
+      } else if ("successCount" in result && result.successCount > 0 && "matchedIds" in result) {
+        const matchedIds = result.matchedIds;
+        if (matchedIds.length > 0) {
+          const event = ctx.repositories.${e}.toChangeEvent("DELETED", matchedIds);
+          ctx.pubsub.publish("${topic}", { ${e}Changed: event });
+        }
       }
       return result;
     },
 
     bulkDelete${E}ByFilter: async (_: unknown, args: { filter: Record<string, unknown>; confirmDeleteAll?: boolean | null }, ctx: DalContext) => {
       const result = await ctx.repositories.${e}.bulkDeleteByFilter(args.filter as never, { actorId: ctx.actorId }, args.confirmDeleteAll);
-      if (result.successCount > 0 && result.matchedIds?.length) {
-        const event = ctx.repositories.${e}.toChangeEvent("DELETED", result.matchedIds);
+      const matchedIds = "matchedIds" in result ? result.matchedIds : undefined;
+      if (result.successCount > 0 && matchedIds && matchedIds.length > 0) {
+        const event = ctx.repositories.${e}.toChangeEvent("DELETED", matchedIds);
         ctx.pubsub.publish("${topic}", { ${e}Changed: event });
       }
       return result;
@@ -204,17 +211,21 @@ export function generateResolvers(entities: EntityModel[]): string {
       if ("items" in result && result.items.length > 0) {
         const event = ctx.repositories.${e}.toChangeEvent("UPDATED", result.items.map((row) => row.id));
         ctx.pubsub.publish("${topic}", { ${e}Changed: event });
-      } else if ("successCount" in result && result.successCount > 0 && result.matchedIds?.length) {
-        const event = ctx.repositories.${e}.toChangeEvent("UPDATED", result.matchedIds);
-        ctx.pubsub.publish("${topic}", { ${e}Changed: event });
+      } else if ("successCount" in result && result.successCount > 0 && "matchedIds" in result) {
+        const matchedIds = result.matchedIds;
+        if (matchedIds.length > 0) {
+          const event = ctx.repositories.${e}.toChangeEvent("UPDATED", matchedIds);
+          ctx.pubsub.publish("${topic}", { ${e}Changed: event });
+        }
       }
       return result;
     },
 
     bulkUpdate${E}ByFilter: async (_: unknown, args: { filter: Record<string, unknown>; input: Record<string, unknown>; confirmUpdateAll?: boolean | null }, ctx: DalContext) => {
       const result = await ctx.repositories.${e}.bulkUpdateByFilter(args.filter as never, args.input as never, { actorId: ctx.actorId }, args.confirmUpdateAll);
-      if (result.successCount > 0 && result.matchedIds?.length) {
-        const event = ctx.repositories.${e}.toChangeEvent("UPDATED", result.matchedIds);
+      const matchedIds = "matchedIds" in result ? result.matchedIds : undefined;
+      if (result.successCount > 0 && matchedIds && matchedIds.length > 0) {
+        const event = ctx.repositories.${e}.toChangeEvent("UPDATED", matchedIds);
         ctx.pubsub.publish("${topic}", { ${e}Changed: event });
       }
       return result;
