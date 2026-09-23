@@ -1,6 +1,9 @@
 import { relations } from "drizzle-orm";
 import { auditEvents } from "./audit-events.js";
 import { categories } from "./categories.js";
+import { demoTags } from "./demo-tags.js";
+import { demoUserTags } from "./demo-user-tags.js";
+import { demoUsers } from "./demo-users.js";
 import { itemDetails } from "./item-details.js";
 import { itemTags } from "./item-tags.js";
 import { items } from "./items.js";
@@ -56,3 +59,22 @@ export const orderLinesRelations = relations(orderLines, ({ one }) => ({
 
 /** auditEvents has no FK relations — standalone append-only log. */
 export const auditEventsRelations = relations(auditEvents, () => ({}));
+
+export const demoUsersRelations = relations(demoUsers, ({ many }) => ({
+  tags: many(demoUserTags),
+}));
+
+export const demoTagsRelations = relations(demoTags, ({ many }) => ({
+  users: many(demoUserTags),
+}));
+
+export const demoUserTagsRelations = relations(demoUserTags, ({ one }) => ({
+  user: one(demoUsers, {
+    fields: [demoUserTags.demoUserId],
+    references: [demoUsers.id],
+  }),
+  tag: one(demoTags, {
+    fields: [demoUserTags.demoTagId],
+    references: [demoTags.id],
+  }),
+}));

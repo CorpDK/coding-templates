@@ -11,14 +11,20 @@
  * | auditEvents  | append-only audit, hard delete, immutable rows     |
  * | orders       | full audit, soft delete, pgEnum (UPPERCASE)        |
  * | orderLines   | full audit, hard delete, 1:M child FK              |
+ * | phase5Widgets| Phase 5 column constraints (maxLength, check)        |
+ * | demoUsers    | pure M:N navigation fixture with demoUserTags        |
  */
 export * from "./audit-events.js";
 export * from "./categories.js";
+export * from "./demo-tags.js";
+export * from "./demo-user-tags.js";
+export * from "./demo-users.js";
 export * from "./enums.js";
 export * from "./item-details.js";
 export * from "./item-tags.js";
 export * from "./items.js";
 export * from "./order-lines.js";
 export * from "./orders.js";
+export * from "./phase5-widgets.js";
 export * from "./relations.js";
 export * from "./tags.js";
