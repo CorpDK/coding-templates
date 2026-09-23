@@ -11,7 +11,7 @@ Phase 3 extends `@corpdk/dal-core` and `@corpdk/dal-codegen` with optional HMAC 
 
 Implementation lives in `@corpdk/dal-core` (`cursor-signing.ts`, `pagination.ts`). Generated repositories and `QueryEngine.listConnection` use `encodeCursor` / `decodeCursor` automatically.
 
-Document `DAL_CURSOR_SECRET` in the DS `.env.example`.
+Env reference: [Environment Variables](../admin/01-environment-variables.md) (`templates/ds/.env.example` includes `DAL_CURSOR_SECRET`).
 
 ## ColumnProjection (§17.2)
 

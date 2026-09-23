@@ -25,6 +25,8 @@ Generate the TypedDocumentNode SDK and CLI from your GraphQL schema:
 pnpm codegen
 ```
 
+For the Drizzle `@corpdk/ds` template, Turbo runs **`dal:codegen`** first (gitignored `packages/ds/src/generated/dal/`) so entity SDL exists before `graphql-codegen`. Run `pnpm --filter @<scope>/ds dal:codegen` manually only if imports fail outside Turbo.
+
 This runs `graphql-codegen` against the DS package and writes into two places:
 
 - `packages/ds-sdk/src/generated/` — TypedDocumentNode types for the UI

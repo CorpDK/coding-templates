@@ -14,6 +14,17 @@ Each package reads from its own `.env` file. Copy `.env.example` to `.env` in ea
 | `DATABASE_URL` | Drizzle connection string (PostgreSQL, MySQL, SQLite, CockroachDB)      |
 | `REDIS_URL`    | _(optional)_ Redis/Valkey URL — enables Redis pub/sub for subscriptions |
 
+Optional DAL runtime overrides (see [GraphQL DAL Requirements](../developer/graphql-dal-requirements.md)):
+
+| Variable               | Description                                                                 |
+| ---------------------- | --------------------------------------------------------------------------- |
+| `DAL_CURSOR_SECRET`    | HMAC-SHA256 signing secret for pagination cursors; unset = unsigned cursors |
+| `DAL_FILTER_MAX_DEPTH` | Override default filter AST depth cap (`2`)                                 |
+| `DAL_FILTER_MAX_NODES` | Override default filter AST node cap (`50`)                                 |
+| `DAL_BULK_FILTER_MAX`  | Max rows matched by filter-based bulk mutations (default `1000`)          |
+
+Codegen-only (unusual outside CI): `DAL_SCHEMA_PATH`, `DAL_OUTPUT_DIR`, `DAL_CONFIG_PATH` — defaults match `templates/ds` layout.
+
 ---
 
 ### `ds-no-sql` (GraphQL Yoga + Prisma)
