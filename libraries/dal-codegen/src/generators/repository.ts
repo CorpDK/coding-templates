@@ -642,16 +642,18 @@ ${updateSet}
       });
     }
     const userErrors: BulkMutationResult["userErrors"] = [];
+    const matchedIds: string[] = [];
     let successCount = 0;
     for (const input of inputs) {
       const result = await this.create(input, ctx);
       if (result.${e} && result.userErrors.length === 0) {
         successCount += 1;
+        matchedIds.push(result.${e}.id);
       } else {
         userErrors.push(...result.userErrors);
       }
     }
-    return { successCount, failureCount: inputs.length - successCount, userErrors };
+    return { successCount, failureCount: inputs.length - successCount, userErrors, matchedIds };
   }
 
   ${full ? `async bulkUpdate(
@@ -677,16 +679,18 @@ ${updateSet}
       });
     }
     const userErrors: BulkMutationResult["userErrors"] = [];
+    const matchedIds: string[] = [];
     let successCount = 0;
     for (const entry of updates) {
       const result = await this.update(entry.id, entry.input, ctx);
       if (result.${e} && result.userErrors.length === 0) {
         successCount += 1;
+        matchedIds.push(result.${e}.id);
       } else {
         userErrors.push(...result.userErrors.map((e) => ({ ...e, id: e.id ?? entry.id })));
       }
     }
-    return { successCount, failureCount: updates.length - successCount, userErrors };
+    return { successCount, failureCount: updates.length - successCount, userErrors, matchedIds };
   }
 
   async bulkUpdateByFilter(
@@ -716,13 +720,16 @@ ${updateSet}
       });
     }
     const userErrors: BulkMutationResult["userErrors"] = [];
+    const matchedIds: string[] = [];
     let successCount = 0;
     for (const id of ids) {
       const result = await this.delete(id, ctx);
-      if (result.success) successCount += 1;
-      else userErrors.push(...result.userErrors.map((e) => ({ ...e, id: e.id ?? id })));
+      if (result.success) {
+        successCount += 1;
+        matchedIds.push(id);
+      } else userErrors.push(...result.userErrors.map((e) => ({ ...e, id: e.id ?? id })));
     }
-    return { successCount, failureCount: ids.length - successCount, userErrors };
+    return { successCount, failureCount: ids.length - successCount, userErrors, matchedIds };
   }
 
   async bulkDeleteByFilter(

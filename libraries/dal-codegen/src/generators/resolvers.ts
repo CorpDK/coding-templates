@@ -161,6 +161,9 @@ export function generateResolvers(entities: EntityModel[]): string {
       if ("items" in result && result.items.length > 0) {
         const event = ctx.repositories.${e}.toChangeEvent("CREATED", result.items.map((row) => row.id));
         ctx.pubsub.publish("${topic}", { ${e}Changed: event });
+      } else if ("successCount" in result && result.successCount > 0 && result.matchedIds?.length) {
+        const event = ctx.repositories.${e}.toChangeEvent("CREATED", result.matchedIds);
+        ctx.pubsub.publish("${topic}", { ${e}Changed: event });
       }
       return result;
     },
@@ -169,6 +172,9 @@ export function generateResolvers(entities: EntityModel[]): string {
       const result = await ctx.repositories.${e}.bulkDelete(args.ids, { actorId: ctx.actorId }, args.atomic);
       if ("count" in result && result.count > 0) {
         const event = ctx.repositories.${e}.toChangeEvent("DELETED", args.ids);
+        ctx.pubsub.publish("${topic}", { ${e}Changed: event });
+      } else if ("successCount" in result && result.successCount > 0 && result.matchedIds?.length) {
+        const event = ctx.repositories.${e}.toChangeEvent("DELETED", result.matchedIds);
         ctx.pubsub.publish("${topic}", { ${e}Changed: event });
       }
       return result;
@@ -197,6 +203,9 @@ export function generateResolvers(entities: EntityModel[]): string {
       const result = await ctx.repositories.${e}.bulkUpdate(args.updates as never, { actorId: ctx.actorId }, args.atomic);
       if ("items" in result && result.items.length > 0) {
         const event = ctx.repositories.${e}.toChangeEvent("UPDATED", result.items.map((row) => row.id));
+        ctx.pubsub.publish("${topic}", { ${e}Changed: event });
+      } else if ("successCount" in result && result.successCount > 0 && result.matchedIds?.length) {
+        const event = ctx.repositories.${e}.toChangeEvent("UPDATED", result.matchedIds);
         ctx.pubsub.publish("${topic}", { ${e}Changed: event });
       }
       return result;

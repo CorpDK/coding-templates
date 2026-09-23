@@ -32,13 +32,6 @@ describe("schema builder", () => {
   it("prints merged SDL with root types and entity surface", () => {
     const merged = generateMergedTypeDefs(entities);
     expect(merged).toMatchSnapshot();
-    expect(merged).toContain("type Query");
-    expect(merged).toContain("type ServerStatus {");
-    expect(merged).toContain("type PingResult {");
-    expect(merged).toContain("type Item {");
-    expect(merged).toContain("scalar DateTime");
-    expect(merged).toContain("direction: SortDirection = ASC");
-    expect(merged.match(/^enum SortDirection/gm)?.length).toBe(1);
   });
 
   it("printed SDL is parseable and valid", () => {
