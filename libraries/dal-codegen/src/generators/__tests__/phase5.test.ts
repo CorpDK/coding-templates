@@ -6,7 +6,7 @@ import { loadEntities } from "../../model.js";
 import { columnGraphqlDescription } from "../schema-utils.js";
 import { buildDalGraphQLSchema } from "../schema-builder.js";
 import { join, dirname } from "node:path";
-import { fileURLToPath } from "node:url";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const packageRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
 const fixtureDir = join(packageRoot, "src/__tests__/fixtures/phase5-schema");
@@ -81,12 +81,37 @@ describe("Phase 5 dal-codegen", () => {
       expect.objectContaining({ exportName: "phase5Widgets", graphqlType: "Phase5Widget" }),
     ]);
 
-    const entities = await loadEntities(fixtureDir, false);
-    const schema = buildDalGraphQLSchema(entities);
-    const queryFields = schema.getQueryType()?.getFields() ?? {};
-    expect(queryFields.phase5Widgets).toBeDefined();
-    expect(queryFields.phase5Widget).toBeDefined();
-    expect(queryFields.phase5WidgetConnection).toBeDefined();
+    const resolverUrl = pathToFileURL(resolverPath).href;
+    const { createDalContext, generatedResolvers } = await import(resolverUrl);
+
+    const pubsub = {
+      publish: () => undefined,
+      subscribe: () =>
+        ({
+          [Symbol.asyncIterator]: async function* empty() {
+            yield await Promise.resolve(undefined);
+          },
+        }) as AsyncIterable<unknown>,
+    };
+
+    const ctx = createDalContext(pubsub as never);
+    expect(ctx.repositories.phase5Widget).toBeDefined();
+
+    const missing = await generatedResolvers.Query.phase5Widget(
+      {},
+      { id: "550e8400-e29b-41d4-a716-446655440000" },
+      ctx,
+      undefined as never,
+    );
+    expect(missing).toBeNull();
+
+    const invalidCreate = await generatedResolvers.Mutation.createPhase5Widget(
+      {},
+      { input: { code: "x".repeat(13), qty: 5, note: "ok" } },
+      ctx,
+    );
+    expect(invalidCreate.userErrors.length).toBeGreaterThan(0);
+    expect(invalidCreate.phase5Widget).toBeNull();
   });
 
   it("runDalCodegen supports ds template relation navigation in GraphQL schema", async () => {
