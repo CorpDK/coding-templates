@@ -205,7 +205,7 @@ function manyToManyTargetRecordImports(entity: EntityModel, entities: EntityMode
       `import type { ${target.graphqlType}Record } from "./generated-${target.fieldBasename}.repository.js";`,
     );
   }
-  return [...imports].sort().join("\n");
+  return [...imports].sort((a, b) => a.localeCompare(b)).join("\n");
 }
 
 function activeRowWhere(idExpr: string, soft: boolean): string {
