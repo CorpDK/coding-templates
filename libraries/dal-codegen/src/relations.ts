@@ -9,7 +9,7 @@ import {
 } from "drizzle-orm/relations";
 import { getTableConfig } from "drizzle-orm/pg-core";
 import { toGraphqlTypeName } from "@corpdk/dal-core";
-import type { EntityModel, RelationKind, RelationModel } from "./model.js";
+import type { EntityModel, RelationModel } from "./model.js";
 
 function hasUniqueOnColumn(exportName: string, drizzleKey: string, combined: Record<string, unknown>): boolean {
   const table = combined[exportName];
@@ -96,6 +96,85 @@ function inferManyToMany(
   return { joinOwnerFk: ownerFk, joinTargetFk: targetFk, targetExport };
 }
 
+function relationFromOneSide(
+  fieldName: string,
+  entity: EntityModel,
+  targetExport: string,
+  targetEntity: EntityModel,
+  relation: One,
+  combined: Record<string, unknown>,
+  tables: ReturnType<typeof extractTablesRelationalConfig>["tables"],
+): RelationModel {
+  const oneConfig = relation.config;
+  if (oneConfig?.fields?.length) {
+    const fkKey = columnDrizzleKey(entity.exportName, oneConfig.fields[0]!, tables);
+    const isOneToOne = hasUniqueOnColumn(entity.exportName, fkKey, combined);
+    return {
+      fieldName,
+      kind: isOneToOne ? "one-to-one" : "many-to-one",
+      targetExportName: targetExport,
+      targetGraphqlType: targetEntity.graphqlType,
+      ownerFkDrizzleKey: fkKey,
+      ownerFkGraphqlName: entity.columns.find((c) => c.drizzleKey === fkKey)?.graphqlName,
+      filterable: true,
+      navigationList: false,
+      navigationNullable: !oneConfig.fields[0]!.notNull,
+    };
+  }
+  const childFk = childFkReferencingParent(targetExport, entity.exportName, tables);
+  return {
+    fieldName,
+    kind: "one-to-one",
+    targetExportName: targetExport,
+    targetGraphqlType: targetEntity.graphqlType,
+    childFkDrizzleKey: childFk,
+    filterable: true,
+    navigationList: false,
+    navigationNullable: true,
+  };
+}
+
+function relationFromManySide(
+  fieldName: string,
+  entity: EntityModel,
+  targetExport: string,
+  targetEntity: EntityModel,
+  entityByExport: Map<string, EntityModel>,
+  tables: ReturnType<typeof extractTablesRelationalConfig>["tables"],
+): RelationModel {
+  const junctionBusinessCols = targetEntity.columns.filter(
+    (c) => c.isBusiness && !(c.drizzleKey.endsWith("Id") && c.drizzleKey !== "id"),
+  );
+  const m2m =
+    junctionBusinessCols.length === 0 ? inferManyToMany(targetExport, entity.exportName, tables) : null;
+  if (m2m) {
+    const finalTarget = entityByExport.get(m2m.targetExport);
+    return {
+      fieldName,
+      kind: "many-to-many",
+      targetExportName: m2m.targetExport,
+      targetGraphqlType: finalTarget?.graphqlType ?? toGraphqlTypeName(m2m.targetExport),
+      joinTableExportName: targetExport,
+      joinOwnerFkDrizzleKey: m2m.joinOwnerFk,
+      joinTargetFkDrizzleKey: m2m.joinTargetFk,
+      filterable: true,
+      navigationList: true,
+      navigationNullable: false,
+    };
+  }
+  const childFk = childFkReferencingParent(targetExport, entity.exportName, tables);
+  return {
+    fieldName,
+    kind: "one-to-many",
+    targetExportName: targetExport,
+    targetGraphqlType: targetEntity.graphqlType,
+    childFkDrizzleKey: childFk,
+    filterable: true,
+    navigationList: true,
+    navigationNullable: false,
+  };
+}
+
 export function attachRelations(entities: EntityModel[], schemaModules: Record<string, unknown>[]): void {
   const combined: Record<string, unknown> = {};
   for (const mod of schemaModules) Object.assign(combined, mod);
@@ -117,75 +196,15 @@ export function attachRelations(entities: EntityModel[], schemaModules: Record<s
       if (!targetExport || !entityByExport.has(targetExport)) continue;
 
       const targetEntity = entityByExport.get(targetExport)!;
-      let model: RelationModel | null = null;
-
       if (is(relation, One)) {
-        const oneConfig = (relation as One).config;
-        if (oneConfig?.fields?.length) {
-          const fkKey = columnDrizzleKey(entity.exportName, oneConfig.fields[0]!, tables);
-          const isOneToOne = hasUniqueOnColumn(entity.exportName, fkKey, combined);
-          model = {
-            fieldName,
-            kind: isOneToOne ? "one-to-one" : "many-to-one",
-            targetExportName: targetExport,
-            targetGraphqlType: targetEntity.graphqlType,
-            ownerFkDrizzleKey: fkKey,
-            ownerFkGraphqlName: entity.columns.find((c) => c.drizzleKey === fkKey)?.graphqlName,
-            filterable: true,
-            navigationList: false,
-            navigationNullable: !oneConfig.fields[0]!.notNull,
-          };
-        } else {
-          const childFk = childFkReferencingParent(targetExport, entity.exportName, tables);
-          model = {
-            fieldName,
-            kind: "one-to-one",
-            targetExportName: targetExport,
-            targetGraphqlType: targetEntity.graphqlType,
-            childFkDrizzleKey: childFk,
-            filterable: true,
-            navigationList: false,
-            navigationNullable: true,
-          };
-        }
-      } else if (is(relation, Many)) {
-        const junctionBusinessCols = targetEntity.columns.filter(
-          (c) => c.isBusiness && !(c.drizzleKey.endsWith("Id") && c.drizzleKey !== "id"),
+        entity.relations.push(
+          relationFromOneSide(fieldName, entity, targetExport, targetEntity, relation as One, combined, tables),
         );
-        const m2m =
-          junctionBusinessCols.length === 0
-            ? inferManyToMany(targetExport, entity.exportName, tables)
-            : null;
-        if (m2m) {
-          const finalTarget = entityByExport.get(m2m.targetExport);
-          model = {
-            fieldName,
-            kind: "many-to-many",
-            targetExportName: m2m.targetExport,
-            targetGraphqlType: finalTarget?.graphqlType ?? toGraphqlTypeName(m2m.targetExport),
-            joinTableExportName: targetExport,
-            joinOwnerFkDrizzleKey: m2m.joinOwnerFk,
-            joinTargetFkDrizzleKey: m2m.joinTargetFk,
-            filterable: true,
-            navigationList: true,
-            navigationNullable: false,
-          };
-        } else {
-          const childFk = childFkReferencingParent(targetExport, entity.exportName, tables);
-          model = {
-            fieldName,
-            kind: "one-to-many",
-            targetExportName: targetExport,
-            targetGraphqlType: targetEntity.graphqlType,
-            childFkDrizzleKey: childFk,
-            filterable: true,
-            navigationList: true,
-            navigationNullable: false,
-          };
-        }
+      } else if (is(relation, Many)) {
+        entity.relations.push(
+          relationFromManySide(fieldName, entity, targetExport, targetEntity, entityByExport, tables),
+        );
       }
-
-      if (model) entity.relations.push(model);
     }
   }
 

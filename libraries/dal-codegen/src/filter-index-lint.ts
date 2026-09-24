@@ -25,28 +25,24 @@ export function collectFilterIndexTargets(entity: EntityModel): FilterIndexTarge
     add(entity.exportName, col.drizzleKey);
   }
 
+  addRelationFilterTargets(entity, add);
+  return targets;
+}
+
+function addRelationFilterTargets(
+  entity: EntityModel,
+  add: (tableExport: string, drizzleKey: string) => void,
+): void {
   for (const rel of entity.relations) {
     if (!rel.filterable) continue;
-
-    if (rel.ownerFkDrizzleKey) {
-      add(entity.exportName, rel.ownerFkDrizzleKey);
-    }
-
+    if (rel.ownerFkDrizzleKey) add(entity.exportName, rel.ownerFkDrizzleKey);
     if (rel.kind === "one-to-many" && rel.childFkDrizzleKey) {
       add(rel.targetExportName, rel.childFkDrizzleKey);
     }
-
-    if (rel.kind === "many-to-many" && rel.joinTableExportName) {
-      if (rel.joinOwnerFkDrizzleKey) {
-        add(rel.joinTableExportName, rel.joinOwnerFkDrizzleKey);
-      }
-      if (rel.joinTargetFkDrizzleKey) {
-        add(rel.joinTableExportName, rel.joinTargetFkDrizzleKey);
-      }
-    }
+    if (rel.kind !== "many-to-many" || !rel.joinTableExportName) continue;
+    if (rel.joinOwnerFkDrizzleKey) add(rel.joinTableExportName, rel.joinOwnerFkDrizzleKey);
+    if (rel.joinTargetFkDrizzleKey) add(rel.joinTableExportName, rel.joinTargetFkDrizzleKey);
   }
-
-  return targets;
 }
 
 export function lintFilterIndexCoverage(

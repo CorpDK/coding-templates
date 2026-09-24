@@ -53,6 +53,37 @@ function generateLoaderSetup(entities: EntityModel[]): string {
   return setupLines.join("\n\n");
 }
 
+function appendRelationResolverField(
+  entity: EntityModel,
+  rel: EntityModel["relations"][number],
+  resolverFields: string[],
+): void {
+  const loaderKey = `${entity.fieldBasename}_${rel.fieldName}`;
+  if (rel.kind === "many-to-one" || rel.kind === "one-to-one") {
+    const fkField =
+      rel.ownerFkGraphqlName ??
+      entity.columns.find((c) => c.drizzleKey === rel.ownerFkDrizzleKey)?.graphqlName;
+    if (!fkField && rel.kind === "many-to-one") return;
+    if (rel.kind === "one-to-one" && !fkField) {
+      resolverFields.push(`    ${rel.fieldName}: (parent: Record<string, unknown>, _: unknown, ctx: DalContext) =>
+      ctx.loaders.${loaderKey}!.load(parent.id as string),`);
+      return;
+    }
+    resolverFields.push(`    ${rel.fieldName}: (parent: Record<string, unknown>, _: unknown, ctx: DalContext) => {
+      const fk = parent.${fkField} as string | null | undefined;
+      if (fk == null) return null;
+      return ctx.loaders.${loaderKey}!.load(fk);
+    },`);
+    return;
+  }
+  if (rel.kind === "one-to-many" || rel.kind === "many-to-many") {
+    resolverFields.push(`    ${rel.fieldName}: (parent: Record<string, unknown>, _: unknown, ctx: DalContext) => {
+      const id = parent.id as string;
+      return ctx.loaders.${loaderKey}!.load(id);
+    },`);
+  }
+}
+
 function generateFieldResolvers(entities: EntityModel[]): string {
   const blocks: string[] = [];
 
@@ -61,28 +92,7 @@ function generateFieldResolvers(entities: EntityModel[]): string {
     const resolverFields: string[] = [];
 
     for (const rel of entity.relations) {
-      const loaderKey = `${entity.fieldBasename}_${rel.fieldName}`;
-      if (rel.kind === "many-to-one" || rel.kind === "one-to-one") {
-        const fkField =
-          rel.ownerFkGraphqlName ??
-          entity.columns.find((c) => c.drizzleKey === rel.ownerFkDrizzleKey)?.graphqlName;
-        if (!fkField && rel.kind === "many-to-one") continue;
-        if (rel.kind === "one-to-one" && !fkField) {
-          resolverFields.push(`    ${rel.fieldName}: (parent: Record<string, unknown>, _: unknown, ctx: DalContext) =>
-      ctx.loaders.${loaderKey}!.load(parent.id as string),`);
-          continue;
-        }
-        resolverFields.push(`    ${rel.fieldName}: (parent: Record<string, unknown>, _: unknown, ctx: DalContext) => {
-      const fk = parent.${fkField} as string | null | undefined;
-      if (fk == null) return null;
-      return ctx.loaders.${loaderKey}!.load(fk);
-    },`);
-      } else if (rel.kind === "one-to-many" || rel.kind === "many-to-many") {
-        resolverFields.push(`    ${rel.fieldName}: (parent: Record<string, unknown>, _: unknown, ctx: DalContext) => {
-      const id = parent.id as string;
-      return ctx.loaders.${loaderKey}!.load(id);
-    },`);
-      }
+      appendRelationResolverField(entity, rel, resolverFields);
     }
 
     if (resolverFields.length === 0) continue;
@@ -258,10 +268,13 @@ export function generateResolvers(entities: EntityModel[]): string {
   const loaderSetup = generateLoaderSetup(entities);
   const fieldResolvers = generateFieldResolvers(entities);
 
-  const repoImports =
-    entities.length === 0
-      ? ""
-      : `import {\n${entities.map((e) => `  Generated${e.graphqlType}Repository,`).join("\n")}\n} from "../repositories/index.js";`;
+  let repoImports = "";
+  if (entities.length > 0) {
+    const repoImportLines = entities
+      .map((e) => `  Generated${e.graphqlType}Repository,`)
+      .join("\n");
+    repoImports = `import {\n${repoImportLines}\n} from "../repositories/index.js";`;
+  }
 
   const repoTypeFields = entities
     .map((e) => `    ${e.fieldBasename}: Generated${e.graphqlType}Repository;`)

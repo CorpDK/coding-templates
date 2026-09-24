@@ -1,5 +1,14 @@
-import { and, asc, desc, eq, gt, lt, or, type SQL } from "drizzle-orm";
-import type { Column } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gt,
+  lt,
+  or,
+  type Column,
+  type SQL,
+} from "drizzle-orm";
 import {
   decodeSignedCursorPayload,
   encodeSignedCursorPayload,
@@ -51,7 +60,7 @@ export function resolveSortWithTieBreaker<TField extends string>(
       })
     : [{ field: defaultField, direction: "ASC", drizzleKey: fieldMap[defaultField] ?? "id" }];
 
-  const last = resolved[resolved.length - 1];
+  const last = resolved.at(-1);
   if (last?.drizzleKey !== "id") {
     resolved.push({ field: "ID", direction: "ASC", drizzleKey: "id" });
   }

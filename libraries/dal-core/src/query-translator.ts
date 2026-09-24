@@ -1,5 +1,14 @@
-import { and, eq, exists, not, notExists, sql, type SQL } from "drizzle-orm";
-import type { Column, Table } from "drizzle-orm";
+import {
+  and,
+  eq,
+  exists,
+  not,
+  notExists,
+  sql,
+  type Column,
+  type SQL,
+  type Table,
+} from "drizzle-orm";
 import type { PgDatabase } from "drizzle-orm/pg-core";
 import {
   buildBooleanFilter,
@@ -160,9 +169,8 @@ export class QueryTranslator {
     return parts.length === 1 ? parts[0] : and(...parts)!;
   }
 
-  private translateLeaf(node: FilterAST): SQL | undefined {
+  private translateScalarFields(node: FilterAST): SQL[] {
     const parts: SQL[] = [];
-
     for (const key of scalarFilterKeys(node)) {
       const col = this.columnByGraphql.get(key);
       if (!col) continue;
@@ -170,28 +178,36 @@ export class QueryTranslator {
       const part = builder(col.column, node[key] as never);
       if (part) parts.push(part);
     }
+    return parts;
+  }
 
+  private translateRelationFilter(rel: RelationDescriptor, relFilter: FilterAST): SQL | undefined {
+    const assoc = extractAssociationFilter(relFilter);
+    if (assoc) return this.translateAssociation(rel, assoc);
+    if (rel.kind === "many-to-one") return this.translateManyToOne(rel, relFilter);
+    if (rel.kind === "one-to-one") {
+      return rel.ownerFkDrizzleKey
+        ? this.translateManyToOne(rel, relFilter)
+        : this.translateInverseOneToOne(rel, relFilter);
+    }
+    return undefined;
+  }
+
+  private translateRelationFields(node: FilterAST): SQL[] {
+    const parts: SQL[] = [];
     for (const [fieldName, value] of Object.entries(node)) {
       if (this.columnByGraphql.has(fieldName)) continue;
       if (fieldName === "and" || fieldName === "or" || fieldName === "not") continue;
       const rel = this.relationByField.get(fieldName);
       if (!rel || !rel.filterable || value == null || typeof value !== "object") continue;
-      const relFilter = value as FilterAST;
-      const assoc = extractAssociationFilter(relFilter);
-      if (assoc) {
-        const part = this.translateAssociation(rel, assoc);
-        if (part) parts.push(part);
-      } else if (rel.kind === "many-to-one") {
-        const part = this.translateManyToOne(rel, relFilter);
-        if (part) parts.push(part);
-      } else if (rel.kind === "one-to-one") {
-        const part = rel.ownerFkDrizzleKey
-          ? this.translateManyToOne(rel, relFilter)
-          : this.translateInverseOneToOne(rel, relFilter);
-        if (part) parts.push(part);
-      }
+      const part = this.translateRelationFilter(rel, value as FilterAST);
+      if (part) parts.push(part);
     }
+    return parts;
+  }
 
+  private translateLeaf(node: FilterAST): SQL | undefined {
+    const parts = [...this.translateScalarFields(node), ...this.translateRelationFields(node)];
     if (parts.length === 0) return undefined;
     return parts.length === 1 ? parts[0] : and(...parts)!;
   }
@@ -284,10 +300,7 @@ export class QueryTranslator {
     return undefined;
   }
 
-  private translateOneToMany(
-    rel: RelationDescriptor,
-    assoc: NonNullable<ReturnType<typeof extractAssociationFilter>>,
-  ): SQL | undefined {
+  private oneToManyChildContext(rel: RelationDescriptor) {
     const parentId = (this.config.table as unknown as Record<string, Column>).id;
     const childFk = (rel.childTable as unknown as Record<string, Column>)[rel.childFkDrizzleKey!];
     const childTranslator = rel.childColumns
@@ -300,71 +313,62 @@ export class QueryTranslator {
           filterBudget: this.config.filterBudget,
         })
       : null;
-
     const childSoftDelete = relationChildSoftDelete(rel);
     const childDeletedAt = childSoftDelete
       ? (rel.childTable as unknown as Record<string, Column>).deletedAt
       : undefined;
-
     const childExistsWhere = (inner?: SQL): SQL => {
       const parts: SQL[] = [eq(childFk, parentId)];
-      if (inner) {
-        parts.push(inner);
-      }
-      if (childDeletedAt) {
-        parts.push(sql`${childDeletedAt} IS NULL`);
-      }
+      if (inner) parts.push(inner);
+      if (childDeletedAt) parts.push(sql`${childDeletedAt} IS NULL`);
       return parts.length === 1 ? parts[0]! : and(...parts)!;
     };
-
     const childPredicate = (childFilter: FilterAST): SQL | undefined => {
       if (isExistenceOnlyFilter(childFilter)) return undefined;
       return childTranslator?.translateFilter(childFilter, false, true);
     };
+    return { childExistsWhere, childPredicate, childFk, parentId, childDeletedAt };
+  }
 
+  private oneToManyExistsMatch(
+    rel: RelationDescriptor,
+    childExistsWhere: (inner?: SQL) => SQL,
+    childPredicate: (childFilter: FilterAST) => SQL | undefined,
+    filter: FilterAST,
+    negate: boolean,
+  ): SQL | undefined {
+    if (!isExistenceOnlyFilter(filter) && !childPredicate(filter)) return undefined;
+    const subquery = this.config.db
+      .select({ one: sql`1` })
+      .from(rel.childTable!)
+      .where(childExistsWhere(childPredicate(filter)));
+    return negate ? notExists(subquery) : exists(subquery);
+  }
+
+  private translateOneToMany(
+    rel: RelationDescriptor,
+    assoc: NonNullable<ReturnType<typeof extractAssociationFilter>>,
+  ): SQL | undefined {
+    const ctx = this.oneToManyChildContext(rel);
     if (assoc.some) {
-      if (!isExistenceOnlyFilter(assoc.some)) {
-        const inner = childPredicate(assoc.some);
-        if (!inner) return undefined;
-      }
-      return exists(
-        this.config.db
-          .select({ one: sql`1` })
-          .from(rel.childTable!)
-          .where(childExistsWhere(childPredicate(assoc.some))),
-      );
+      return this.oneToManyExistsMatch(rel, ctx.childExistsWhere, ctx.childPredicate, assoc.some, false);
     }
     if (assoc.none) {
-      if (!isExistenceOnlyFilter(assoc.none)) {
-        const inner = childPredicate(assoc.none);
-        if (!inner) return undefined;
-      }
-      return notExists(
-        this.config.db
-          .select({ one: sql`1` })
-          .from(rel.childTable!)
-          .where(childExistsWhere(childPredicate(assoc.none))),
-      );
+      return this.oneToManyExistsMatch(rel, ctx.childExistsWhere, ctx.childPredicate, assoc.none, true);
     }
-    if (assoc.every) {
-      if (isEmptyFilter(assoc.every)) return undefined;
-      if (isExistenceOnlyFilter(assoc.every)) {
-        return sql`true`;
-      }
-      const inner = childPredicate(assoc.every);
-      if (!inner) return undefined;
-      const everyParts: SQL[] = [eq(childFk, parentId), not(inner)];
-      if (childDeletedAt) {
-        everyParts.push(sql`${childDeletedAt} IS NULL`);
-      }
-      return notExists(
-        this.config.db
-          .select({ one: sql`1` })
-          .from(rel.childTable!)
-          .where(everyParts.length === 1 ? everyParts[0] : and(...everyParts)!),
-      );
-    }
-    return undefined;
+    if (!assoc.every) return undefined;
+    if (isEmptyFilter(assoc.every)) return undefined;
+    if (isExistenceOnlyFilter(assoc.every)) return sql`true`;
+    const inner = ctx.childPredicate(assoc.every);
+    if (!inner) return undefined;
+    const everyParts: SQL[] = [eq(ctx.childFk, ctx.parentId), not(inner)];
+    if (ctx.childDeletedAt) everyParts.push(sql`${ctx.childDeletedAt} IS NULL`);
+    return notExists(
+      this.config.db
+        .select({ one: sql`1` })
+        .from(rel.childTable!)
+        .where(everyParts.length === 1 ? everyParts[0] : and(...everyParts)!),
+    );
   }
 
   private translateManyToMany(

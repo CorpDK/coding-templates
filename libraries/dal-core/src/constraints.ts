@@ -42,10 +42,10 @@ function assertNumericBounds(
   } else {
     return;
   }
-  if (meta.minExclusive != null && !(num > meta.minExclusive)) {
+  if (meta.minExclusive != null && num <= meta.minExclusive) {
     throw new ValidationError(`${meta.graphqlName} must be greater than ${meta.minExclusive}`, path);
   }
-  if (meta.minInclusive != null && !(num >= meta.minInclusive)) {
+  if (meta.minInclusive != null && num < meta.minInclusive) {
     throw new ValidationError(
       `${meta.graphqlName} must be at least ${meta.minInclusive}`,
       path,

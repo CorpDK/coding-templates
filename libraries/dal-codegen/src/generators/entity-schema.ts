@@ -148,6 +148,17 @@ function buildEntityFilter(
   return filterType;
 }
 
+function navigationFieldOutputType(
+  rel: RelationModel,
+  targetType: GraphQLOutputType,
+): GraphQLOutputType {
+  if (rel.navigationList) {
+    return new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(targetType)));
+  }
+  if (rel.navigationNullable) return targetType;
+  return new GraphQLNonNull(targetType);
+}
+
 export function buildEntitySchema(
   entity: EntityModel,
   registry: SchemaRegistry,
@@ -173,12 +184,8 @@ export function buildEntitySchema(
       if (options?.scalarsOnly) return scalarFields;
       const navFields = Object.fromEntries(
         (entity.relations ?? []).map((rel) => {
-          const targetType = registryType(registry, rel.targetGraphqlType);
-          const outputType = rel.navigationList
-            ? new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(targetType)))
-            : rel.navigationNullable
-              ? targetType
-              : new GraphQLNonNull(targetType);
+          const targetType = registryType(registry, rel.targetGraphqlType) as GraphQLOutputType;
+          const outputType = navigationFieldOutputType(rel, targetType);
           return [
             rel.fieldName,
             {

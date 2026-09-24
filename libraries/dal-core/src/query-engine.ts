@@ -181,7 +181,7 @@ export class QueryEngine<TRow> {
           hasNextPage: Boolean(args.before),
           hasPreviousPage,
           startCursor: edges[0]?.cursor ?? null,
-          endCursor: edges[edges.length - 1]?.cursor ?? null,
+          endCursor: edges.at(-1)?.cursor ?? null,
         },
       };
     }
@@ -203,7 +203,7 @@ export class QueryEngine<TRow> {
         hasNextPage,
         hasPreviousPage: Boolean(args.after),
         startCursor: edges[0]?.cursor ?? null,
-        endCursor: edges[edges.length - 1]?.cursor ?? null,
+        endCursor: edges.at(-1)?.cursor ?? null,
       },
     };
   }

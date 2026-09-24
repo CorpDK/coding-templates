@@ -1,7 +1,7 @@
 /** Minimal per-request DataLoader — batches keys within the same event-loop tick. */
 export class DataLoader<K, V> {
   private queue: K[] = [];
-  private resolvers = new Map<
+  private readonly resolvers = new Map<
     K,
     { resolve: (value: V) => void; reject: (err: unknown) => void }
   >();

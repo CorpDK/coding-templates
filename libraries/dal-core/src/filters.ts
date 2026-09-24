@@ -15,9 +15,9 @@ import {
   notInArray,
   or,
   sql,
+  type Column,
   type SQL,
 } from "drizzle-orm";
-import type { Column } from "drizzle-orm";
 import { ValidationError } from "./errors.js";
 import { extractAssociationFilter, scalarFilterKeys } from "./filter-ast.js";
 
@@ -153,6 +153,34 @@ export interface LogicalFilter<T> {
   not?: T | null;
 }
 
+function combineFilterParts(parts: SQL[]): SQL | undefined {
+  if (parts.length === 0) return undefined;
+  return parts.length === 1 ? parts[0] : and(...parts);
+}
+
+function pushStringFilterEqualityParts(
+  column: Column,
+  filter: StringFilter,
+  ci: boolean,
+  parts: SQL[],
+): void {
+  if (filter.eq != null) {
+    parts.push(ci ? ciEq(column, filter.eq) : eq(column, filter.eq));
+  }
+  if (filter.neq != null) {
+    parts.push(ci ? ciNeq(column, filter.neq) : ne(column, filter.neq));
+  }
+  if (filter.like != null) {
+    parts.push(ci ? ilike(column, filter.like) : like(column, filter.like));
+  }
+  if (filter.in?.length) {
+    parts.push(ci ? ciIn(column, filter.in) : inArray(column, filter.in));
+  }
+  if (filter.notIn?.length) {
+    parts.push(ci ? ciNotIn(column, filter.notIn) : notInArray(column, filter.notIn));
+  }
+}
+
 function assertExclusiveIsNull(filter: { isNull?: boolean | null }, keys: string[]): void {
   if (filter.isNull == null) return;
   const others = keys.filter((k) => k !== "isNull" && (filter as Record<string, unknown>)[k] != null);
@@ -191,32 +219,15 @@ export function buildStringFilter(column: Column, filter: StringFilter | null | 
 
   const ci = filter.isCaseInsensitive === true;
   const parts: SQL[] = [];
-
-  if (filter.eq != null) {
-    parts.push(ci ? ciEq(column, filter.eq) : eq(column, filter.eq));
-  }
-  if (filter.neq != null) {
-    parts.push(ci ? ciNeq(column, filter.neq) : ne(column, filter.neq));
-  }
-  if (filter.like != null) {
-    parts.push(ci ? ilike(column, filter.like) : like(column, filter.like));
-  }
-  if (filter.in?.length) {
-    parts.push(ci ? ciIn(column, filter.in) : inArray(column, filter.in));
-  }
-  if (filter.notIn?.length) {
-    parts.push(ci ? ciNotIn(column, filter.notIn) : notInArray(column, filter.notIn));
-  }
-
-  if (parts.length === 0) return undefined;
-  return parts.length === 1 ? parts[0] : and(...parts);
+  pushStringFilterEqualityParts(column, filter, ci, parts);
+  return combineFilterParts(parts);
 }
 
 export function buildBooleanFilter(
   column: Column,
   filter: BooleanFilter | null | undefined,
 ): SQL | undefined {
-  if (!filter || filter.eq == null) return undefined;
+  if (filter?.eq == null) return undefined;
   return eq(column, filter.eq);
 }
 
@@ -256,14 +267,7 @@ export function buildEnumFilter<T extends string>(
   column: Column,
   filter: EnumFilter<T> | null | undefined,
 ): SQL | undefined {
-  if (!filter) return undefined;
-  const parts: SQL[] = [];
-  if (filter.eq != null) parts.push(eq(column, filter.eq));
-  if (filter.neq != null) parts.push(ne(column, filter.neq));
-  if (filter.in?.length) parts.push(inArray(column, filter.in));
-  if (filter.notIn?.length) parts.push(notInArray(column, filter.notIn));
-  if (parts.length === 0) return undefined;
-  return parts.length === 1 ? parts[0] : and(...parts);
+  return buildIdFilter(column, filter);
 }
 
 function buildComparableNumberFilter(
@@ -323,6 +327,41 @@ export function buildFloatFilter(
   ]);
 }
 
+function comparableFilterIsNullClause(
+  column: Column,
+  filter: DateFilter,
+): SQL | undefined {
+  assertExclusiveIsNull(filter, [
+    "eq",
+    "neq",
+    "gt",
+    "gte",
+    "lt",
+    "lte",
+    "in",
+    "notIn",
+    "isNull",
+  ]);
+  if (filter.isNull === true) return isNull(column);
+  if (filter.isNull === false) return isNotNull(column);
+  return undefined;
+}
+
+function pushComparableFilterParts(
+  column: Column,
+  filter: BigIntFilter | DecimalFilter | DateFilter | TimeTzFilter | IntervalMsFilter,
+  parts: SQL[],
+): void {
+  if (filter.eq != null) parts.push(eq(column, filter.eq));
+  if (filter.neq != null) parts.push(ne(column, filter.neq));
+  if (filter.gt != null) parts.push(gt(column, filter.gt));
+  if (filter.gte != null) parts.push(gte(column, filter.gte));
+  if (filter.lt != null) parts.push(lt(column, filter.lt));
+  if (filter.lte != null) parts.push(lte(column, filter.lte));
+  if (filter.in?.length) parts.push(inArray(column, filter.in));
+  if (filter.notIn?.length) parts.push(notInArray(column, filter.notIn));
+}
+
 function buildStringComparableFilter(
   column: Column,
   filter:
@@ -337,32 +376,12 @@ function buildStringComparableFilter(
 ): SQL | undefined {
   if (!filter) return undefined;
   if (withIsNull) {
-    assertExclusiveIsNull(filter as { isNull?: boolean | null }, [
-      "eq",
-      "neq",
-      "gt",
-      "gte",
-      "lt",
-      "lte",
-      "in",
-      "notIn",
-      "isNull",
-    ]);
-    const f = filter as DateFilter;
-    if (f.isNull === true) return isNull(column);
-    if (f.isNull === false) return isNotNull(column);
+    const isNullClause = comparableFilterIsNullClause(column, filter as DateFilter);
+    if (isNullClause) return isNullClause;
   }
   const parts: SQL[] = [];
-  if (filter.eq != null) parts.push(eq(column, filter.eq));
-  if (filter.neq != null) parts.push(ne(column, filter.neq));
-  if (filter.gt != null) parts.push(gt(column, filter.gt));
-  if (filter.gte != null) parts.push(gte(column, filter.gte));
-  if (filter.lt != null) parts.push(lt(column, filter.lt));
-  if (filter.lte != null) parts.push(lte(column, filter.lte));
-  if (filter.in?.length) parts.push(inArray(column, filter.in));
-  if (filter.notIn?.length) parts.push(notInArray(column, filter.notIn));
-  if (parts.length === 0) return undefined;
-  return parts.length === 1 ? parts[0] : and(...parts);
+  pushComparableFilterParts(column, filter, parts);
+  return combineFilterParts(parts);
 }
 
 export function buildBigIntFilter(

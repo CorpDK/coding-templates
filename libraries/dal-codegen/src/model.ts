@@ -95,42 +95,57 @@ interface DrizzleColumnWithTz {
   withTimezone?: boolean;
 }
 
+const SIMPLE_PG_COLUMN_KINDS: Record<string, ColumnKind> = {
+  PgUUID: "uuid",
+  PgText: "text",
+  PgChar: "text",
+  PgVarchar: "varchar",
+  PgBoolean: "boolean",
+  PgSmallInt: "smallint",
+  PgInteger: "integer",
+  PgBigInt53: "bigint",
+  PgBigInt64: "bigint",
+  PgNumeric: "decimal",
+  PgReal: "float",
+  PgDoublePrecision: "float",
+  PgDateString: "date",
+  PgDate: "date",
+  PgInterval: "interval",
+};
+
+function requireWithTimezone(
+  exportName: string,
+  drizzleKey: string,
+  col: DrizzleColumnWithTz,
+  pgTypeLabel: string,
+  expectedType: string,
+): void {
+  if (!col.withTimezone) {
+    throw new Error(
+      `Column '${exportName}.${drizzleKey}' uses ${pgTypeLabel} without time zone — use ${expectedType} only.`,
+    );
+  }
+}
+
 function inferColumnKind(
   exportName: string,
   drizzleKey: string,
   col: { columnType: string } & DrizzleColumnWithTz,
 ): ColumnKind {
   const columnType = col.columnType;
-  if (columnType === "PgUUID") return "uuid";
-  if (columnType === "PgText" || columnType === "PgChar") return "text";
-  if (columnType === "PgVarchar") return "varchar";
-  if (columnType === "PgBoolean") return "boolean";
-  if (columnType === "PgSmallInt") return "smallint";
-  if (columnType === "PgInteger") return "integer";
-  if (columnType === "PgBigInt53" || columnType === "PgBigInt64") return "bigint";
-  if (columnType === "PgNumeric") return "decimal";
-  if (columnType === "PgReal" || columnType === "PgDoublePrecision") return "float";
-  if (columnType === "PgDateString" || columnType === "PgDate") return "date";
-  if (columnType === "PgInterval") return "interval";
+  const simple = SIMPLE_PG_COLUMN_KINDS[columnType];
+  if (simple) return simple;
   if (columnType === "PgMoney") {
     throw new Error(
       `Column '${exportName}.${drizzleKey}' uses banned PostgreSQL type 'money'. Use integer cents or numeric/decimal.`,
     );
   }
   if (columnType === "PgTimestamp") {
-    if (!col.withTimezone) {
-      throw new Error(
-        `Column '${exportName}.${drizzleKey}' uses timestamp without time zone — use timestamptz only.`,
-      );
-    }
+    requireWithTimezone(exportName, drizzleKey, col, "timestamp", "timestamptz");
     return "timestamptz";
   }
   if (columnType === "PgTime") {
-    if (!col.withTimezone) {
-      throw new Error(
-        `Column '${exportName}.${drizzleKey}' uses time without time zone — use timetz only.`,
-      );
-    }
+    requireWithTimezone(exportName, drizzleKey, col, "time", "timetz");
     return "timetz";
   }
   if (columnType.startsWith("PgEnum")) return "enum";
@@ -185,7 +200,9 @@ export function collectSchemaFiles(schemaPath: string): string[] {
   const files = readdirSync(schemaPath)
     .filter((f: string) => extname(f) === ".ts" && !f.endsWith(".d.ts"))
     .map((f: string) => join(schemaPath, f));
-  const nonIndex = files.filter((f) => !f.endsWith("/index.ts") && !f.endsWith("\\index.ts"));
+  const nonIndex = files.filter(
+    (f) => !f.endsWith("/index.ts") && !f.endsWith(String.raw`\index.ts`),
+  );
   return nonIndex.length > 0 ? nonIndex : files;
 }
 
@@ -197,6 +214,119 @@ export async function importSchemaModule(file: string): Promise<Record<string, u
     register();
     return (await import(pathToFileURL(file).href)) as Record<string, unknown>;
   }
+}
+
+function inferEnumMetadata(
+  exportName: string,
+  drizzleKey: string,
+  col: DrizzleColumnWithEnum,
+): { enumName: string; enumValues: string[] } {
+  const pgEnumRef = col.enum;
+  const enumName = pgEnumRef?.enumName ? pgEnumNameToGraphql(pgEnumRef.enumName) : undefined;
+  const enumValues = pgEnumRef?.enumValues ?? col.enumValues;
+  if (!enumName || !enumValues?.length) {
+    throw new Error(`Column '${exportName}.${drizzleKey}' is enum but enum metadata is missing`);
+  }
+  return { enumName, enumValues };
+}
+
+function inferStaticDefault(col: {
+  hasDefault: boolean;
+  default?: unknown;
+  defaultFn?: unknown;
+}): string | boolean | number | undefined {
+  if (!col.hasDefault || col.default === undefined || col.defaultFn !== undefined) {
+    return undefined;
+  }
+  const dv = col.default;
+  if (typeof dv === "string" || typeof dv === "boolean" || typeof dv === "number") {
+    return dv;
+  }
+  return undefined;
+}
+
+function buildColumnModel(
+  exportName: string,
+  drizzleKey: string,
+  col: ReturnType<typeof getTableColumns>[string],
+  strict: boolean,
+  columnComments: Map<string, Map<string, string>>,
+  checkConstraints: Map<string, { minExclusive?: number; minInclusive?: number }>,
+): ColumnModel {
+  const kind = inferColumnKind(exportName, drizzleKey, col);
+  if (kind === "unsupported") {
+    throw new Error(
+      `Column '${exportName}.${drizzleKey}' uses unsupported type '${col.columnType}'. See dal-pg-type-mapping.md`,
+    );
+  }
+  const comment = columnComments.get(exportName)?.get(drizzleKey) ?? "";
+  if (strict && !comment) {
+    throw new Error(`Missing comment on ${exportName}.${drizzleKey} (strict mode)`);
+  }
+  const colWithEnum = col as typeof col & DrizzleColumnWithEnum;
+  let enumName: string | undefined;
+  let enumValues: string[] | undefined;
+  if (kind === "enum") {
+    ({ enumName, enumValues } = inferEnumMetadata(exportName, drizzleKey, colWithEnum));
+  }
+  const colWithDefault = col as typeof col & { default?: unknown; defaultFn?: unknown };
+  const defaultValue = inferStaticDefault(colWithDefault);
+  const lengthMeta = inferLengthConstraint(col);
+  const checkMeta = checkConstraints.get(drizzleKey);
+  return {
+    drizzleKey,
+    physicalName: col.name,
+    graphqlName: toGraphqlFieldName(drizzleKey, col.name),
+    kind,
+    notNull: col.notNull,
+    hasDefault: col.hasDefault,
+    defaultValue,
+    comment,
+    enumName,
+    enumValues,
+    isServerManaged: isServerManaged(drizzleKey),
+    isBusiness: !isServerManaged(drizzleKey),
+    maxLength: lengthMeta,
+    minExclusive: checkMeta?.minExclusive,
+    minInclusive: checkMeta?.minInclusive,
+  };
+}
+
+function buildEntityFromTable(
+  exportName: string,
+  value: unknown,
+  file: string,
+  strict: boolean,
+  tableComments: Map<string, string>,
+  columnComments: Map<string, Map<string, string>>,
+): EntityModel {
+  const config = getTableConfig(value as Parameters<typeof getTableConfig>[0]);
+  const cols = getTableColumns(value as Parameters<typeof getTableColumns>[0]);
+  const checkConstraints = inferCheckConstraintsForTable(config.checks, Object.keys(cols));
+  const colModels = Object.entries(cols).map(([drizzleKey, col]) =>
+    buildColumnModel(exportName, drizzleKey, col, strict, columnComments, checkConstraints),
+  );
+  if (!colModels.some((c) => c.drizzleKey === "id" && c.kind === "uuid")) {
+    throw new Error(`Entity '${exportName}' must have uuid 'id' primary key`);
+  }
+  const tableComment = tableComments.get(exportName) ?? "";
+  if (strict && !tableComment) {
+    throw new Error(`Missing table comment on ${exportName} (strict mode)`);
+  }
+  const auditProfile = inferAuditProfile(colModels);
+  return {
+    exportName,
+    tableName: config.name,
+    graphqlType: toGraphqlTypeName(exportName),
+    fieldBasename: toGraphqlFieldBasename(exportName),
+    listField: toGraphqlListField(exportName),
+    auditProfile,
+    deleteStrategy: inferDeleteStrategy(colModels),
+    tableComment,
+    columns: colModels,
+    relations: [],
+    sourceFile: file,
+  };
 }
 
 export async function loadEntities(schemaPath: string, strict: boolean): Promise<EntityModel[]> {
@@ -211,95 +341,7 @@ export async function loadEntities(schemaPath: string, strict: boolean): Promise
 
     for (const [exportName, value] of Object.entries(mod)) {
       if (!isTable(value)) continue;
-
-      const config = getTableConfig(value);
-      const cols = getTableColumns(value);
-      const colModels: ColumnModel[] = [];
-      const checkConstraints = inferCheckConstraintsForTable(
-        config.checks,
-        Object.keys(cols),
-      );
-
-      for (const [drizzleKey, col] of Object.entries(cols)) {
-        const kind = inferColumnKind(exportName, drizzleKey, col);
-        if (kind === "unsupported") {
-          throw new Error(
-            `Column '${exportName}.${drizzleKey}' uses unsupported type '${col.columnType}'. See dal-pg-type-mapping.md`,
-          );
-        }
-        const comment = columnComments.get(exportName)?.get(drizzleKey) ?? "";
-        if (strict && !comment) {
-          throw new Error(`Missing comment on ${exportName}.${drizzleKey} (strict mode)`);
-        }
-        const colWithEnum = col as typeof col & DrizzleColumnWithEnum;
-        let enumName: string | undefined;
-        let enumValues: string[] | undefined;
-        if (kind === "enum") {
-          const pgEnumRef = colWithEnum.enum;
-          if (pgEnumRef?.enumName) {
-            enumName = pgEnumNameToGraphql(pgEnumRef.enumName);
-            enumValues = pgEnumRef.enumValues ?? colWithEnum.enumValues;
-          }
-          if (!enumName || !enumValues?.length) {
-            throw new Error(
-              `Column '${exportName}.${drizzleKey}' is enum but enum metadata is missing`,
-            );
-          }
-        }
-        const colWithDefault = col as typeof col & { default?: unknown; defaultFn?: unknown };
-        let defaultValue: string | boolean | number | undefined;
-        if (col.hasDefault && colWithDefault.default !== undefined && colWithDefault.defaultFn === undefined) {
-          const dv = colWithDefault.default;
-          if (typeof dv === "string" || typeof dv === "boolean" || typeof dv === "number") {
-            defaultValue = dv;
-          }
-        }
-
-        const lengthMeta = inferLengthConstraint(col);
-        const checkMeta = checkConstraints.get(drizzleKey);
-
-        colModels.push({
-          drizzleKey,
-          physicalName: col.name,
-          graphqlName: toGraphqlFieldName(drizzleKey, col.name),
-          kind,
-          notNull: col.notNull,
-          hasDefault: col.hasDefault,
-          defaultValue,
-          comment,
-          enumName,
-          enumValues,
-          isServerManaged: isServerManaged(drizzleKey),
-          isBusiness: !isServerManaged(drizzleKey),
-          maxLength: lengthMeta,
-          minExclusive: checkMeta?.minExclusive,
-          minInclusive: checkMeta?.minInclusive,
-        });
-      }
-
-      if (!colModels.some((c) => c.drizzleKey === "id" && c.kind === "uuid")) {
-        throw new Error(`Entity '${exportName}' must have uuid 'id' primary key`);
-      }
-
-      const tableComment = tableComments.get(exportName) ?? "";
-      if (strict && !tableComment) {
-        throw new Error(`Missing table comment on ${exportName} (strict mode)`);
-      }
-
-      const auditProfile = inferAuditProfile(colModels);
-      entities.push({
-        exportName,
-        tableName: config.name,
-        graphqlType: toGraphqlTypeName(exportName),
-        fieldBasename: toGraphqlFieldBasename(exportName),
-        listField: toGraphqlListField(exportName),
-        auditProfile,
-        deleteStrategy: inferDeleteStrategy(colModels),
-        tableComment,
-        columns: colModels,
-        relations: [],
-        sourceFile: file,
-      });
+      entities.push(buildEntityFromTable(exportName, value, file, strict, tableComments, columnComments));
     }
   }
 

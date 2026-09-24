@@ -2,70 +2,82 @@ import { join } from "node:path";
 import { loadDalConfig, type DalConfig } from "./config.js";
 import { lintFilterIndexCoverage } from "./filter-index-lint.js";
 import { hasIndexCoverage } from "./index-coverage.js";
-import { collectSchemaFiles, importSchemaModule } from "./model.js";
-import type { EntityModel } from "./model.js";
-import { loadEntities } from "./model.js";
+import {
+  collectSchemaFiles,
+  importSchemaModule,
+  loadEntities,
+  type EntityModel,
+} from "./model.js";
 
 export type { LintSeverity, LintViolation } from "./lint-types.js";
 import type { LintSeverity, LintViolation } from "./lint-types.js";
 
 const ENUM_VALUE_RE = /^[A-Z][A-Z0-9_]*$/;
 
-function lintEntityModel(entity: EntityModel, combined: Record<string, unknown>, strict: boolean): LintViolation[] {
+function lintBooleanNaming(entity: EntityModel): LintViolation[] {
   const violations: LintViolation[] = [];
-
   for (const col of entity.columns) {
-    if (col.kind === "boolean") {
-      const physical = col.physicalName;
-      if (!physical.startsWith("is_") && !physical.startsWith("has_")) {
-        violations.push({
-          severity: "error",
-          code: "BOOLEAN_NAMING",
-          message: `Boolean column must use is_* or has_* physical name (got '${physical}')`,
-          entity: entity.exportName,
-          column: col.drizzleKey,
-        });
-      }
-    }
+    if (col.kind !== "boolean") continue;
+    const physical = col.physicalName;
+    if (physical.startsWith("is_") || physical.startsWith("has_")) continue;
+    violations.push({
+      severity: "error",
+      code: "BOOLEAN_NAMING",
+      message: `Boolean column must use is_* or has_* physical name (got '${physical}')`,
+      entity: entity.exportName,
+      column: col.drizzleKey,
+    });
+  }
+  return violations;
+}
 
-    if (col.enumValues?.length) {
-      for (const value of col.enumValues) {
-        if (!ENUM_VALUE_RE.test(value)) {
-          violations.push({
-            severity: "error",
-            code: "ENUM_CASING",
-            message: `Enum value '${value}' must be UPPERCASE or SCREAMING_SNAKE_CASE`,
-            entity: entity.exportName,
-            column: col.drizzleKey,
-          });
-        }
-      }
+function lintEnumCasing(entity: EntityModel): LintViolation[] {
+  const violations: LintViolation[] = [];
+  for (const col of entity.columns) {
+    if (!col.enumValues?.length) continue;
+    for (const value of col.enumValues) {
+      if (ENUM_VALUE_RE.test(value)) continue;
+      violations.push({
+        severity: "error",
+        code: "ENUM_CASING",
+        message: `Enum value '${value}' must be UPPERCASE or SCREAMING_SNAKE_CASE`,
+        entity: entity.exportName,
+        column: col.drizzleKey,
+      });
     }
   }
+  return violations;
+}
 
+function lintSoftDeleteShape(entity: EntityModel): LintViolation[] {
   const hasDeletedAt = entity.columns.some((c) => c.drizzleKey === "deletedAt");
   const hasDeletedBy = entity.columns.some((c) => c.drizzleKey === "deletedBy");
-  if (hasDeletedBy && !hasDeletedAt) {
-    violations.push({
+  if (!hasDeletedBy || hasDeletedAt) return [];
+  return [
+    {
       severity: "error",
       code: "SOFT_DELETE_SHAPE",
       message: "deletedBy without deletedAt is invalid",
       entity: entity.exportName,
-    });
-  }
+    },
+  ];
+}
 
+function lintSortIndexCoverage(
+  entity: EntityModel,
+  combined: Record<string, unknown>,
+  strict: boolean,
+): LintViolation[] {
   const indexCheckColumns = strict
     ? entity.columns.filter((c) => c.drizzleKey !== "id")
     : entity.columns.filter((c) => c.drizzleKey === "createdAt" || c.drizzleKey === "updatedAt");
-
-  violations.push(...lintFilterIndexCoverage(entity, combined, strict));
-
+  const severity: LintSeverity = strict ? "error" : "warn";
+  const violations: LintViolation[] = [];
   for (const col of indexCheckColumns) {
     const covered = hasIndexCoverage(entity.exportName, col.drizzleKey, combined, {
       leadingOnly: false,
     });
     if (covered) continue;
-    const severity: LintSeverity = strict ? "error" : "warn";
     violations.push({
       severity,
       code: "SORT_INDEX",
@@ -74,8 +86,17 @@ function lintEntityModel(entity: EntityModel, combined: Record<string, unknown>,
       column: col.drizzleKey,
     });
   }
-
   return violations;
+}
+
+function lintEntityModel(entity: EntityModel, combined: Record<string, unknown>, strict: boolean): LintViolation[] {
+  return [
+    ...lintBooleanNaming(entity),
+    ...lintEnumCasing(entity),
+    ...lintSoftDeleteShape(entity),
+    ...lintFilterIndexCoverage(entity, combined, strict),
+    ...lintSortIndexCoverage(entity, combined, strict),
+  ];
 }
 
 async function loadSchemaModules(schemaPath: string): Promise<Record<string, unknown>> {
@@ -129,7 +150,8 @@ export function formatLintViolations(violations: LintViolation[]): string {
     .map((v) => {
       const loc = [v.entity, v.column].filter(Boolean).join(".");
       const prefix = v.severity === "error" ? "ERROR" : "WARN";
-      return `${prefix} [${v.code}]${loc ? ` ${loc}:` : ""} ${v.message}`;
+      const locationSuffix = loc ? ` ${loc}:` : "";
+      return `${prefix} [${v.code}]${locationSuffix} ${v.message}`;
     })
     .join("\n");
 }

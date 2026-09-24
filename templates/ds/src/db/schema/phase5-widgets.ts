@@ -22,7 +22,5 @@ export const phase5Widgets = pgTable(
     /** Actor ID from request context on last update. */
     updatedBy: text("updated_by").notNull(),
   },
-  (table) => ({
-    qtyPositive: check("phase5_widgets_qty_positive", sql`${table.qty} > 0`),
-  }),
+  (table) => [check("phase5_widgets_qty_positive", sql`${table.qty} > 0`)],
 );

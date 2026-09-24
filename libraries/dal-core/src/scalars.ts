@@ -55,11 +55,17 @@ const BIGINT_RE = /^-?\d+$/;
 const BIGINT_MIN = BigInt("-9223372036854775808");
 const BIGINT_MAX = BigInt("9223372036854775807");
 
-export function serializeBigInt(value: bigint | number | string | null | undefined): string | null {
+function serializeIntegralString(
+  value: bigint | number | string | null | undefined,
+): string | null {
   if (value == null) return null;
   if (typeof value === "bigint") return value.toString();
   if (typeof value === "number") return Math.trunc(value).toString();
   return value;
+}
+
+export function serializeBigInt(value: bigint | number | string | null | undefined): string | null {
+  return serializeIntegralString(value);
 }
 
 export function parseBigInt(value: unknown): string {
@@ -91,10 +97,7 @@ export function parseDecimal(value: unknown): string {
 const INTERVAL_MS_RE = /^-?\d+$/;
 
 export function serializeIntervalMs(value: string | number | bigint | null | undefined): string | null {
-  if (value == null) return null;
-  if (typeof value === "bigint") return value.toString();
-  if (typeof value === "number") return Math.trunc(value).toString();
-  return value;
+  return serializeIntegralString(value);
 }
 
 /** Parse PG interval or milliseconds wire value to total milliseconds string. */

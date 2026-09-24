@@ -195,6 +195,12 @@ async function copyBundledLibraries(
   }
 }
 
+function dsPackageDirectory(ds: ScaffoldConfig["ds"]): string {
+  if (ds === "standard") return "ds-no-sql";
+  if (ds === "hprt") return "ds";
+  return `ds-${ds}`;
+}
+
 async function scaffoldMonorepo(
   config: ScaffoldConfig,
   templateRoot: string,
@@ -308,12 +314,7 @@ async function scaffoldMonorepo(
   };
 
   if (config.ds !== "none") {
-    const dir =
-      config.ds === "standard"
-        ? "ds-no-sql"
-        : config.ds === "hprt"
-          ? "ds"
-          : `ds-${config.ds}`;
+    const dir = dsPackageDirectory(config.ds);
     const src = path.join(dockerTemplateDir, "Dockerfile.ds");
     const content = await fs.readFile(src, "utf8");
     await fs.writeFile(

@@ -1,10 +1,12 @@
+function singularExportName(exportName: string): string {
+  if (exportName.endsWith("ies")) return exportName.slice(0, -3) + "y";
+  if (exportName.endsWith("s")) return exportName.slice(0, -1);
+  return exportName;
+}
+
 /** Convert camelCase plural Drizzle export to PascalCase singular GraphQL type. */
 export function toGraphqlTypeName(exportName: string): string {
-  const singular = exportName.endsWith("ies")
-    ? exportName.slice(0, -3) + "y"
-    : exportName.endsWith("s")
-      ? exportName.slice(0, -1)
-      : exportName;
+  const singular = singularExportName(exportName);
   return singular.charAt(0).toUpperCase() + singular.slice(1);
 }
 

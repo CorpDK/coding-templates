@@ -98,9 +98,8 @@ export function buildDalGraphQLSchema(entities: EntityModel[]): GraphQLSchema {
 
   const schemaErrors = validateSchema(schema);
   if (schemaErrors.length > 0) {
-    throw new Error(
-      `Schema validation error(s):\n${schemaErrors.map((e) => `  - ${formatSchemaError(e)}`).join("\n")}`,
-    );
+    const errorLines = schemaErrors.map((e) => `  - ${formatSchemaError(e)}`).join("\n");
+    throw new Error(`Schema validation error(s):\n${errorLines}`);
   }
 
   return schema;

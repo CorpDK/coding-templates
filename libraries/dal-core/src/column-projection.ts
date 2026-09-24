@@ -68,6 +68,16 @@ function collectFieldNames(
   }
 }
 
+function nodeSelectionFromEdges(selectionSet: SelectionSetNode): SelectionSetNode | null {
+  for (const edgeSel of selectionSet.selections) {
+    if (edgeSel.kind !== Kind.FIELD || edgeSel.name.value !== "node" || !edgeSel.selectionSet) {
+      continue;
+    }
+    return edgeSel.selectionSet;
+  }
+  return null;
+}
+
 function findNestedSelection(
   selectionSet: SelectionSetNode | undefined | null,
   targetNames: string[],
@@ -76,17 +86,9 @@ function findNestedSelection(
   for (const sel of selectionSet.selections) {
     if (sel.kind !== Kind.FIELD) continue;
     const name = sel.name.value;
-    if (targetNames.includes(name) && sel.selectionSet) {
-      if (name === "edges") {
-        for (const edgeSel of sel.selectionSet.selections) {
-          if (edgeSel.kind === Kind.FIELD && edgeSel.name.value === "node" && edgeSel.selectionSet) {
-            return edgeSel.selectionSet;
-          }
-        }
-        return null;
-      }
-      return sel.selectionSet;
-    }
+    if (!targetNames.includes(name) || !sel.selectionSet) continue;
+    if (name === "edges") return nodeSelectionFromEdges(sel.selectionSet);
+    return sel.selectionSet;
   }
   return null;
 }

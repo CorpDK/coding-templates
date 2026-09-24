@@ -57,17 +57,42 @@ function resolveRelationTargets(
 } {
   const entityByExport = new Map(entities.map((e) => [e.exportName, e]));
   const target = entityByExport.get(rel.targetExportName);
-  const child =
-    rel.kind === "one-to-many"
-      ? target
-      : rel.kind === "many-to-many" && rel.joinTableExportName
-        ? entityByExport.get(rel.joinTableExportName)
-        : undefined;
+  let child: EntityModel | undefined;
+  if (rel.kind === "one-to-many") {
+    child = target;
+  } else if (rel.kind === "many-to-many" && rel.joinTableExportName) {
+    child = entityByExport.get(rel.joinTableExportName);
+  }
   const m2mTarget = rel.kind === "many-to-many" ? target : undefined;
   const targetExport =
     rel.kind === "many-to-many" ? (m2mTarget?.exportName ?? rel.targetExportName) : rel.targetExportName;
   const targetEntity = entityByExport.get(targetExport) ?? target;
   return { targetEntity, childEntity: child };
+}
+
+function relationDescriptorWiringLines(
+  rel: EntityModel["relations"][number],
+  entity: EntityModel,
+  varName: string,
+  targetEntity: EntityModel | undefined,
+  childEntity: EntityModel | undefined,
+): string[] {
+  const lines: string[] = [];
+  if (
+    (rel.kind === "many-to-one" ||
+      rel.kind === "many-to-many" ||
+      (rel.kind === "one-to-one" && rel.ownerFkDrizzleKey)) &&
+    targetEntity
+  ) {
+    lines.push(`${varName}.targetRelations = ${relationsVarName(targetEntity.exportName)};`);
+  }
+  if (rel.kind === "one-to-many" && childEntity) {
+    lines.push(`${varName}.childRelations = ${relationsVarName(childEntity.exportName)};`);
+  }
+  if (rel.kind === "one-to-one" && rel.childFkDrizzleKey && targetEntity) {
+    lines.push(`${varName}.targetRelations = ${relationsVarName(targetEntity.exportName)};`);
+  }
+  return lines;
 }
 
 function buildRelationDescriptorObject(
@@ -122,20 +147,7 @@ export function generateRelationDescriptorsModule(entities: EntityModel[]): stri
       relVars.push(varName);
 
       const { targetEntity, childEntity } = resolveRelationTargets(rel, entities);
-      if (
-        (rel.kind === "many-to-one" ||
-          rel.kind === "many-to-many" ||
-          (rel.kind === "one-to-one" && rel.ownerFkDrizzleKey)) &&
-        targetEntity
-      ) {
-        wiring.push(`${varName}.targetRelations = ${relationsVarName(targetEntity.exportName)};`);
-      }
-      if (rel.kind === "one-to-many" && childEntity) {
-        wiring.push(`${varName}.childRelations = ${relationsVarName(childEntity.exportName)};`);
-      }
-      if (rel.kind === "one-to-one" && rel.childFkDrizzleKey && targetEntity) {
-        wiring.push(`${varName}.targetRelations = ${relationsVarName(targetEntity.exportName)};`);
-      }
+      wiring.push(...relationDescriptorWiringLines(rel, entity, varName, targetEntity, childEntity));
     }
 
     const arrayName = relationsVarName(entity.exportName);

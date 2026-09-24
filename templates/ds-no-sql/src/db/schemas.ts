@@ -11,7 +11,7 @@ import { z } from "zod";
  */
 export const ItemSchema = z.object({
   /** Unique identifier (UUID). */
-  id: z.string().uuid(),
+  id: z.uuid(),
   /** Display name of the item. */
   name: z.string().min(1).max(255),
   /** Optional longer description. */
@@ -19,7 +19,7 @@ export const ItemSchema = z.object({
   /** Whether the item is active. Defaults to true on creation. */
   active: z.boolean().default(true),
   /** ISO-8601 timestamp of when the item was created. */
-  createdAt: z.string().datetime(),
+  createdAt: z.iso.datetime(),
 });
 
 export type Item = z.infer<typeof ItemSchema>;

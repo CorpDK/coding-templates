@@ -25,34 +25,50 @@ function readString(obj: Record<string, unknown>, key: string): string | undefin
   return typeof v === "string" && v.length > 0 ? v : undefined;
 }
 
+function errorMessage(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (typeof err === "string") return err;
+  return "Unknown error";
+}
+
+interface DriverFieldState {
+  code?: string;
+  constraint?: string;
+  column?: string;
+}
+
+function mergeDriverFields(rec: Record<string, unknown>, state: DriverFieldState): void {
+  state.code = readString(rec, "code") ?? readString(rec, "errno") ?? state.code;
+  state.constraint = readString(rec, "constraint") ?? state.constraint;
+  state.column = readString(rec, "column") ?? state.column;
+  if (!state.code) {
+    const sqlState = readString(rec, "sqlState");
+    if (sqlState) state.code = sqlState;
+  }
+}
+
+function nextErrorCause(current: unknown): unknown | null {
+  if (current instanceof Error && current.cause != null && current.cause !== current) {
+    return current.cause;
+  }
+  return null;
+}
+
 /** Walk error.cause chain and collect driver fields (Postgres, MySQL, libsql, etc.). */
 export function extractDriverErrorDetails(err: unknown): DriverErrorDetails {
-  const message =
-    err instanceof Error ? err.message : typeof err === "string" ? err : "Unknown error";
+  const message = errorMessage(err);
   let current: unknown = err;
-  let code: string | undefined;
-  let constraint: string | undefined;
-  let column: string | undefined;
+  const state: DriverFieldState = {};
 
   for (let depth = 0; depth < 8 && current != null; depth += 1) {
     const rec = asRecord(current);
-    if (rec) {
-      code = readString(rec, "code") ?? readString(rec, "errno") ?? code;
-      constraint = readString(rec, "constraint") ?? constraint;
-      column = readString(rec, "column") ?? column;
-      if (!code) {
-        const sqlState = readString(rec, "sqlState");
-        if (sqlState) code = sqlState;
-      }
-    }
-    if (current instanceof Error && current.cause != null && current.cause !== current) {
-      current = current.cause;
-    } else {
-      break;
-    }
+    if (rec) mergeDriverFields(rec, state);
+    const next = nextErrorCause(current);
+    if (next == null) break;
+    current = next;
   }
 
-  return { code, message, constraint, column };
+  return { code: state.code, message, constraint: state.constraint, column: state.column };
 }
 
 function mapPostgresCode(code: string): MutationUserError | null {

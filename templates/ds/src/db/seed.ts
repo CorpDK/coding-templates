@@ -538,10 +538,11 @@ const isMainModule =
   process.argv[1]?.endsWith("/seed.ts") || process.argv[1]?.endsWith("/seed.js");
 
 if (isMainModule) {
-  seedDatabase()
-    .then(() => process.exit(0))
-    .catch((error: unknown) => {
-      console.error("[seed] Failed:", error);
-      process.exit(1);
-    });
+  try {
+    await seedDatabase();
+    process.exit(0);
+  } catch (error: unknown) {
+    console.error("[seed] Failed:", error);
+    process.exit(1);
+  }
 }

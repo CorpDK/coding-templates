@@ -20,10 +20,19 @@
       "cache": true
     },
     "build": {
-      "dependsOn": ["^build", "dal:codegen"],
+      "dependsOn": ["^build"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
+    "@corpdk/ds#build": {
+      "dependsOn": ["^build", "dal:codegen"],
+      "outputs": ["dist/**"]
+    },
     "dev": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true
+    },
+    "@corpdk/ds#dev": {
       "dependsOn": ["^build", "dal:codegen"],
       "cache": false,
       "persistent": true
