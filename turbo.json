@@ -2,9 +2,15 @@
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
   "tasks": {
+    "dal:codegen": {
+      "dependsOn": ["@corpdk/dal-codegen#build", "@corpdk/dal-core#build"],
+      "inputs": ["src/db/schema/**", "dal/dal.config.yaml"],
+      "outputs": ["src/generated/dal/**"],
+      "cache": true
+    },
     "codegen": {
-      "dependsOn": ["@corpdk/codegen-cli#build"],
-      "inputs": ["src/**/*.ts", "prisma/schema.prisma", "drizzle/schema.ts"],
+      "dependsOn": ["@corpdk/codegen-cli#build", "dal:codegen"],
+      "inputs": ["src/**/*.ts", "prisma/schema.prisma", "src/db/schema/**", "src/generated/dal/generated-schema.ts"],
       "outputs": ["../ds-sdk/src/generated/**", "../ds-cli/src/generated/**"],
       "cache": true
     },
@@ -17,8 +23,17 @@
       "dependsOn": ["^build"],
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
+    "@corpdk/ds#build": {
+      "dependsOn": ["^build", "dal:codegen"],
+      "outputs": ["dist/**"]
+    },
     "dev": {
       "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true
+    },
+    "@corpdk/ds#dev": {
+      "dependsOn": ["^build", "dal:codegen"],
       "cache": false,
       "persistent": true
     },

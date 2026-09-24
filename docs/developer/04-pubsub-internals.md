@@ -21,7 +21,9 @@ Never import `createMemoryEventTarget` or `createRedisEventTarget` directly in D
 
 ## Wiring PubSub in a DS Package
 
-Define topics and create the instance once in `src/pubsub/index.ts`:
+**`templates/ds` (DAL):** `@corpdk/dal-codegen` emits `PubSubTopics`, the `pubsub` instance, and subscription resolvers under gitignored `src/generated/dal/` — do not add `src/pubsub/index.ts`. See [Repository Pattern](03-repository-pattern.md#dal-automated-templatesds-drizzle-primary-template).
+
+**Manual DS variants** define topics and create the instance once in `src/pubsub/index.ts`:
 
 ```typescript
 import { createAppPubSub } from "@corpdk/pub-sub";

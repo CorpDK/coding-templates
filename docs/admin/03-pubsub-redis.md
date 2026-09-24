@@ -52,7 +52,9 @@ The connection string format is the same for both Redis and Valkey.
 
 ## How It Works
 
-`createAppPubSub<T>()` from `@corpdk/pub-sub` wraps either `createMemoryEventTarget` or `@graphql-yoga/redis-event-target` depending on `REDIS_URL`. Each DS package calls it once in `src/pubsub/index.ts`:
+`createAppPubSub<T>()` from `@corpdk/pub-sub` wraps either `createMemoryEventTarget` or `@graphql-yoga/redis-event-target` depending on `REDIS_URL`. **Manual DS variants** call it once in `src/pubsub/index.ts`. **`templates/ds` (DAL)** imports the generated instance from `src/generated/dal/` (see [PubSub Internals](../developer/04-pubsub-internals.md)).
+
+Manual variant example:
 
 ```typescript
 import { createAppPubSub } from "@corpdk/pub-sub";

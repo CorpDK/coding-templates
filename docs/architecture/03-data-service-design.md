@@ -20,8 +20,8 @@ This design means:
 
 | Package            | Storage                                   | ORM / Driver        | Real-time        | Best for                                                                              |
 | ------------------ | ----------------------------------------- | ------------------- | ---------------- | ------------------------------------------------------------------------------------- |
-| `@corpdk/ds`       | PostgreSQL / MySQL / SQLite / CockroachDB | Prisma              | Standard         | Most relational projects; Prisma's type safety + migrations                           |
-| `@corpdk/ds-hprt`  | PostgreSQL / MySQL / SQLite / CockroachDB | Drizzle             | High-performance | Relational projects with high-frequency real-time updates; lower overhead than Prisma |
+| `@corpdk/ds`       | PostgreSQL / MySQL / SQLite / CockroachDB | Drizzle             | High-performance | Primary/default relational DS; real-time workloads; lower overhead than Prisma          |
+| `@corpdk/ds-no-sql`| Prisma-supported databases (incl. MongoDB, DocumentDB) | Prisma | Standard | Databases Drizzle does not support; Prisma type safety + migrations                   |
 | `@corpdk/ds-cdb`   | Couchbase Capella / self-hosted           | Native SDK + Zod    | Yes              | Couchbase-native projects; N1QL queries, full-text search                             |
 | `@corpdk/ds-mongo` | MongoDB Atlas / self-hosted               | Native driver + Zod | Yes              | MongoDB projects requiring native driver performance; no ORM overhead                 |
 | `@corpdk/ds-ddb`   | DocumentDB (documentdb.io)                | Native driver + Zod | Yes              | MongoDB wire-protocol compatible storage on DocumentDB                                |
@@ -31,17 +31,19 @@ This design means:
 
 ## Storage Selection Guide
 
-### Use `ds` (Prisma)
+### Use `ds` (Drizzle)
 
-- You want Prisma's type-safe query builder, schema migrations, and broad database support
-- Your workload is standard CRUD without extreme real-time update frequency
-- You value Prisma Studio and its developer tooling ecosystem
-
-### Use `ds-hprt` (Drizzle)
-
+- Default choice for relational SQL projects (PostgreSQL, MySQL, SQLite, CockroachDB)
 - Your application streams high-frequency real-time data (live dashboards, trading, telemetry)
 - You need Drizzle's lower query overhead and more direct SQL control
 - You are pairing with `ui-hprt` (urql + Graphcache) for end-to-end real-time performance
+
+### Use `ds-no-sql` (Prisma)
+
+- You need a database Drizzle does not support (MongoDB, DocumentDB via Prisma connector)
+- You want Prisma's type-safe query builder, schema migrations, and broad database support
+- Your workload is standard CRUD without extreme real-time update frequency
+- You value Prisma Studio and its developer tooling ecosystem
 
 ### Use `ds-cdb` (Couchbase)
 
@@ -52,7 +54,7 @@ This design means:
 
 - Your workload suits document storage and you want native driver performance
 - You run MongoDB Atlas or self-hosted MongoDB
-- You do not need Prisma ORM overhead (use `ds` with Prisma's MongoDB connector if you prefer Prisma)
+- You do not need Prisma ORM overhead (use `ds-no-sql` with Prisma's MongoDB connector if you prefer Prisma)
 
 ### Use `ds-ddb` (DocumentDB)
 
@@ -77,7 +79,9 @@ Consequence: all TypeScript imports within DS packages must use explicit `.js` e
 
 ## Why the Repository Pattern
 
-The Repository Pattern (`IItemRepository` interface + `itemRepository` implementation in `src/db/repository.ts`) is mandatory in all DS packages because:
+**`templates/ds`** uses DAL automation: repositories are generated under `src/generated/dal/repositories/` from Drizzle schema (`pnpm dal:codegen`). Bootstrap `schema.ts` wires generated resolver stubs — no hand-written `IItemRepository`.
+
+Other DS variants use the manual Repository Pattern (`IItemRepository` interface + `itemRepository` implementation in `src/db/repository.ts`) because:
 
 1. **Storage-agnostic resolvers** — resolvers in `schema.ts` call `itemRepository.findAll()` regardless of whether the backend is Prisma, Drizzle, MongoDB, or a file. This makes the GraphQL layer identical across all DS variants.
 2. **Testability** — the interface can be stubbed in tests without hitting a database.
@@ -134,7 +138,7 @@ Variable merging order: `--input <file>` → piped stdin → explicit flags (fla
 },
 ```
 
-The preset lives in `libraries/codegen-cli/` and is compiled with `tsup`. The `codegen` Turbo task declares `dependsOn: ["@corpdk/codegen-cli#build"]` so the preset is always compiled before any DS runs codegen.
+The preset lives in `libraries/codegen-cli/` and is compiled with `tsup`. The `codegen` Turbo task declares `dependsOn: ["@corpdk/codegen-cli#build", "dal:codegen"]` on `@corpdk/ds` so DAL SDL exists before graphql-codegen runs.
 
 ### Scaffolded binary name
 

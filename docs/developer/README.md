@@ -17,13 +17,17 @@ Implementation guides, coding patterns, and standards for contributors to the co
 | [07-git-conventions.md](07-git-conventions.md)         | Conventional Commits format and examples                     |
 | [08-coding-guidelines.md](08-coding-guidelines.md)     | Code style, component patterns, review checklist             |
 | [09-enhancement-backlog.md](09-enhancement-backlog.md) | Future improvements for UI and DS packages                   |
+| [dal-entity-design.md](dal-entity-design.md)           | Drizzle entity table design — audit profiles, relations, indexes, schema scope |
+| [dal-pg-type-mapping.md](dal-pg-type-mapping.md)       | PostgreSQL → DAL type mapping — PG types, `ID` for uuid, custom scalars (`IntervalMs`, etc.), filters |
+| [graphql-dal-requirements.md](graphql-dal-requirements.md) | GraphQL DAL requirements — inference rules, queries, mutations, filters, pagination |
+| [dal-phase2.md](dal-phase2.md) … [dal-phase5.md](dal-phase5.md) | Phase delivery notes — filters, cursors, index lint, driver errors |
 
 ---
 
 ## Design Principles
 
-- **Repository Pattern** — resolvers call `itemRepository.*`, never DB-specific APIs directly
-- **GraphQL SDL in `src/schema/`** — multiple `.graphqls` files using `extend type`, not inline TypeScript
+- **Repository Pattern** — resolvers call repository methods, never DB-specific APIs directly. **`templates/ds`**: generated repos in `src/generated/dal/` via `pnpm dal:codegen`
+- **GraphQL SDL** — manual DS variants use `src/schema/*.graphqls`; **`templates/ds`** generates entity + bootstrap SDL, resolvers, and pubsub topics under `src/generated/dal/` from Drizzle schema
 - **Pure ESM for DS packages** — `module: NodeNext` with explicit `.js` extensions on imports
 - **Component size limits** — Pages < 100 lines, Views < 250 lines, UI components < 50 lines
 
@@ -31,4 +35,4 @@ Implementation guides, coding patterns, and standards for contributors to the co
 
 **Related**: [Documentation Index](../00-index.md) | [Architecture](../architecture/README.md) | [Contributing](../10-contributing.md)
 
-**Last updated**: March 31, 2026
+**Last updated**: September 11, 2026

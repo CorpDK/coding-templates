@@ -21,7 +21,16 @@ export const PACKAGE_DEFS: Record<PackageId, PackageDef> = {
   ds: {
     id: "ds",
     dirName: "ds",
-    label: "ds (GraphQL Yoga + Prisma)",
+    label: "ds (GraphQL Yoga + Drizzle)",
+    requires: ["ds-sdk"],
+    builtDeps: [],
+    sourceBase: "templates",
+  },
+  "ds-no-sql": {
+    id: "ds-no-sql",
+    dirName: "ds-no-sql",
+    label:
+      "ds-no-sql (GraphQL Yoga + Prisma — databases Drizzle does not support)",
     requires: ["ds-sdk"],
     builtDeps: ["@prisma/engines", "prisma"],
     sourceBase: "templates",
@@ -39,14 +48,6 @@ export const PACKAGE_DEFS: Record<PackageId, PackageDef> = {
     dirName: "ds-cli",
     label: "ds-cli (Auto-generated CLI for LLM/automation access)",
     requires: [],
-    builtDeps: [],
-    sourceBase: "templates",
-  },
-  "ds-hprt": {
-    id: "ds-hprt",
-    dirName: "ds-hprt",
-    label: "ds-hprt (GraphQL Yoga + Drizzle)",
-    requires: ["ds-sdk"],
     builtDeps: [],
     sourceBase: "templates",
   },
@@ -157,11 +158,11 @@ export function resolvePackages(
   const selected = new Set<PackageId>();
 
   if (ds === "standard") {
-    selected.add("ds");
+    selected.add("ds-no-sql");
     selected.add("ds-sdk");
     selected.add("ds-cli");
   } else if (ds === "hprt") {
-    selected.add("ds-hprt");
+    selected.add("ds");
     selected.add("ds-sdk");
     selected.add("ds-cli");
   } else if (ds === "cdb") {

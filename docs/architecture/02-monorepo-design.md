@@ -53,19 +53,21 @@ All DS variants expose the same GraphQL API surface (schema-identical). Rather t
 
 ### Repository Pattern in all DS packages
 
-Resolvers in `schema.ts` call only `itemRepository.*`, never DB-specific APIs directly. This decoupling means the GraphQL layer is identical across all DS variants; only `src/db/repository.ts` differs. See [Repository Pattern](../developer/03-repository-pattern.md) for implementation details.
+**`templates/ds`** uses DAL automation: generated repositories under `src/generated/dal/repositories/` from Drizzle schema (`pnpm dal:codegen`); resolvers call generated repos, never Drizzle directly. Other DS variants use hand-written `src/db/repository.ts` interfaces — resolvers call `itemRepository.*`, never DB-specific APIs directly. See [Repository Pattern](../developer/03-repository-pattern.md).
 
-### GraphQL SDL in `src/schema/`
+### GraphQL SDL
 
-Schema is defined as multiple `.graphqls` files in a directory, not inline TypeScript strings. `base.graphqls` declares empty root types; feature files extend them. This enables independent schema files per entity without merge conflicts, and the codegen glob (`./src/schema/**/*.graphqls`) picks up new files automatically.
+**`templates/ds` (DAL):** entity + bootstrap SDL, resolvers, and pubsub topics are emitted to gitignored `src/generated/dal/` via `pnpm dal:codegen`; `schema.ts` imports the generated barrel only.
+
+**Manual DS variants:** schema is defined as multiple `.graphqls` files in `src/schema/`, not inline TypeScript strings. `base.graphqls` declares empty root types; feature files extend them. The codegen glob (`./src/schema/**/*.graphqls`) picks up new files automatically.
 
 ### Plugin-style pub/sub via `@corpdk/pub-sub`
 
 Each DS package calls `createAppPubSub<T>()` once. The factory selects Redis or in-memory based on `REDIS_URL`. Topics (`PubSubTopics`) are defined locally per package. This pattern keeps the transport decision outside of application code while allowing each app to define its own topic types.
 
-### `dev` depends on `^build`
+### `dev` depends on `^build` (and `dal:codegen` for `@corpdk/ds`)
 
-Turbo's `dev` task declares `dependsOn: ["^build"]`. This ensures shared packages and `ds-sdk` are built before any dev server starts, preventing missing-type errors on first launch. The slight startup overhead (building upstreams once) is far cheaper than debugging missing types.
+Turbo's `dev` task declares `dependsOn: ["^build"]` globally; `@corpdk/ds` also depends on `dal:codegen` so gitignored `src/generated/dal/` exists before DS dev or graphql-codegen runs. This prevents missing-import errors on first launch.
 
 ---
 
@@ -82,7 +84,7 @@ tsconfig.base.json     ← strict, esModuleInterop, skipLibCheck, sourceMap, dec
 
 | Base config           | Target | Module         | Used by                                                                                                      |
 | --------------------- | ------ | -------------- | ------------------------------------------------------------------------------------------------------------ |
-| `tsconfig.node.json`  | ES2024 | NodeNext       | `ds`, `ds-hprt`, `ds-cdb`, `ds-ddb`, `ds-file`, `ds-mongo`, `ds-sdk`, `pub-sub`, `codegen-cli`, `create-app` |
+| `tsconfig.node.json`  | ES2024 | NodeNext       | `ds`, `ds-no-sql`, `ds-cdb`, `ds-ddb`, `ds-file`, `ds-mongo`, `ds-sdk`, `pub-sub`, `codegen-cli`, `create-app` |
 | `tsconfig.react.json` | ES2024 | esnext/bundler | `ui-core`, `ui-auth`, `ui-charts`, `ui-forms`, `ui-datagrid`, `ui-feedback`                                  |
 | `tsconfig.next.json`  | ES2024 | esnext/bundler | `ui`, `ui-hprt`                                                                                              |
 

@@ -32,6 +32,10 @@ Welcome to the coding-templates documentation! This monorepo provides production
 - [Git Conventions](developer/07-git-conventions.md) — Conventional Commits format and examples
 - [Coding Guidelines](developer/08-coding-guidelines.md) — code style, component patterns, review checklist
 - [Enhancement Backlog](developer/09-enhancement-backlog.md) — future improvements for UI and DS packages
+- [DAL Entity Design](developer/dal-entity-design.md) — Drizzle entity tables, audit profiles, relations, indexes
+- [DAL PostgreSQL Type Mapping](developer/dal-pg-type-mapping.md) — PG types → GraphQL scalars and filters
+- [GraphQL DAL Requirements](developer/graphql-dal-requirements.md) — inference rules, queries, mutations, filters, pagination
+- [DAL Phase 2–5 notes](developer/dal-phase2.md) — phased delivery (filters, cursors, index lint, constraints)
 
 ### User Guides (create-app)
 
@@ -53,6 +57,7 @@ Welcome to the coding-templates documentation! This monorepo provides production
 | **Configure environment**   | [Environment Variables](admin/01-environment-variables.md)    |
 | **Deploy with Docker**      | [Docker Deployment](admin/02-docker-deployment.md)            |
 | **Add a GraphQL entity**    | [Repository Pattern](developer/03-repository-pattern.md)      |
+| **Design a DAL entity**     | [DAL Entity Design](developer/dal-entity-design.md)           |
 | **Add a subscription**      | [PubSub Internals](developer/04-pubsub-internals.md)          |
 | **Choose a DS variant**     | [Data Service Design](architecture/03-data-service-design.md) |
 | **Write a commit message**  | [Git Conventions](developer/07-git-conventions.md)            |
@@ -109,6 +114,10 @@ Welcome to the coding-templates documentation! This monorepo provides production
 | [developer/07-git-conventions.md](developer/07-git-conventions.md)                 | Commit format                 |
 | [developer/08-coding-guidelines.md](developer/08-coding-guidelines.md)             | Code style guide              |
 | [developer/09-enhancement-backlog.md](developer/09-enhancement-backlog.md)         | Future improvements           |
+| [developer/dal-entity-design.md](developer/dal-entity-design.md)                   | DAL Drizzle entity design     |
+| [developer/dal-pg-type-mapping.md](developer/dal-pg-type-mapping.md)               | PG → GraphQL type mapping     |
+| [developer/graphql-dal-requirements.md](developer/graphql-dal-requirements.md)   | GraphQL DAL requirements      |
+| [developer/dal-phase2.md](developer/dal-phase2.md) … [dal-phase5.md](developer/dal-phase5.md) | DAL phase delivery notes |
 
 ---
 

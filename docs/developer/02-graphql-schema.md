@@ -2,9 +2,25 @@
 
 ---
 
-## Schema Directory Layout
+## DAL-automated `templates/ds`
 
-The GraphQL schema lives in `src/schema/` — a directory of `.graphqls` files, not inline TypeScript. `schema.ts` scans the directory at runtime, sorts files alphabetically, and merges them into a single SDL string.
+Domain GraphQL SDL is **generated** from Drizzle schema — not hand-written.
+
+```text
+src/generated/dal/index.ts               ← barrel: typeDefs, pubsub, repositories, resolvers
+src/generated/dal/generated-schema.ts    ← auto-generated merged SDL (entities + bootstrap) as `typeDefs` export (gitignored)
+src/generated/dal/generated-pubsub.ts    ← auto-generated PubSubTopics + pubsub instance (gitignored)
+src/generated/dal/manifest.json          ← entity metadata (audit profile, delete strategy)
+src/schema.ts                            ← imports from generated/dal barrel only
+```
+
+Run `pnpm dal:codegen` after changing `src/db/schema/`. Entity docstrings come from JSDoc comments on Drizzle columns and tables. Custom scalars (`DateTime`, `Date`, etc.) are included in the merged SDL only when referenced by entity columns — not all six core scalars upfront. `@corpdk/dal-codegen` validates merged SDL with GraphQL.js before writing output — codegen fails fast on syntax or schema errors. See [GraphQL DAL Requirements](graphql-dal-requirements.md).
+
+---
+
+## Schema Directory Layout (manual DS variants)
+
+Non-DAL DS packages keep GraphQL schema in `src/schema/` — a directory of `.graphqls` files, not inline TypeScript. `schema.ts` scans the directory at runtime, sorts files alphabetically, and merges them into a single SDL string.
 
 ```text
 src/schema/
@@ -161,7 +177,7 @@ type Subscription {
 ## Code Review Checklist
 
 - [ ] All GraphQL types, fields, and arguments have `"""docstrings"""`
-- [ ] GraphQL SDL is in `src/schema/*.graphqls`, not inline in TypeScript
+- [ ] **`templates/ds`:** Drizzle JSDoc on tables/columns; run `pnpm dal:codegen` after schema changes — **manual DS variants:** SDL in `src/schema/*.graphqls`, not inline in TypeScript
 - [ ] Every mutation has a corresponding subscription
 - [ ] Subscription field name matches the publish payload key (see [PubSub Internals](04-pubsub-internals.md))
 

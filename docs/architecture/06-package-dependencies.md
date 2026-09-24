@@ -33,10 +33,10 @@ Dependencies used across multiple workspace packages.
 
 | Package                          | Version  | Used by                                                                          |
 | -------------------------------- | -------- | -------------------------------------------------------------------------------- |
-| graphql                          | ^16.13.2 | ds, ds-hprt, ds-cdb, ds-mongo, ds-ddb, ds-file, ui, ui-hprt, ds-sdk, codegen-cli |
-| graphql-yoga                     | ^5.18.1  | ds, ds-hprt, ds-cdb, ds-mongo, ds-ddb, ds-file, pub-sub                          |
-| graphql-ws                       | ^6.0.8   | ds, ds-hprt, ds-cdb, ds-mongo, ds-ddb, ds-file, ui, ui-hprt                      |
-| @graphql-yoga/redis-event-target | ^3.0.0   | ds, ds-hprt, ds-cdb, ds-mongo, ds-ddb, ds-file, pub-sub                          |
+| graphql                          | ^16.13.2 | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file, ui, ui-hprt, ds-sdk, codegen-cli |
+| graphql-yoga                     | ^5.18.1  | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file, pub-sub                          |
+| graphql-ws                       | ^6.0.8   | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file, ui, ui-hprt                      |
+| @graphql-yoga/redis-event-target | ^3.0.0   | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file, pub-sub                          |
 
 ### UI Framework
 
@@ -53,14 +53,14 @@ Dependencies used across multiple workspace packages.
 
 | Package | Version | Used by                                                  |
 | ------- | ------- | -------------------------------------------------------- |
-| zod     | ^4.3.6  | ds, ds-hprt, ds-cdb, ds-mongo, ds-ddb, ds-file, ui-forms |
+| zod     | ^4.3.6  | ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file, ui-forms |
 
 ### Infrastructure
 
 | Package | Version | Used by                                                 |
 | ------- | ------- | ------------------------------------------------------- |
-| ioredis | ^5.10.1 | ds, ds-hprt, ds-cdb, ds-mongo, ds-ddb, ds-file, pub-sub |
-| ws      | ^8.20.0 | ds, ds-hprt, ds-cdb, ds-mongo, ds-ddb, ds-file          |
+| ioredis | ^5.10.1 | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file, pub-sub |
+| ws      | ^8.20.0 | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file          |
 
 ---
 
@@ -80,11 +80,11 @@ Dependencies used across multiple workspace packages.
 
 | Package        | Version  | Used by          |
 | -------------- | -------- | ---------------- |
-| @prisma/client | ^7.6.0   | ds               |
-| prisma         | ^7.6.0   | ds (devDep)      |
-| drizzle-orm    | ^0.45.2  | ds-hprt          |
-| drizzle-kit    | ^0.31.10 | ds-hprt (devDep) |
-| pg             | ^8.20.0  | ds-hprt          |
+| @prisma/client | ^7.6.0   | ds-no-sql        |
+| prisma         | ^7.6.0   | ds-no-sql (devDep) |
+| drizzle-orm    | ^0.45.2  | ds, dal-core, dal-codegen |
+| drizzle-kit    | ^0.31.10 | ds (devDep)      |
+| pg             | ^8.20.0  | ds               |
 | couchbase      | ^4.6.1   | ds-cdb           |
 | mongodb        | ^7.1.1   | ds-mongo, ds-ddb |
 | js-yaml        | ^4.1.0   | ds-file          |
@@ -162,6 +162,24 @@ Dependencies used across multiple workspace packages.
 | graphql-yoga                     | ^5.18.1 | runtime |
 | ioredis                          | ^5.10.1 | runtime |
 
+### dal-core (@corpdk/dal-core)
+
+| Package     | Version  | Type    |
+| ----------- | -------- | ------- |
+| drizzle-orm | ^0.45.2  | runtime |
+| graphql     | ^16.13.2 | runtime |
+| vitest      | ^4.1.2   | dev     |
+
+### dal-codegen (@corpdk/dal-codegen)
+
+| Package           | Version  | Type    |
+| ----------------- | -------- | ------- |
+| @corpdk/dal-core  | workspace:* | runtime |
+| drizzle-orm       | ^0.45.2  | runtime |
+| graphql           | ^16.13.2 | runtime |
+| yaml              | ^2.8.3   | runtime |
+| vitest            | ^4.1.2   | dev     |
+
 ### create-app (@corpdk/create-app)
 
 | Package        | Version | Type    |
@@ -191,10 +209,10 @@ Common dev dependencies used across most workspace packages.
 
 | Package                               | Version | Used by                                        |
 | ------------------------------------- | ------- | ---------------------------------------------- |
-| @graphql-codegen/cli                  | ^6.2.1  | ds, ds-hprt, ds-cdb, ds-mongo, ds-ddb, ds-file |
-| @graphql-codegen/client-preset        | ^5.2.4  | ds, ds-hprt, ds-cdb, ds-mongo, ds-ddb, ds-file |
-| @graphql-codegen/typescript           | ^5.0.9  | ds, ds-hprt, ds-cdb, ds-mongo, ds-ddb, ds-file |
-| @graphql-codegen/typescript-resolvers | ^5.1.7  | ds, ds-hprt, ds-cdb, ds-mongo, ds-ddb, ds-file |
+| @graphql-codegen/cli                  | ^6.2.1  | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file |
+| @graphql-codegen/client-preset        | ^5.2.4  | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file |
+| @graphql-codegen/typescript           | ^5.0.9  | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file |
+| @graphql-codegen/typescript-resolvers | ^5.1.7  | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file |
 
 ---
 

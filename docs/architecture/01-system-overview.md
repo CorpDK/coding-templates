@@ -13,8 +13,8 @@
               └──────┬───────────────────┬────────────────────┘
                      │ HTTP + WS         │ HTTP + WS
               ┌──────▼──────┐    ┌───────▼───────────┐
-              │ @corpdk/ds  │    │ @corpdk/ds-hprt    │
-              │ Yoga+Prisma │    │ Yoga+Drizzle       │
+              │ @corpdk/ds  │    │ @corpdk/ds-no-sql  │
+              │ Yoga+Drizzle│    │ Yoga+Prisma        │
               └──────┬──────┘    └───────┬────────────┘
                      └─────────┬─────────┘
               ┌────────────────▼────────────────────────────┐
@@ -57,10 +57,11 @@ Browser → NEXT_PUBLIC_DS_WS_URL → DS WebSocket server
 All DS packages share one GraphQL schema and generate a single shared TypeScript SDK:
 
 ```text
-DS package (src/schema/*.graphqls)
+templates/ds: Drizzle schema → dal:codegen → src/generated/dal/generated-schema.ts
+manual DS variants: src/schema/*.graphqls
         │
         ▼
-  graphql-codegen
+  graphql-codegen (per DS package)
         │
         ▼
 @corpdk/ds-sdk  ← TypedDocumentNode types + hooks
@@ -72,7 +73,7 @@ DS package (src/schema/*.graphqls)
 **Why a single shared SDK?**
 All DS variants are schema-identical — they expose the same GraphQL API regardless of the underlying storage backend. Consolidating into one `@corpdk/ds-sdk` means UI packages have a single typed import regardless of which DS variant is deployed. It also means codegen only needs to run once per schema change.
 
-The `dev` Turbo task declares `dependsOn: ["^build"]`, ensuring codegen and the SDK build complete before any UI dev server starts.
+Turbo `dev` declares `dependsOn: ["^build", "dal:codegen"]` on `@corpdk/ds`, so DAL output exists before DS dev/codegen/SDK build; UI packages still depend on `^build` so upstream packages compile first.
 
 ---
 
@@ -116,7 +117,7 @@ Each package category has a different module system, driven by its runtime envir
 
 | Package type                      | `module` setting     | Import extension | Reason                                            |
 | --------------------------------- | -------------------- | ---------------- | ------------------------------------------------- |
-| DS server (`ds`, `ds-hprt`, etc.) | `NodeNext`           | Must use `.js`   | Node.js ESM runtime; explicit extensions required |
+| DS server (`ds`, `ds-no-sql`, etc.) | `NodeNext`         | Must use `.js`   | Node.js ESM runtime; explicit extensions required |
 | `ds-sdk`                          | `ESNext` / `bundler` | Must omit `.js`  | Consumed by Next.js bundler, not Node.js directly |
 | UI apps (`ui`, `ui-hprt`)         | Next.js managed      | N/A              | Next.js controls compilation                      |
 | Shared packages (`packages/ui-*`) | `ESNext` / `bundler` | Must omit `.js`  | Consumed by Next.js bundler                       |

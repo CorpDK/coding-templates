@@ -1,0 +1,377 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`schema builder > prints merged SDL with root types and entity surface 1`] = `
+""""Filter operators for boolean columns."""
+input BooleanFilter {
+  eq: Boolean
+}
+
+"""Bulk create result for Item."""
+union BulkCreateItemResult = BulkMutationResult | ItemListPayload
+
+"""Bulk delete success count for Item."""
+type BulkDeleteItemCountPayload {
+  count: Int!
+}
+
+"""Bulk delete result for Item."""
+union BulkDeleteItemResult = BulkDeleteItemCountPayload | BulkMutationResult
+
+"""Partial or failed bulk mutation outcome with per-row errors."""
+type BulkMutationResult {
+  failureCount: Int!
+  successCount: Int!
+  userErrors: [MutationUserError!]!
+}
+
+"""Bulk update result for Item."""
+union BulkUpdateItemResult = BulkMutationResult | ItemListPayload
+
+"""Lifecycle operation for subscription change events."""
+enum ChangeOperation {
+  CREATED
+  DELETED
+  UPDATED
+}
+
+"""Result of createItem mutation."""
+type CreateItemPayload {
+  item: Item
+  userErrors: [MutationUserError!]!
+}
+
+"""ISO-8601 UTC timestamp with milliseconds."""
+scalar DateTime
+
+"""Result of deleteItem mutation."""
+type DeleteItemPayload {
+  success: Boolean!
+  userErrors: [MutationUserError!]!
+}
+
+"""Filter operators for UUID primary keys and foreign keys."""
+input IDFilter {
+  eq: ID
+  in: [ID!]
+  neq: ID
+  notIn: [ID!]
+}
+
+"""
+Customer-facing data items; soft-deleted rows retained per retention policy.
+"""
+type Item {
+  """Row creation time (UTC)."""
+  createdAt: DateTime!
+
+  """Actor ID from request context; never client-supplied."""
+  createdBy: String!
+
+  """Optional longer description of the item."""
+  description: String
+
+  """Surrogate primary key."""
+  id: ID!
+
+  """Whether the item is currently active."""
+  isActive: Boolean!
+
+  """Display name of the item."""
+  name: String!
+
+  """Last update time (UTC)."""
+  updatedAt: DateTime!
+
+  """Actor ID from request context on last update."""
+  updatedBy: String!
+}
+
+"""Aggregate metrics for Item."""
+type ItemAggregate {
+  count: Int!
+}
+
+"""Change notification payload for item subscriptions."""
+type ItemChangeEvent {
+  count: Int!
+  ids: [ID!]!
+  isTruncated: Boolean!
+  operation: ChangeOperation!
+}
+
+"""Relay-style connection for paginated items queries."""
+type ItemConnection {
+  edges: [ItemEdge!]!
+  nodes: [Item!]!
+  pageInfo: PageInfo!
+}
+
+"""Input for creating a new Item."""
+input ItemCreateInput {
+  """Optional longer description of the item."""
+  description: String
+
+  """Whether the item is currently active."""
+  isActive: Boolean
+
+  """Display name of the item."""
+  name: String!
+}
+
+"""Edge wrapper for Item connection pagination."""
+type ItemEdge {
+  cursor: String!
+  node: Item!
+}
+
+"""Sortable fields on Item."""
+enum ItemField {
+  """Row creation time (UTC)."""
+  CREATED_AT
+
+  """Actor ID from request context; never client-supplied."""
+  CREATED_BY
+
+  """Optional longer description of the item."""
+  DESCRIPTION
+
+  """Surrogate primary key."""
+  ID
+
+  """Whether the item is currently active."""
+  IS_ACTIVE
+
+  """Display name of the item."""
+  NAME
+
+  """Last update time (UTC)."""
+  UPDATED_AT
+
+  """Actor ID from request context on last update."""
+  UPDATED_BY
+}
+
+"""Filter criteria for Item queries and mutations."""
+input ItemFilter {
+  """All nested filters must match."""
+  and: [ItemFilter!]
+
+  """Optional longer description of the item."""
+  description: StringFilter
+
+  """Surrogate primary key."""
+  id: IDFilter
+
+  """Whether the item is currently active."""
+  isActive: BooleanFilter
+
+  """Display name of the item."""
+  name: StringFilter
+
+  """Negates the nested filter."""
+  not: ItemFilter
+
+  """At least one nested filter must match."""
+  or: [ItemFilter!]
+}
+
+"""Bulk create/update success payload for Item."""
+type ItemListPayload {
+  items: [Item!]!
+}
+
+"""Sort specification for Item list queries."""
+input ItemSortInput {
+  """Sort direction; defaults to ascending."""
+  direction: SortDirection = ASC
+  field: ItemField!
+}
+
+"""Single row update entry for bulk update."""
+input ItemUpdateEntry {
+  id: ID!
+  input: ItemUpdateInput!
+}
+
+"""Input for updating an existing Item; all fields optional."""
+input ItemUpdateInput {
+  """Optional longer description of the item."""
+  description: String
+
+  """Whether the item is currently active."""
+  isActive: Boolean
+
+  """Display name of the item."""
+  name: String
+}
+
+"""Entry points for data mutations that trigger side effects."""
+type Mutation {
+  """Bulk create items."""
+  bulkCreateItem(atomic: Boolean, inputs: [ItemCreateInput!]!): BulkCreateItemResult!
+
+  """Bulk delete items by ID list."""
+  bulkDeleteItem(atomic: Boolean, ids: [ID!]!): BulkDeleteItemResult!
+
+  """Bulk delete items matching filter (always atomic)."""
+  bulkDeleteItemByFilter(confirmDeleteAll: Boolean, filter: ItemFilter!): BulkMutationResult!
+
+  """Bulk update items by ID list."""
+  bulkUpdateItem(atomic: Boolean, updates: [ItemUpdateEntry!]!): BulkUpdateItemResult!
+
+  """Bulk update items matching filter (always atomic)."""
+  bulkUpdateItemByFilter(confirmUpdateAll: Boolean, filter: ItemFilter!, input: ItemUpdateInput!): BulkMutationResult!
+
+  """Creates a new Item."""
+  createItem(input: ItemCreateInput!): CreateItemPayload!
+
+  """Deletes an Item by ID."""
+  deleteItem(id: ID!): DeleteItemPayload!
+
+  """
+  Sends a ping with a custom message and broadcasts it to all pingSent subscribers. Use this to verify end-to-end real-time connectivity.
+  """
+  ping(
+    """The message payload to broadcast to all active subscribers."""
+    message: String!
+  ): PingResult!
+
+  """Updates an existing Item by ID."""
+  updateItem(id: ID!, input: ItemUpdateInput!): UpdateItemPayload!
+}
+
+"""Field-level validation or business rule failure on a mutation."""
+type MutationUserError {
+  code: String
+  field: [String!]
+  id: ID
+  message: String!
+}
+
+"""Relay pagination metadata."""
+type PageInfo {
+  endCursor: String
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+}
+
+"""
+Result returned by the ping mutation and emitted on the pingSent subscription.
+"""
+type PingResult {
+  """The message that was sent with the ping."""
+  message: String!
+
+  """ISO-8601 timestamp of when the ping was processed."""
+  timestamp: String!
+}
+
+"""Entry points for read-only data fetching."""
+type Query {
+  """
+  Returns a personalised greeting. Omit name to receive the default greeting.
+  """
+  hello(
+    """Optional name to include in the greeting."""
+    name: String
+  ): String!
+
+  """Returns a single item by ID."""
+  item(
+    id: ID!
+
+    """When true, include soft-deleted rows."""
+    includeDeleted: Boolean
+  ): Item
+
+  """Aggregate metrics for items matching the filter."""
+  itemAggregate(
+    filter: ItemFilter
+
+    """When true, include soft-deleted rows."""
+    includeDeleted: Boolean
+  ): ItemAggregate!
+
+  """Relay connection for paginated items queries."""
+  itemConnection(
+    after: String
+    before: String
+    filter: ItemFilter
+    first: Int
+
+    """When true, include soft-deleted rows."""
+    includeDeleted: Boolean
+    last: Int
+    sort: [ItemSortInput!]
+  ): ItemConnection!
+
+  """Returns items matching the filter."""
+  items(
+    filter: ItemFilter
+
+    """When true, include soft-deleted rows."""
+    includeDeleted: Boolean
+    limit: Int = 100
+    sort: [ItemSortInput!]
+  ): [Item!]!
+
+  """Count of items matching the filter."""
+  itemsCount(
+    filter: ItemFilter
+
+    """When true, include soft-deleted rows."""
+    includeDeleted: Boolean
+  ): Int!
+
+  """Returns the current server health status and a server-side timestamp."""
+  status: ServerStatus!
+}
+
+"""Current health state of the server."""
+type ServerStatus {
+  """True when the server is operating normally."""
+  ok: Boolean!
+
+  """ISO-8601 timestamp of when this status was generated."""
+  timestamp: String!
+}
+
+"""Ascending or descending sort order."""
+enum SortDirection {
+  ASC
+  DESC
+}
+
+"""Filter operators for string columns."""
+input StringFilter {
+  eq: String
+  in: [String!]
+
+  """When true, eq/neq/like/in/notIn use case-insensitive matching."""
+  isCaseInsensitive: Boolean
+
+  """True = IS NULL; false = IS NOT NULL; nullable columns only."""
+  isNull: Boolean
+  like: String
+  neq: String
+  notIn: [String!]
+}
+
+"""Real-time event streams delivered over WebSocket."""
+type Subscription {
+  """Subscribe to item create/update/delete events."""
+  itemChanged(subscribeTo: [ChangeOperation!]): ItemChangeEvent!
+
+  """
+  Fires whenever the ping mutation is called. Subscribe to receive real-time updates from mutations.
+  """
+  pingSent: PingResult!
+}
+
+"""Result of updateItem mutation."""
+type UpdateItemPayload {
+  item: Item
+  userErrors: [MutationUserError!]!
+}"
+`;

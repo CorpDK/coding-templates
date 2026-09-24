@@ -19,6 +19,8 @@ coding-templates/
 │   └── create-app/  (@corpdk/create-app)   Interactive CLI scaffolding tool
 ├── libraries/
 │   ├── codegen-cli/ (@corpdk/codegen-cli)   GraphQL codegen plugin for resolver types + SDK generation
+│   ├── dal-core/    (@corpdk/dal-core)      DAL shared types, filters, scalars, mutation error taxonomy
+│   ├── dal-codegen/ (@corpdk/dal-codegen)   Drizzle → GraphQL SDL + repositories + resolvers codegen CLI
 │   └── pub-sub/     (@corpdk/pub-sub)       Plugin-style GraphQL pub/sub factory (memory + Redis)
 ├── packages/
 │   ├── ui-core/     (@corpdk/ui-core)       Design system, primitives, shadcn/ui, theming
@@ -35,8 +37,8 @@ coding-templates/
     ├── ui/          (@corpdk/ui)           Next.js + Apollo Client
     ├── ui-hprt/     (@corpdk/ui-hprt)      Next.js + urql + Graphcache
     ├── ui-showcase/ (@corpdk/ui-showcase)  Storybook showcase — visual testing for all shared UI packages
-    ├── ds/          (@corpdk/ds)           GraphQL Yoga + Prisma + PostgreSQL
-    ├── ds-hprt/     (@corpdk/ds-hprt)      GraphQL Yoga + Drizzle + PostgreSQL
+    ├── ds/          (@corpdk/ds)           GraphQL Yoga + Drizzle + PostgreSQL (primary/default DS)
+    ├── ds-no-sql/   (@corpdk/ds-no-sql)    GraphQL Yoga + Prisma (databases Drizzle does not support)
     ├── ds-cdb/      (@corpdk/ds-cdb)       GraphQL Yoga + Couchbase SDK + Zod
     ├── ds-mongo/    (@corpdk/ds-mongo)     GraphQL Yoga + MongoDB native driver + Zod
     ├── ds-ddb/      (@corpdk/ds-ddb)       GraphQL Yoga + DocumentDB (documentdb.io) + Zod
@@ -51,8 +53,8 @@ coding-templates/
 | --------------- | ----------------------- | -------------------------------------------------------------------------------------------------------------- |
 | `ui`            | `@corpdk/ui`            | Standard Next.js UI using Apollo Client for GraphQL                                                            |
 | `ui-hprt`       | `@corpdk/ui-hprt`       | High-performance real-time UI using urql + Graphcache                                                          |
-| `ds`            | `@corpdk/ds`            | GraphQL Yoga server with Prisma ORM (PostgreSQL/MySQL/SQLite/CockroachDB/MongoDB)                              |
-| `ds-hprt`       | `@corpdk/ds-hprt`       | GraphQL Yoga server with Drizzle ORM (PostgreSQL/MySQL/SQLite/CockroachDB), optimized for real-time            |
+| `ds`            | `@corpdk/ds`            | GraphQL Yoga server with Drizzle ORM (PostgreSQL/MySQL/SQLite/CockroachDB) — primary/default relational DS     |
+| `ds-no-sql`     | `@corpdk/ds-no-sql`     | GraphQL Yoga server with Prisma ORM for databases Drizzle does not support (MongoDB, DocumentDB, etc.)          |
 | `ds-cdb`        | `@corpdk/ds-cdb`        | GraphQL Yoga server with Couchbase SDK + Zod (cloud-agnostic NoSQL)                                            |
 | `ds-mongo`      | `@corpdk/ds-mongo`      | GraphQL Yoga server with MongoDB native driver + Zod (Atlas or self-hosted)                                    |
 | `ds-ddb`        | `@corpdk/ds-ddb`        | GraphQL Yoga server with DocumentDB (documentdb.io) + Zod (MongoDB-compatible wire protocol)                   |
@@ -77,12 +79,12 @@ coding-templates/
 - **HTTP via Next.js proxy, WS direct** — `rewrites()` handles queries/mutations; WebSocket connects directly via `NEXT_PUBLIC_DS_WS_URL` (avoids Next.js WS proxy limitations)
 - **SDK as workspace dependency** — `ui` depends on `@corpdk/ds-sdk: "workspace:*"`; Turbo ensures codegen runs before build
 - **All ports from env, no defaults** — prevents port collision surprises; each package has `.env.example`
-- **`.js` extension on imports in DS server packages** — all DS packages (`ds`, `ds-hprt`, `ds-cdb`, `ds-mongo`, `ds-ddb`, `ds-file`) use `module: NodeNext` (pure ESM Node.js runtime); explicit `.js` is required even for `.ts` source files. `ds-sdk` uses `module: ESNext / moduleResolution: bundler` (consumed by Next.js bundler) and must omit the `.js` extension.
+- **`.js` extension on imports in DS server packages** — all DS packages (`ds`, `ds-no-sql`, `ds-cdb`, `ds-mongo`, `ds-ddb`, `ds-file`) use `module: NodeNext` (pure ESM Node.js runtime); explicit `.js` is required even for `.ts` source files. `ds-sdk` uses `module: ESNext / moduleResolution: bundler` (consumed by Next.js bundler) and must omit the `.js` extension.
 - **Single shared SDK** — all DS variants codegen into `@corpdk/ds-sdk` (one package, schema-identical output); the consolidated SDK replaced the former per-variant `ds-sdk-hprt` and `ds-sdk-cdb` packages.
 - **`dev` depends on `^build`** — Turbo's `dev` task declares `dependsOn: ["^build"]` so codegen and upstream builds complete before Next.js starts, preventing missing-type errors on first launch.
-- **Repository Pattern in all DS packages** — every DS package exposes `src/db/repository.ts` with an `IItemRepository` interface. GraphQL resolvers in `schema.ts` call only `itemRepository.*` — never DB-specific APIs directly.
-- **GraphQL SDL in `src/schema/`** — DS packages define the schema as multiple `.graphqls` files in `src/schema/` (not inline in TypeScript). `base.graphqls` declares empty root types; feature files use `extend type` to add fields. Loaded at runtime by scanning the directory with `readdirSync`. Codegen uses `./src/schema/**/*.graphqls`. The directory is copied to `dist/` as part of the build script (`cp -r src/schema dist/`).
-- **Plugin-style pub/sub via `@corpdk/pub-sub`** — all DS packages use `createAppPubSub<T>()` from the shared library to wire up memory or Redis event targets. Topics (`PubSubTopics`) are defined locally in each package's `src/pubsub/index.ts`.
+- **Repository Pattern in all DS packages** — non-DAL DS variants expose hand-written `src/db/repository.ts` interfaces. **`templates/ds` uses DAL automation**: Drizzle schema in `src/db/schema/` is the sole authoring surface; `pnpm dal:codegen` emits gitignored output under `src/generated/dal/` (SDL including bootstrap hello/ping/status, repositories, resolvers, pubsub topics). Turbo `dev`/`build` depend on `dal:codegen`. `schema.ts` imports generated `typeDefs` and `generatedResolvers` only — resolvers call generated repositories, never Drizzle directly.
+- **GraphQL SDL in `src/schema/`** — non-DAL DS packages define the schema as multiple `.graphqls` files in `src/schema/` (not inline in TypeScript). `base.graphqls` declares empty root types; feature files use `extend type` to add fields. **`templates/ds` (DAL)**: all SDL (entities + bootstrap), pubsub topics, repositories, and resolvers are emitted under `src/generated/dal/`; `src/schema.ts` imports from the generated barrel (`src/generated/dal/index.ts`). Codegen uses `./src/generated/dal/generated-schema.ts` only. Generated artifacts are gitignored under `src/generated/dal/`.
+- **Plugin-style pub/sub via `@corpdk/pub-sub`** — all DS packages use `createAppPubSub<T>()` from the shared library to wire up memory or Redis event targets. **Manual DS variants** define `PubSubTopics` in `src/pubsub/index.ts`. **`templates/ds` (DAL)** emits topics and the pubsub instance under gitignored `src/generated/dal/` via `pnpm dal:codegen`.
 - **Publishing: npmjs vs Artifactory** — engines, libraries, and `packages/*` (including `eslint-config`) publish to **npmjs** (public, `"access": "public"`). Templates publish to a **private Artifactory** registry. Only the workspace root stays `"private": true`. See [docs/architecture/02-monorepo-design.md](docs/architecture/02-monorepo-design.md) for the full publishing strategy.
 - **Shared tsconfig hierarchy** — four base configs at the workspace root (`tsconfig.base.json` → `tsconfig.node.json`, `tsconfig.react.json` → `tsconfig.next.json`). All packages target **ES2024**. Per-package tsconfigs declare only local overrides.
 
@@ -138,7 +140,7 @@ docker build -f packages/ui/Dockerfile -t my-app-ui .     # Build UI image
 
 - Build context is always the monorepo root (needed for `pnpm-lock.yaml` and workspace manifests)
 - `@corpdk/ds-sdk` is resolved at build time; Docker's `COPY` dereferences pnpm symlinks so it is self-contained in `node_modules` at runtime
-- SDL schema files are copied to `dist/` by the DS build script — no extra step needed
+- **`templates/ds` (DAL):** Docker build runs `dal:codegen` then `tsc` — generated SDL lives under `src/generated/dal/` (gitignored). Manual DS variants copy `src/schema/*.graphqls` to `dist/` — see [docs/admin/02-docker-deployment.md](docs/admin/02-docker-deployment.md)
 
 ## Code Quality Requirements
 
@@ -164,7 +166,7 @@ docker build -f packages/ui/Dockerfile -t my-app-ui .     # Build UI image
 Files that are commonly modified together:
 
 - `templates/<pkg>/app/layout.tsx` + `templates/<pkg>/app/globals.css` (styling)
-- `templates/ds/src/schema.ts` + `templates/ds/src/pubsub/index.ts` (schema changes)
+- `templates/ds/src/schema.ts` + `templates/ds/src/generated/dal/` (schema / DAL changes)
 - `templates/ds/package.json` + `templates/ds-sdk/package.json` (SDK dependency updates)
 - Root `package.json` + `turbo.json` (task pipeline changes)
 - `packages/ui-*/src/types.ts` + `templates/ui-showcase/src/stories/` (prop changes affect stories)

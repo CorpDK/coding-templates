@@ -1,0 +1,3 @@
+strict: false
+filterMaxDepth: 2
+filterMaxNodes: 50
