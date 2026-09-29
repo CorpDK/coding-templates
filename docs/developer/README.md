@@ -12,6 +12,7 @@ Implementation guides, coding patterns, and standards for contributors to the co
 | [02-graphql-schema.md](02-graphql-schema.md)           | SDL directory layout, docstring rules, entity file pattern   |
 | [03-repository-pattern.md](03-repository-pattern.md)   | IRepository interface, 4-step entity add guide               |
 | [04-pubsub-internals.md](04-pubsub-internals.md)       | `createAppPubSub` factory, topic definition, resolver wiring |
+| [11-ds-subscription-sse.md](11-ds-subscription-sse.md) | `@corpdk/ds` subscriptions over SSE (UI migration deferred)   |
 | [05-ui-architecture.md](05-ui-architecture.md)         | UI template state and app-level configuration                |
 | [06-ui-status.md](06-ui-status.md)                     | Living capability status matrix across all UI packages       |
 | [07-git-conventions.md](07-git-conventions.md)         | Conventional Commits format and examples                     |

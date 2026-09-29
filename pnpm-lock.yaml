@@ -518,9 +518,6 @@ importers:
       graphql:
         specifier: ^16.13.2
         version: 16.13.2
-      graphql-ws:
-        specifier: ^6.0.8
-        version: 6.0.8(graphql@16.13.2)(ws@8.20.0)
       graphql-yoga:
         specifier: ^5.18.1
         version: 5.18.1(graphql@16.13.2)
@@ -528,9 +525,6 @@ importers:
         specifier: ^5.10.1
         version: 5.10.1
       pg:
-        specifier: ^8.20.0
-        version: 8.20.0
-      ws:
         specifier: ^8.20.0
         version: 8.20.0
     devDependencies:
@@ -558,9 +552,6 @@ importers:
       '@types/pg':
         specifier: ^8.11.14
         version: 8.18.0
-      '@types/ws':
-        specifier: ^8.18.1
-        version: 8.18.1
       drizzle-kit:
         specifier: ^0.31.10
         version: 0.31.10

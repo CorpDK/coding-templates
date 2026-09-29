@@ -91,6 +91,14 @@ See [Repository Pattern](../developer/03-repository-pattern.md) for the full imp
 
 ---
 
+## Subscription transport (`@corpdk/ds`)
+
+The primary Drizzle DS template (`templates/ds`, `@corpdk/ds`) serves subscriptions over **SSE on the same `/graphql` HTTP route** as queries and mutations (GraphQL Yoga v5 default). It does not expose a WebSocket listener.
+
+See [DS subscription transport (SSE)](../developer/11-ds-subscription-sse.md) for client headers, curl examples, and deferred UI migration notes. Other DS variants may still use WebSocket until migrated.
+
+---
+
 ## Generated CLI (`ds-cli`)
 
 Every DS variant runs `graphql-codegen` with the `@corpdk/codegen-cli` preset alongside the standard `client` preset. This generates three files in `templates/ds-cli/src/generated/` (and the equivalent path in scaffolded projects):
@@ -122,7 +130,7 @@ Variable merging order: `--input <file>` → piped stdin → explicit flags (fla
 | Variable      | Default | Description                             |
 | ------------- | ------- | --------------------------------------- |
 | `DS_HTTP_URL` | —       | HTTP endpoint for queries and mutations |
-| `DS_WS_URL`   | —       | WebSocket endpoint for subscriptions    |
+| `DS_WS_URL`   | —       | WebSocket endpoint for subscriptions (generated CLI; `@corpdk/ds` server uses SSE instead) |
 
 ### How it's wired
 
