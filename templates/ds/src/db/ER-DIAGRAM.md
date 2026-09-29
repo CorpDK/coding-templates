@@ -11,6 +11,8 @@ erDiagram
     items ||--o{ item_tags : "tagged via (M:N)"
     tags ||--o{ item_tags : "applied via (M:N)"
     orders ||--o{ order_lines : "contains (1:M)"
+    users ||--o{ user_labels : "labeled via (M:N)"
+    labels ||--o{ user_labels : "applied via (M:N)"
 
     categories {
         uuid id PK
@@ -96,9 +98,50 @@ erDiagram
     audit_events {
         uuid id PK
         varchar action
-        text payload
+        text payload "notNull"
         timestamptz created_at
         text created_by
+    }
+
+    phase5_widgets {
+        uuid id PK
+        varchar code "max 12"
+        integer qty "check > 0"
+        text note
+        timestamptz created_at
+        timestamptz updated_at
+        text created_by
+        text updated_by
+    }
+
+    users {
+        uuid id PK
+        varchar name
+        timestamptz created_at
+        timestamptz updated_at
+        text created_by
+        text updated_by
+    }
+
+    labels {
+        uuid id PK
+        varchar label
+        timestamptz created_at
+        timestamptz updated_at
+        text created_by
+        text updated_by
+    }
+
+    user_labels {
+        uuid id PK
+        uuid user_id FK
+        uuid label_id FK
+        timestamptz deleted_at "soft delete"
+        text deleted_by
+        timestamptz created_at
+        timestamptz updated_at
+        text created_by
+        text updated_by
     }
 ```
 
@@ -113,12 +156,18 @@ erDiagram
 | **itemTags** | full | hard | Enriched M:N junction (`assignedAt` + unique item+tag pair) |
 | **orders** | full | soft | 1:M parent of orderLines |
 | **orderLines** | full | hard | M:1 child of orders |
-| **auditEvents** | append-only | hard | Standalone — no FK relations |
+| **auditEvents** | append-only | hard | Standalone — no FK relations; `payload` required |
+| **phase5Widgets** | full | hard | Standalone — `code` varchar(12), check `qty > 0` |
+| **users** | full | hard | M:N → labels via userLabels |
+| **labels** | full | hard | M:N → users via userLabels (distinct from item `tags`) |
+| **userLabels** | full | soft | Pure M:N junction (FKs + audit only); unique user+label pair |
 
 ## Notes
 
 - **GraphQL output (Phase 2)**: entity types expose **navigation fields** from Drizzle `relations()` — FK scalars (`categoryId`, `orderId`, etc.) are omitted from output types but remain on create/update inputs. Internal repository records still carry FK values for DataLoader batch keys.
 - **1:1 (`items` ↔ `itemDetails`)**: FK on dependent `item_details.item_id` with unique index; optional extended specs separate from core item row.
 - **Enriched junction (`itemTags`)**: M:N link table with business column `assignedAt` beyond the two FKs — not a pure link table.
-- **Append-only**: `tags` and `auditEvents` have `createdAt` + `createdBy` only — no `updatedAt` / `updatedBy`.
-- **Soft delete**: `deletedAt` (+ optional `deletedBy`) on `items`, `tags`, `orders`.
+- **Pure junction (`userLabels`)**: M:N link for Phase 5 navigation validation — FKs and audit columns only (contrast with `itemTags`); soft-deletable links without touching `users` / `labels`.
+- **Phase 5 constraints (`phase5Widgets`)**: standalone row with `code` maxLength(12) and PostgreSQL check `qty > 0` — no `relations()` entry.
+- **Append-only**: `tags` and `auditEvents` have `createdAt` + `createdBy` only — no `updatedAt` / `updatedBy`; `auditEvents.payload` is required (`notNull`).
+- **Soft delete**: `deletedAt` (+ optional `deletedBy`) on `items`, `tags`, `orders`, and junction `userLabels`.

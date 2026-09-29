@@ -3,9 +3,9 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import { Pool } from "pg";
 import { auditEvents } from "./schema/audit-events.js";
 import { categories } from "./schema/categories.js";
-import { demoTags } from "./schema/demo-tags.js";
-import { demoUserTags } from "./schema/demo-user-tags.js";
-import { demoUsers } from "./schema/demo-users.js";
+import { labels } from "./schema/labels.js";
+import { userLabels } from "./schema/user-labels.js";
+import { users } from "./schema/users.js";
 import { itemDetails } from "./schema/item-details.js";
 import { itemTags } from "./schema/item-tags.js";
 import { items } from "./schema/items.js";
@@ -68,14 +68,14 @@ const IDS = {
     orderPlaced: "a7000001-0000-4000-8000-000000000002",
     itemsTagged: "a7000001-0000-4000-8000-000000000003",
   },
-  demoUsers: {
+  users: {
     alice: "b1000001-0000-4000-8000-000000000001",
   },
-  demoTags: {
+  labels: {
     earlyAdopter: "b2000001-0000-4000-8000-000000000001",
     beta: "b2000001-0000-4000-8000-000000000002",
   },
-  demoUserTags: {
+  userLabels: {
     aliceEarlyAdopter: "b3000001-0000-4000-8000-000000000001",
     aliceBeta: "b3000001-0000-4000-8000-000000000002",
   },
@@ -97,7 +97,7 @@ export async function seedDatabase(): Promise<void> {
 
     if (row.count > 0) {
       console.log("[seed] Sample data already present — skipping.");
-      await seedDemoM2mIfEmpty(db);
+      await seedUserLabelsM2mIfEmpty(db);
       return;
     }
 
@@ -456,25 +456,25 @@ export async function seedDatabase(): Promise<void> {
       "[seed] Loaded sample data: 3 categories, 5 items, 5 item-details, 3 tags, 6 item-tags, 2 orders, 4 order lines, 3 audit events.",
     );
 
-    await seedDemoM2mIfEmpty(db);
+    await seedUserLabelsM2mIfEmpty(db);
   } finally {
     await pool.end();
   }
 }
 
-async function seedDemoM2mIfEmpty(db: ReturnType<typeof drizzle<typeof schema>>): Promise<void> {
-  const [row] = await db.select({ count: sql<number>`count(*)::int` }).from(demoUsers);
+async function seedUserLabelsM2mIfEmpty(db: ReturnType<typeof drizzle<typeof schema>>): Promise<void> {
+  const [row] = await db.select({ count: sql<number>`count(*)::int` }).from(users);
   if (row.count > 0) {
-    console.log("[seed] Demo M:N sample already present — skipping.");
+    console.log("[seed] User/label M:N sample already present — skipping.");
     return;
   }
 
   await db.transaction(async (tx) => {
     await tx
-      .insert(demoUsers)
+      .insert(users)
       .values([
         {
-          id: IDS.demoUsers.alice,
+          id: IDS.users.alice,
           name: "Alice Demo",
           createdAt: SEEDED_AT,
           updatedAt: SEEDED_AT,
@@ -485,10 +485,10 @@ async function seedDemoM2mIfEmpty(db: ReturnType<typeof drizzle<typeof schema>>)
       .onConflictDoNothing();
 
     await tx
-      .insert(demoTags)
+      .insert(labels)
       .values([
         {
-          id: IDS.demoTags.earlyAdopter,
+          id: IDS.labels.earlyAdopter,
           label: "early-adopter",
           createdAt: SEEDED_AT,
           updatedAt: SEEDED_AT,
@@ -496,7 +496,7 @@ async function seedDemoM2mIfEmpty(db: ReturnType<typeof drizzle<typeof schema>>)
           updatedBy: ACTOR,
         },
         {
-          id: IDS.demoTags.beta,
+          id: IDS.labels.beta,
           label: "beta",
           createdAt: SEEDED_AT,
           updatedAt: SEEDED_AT,
@@ -507,21 +507,21 @@ async function seedDemoM2mIfEmpty(db: ReturnType<typeof drizzle<typeof schema>>)
       .onConflictDoNothing();
 
     await tx
-      .insert(demoUserTags)
+      .insert(userLabels)
       .values([
         {
-          id: IDS.demoUserTags.aliceEarlyAdopter,
-          demoUserId: IDS.demoUsers.alice,
-          demoTagId: IDS.demoTags.earlyAdopter,
+          id: IDS.userLabels.aliceEarlyAdopter,
+          userId: IDS.users.alice,
+          labelId: IDS.labels.earlyAdopter,
           createdAt: SEEDED_AT,
           updatedAt: SEEDED_AT,
           createdBy: ACTOR,
           updatedBy: ACTOR,
         },
         {
-          id: IDS.demoUserTags.aliceBeta,
-          demoUserId: IDS.demoUsers.alice,
-          demoTagId: IDS.demoTags.beta,
+          id: IDS.userLabels.aliceBeta,
+          userId: IDS.users.alice,
+          labelId: IDS.labels.beta,
           createdAt: SEEDED_AT,
           updatedAt: SEEDED_AT,
           createdBy: ACTOR,
@@ -531,7 +531,7 @@ async function seedDemoM2mIfEmpty(db: ReturnType<typeof drizzle<typeof schema>>)
       .onConflictDoNothing();
   });
 
-  console.log("[seed] Loaded demo M:N: 1 demo user, 2 demo tags, 2 user-tag links.");
+  console.log("[seed] Loaded user/label M:N: 1 user, 2 labels, 2 user-label links.");
 }
 
 const isMainModule =

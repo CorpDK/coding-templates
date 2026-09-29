@@ -12,23 +12,23 @@ const m2mOutputDir = "src/__tests__/tmp-generated-m2m";
 describe("many-to-many navigation", () => {
   it("infers pure junction tables as many-to-many to the far target", async () => {
     const entities = await loadEntities(m2mFixtureDir, false);
-    const users = entities.find((e) => e.exportName === "demoUsers");
-    expect(users).toBeDefined();
-    const tagsRel = users!.relations.find((r) => r.fieldName === "tags");
-    expect(tagsRel?.kind).toBe("many-to-many");
-    expect(tagsRel?.joinTableExportName).toBe("demoUserTags");
-    expect(tagsRel?.targetExportName).toBe("demoTags");
+    const usersEntity = entities.find((e) => e.exportName === "users");
+    expect(usersEntity).toBeDefined();
+    const labelsRel = usersEntity!.relations.find((r) => r.fieldName === "labels");
+    expect(labelsRel?.kind).toBe("many-to-many");
+    expect(labelsRel?.joinTableExportName).toBe("userLabels");
+    expect(labelsRel?.targetExportName).toBe("labels");
   });
 
   it("exposes M:N navigation on the GraphQL schema", async () => {
     const entities = await loadEntities(m2mFixtureDir, false);
     const schema = buildDalGraphQLSchema(entities);
-    const userType = schema.getType("DemoUser");
+    const userType = schema.getType("User");
     expect(userType && "getFields" in userType).toBe(true);
     if (!userType || !("getFields" in userType)) return;
-    const tagsField = userType.getFields().tags;
-    expect(tagsField).toBeDefined();
-    expect(tagsField.type.toString()).toMatch(/\[DemoTag!/);
+    const labelsField = userType.getFields().labels;
+    expect(labelsField).toBeDefined();
+    expect(labelsField.type.toString()).toMatch(/\[Label!/);
   });
 
   it("runDalCodegen wires M:N loaders and resolver navigation", async () => {
@@ -56,9 +56,9 @@ describe("many-to-many navigation", () => {
     };
 
     const ctx = createDalContext(pubsub as never);
-    expect(ctx.loaders.demoUser_tags).toBeDefined();
+    expect(ctx.loaders.user_labels).toBeDefined();
 
-    const tags = await generatedResolvers.DemoUser.tags({ id: "user-1" }, {}, ctx);
-    expect(tags).toEqual([]);
+    const labels = await generatedResolvers.User.labels({ id: "user-1" }, {}, ctx);
+    expect(labels).toEqual([]);
   });
 });

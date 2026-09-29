@@ -1,9 +1,9 @@
 import { relations } from "drizzle-orm";
 import { auditEvents } from "./audit-events.js";
 import { categories } from "./categories.js";
-import { demoTags } from "./demo-tags.js";
-import { demoUserTags } from "./demo-user-tags.js";
-import { demoUsers } from "./demo-users.js";
+import { labels } from "./labels.js";
+import { userLabels } from "./user-labels.js";
+import { users } from "./users.js";
 import { itemDetails } from "./item-details.js";
 import { itemTags } from "./item-tags.js";
 import { items } from "./items.js";
@@ -60,21 +60,21 @@ export const orderLinesRelations = relations(orderLines, ({ one }) => ({
 /** auditEvents has no FK relations — standalone append-only log. */
 export const auditEventsRelations = relations(auditEvents, () => ({}));
 
-export const demoUsersRelations = relations(demoUsers, ({ many }) => ({
-  tags: many(demoUserTags),
+export const usersRelations = relations(users, ({ many }) => ({
+  labels: many(userLabels),
 }));
 
-export const demoTagsRelations = relations(demoTags, ({ many }) => ({
-  users: many(demoUserTags),
+export const labelsRelations = relations(labels, ({ many }) => ({
+  users: many(userLabels),
 }));
 
-export const demoUserTagsRelations = relations(demoUserTags, ({ one }) => ({
-  user: one(demoUsers, {
-    fields: [demoUserTags.demoUserId],
-    references: [demoUsers.id],
+export const userLabelsRelations = relations(userLabels, ({ one }) => ({
+  user: one(users, {
+    fields: [userLabels.userId],
+    references: [users.id],
   }),
-  tag: one(demoTags, {
-    fields: [demoUserTags.demoTagId],
-    references: [demoTags.id],
+  label: one(labels, {
+    fields: [userLabels.labelId],
+    references: [labels.id],
   }),
 }));

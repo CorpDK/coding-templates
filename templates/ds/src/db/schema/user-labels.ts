@@ -1,21 +1,21 @@
 import { index, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
-import { demoTags } from "./demo-tags.js";
-import { demoUsers } from "./demo-users.js";
+import { labels } from "./labels.js";
+import { users } from "./users.js";
 
-/** Pure junction (FKs + audit only) — inferred as M:N DemoUser ↔ DemoTag. */
-export const demoUserTags = pgTable(
-  "demo_user_tags",
+/** Pure junction (FKs + audit only) — inferred as M:N User ↔ Label. */
+export const userLabels = pgTable(
+  "user_labels",
   {
     /** Surrogate primary key. */
     id: uuid("id").primaryKey().defaultRandom(),
-    /** FK to demo_users.id. */
-    demoUserId: uuid("demo_user_id")
+    /** FK to users.id. */
+    userId: uuid("user_id")
       .notNull()
-      .references(() => demoUsers.id),
-    /** FK to demo_tags.id. */
-    demoTagId: uuid("demo_tag_id")
+      .references(() => users.id),
+    /** FK to labels.id. */
+    labelId: uuid("label_id")
       .notNull()
-      .references(() => demoTags.id),
+      .references(() => labels.id),
     /** Row creation time (UTC). */
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     /** Last update time (UTC). */
@@ -30,8 +30,8 @@ export const demoUserTags = pgTable(
     deletedBy: text("deleted_by"),
   },
   (table) => [
-    index("demo_user_tags_demo_user_id_idx").on(table.demoUserId),
-    index("demo_user_tags_demo_tag_id_idx").on(table.demoTagId),
-    uniqueIndex("demo_user_tags_demo_user_id_demo_tag_id_uniq").on(table.demoUserId, table.demoTagId),
+    index("user_labels_user_id_idx").on(table.userId),
+    index("user_labels_label_id_idx").on(table.labelId),
+    uniqueIndex("user_labels_user_id_label_id_uniq").on(table.userId, table.labelId),
   ],
 );

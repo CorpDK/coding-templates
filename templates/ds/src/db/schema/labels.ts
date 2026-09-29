@@ -1,13 +1,13 @@
 import { index, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 
-/** Demo users for pure M:N junction navigation (Phase 5 / M:N live validation). */
-export const demoUsers = pgTable(
-  "demo_users",
+/** User label names for pure M:N junction navigation (distinct from item `tags`). */
+export const labels = pgTable(
+  "labels",
   {
     /** Surrogate primary key. */
     id: uuid("id").primaryKey().defaultRandom(),
-    /** Display name. */
-    name: varchar("name", { length: 64 }).notNull(),
+    /** Unique label text. */
+    label: varchar("label", { length: 64 }).notNull(),
     /** Row creation time (UTC). */
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     /** Last update time (UTC). */
@@ -17,5 +17,5 @@ export const demoUsers = pgTable(
     /** Actor ID from request context on last update. */
     updatedBy: text("updated_by").notNull(),
   },
-  (table) => [index("demo_users_name_idx").on(table.name)],
+  (table) => [index("labels_label_idx").on(table.label)],
 );
