@@ -97,20 +97,23 @@ See [PubSub Internals](../developer/04-pubsub-internals.md) for implementation d
 ## Turbo Task Pipeline
 
 ```text
-dal:codegen (@corpdk/ds) → codegen → build → dev / start
+dal:codegen:schema → codegen → dal:codegen:impl → build → dev / start
+(dal:codegen meta-task = all three DAL/codegen steps)
 ```
 
-| Task              | Depends on                                              | Cache |
-| ----------------- | ------------------------------------------------------- | ----- |
-| `dal:codegen`     | `@corpdk/dal-core#build`, `@corpdk/dal-codegen#build`   | Yes   |
-| `codegen`         | `dal:codegen` (DS), `@corpdk/codegen-cli#build`         | Yes   |
-| `@corpdk/ds#build`| `^build`, `dal:codegen`                                 | Yes   |
-| `build`           | `^build` (upstream packages first)                      | Yes   |
-| `dev`             | `^build`                                                | No    |
-| `@corpdk/ds#dev`  | `^build`, `dal:codegen`                                 | No    |
-| `start`           | `build`                                                 | No    |
+| Task                   | Depends on                                              | Cache |
+| ---------------------- | ------------------------------------------------------- | ----- |
+| `dal:codegen:schema`   | `@corpdk/dal-core#build`, `@corpdk/dal-codegen#build`   | Yes   |
+| `codegen`              | `dal:codegen:schema`, `@corpdk/codegen-cli#build`       | Yes   |
+| `dal:codegen:impl`     | `codegen`, `@corpdk/dal-core#build`, `@corpdk/dal-codegen#build` | Yes |
+| `dal:codegen`          | `dal:codegen:schema`, `codegen`, `dal:codegen:impl`     | Yes   |
+| `@corpdk/ds#build`     | `^build`, `dal:codegen:impl`                            | Yes   |
+| `build`                | `^build` (upstream packages first)                      | Yes   |
+| `dev`                  | `^build`                                                | No    |
+| `@corpdk/ds#dev`       | `^build`, `codegen`, `dal:codegen:impl`                 | No    |
+| `start`                | `build`                                                 | No    |
 
-Only **`@corpdk/ds`** defines the `dal:codegen` task (gitignored `src/generated/dal/`). Global `dev` depending on `^build` ensures shared packages and `@corpdk/ds-sdk` compile before UI dev servers start; `@corpdk/ds#dev` additionally waits on `dal:codegen` so entity SDL exists before graphql-codegen.
+Only **`@corpdk/ds`** defines the `dal:codegen:*` tasks. `@corpdk/ds#dev` waits on **`codegen`** and **`dal:codegen:impl`** so resolver types and repositories exist before the Yoga server starts.
 
 ---
 

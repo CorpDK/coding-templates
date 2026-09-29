@@ -208,16 +208,15 @@ function drizzleImportLine(entity: EntityModel, entities: EntityModel[]): string
 }
 
 function manyToManyTargetRecordImports(entity: EntityModel, entities: EntityModel[]): string {
-  const imports = new Set<string>();
+  const typeNames = new Set<string>([`${entity.graphqlType}Record`]);
   for (const rel of entity.relations) {
     if (rel.kind !== "many-to-many") continue;
     const target = entities.find((e) => e.exportName === rel.targetExportName);
     if (!target) continue;
-    imports.add(
-      `import type { ${target.graphqlType}Record } from "./generated-${target.fieldBasename}.repository.js";`,
-    );
+    typeNames.add(`${target.graphqlType}Record`);
   }
-  return [...imports].sort((a, b) => a.localeCompare(b)).join("\n");
+  const sorted = [...typeNames].sort((a, b) => a.localeCompare(b));
+  return `import type { ${sorted.join(", ")} } from "../../entity-records.js";`;
 }
 
 function activeRowWhere(idExpr: string, soft: boolean): string {
@@ -425,7 +424,7 @@ import type { GraphQLResolveInfo } from "graphql";
 import { db } from "../../../db/index.js";
 import { ${schemaImports} } from "../../../db/schema/index.js";
 import { RELATION_DESCRIPTORS_BY_TABLE } from "./generated-relation-descriptors.js";
-${m2mRecordImports ? `${m2mRecordImports}\n` : ""}
+${m2mRecordImports}
 
 type DbTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0];
 type DbConn = typeof db | DbTransaction;
@@ -463,10 +462,6 @@ ${sortCols
   .join("\n")}
   },
 );
-
-export type ${E}Record = {
-${recordCols.map((c) => `  ${c.graphqlName}: ${tsTypeForColumn(c)}${c.notNull ? "" : " | null"};`).join("\n")}
-};
 
 export type ${E}CreateInput = {
 ${businessCols.map((c) => `  ${c.graphqlName}${c.notNull && !c.hasDefault ? "" : "?"}: ${tsTypeForColumn(c)}${!c.notNull ? " | null" : ""};`).join("\n")}

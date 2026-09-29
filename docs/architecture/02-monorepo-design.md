@@ -65,9 +65,9 @@ All DS variants expose the same GraphQL API surface (schema-identical). Rather t
 
 **Manual DS variants** define `PubSubTopics` in `src/pubsub/index.ts` and call `createAppPubSub<T>()` once. **`templates/ds` (DAL)** emits topics and the pubsub instance under gitignored `src/generated/dal/` via `pnpm dal:codegen`. In both cases the factory selects Redis or in-memory based on `REDIS_URL`, keeping transport selection out of resolver code.
 
-### `dev` depends on `^build` (and `dal:codegen` for `@corpdk/ds`)
+### `dev` depends on `^build` (and codegen + impl for `@corpdk/ds`)
 
-Turbo's `dev` task declares `dependsOn: ["^build"]` globally; `@corpdk/ds` also depends on `dal:codegen` so gitignored `src/generated/dal/` exists before DS dev or graphql-codegen runs. This prevents missing-import errors on first launch.
+Turbo's `dev` task declares `dependsOn: ["^build"]` globally; `@corpdk/ds#dev` also depends on **`codegen`** and **`dal:codegen:impl`** (which itself depends on `codegen` → `dal:codegen:schema`) so gitignored schema, mappers, resolver types, and DAL repositories exist before the Yoga server starts.
 
 ---
 

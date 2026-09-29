@@ -1,7 +1,7 @@
-export { runDalCodegen } from "./generate.js";
+export { runDalCodegen, runDalCodegenSchema, runDalCodegenImpl } from "./generate.js";
 export { loadEntities } from "./model.js";
 export type { EntityModel, ColumnModel } from "./model.js";
-export type { CodegenOptions, DalConfig } from "./config.js";
+export type { CodegenOptions, DalConfig, DalCodegenMode } from "./config.js";
 export {
   runEntityLint,
   formatLintViolations,

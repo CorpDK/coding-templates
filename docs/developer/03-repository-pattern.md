@@ -11,7 +11,8 @@ The primary `@corpdk/ds` template uses **DAL automation** — no hand-written en
 | Concern | Location |
 | ------- | -------- |
 | **Authoring surface** | Drizzle entity tables in `src/db/schema/` (UUID PK, audit columns, JSDoc comments) |
-| **Codegen command** | `pnpm dal:codegen` → `src/generated/generated-schema.ts` + `src/generated/dal/` (gitignored; Turbo runs before dev) |
+| **Codegen command** | `pnpm dal:codegen` (schema → graphql-codegen → impl) or `dal:codegen:schema` / `codegen` / `dal:codegen:impl` individually |
+| **Record types** | `src/generated/entity-records.ts` (phase 1; shared by mappers and repositories) |
 | **Generated repos** | `src/generated/dal/repositories/generated-<entity>.repository.ts` |
 | **Bootstrap wiring** | `src/schema.ts` imports `typeDefs` from `src/generated/generated-schema.ts` and `generatedResolvers`, `createDalContext`, `pubsub` from `src/generated/dal/index.ts`; bootstrap SDL/resolvers/pubsub topics are emitted by `@corpdk/dal-codegen` |
 

@@ -1,5 +1,5 @@
 import type { CodegenConfig } from "@graphql-codegen/cli";
-import { graphqlCodegenMappers } from "./src/generated/dal/graphql-codegen.mappers.js";
+import { graphqlCodegenMappers } from "./src/generated/graphql-codegen.mappers.js";
 
 const config: CodegenConfig = {
   schema: ["./src/generated/generated-schema.ts"],

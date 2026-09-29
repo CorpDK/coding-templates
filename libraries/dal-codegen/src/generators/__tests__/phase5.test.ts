@@ -97,6 +97,8 @@ describe("Phase 5 dal-codegen", () => {
       schemaPath: "src/__tests__/fixtures/phase5-schema",
       outputDir: codegenOutputDir,
       schemaOutputPath: "src/__tests__/tmp-generated-schema.ts",
+      entityRecordsOutputPath: "src/__tests__/tmp-entity-records.ts",
+      mappersOutputPath: "src/__tests__/tmp-graphql-codegen.mappers.ts",
       configPath: "dal.config.yaml",
     });
 
@@ -161,6 +163,8 @@ describe("Phase 5 dal-codegen", () => {
       schemaPath: "src/db/schema",
       outputDir: "src/__tests__/tmp-generated-ds",
       schemaOutputPath: "src/__tests__/tmp-generated-ds-schema.ts",
+      entityRecordsOutputPath: "src/__tests__/tmp-generated-ds-entity-records.ts",
+      mappersOutputPath: "src/__tests__/tmp-generated-ds-mappers.ts",
       configPath: "dal.config.yaml",
     });
 

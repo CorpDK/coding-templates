@@ -7,16 +7,17 @@
 Domain GraphQL SDL is **generated** from Drizzle schema — not hand-written.
 
 ```text
-src/generated/generated-schema.ts        ← auto-generated merged SDL (entities + bootstrap) as `typeDefs` export (gitignored; survives dal/ wipe)
-src/generated/dal/index.ts               ← barrel: pubsub, repositories, resolvers (gitignored)
-src/generated/dal/generated-pubsub.ts    ← auto-generated PubSubTopics + pubsub instance (gitignored)
-src/generated/dal/manifest.json          ← entity metadata (audit profile, delete strategy)
-src/generated/dal/graphql-codegen.mappers.ts ← entity → `*Record` mapper paths for graphql-codegen (gitignored)
-src/generated/graphql/resolvers.generated.ts ← graphql-codegen resolver types (gitignored; separate from DAL output)
-src/schema.ts                            ← `typeDefs` from generated-schema; resolvers/context from generated/dal barrel
+src/generated/generated-schema.ts        ← phase 1: merged SDL as `typeDefs` (gitignored)
+src/generated/entity-records.ts            ← phase 1: standalone `*Record` types for mappers + repos (gitignored)
+src/generated/graphql-codegen.mappers.ts   ← phase 1: entity → `*Record` paths for graphql-codegen (gitignored)
+src/generated/dal/index.ts                 ← phase 3: barrel pubsub, repositories, resolvers (gitignored; wiped each impl run)
+src/generated/dal/generated-pubsub.ts      ← phase 3 (gitignored)
+src/generated/dal/manifest.json            ← phase 3 entity metadata (gitignored)
+src/generated/graphql/resolvers.generated.ts ← phase 2: graphql-codegen resolver types (gitignored)
+src/schema.ts                              ← `typeDefs` from generated-schema; resolvers/context from generated/dal barrel
 ```
 
-Run **`pnpm dal:codegen`** after changing `src/db/schema/`, then **`pnpm codegen`** (graphql-codegen) so `src/generated/graphql/resolvers.generated.ts` matches the merged SDL. DAL-generated `generated-resolvers.ts` imports resolver types from that file (`import type { Resolvers, ResolversParentTypes }`) and exports `generatedResolvers` as `satisfies Resolvers<DalContext>`. Turbo runs `dal:codegen` → `codegen` before `@corpdk/ds#build`; until graphql-codegen runs, TypeScript may report missing or stale types under `src/generated/graphql/`. Entity docstrings come from JSDoc comments on Drizzle columns and tables. Custom scalars (`DateTime`, `Date`, etc.) are included in the merged SDL only when referenced by entity columns — not all six core scalars upfront. `@corpdk/dal-codegen` validates merged SDL with GraphQL.js before writing output — codegen fails fast on syntax or schema errors. See [GraphQL DAL Requirements](graphql-dal-requirements.md).
+Run **`pnpm dal:codegen`** after changing `src/db/schema/` (runs **phase 1** schema → **`pnpm codegen`** → **phase 3** impl). Phase 1 must complete before graphql-codegen so SDL and mappers exist; phase 3 runs after graphql-codegen so generated resolvers can `satisfies Resolvers<DalContext>`. Turbo wires `dal:codegen:schema` → `codegen` → `dal:codegen:impl` before `@corpdk/ds#build` and `@corpdk/ds#dev`.
 
 ---
 

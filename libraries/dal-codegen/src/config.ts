@@ -23,15 +23,23 @@ export function loadDalConfig(configPath: string): Required<DalConfig> {
   };
 }
 
+export type DalCodegenMode = "schema" | "impl" | "all";
+
 export interface CodegenOptions {
   /** Absolute path to package root (templates/ds). */
   packageRoot: string;
   /** Relative path to Drizzle schema dir or file from package root. */
   schemaPath: string;
-  /** Relative output dir from package root (wiped and regenerated each run). */
+  /** Relative output dir from package root (wiped and regenerated each impl run). */
   outputDir: string;
   /** Relative path to merged GraphQL SDL module from package root (outside outputDir). */
   schemaOutputPath: string;
+  /** Relative path to standalone entity *Record types from package root. */
+  entityRecordsOutputPath?: string;
+  /** Relative path to graphql-codegen mappers module from package root. */
+  mappersOutputPath?: string;
   /** Relative path to dal.config.yaml from package root. */
   configPath: string;
+  /** schema = phase 1 only; impl = phase 3 only; all = schema then impl. */
+  mode?: DalCodegenMode;
 }

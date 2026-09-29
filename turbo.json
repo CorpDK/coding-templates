@@ -2,15 +2,43 @@
   "$schema": "https://turbo.build/schema.json",
   "ui": "tui",
   "tasks": {
-    "dal:codegen": {
+    "dal:codegen:schema": {
       "dependsOn": ["@corpdk/dal-codegen#build", "@corpdk/dal-core#build"],
       "inputs": ["src/db/schema/**", "dal/dal.config.yaml"],
-      "outputs": ["src/generated/dal/**", "src/generated/generated-schema.ts"],
+      "outputs": [
+        "src/generated/generated-schema.ts",
+        "src/generated/entity-records.ts",
+        "src/generated/graphql-codegen.mappers.ts"
+      ],
+      "cache": true
+    },
+    "dal:codegen:impl": {
+      "dependsOn": [
+        "@corpdk/dal-codegen#build",
+        "@corpdk/dal-core#build",
+        "codegen"
+      ],
+      "inputs": [
+        "src/db/schema/**",
+        "dal/dal.config.yaml",
+        "src/generated/graphql/resolvers.generated.ts"
+      ],
+      "outputs": ["src/generated/dal/**"],
+      "cache": true
+    },
+    "dal:codegen": {
+      "dependsOn": ["dal:codegen:schema", "codegen", "dal:codegen:impl"],
       "cache": true
     },
     "codegen": {
-      "dependsOn": ["@corpdk/codegen-cli#build", "dal:codegen"],
-      "inputs": ["src/**/*.ts", "prisma/schema.prisma", "src/db/schema/**", "src/generated/generated-schema.ts"],
+      "dependsOn": ["@corpdk/codegen-cli#build", "dal:codegen:schema"],
+      "inputs": [
+        "src/**/*.ts",
+        "prisma/schema.prisma",
+        "src/db/schema/**",
+        "src/generated/generated-schema.ts",
+        "src/generated/graphql-codegen.mappers.ts"
+      ],
       "outputs": [
         "../ds-sdk/src/generated/**",
         "../ds-cli/src/generated/**",
@@ -28,7 +56,7 @@
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
     "@corpdk/ds#build": {
-      "dependsOn": ["^build", "codegen"],
+      "dependsOn": ["^build", "dal:codegen:impl"],
       "outputs": ["dist/**"]
     },
     "dev": {
@@ -37,7 +65,7 @@
       "persistent": true
     },
     "@corpdk/ds#dev": {
-      "dependsOn": ["^build", "dal:codegen"],
+      "dependsOn": ["^build", "codegen", "dal:codegen:impl"],
       "cache": false,
       "persistent": true
     },
