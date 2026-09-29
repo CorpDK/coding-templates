@@ -31,6 +31,6 @@ jobs:
 
       - run: pnpm --filter @corpdk/dal-core test
       - run: pnpm --filter @corpdk/dal-codegen test
-      - run: pnpm --filter @corpdk/ds dal:codegen
-      - run: pnpm --filter @corpdk/ds build
+      # Turbo @corpdk/ds#build runs dal:codegen → graphql-codegen → tsc (typed resolvers need codegen output)
+      - run: pnpm turbo run build --filter=@corpdk/ds
       - run: pnpm --filter @corpdk/ds entity:lint
