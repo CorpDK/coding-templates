@@ -1,5 +1,6 @@
 import { index, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 import { orderStatusEnum } from "./enums.js";
+import { users } from "./users.js";
 
 /** Customer purchase orders; soft-deleted rows retained per retention policy. */
 export const orders = pgTable(
@@ -7,7 +8,11 @@ export const orders = pgTable(
   {
     /** Surrogate primary key. */
     id: uuid("id").primaryKey().defaultRandom(),
-    /** PII: customer display name on the order. */
+    /** FK to users.id — customer who placed this order (M:1 from order perspective). */
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id),
+    /** PII: customer display name snapshot at order time (may differ from users.name). */
     customerName: varchar("customer_name", { length: 255 }).notNull(),
     /** Optional order notes from the customer. */
     notes: text("notes"),
@@ -26,5 +31,8 @@ export const orders = pgTable(
     /** Actor ID from request context on last update. */
     updatedBy: text("updated_by").notNull(),
   },
-  (table) => [index("orders_status_created_at_idx").on(table.status, table.createdAt)],
+  (table) => [
+    index("orders_user_id_idx").on(table.userId),
+    index("orders_status_created_at_idx").on(table.status, table.createdAt),
+  ],
 );

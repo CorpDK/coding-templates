@@ -70,6 +70,7 @@ const IDS = {
   },
   users: {
     alice: "b1000001-0000-4000-8000-000000000001",
+    bob: "b1000001-0000-4000-8000-000000000002",
   },
   labels: {
     earlyAdopter: "b2000001-0000-4000-8000-000000000001",
@@ -97,7 +98,7 @@ export async function seedDatabase(): Promise<void> {
 
     if (row.count > 0) {
       console.log("[seed] Sample data already present — skipping.");
-      await seedUserLabelsM2mIfEmpty(db);
+      await seedUsersAndLabelsIfEmpty(db);
       return;
     }
 
@@ -353,10 +354,79 @@ export async function seedDatabase(): Promise<void> {
         .onConflictDoNothing();
 
       await tx
+        .insert(users)
+        .values([
+          {
+            id: IDS.users.alice,
+            name: "Alice Chen",
+            createdAt: SEEDED_AT,
+            updatedAt: SEEDED_AT,
+            createdBy: ACTOR,
+            updatedBy: ACTOR,
+          },
+          {
+            id: IDS.users.bob,
+            name: "Bob Martinez",
+            createdAt: SEEDED_AT,
+            updatedAt: SEEDED_AT,
+            createdBy: ACTOR,
+            updatedBy: ACTOR,
+          },
+        ])
+        .onConflictDoNothing();
+
+      await tx
+        .insert(labels)
+        .values([
+          {
+            id: IDS.labels.earlyAdopter,
+            label: "early-adopter",
+            createdAt: SEEDED_AT,
+            updatedAt: SEEDED_AT,
+            createdBy: ACTOR,
+            updatedBy: ACTOR,
+          },
+          {
+            id: IDS.labels.beta,
+            label: "beta",
+            createdAt: SEEDED_AT,
+            updatedAt: SEEDED_AT,
+            createdBy: ACTOR,
+            updatedBy: ACTOR,
+          },
+        ])
+        .onConflictDoNothing();
+
+      await tx
+        .insert(userLabels)
+        .values([
+          {
+            id: IDS.userLabels.aliceEarlyAdopter,
+            userId: IDS.users.alice,
+            labelId: IDS.labels.earlyAdopter,
+            createdAt: SEEDED_AT,
+            updatedAt: SEEDED_AT,
+            createdBy: ACTOR,
+            updatedBy: ACTOR,
+          },
+          {
+            id: IDS.userLabels.aliceBeta,
+            userId: IDS.users.alice,
+            labelId: IDS.labels.beta,
+            createdAt: SEEDED_AT,
+            updatedAt: SEEDED_AT,
+            createdBy: ACTOR,
+            updatedBy: ACTOR,
+          },
+        ])
+        .onConflictDoNothing();
+
+      await tx
         .insert(orders)
         .values([
           {
             id: IDS.orders.alicePending,
+            userId: IDS.users.alice,
             customerName: "Alice Chen",
             notes: "Gift wrap please",
             status: "PENDING",
@@ -367,6 +437,7 @@ export async function seedDatabase(): Promise<void> {
           },
           {
             id: IDS.orders.bobCompleted,
+            userId: IDS.users.bob,
             customerName: "Bob Martinez",
             notes: null,
             status: "COMPLETED",
@@ -384,6 +455,8 @@ export async function seedDatabase(): Promise<void> {
           {
             id: IDS.orderLines.aliceHeadphones,
             orderId: IDS.orders.alicePending,
+            itemId: IDS.items.headphones,
+            quantity: 1,
             sku: "WH-001",
             description: "Wireless Headphones — matte black",
             createdAt: SEEDED_AT,
@@ -394,6 +467,8 @@ export async function seedDatabase(): Promise<void> {
           {
             id: IDS.orderLines.aliceBook,
             orderId: IDS.orders.alicePending,
+            itemId: IDS.items.graphqlBook,
+            quantity: 1,
             sku: "BOOK-001",
             description: "GraphQL in Action — paperback",
             createdAt: SEEDED_AT,
@@ -404,6 +479,8 @@ export async function seedDatabase(): Promise<void> {
           {
             id: IDS.orderLines.bobTee,
             orderId: IDS.orders.bobCompleted,
+            itemId: IDS.items.cottonTee,
+            quantity: 2,
             sku: "APP-TSH-001",
             description: "Organic Cotton Tee — medium / natural",
             createdAt: SEEDED_AT,
@@ -414,6 +491,8 @@ export async function seedDatabase(): Promise<void> {
           {
             id: IDS.orderLines.bobBeanie,
             orderId: IDS.orders.bobCompleted,
+            itemId: IDS.items.woolBeanie,
+            quantity: 1,
             sku: "APP-BNI-001",
             description: "Merino Wool Beanie — charcoal",
             createdAt: SEEDED_AT,
@@ -437,7 +516,7 @@ export async function seedDatabase(): Promise<void> {
           {
             id: IDS.auditEvents.orderPlaced,
             action: "SEED_ORDER_PLACED",
-            payload: `Order ${IDS.orders.alicePending} placed by Alice Chen (PENDING)`,
+            payload: `Order ${IDS.orders.alicePending} placed by user ${IDS.users.alice} (PENDING)`,
             createdAt: SEEDED_AT,
             createdBy: ACTOR,
           },
@@ -453,19 +532,17 @@ export async function seedDatabase(): Promise<void> {
     });
 
     console.log(
-      "[seed] Loaded sample data: 3 categories, 5 items, 5 item-details, 3 tags, 6 item-tags, 2 orders, 4 order lines, 3 audit events.",
+      "[seed] Loaded sample data: 2 users, 2 labels, 2 user-labels, 3 categories, 5 items, 5 item-details, 3 tags, 6 item-tags, 2 orders, 4 order lines, 3 audit events.",
     );
-
-    await seedUserLabelsM2mIfEmpty(db);
   } finally {
     await pool.end();
   }
 }
 
-async function seedUserLabelsM2mIfEmpty(db: ReturnType<typeof drizzle<typeof schema>>): Promise<void> {
+async function seedUsersAndLabelsIfEmpty(db: ReturnType<typeof drizzle<typeof schema>>): Promise<void> {
   const [row] = await db.select({ count: sql<number>`count(*)::int` }).from(users);
   if (row.count > 0) {
-    console.log("[seed] User/label M:N sample already present — skipping.");
+    console.log("[seed] Users/labels sample already present — skipping.");
     return;
   }
 
@@ -475,7 +552,15 @@ async function seedUserLabelsM2mIfEmpty(db: ReturnType<typeof drizzle<typeof sch
       .values([
         {
           id: IDS.users.alice,
-          name: "Alice Demo",
+          name: "Alice Chen",
+          createdAt: SEEDED_AT,
+          updatedAt: SEEDED_AT,
+          createdBy: ACTOR,
+          updatedBy: ACTOR,
+        },
+        {
+          id: IDS.users.bob,
+          name: "Bob Martinez",
           createdAt: SEEDED_AT,
           updatedAt: SEEDED_AT,
           createdBy: ACTOR,
@@ -531,7 +616,7 @@ async function seedUserLabelsM2mIfEmpty(db: ReturnType<typeof drizzle<typeof sch
       .onConflictDoNothing();
   });
 
-  console.log("[seed] Loaded user/label M:N: 1 user, 2 labels, 2 user-label links.");
+  console.log("[seed] Loaded users/labels: 2 users, 2 labels, 2 user-label links.");
 }
 
 const isMainModule =

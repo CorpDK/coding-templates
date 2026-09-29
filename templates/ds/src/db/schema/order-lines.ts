@@ -1,7 +1,8 @@
-import { index, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import { index, integer, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import { items } from "./items.js";
 import { orders } from "./orders.js";
 
-/** Line items belonging to an order (1:M child); hard-deleted when removed. */
+/** One catalog item per line on an order (1:M order → lines; each line → one item); hard-deleted when removed. */
 export const orderLines = pgTable(
   "order_lines",
   {
@@ -11,7 +12,13 @@ export const orderLines = pgTable(
     orderId: uuid("order_id")
       .notNull()
       .references(() => orders.id),
-    /** Product or SKU label for this line. */
+    /** FK to items.id — catalog item this line purchases (exactly one item per line). */
+    itemId: uuid("item_id")
+      .notNull()
+      .references(() => items.id),
+    /** Units ordered for this line (default 1). */
+    quantity: integer("quantity").notNull().default(1),
+    /** Product or SKU label snapshot at order time. */
     sku: varchar("sku", { length: 64 }).notNull(),
     /** Optional line-level description. */
     description: text("description"),
@@ -24,5 +31,8 @@ export const orderLines = pgTable(
     /** Actor ID from request context on last update. */
     updatedBy: text("updated_by").notNull(),
   },
-  (table) => [index("order_lines_order_id_idx").on(table.orderId)],
+  (table) => [
+    index("order_lines_order_id_idx").on(table.orderId),
+    index("order_lines_item_id_idx").on(table.itemId),
+  ],
 );

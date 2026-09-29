@@ -1,18 +1,20 @@
 /**
- * DAL codegen test fixture schema — one entity per design guideline scenario.
+ * Sample commerce ER for DAL codegen — catalog, checkout, and supporting DAL scenarios.
  *
- * | Entity       | Tests                                              |
- * |--------------|----------------------------------------------------|
- * | categories   | full audit, hard delete, boolean is_*              |
- * | items        | full audit, soft delete, M:1 FK, is_* / has_*    |
- * | itemDetails  | 1:1 dependent, full audit, hard delete, unique FK |
- * | tags         | append-only audit, soft delete                     |
- * | itemTags     | enriched M:N junction, assignedAt, full audit      |
- * | auditEvents  | append-only audit, hard delete, immutable rows     |
- * | orders       | full audit, soft delete, pgEnum (UPPERCASE)        |
- * | orderLines   | full audit, hard delete, 1:M child FK              |
- * | phase5Widgets| Phase 5 column constraints (maxLength, check)        |
- * | users        | pure M:N navigation fixture with userLabels          |
+ * | Entity       | Role / DAL coverage                                  |
+ * |--------------|------------------------------------------------------|
+ * | users        | customers; 1:M orders; M:N labels via userLabels     |
+ * | categories   | catalog grouping; full audit, hard delete            |
+ * | items        | catalog SKU; M:1 category; soft delete               |
+ * | itemDetails  | 1:1 extended specs for items                         |
+ * | tags         | append-only audit, soft delete                       |
+ * | itemTags     | enriched M:N items ↔ tags                            |
+ * | orders       | user checkout; soft delete, pgEnum status, PII name  |
+ * | orderLines   | one item per line (FK itemId), qty, order FK         |
+ * | labels       | user segmentation (M:N via userLabels)               |
+ * | userLabels   | pure M:N junction (soft-deletable links)             |
+ * | auditEvents  | append-only audit log (no FK)                        |
+ * | phase5Widgets| Phase 5 column constraints (standalone)              |
  */
 export * from "./audit-events.js";
 export * from "./categories.js";

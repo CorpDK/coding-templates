@@ -1,6 +1,6 @@
 import { index, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 
-/** Users for pure M:N junction navigation (Phase 5 / M:N live validation). */
+/** Registered customers who place orders; also participates in M:N labels via userLabels. */
 export const users = pgTable(
   "users",
   {

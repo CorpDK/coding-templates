@@ -22,6 +22,7 @@ export const itemsRelations = relations(items, ({ one, many }) => ({
   }),
   detail: one(itemDetails),
   itemTags: many(itemTags),
+  orderLines: many(orderLines),
 }));
 
 export const itemDetailsRelations = relations(itemDetails, ({ one }) => ({
@@ -46,7 +47,11 @@ export const itemTagsRelations = relations(itemTags, ({ one }) => ({
   }),
 }));
 
-export const ordersRelations = relations(orders, ({ many }) => ({
+export const ordersRelations = relations(orders, ({ one, many }) => ({
+  user: one(users, {
+    fields: [orders.userId],
+    references: [users.id],
+  }),
   lines: many(orderLines),
 }));
 
@@ -55,12 +60,17 @@ export const orderLinesRelations = relations(orderLines, ({ one }) => ({
     fields: [orderLines.orderId],
     references: [orders.id],
   }),
+  item: one(items, {
+    fields: [orderLines.itemId],
+    references: [items.id],
+  }),
 }));
 
 /** auditEvents has no FK relations — standalone append-only log. */
 export const auditEventsRelations = relations(auditEvents, () => ({}));
 
 export const usersRelations = relations(users, ({ many }) => ({
+  orders: many(orders),
   labels: many(userLabels),
 }));
 
