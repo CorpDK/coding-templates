@@ -18,6 +18,7 @@ function generateLoaderSetup(entities: EntityModel[]): string {
     const rows = await ctxRef.repositories.${targetRepo}.findByIds([...ids]);
     const map = new Map<string, unknown>();
     for (const row of rows) map.set(row.id as string, row);
+    for (const id of ids) if (!map.has(id)) map.set(id, null);
     return map;
   });`);
       } else if (rel.kind === "one-to-many") {
