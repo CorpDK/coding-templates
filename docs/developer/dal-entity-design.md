@@ -551,7 +551,7 @@ export const orderTags = pgTable('order_tags', {
 | **Join table as full entity** | The junction row has its own lifecycle, audit columns, or business fields beyond the two FKs — treat as a normal entity table |
 | **Join table as relation-only** | Pure link table with only `id` + two FKs (no extra business columns). Still declare `relations()` on both parent entities and conform to entity shape (UUID `id`, audit profile) |
 
-Index both FK columns on join tables. Add a unique constraint on `(ownerId, targetId)` when duplicate links are invalid.
+Index both FK columns on join tables. Add a unique constraint on `(ownerId, targetId)` when duplicate links are invalid. When the join table is **soft-deletable**, use a **partial unique index** on active rows only (e.g. `WHERE deleted_at IS NULL`) so soft-unlink followed by re-link can insert a new active row without violating uniqueness on the soft-deleted link.
 
 **Join table patterns:**
 

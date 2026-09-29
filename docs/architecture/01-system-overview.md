@@ -73,7 +73,7 @@ manual DS variants: src/schema/*.graphqls
 **Why a single shared SDK?**
 All DS variants are schema-identical — they expose the same GraphQL API regardless of the underlying storage backend. Consolidating into one `@corpdk/ds-sdk` means UI packages have a single typed import regardless of which DS variant is deployed. It also means codegen only needs to run once per schema change.
 
-Turbo `dev` declares `dependsOn: ["^build", "dal:codegen"]` on `@corpdk/ds`, so DAL output exists before DS dev/codegen/SDK build; UI packages still depend on `^build` so upstream packages compile first.
+Turbo `@corpdk/ds#dev` declares `dependsOn: ["^build", "dal:codegen"]`, so gitignored DAL output exists before DS dev or graphql-codegen; other packages use global `dev` with `^build` only.
 
 ---
 
@@ -97,17 +97,20 @@ See [PubSub Internals](../developer/04-pubsub-internals.md) for implementation d
 ## Turbo Task Pipeline
 
 ```text
-codegen → build → dev / start
+dal:codegen (@corpdk/ds) → codegen → build → dev / start
 ```
 
-| Task      | Depends on                         | Cache                   |
-| --------- | ---------------------------------- | ----------------------- |
-| `codegen` | —                                  | Yes (cached per schema) |
-| `build`   | `^build` (upstream packages first) | Yes                     |
-| `dev`     | `^build`                           | No                      |
-| `start`   | `^build`                           | No                      |
+| Task              | Depends on                                              | Cache |
+| ----------------- | ------------------------------------------------------- | ----- |
+| `dal:codegen`     | `@corpdk/dal-core#build`, `@corpdk/dal-codegen#build`   | Yes   |
+| `codegen`         | `dal:codegen` (DS), `@corpdk/codegen-cli#build`         | Yes   |
+| `@corpdk/ds#build`| `^build`, `dal:codegen`                                 | Yes   |
+| `build`           | `^build` (upstream packages first)                      | Yes   |
+| `dev`             | `^build`                                                | No    |
+| `@corpdk/ds#dev`  | `^build`, `dal:codegen`                                 | No    |
+| `start`           | `build`                                                 | No    |
 
-`dev` depending on `^build` is the critical design choice: it ensures the shared packages (`packages/ui-*`) and `@corpdk/ds-sdk` are built before any consumer app's dev server starts. Without this, first-launch type errors occur when the SDK doesn't exist yet.
+Only **`@corpdk/ds`** defines the `dal:codegen` task (gitignored `src/generated/dal/`). Global `dev` depending on `^build` ensures shared packages and `@corpdk/ds-sdk` compile before UI dev servers start; `@corpdk/ds#dev` additionally waits on `dal:codegen` so entity SDL exists before graphql-codegen.
 
 ---
 

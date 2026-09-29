@@ -517,9 +517,9 @@ Per entity, codegen emits:
 | **Schema input** | Configured Drizzle schema path(s) — not metadata YAML |
 | **Workspace config** | Optional **`dal/dal.config.yaml`** for workspace-wide settings (e.g. index **`strict`** mode — §17.1; filter complexity limits — §10.7) |
 | **Command** | `pnpm dal:codegen` |
-| **Output** | Full idempotent regen into **`src/generated/dal/`** — **gitignored** (run `pnpm dal:codegen` locally; Turbo `dev`/`build` depend on it) |
+| **Output** | Full idempotent regen into **`src/generated/dal/`** — **gitignored** (run `pnpm dal:codegen` locally; `@corpdk/ds#dev` / `#build` depend on it via Turbo) |
 | **Invalid schema** | **Fails codegen** (non-zero exit); CI treats this as a gate |
-| **Turbo pipeline** | `dal:codegen` is a dependency of DS `dev`, `codegen`, and `build` tasks |
+| **Turbo pipeline** | Only **`@corpdk/ds`** defines `dal:codegen`; Turbo wires it into `@corpdk/ds#dev`, `@corpdk/ds#build`, and DS `codegen` |
 | **Local dev** | Optional **`--watch`** on the Drizzle schema directory for iterative regen |
 
 Codegen parses Drizzle tables, enums, indexes, and relations, validates entity shape (UUID `id`, audit/delete column rules, database object comments — §2.11), emits a **`generated-schema.ts`** module exporting merged GraphQL SDL as `typeDefs` (with docstrings from DB object comments — §2.11), GeneratedDataAccess, default repository implementations, resolver stubs, and cursor codec version constants per entity. Re-running codegen with unchanged schema produces byte-identical output (idempotent). Physical `.graphqls` files are not emitted — SDL is merged in-memory during codegen and written as a TypeScript string export for runtime and graphql-codegen consumption.

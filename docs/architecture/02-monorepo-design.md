@@ -63,7 +63,7 @@ All DS variants expose the same GraphQL API surface (schema-identical). Rather t
 
 ### Plugin-style pub/sub via `@corpdk/pub-sub`
 
-Each DS package calls `createAppPubSub<T>()` once. The factory selects Redis or in-memory based on `REDIS_URL`. Topics (`PubSubTopics`) are defined locally per package. This pattern keeps the transport decision outside of application code while allowing each app to define its own topic types.
+**Manual DS variants** define `PubSubTopics` in `src/pubsub/index.ts` and call `createAppPubSub<T>()` once. **`templates/ds` (DAL)** emits topics and the pubsub instance under gitignored `src/generated/dal/` via `pnpm dal:codegen`. In both cases the factory selects Redis or in-memory based on `REDIS_URL`, keeping transport selection out of resolver code.
 
 ### `dev` depends on `^build` (and `dal:codegen` for `@corpdk/ds`)
 
@@ -84,7 +84,7 @@ tsconfig.base.json     ← strict, esModuleInterop, skipLibCheck, sourceMap, dec
 
 | Base config           | Target | Module         | Used by                                                                                                      |
 | --------------------- | ------ | -------------- | ------------------------------------------------------------------------------------------------------------ |
-| `tsconfig.node.json`  | ES2024 | NodeNext       | `ds`, `ds-no-sql`, `ds-cdb`, `ds-ddb`, `ds-file`, `ds-mongo`, `ds-sdk`, `pub-sub`, `codegen-cli`, `create-app` |
+| `tsconfig.node.json`  | ES2024 | NodeNext       | `ds`, `ds-no-sql`, `ds-cdb`, `ds-ddb`, `ds-file`, `ds-mongo`, `ds-sdk`, `dal-core`, `dal-codegen`, `pub-sub`, `codegen-cli`, `create-app` |
 | `tsconfig.react.json` | ES2024 | esnext/bundler | `ui-core`, `ui-auth`, `ui-charts`, `ui-forms`, `ui-datagrid`, `ui-feedback`                                  |
 | `tsconfig.next.json`  | ES2024 | esnext/bundler | `ui`, `ui-hprt`                                                                                              |
 
