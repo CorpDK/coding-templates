@@ -8,6 +8,7 @@ import { buildDalGraphQLSchema } from "../schema-builder.js";
 const packageRoot = join(pathDirname(fileURLToPath(import.meta.url)), "../../..");
 const m2mFixtureDir = join(packageRoot, "src/__tests__/fixtures/m2m-schema");
 const m2mOutputDir = "src/__tests__/tmp-generated-m2m";
+const testEntityRecords = "src/__tests__/entity-records.ts";
 
 describe("many-to-many navigation", () => {
   it("infers pure junction tables as many-to-many to the far target", async () => {
@@ -37,7 +38,7 @@ describe("many-to-many navigation", () => {
       schemaPath: "src/__tests__/fixtures/m2m-schema",
       outputDir: m2mOutputDir,
       schemaOutputPath: "src/__tests__/tmp-generated-m2m-schema.ts",
-      entityRecordsOutputPath: "src/__tests__/tmp-generated-m2m-entity-records.ts",
+      entityRecordsOutputPath: testEntityRecords,
       mappersOutputPath: "src/__tests__/tmp-generated-m2m-mappers.ts",
       configPath: "dal.config.yaml",
     });

@@ -11,6 +11,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 const packageRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
 const fixtureDir = join(packageRoot, "src/__tests__/fixtures/phase5-schema");
 const codegenOutputDir = "src/__tests__/tmp-generated";
+const testEntityRecords = "src/__tests__/entity-records.ts";
 const dsPackageRoot = join(packageRoot, "../../templates/ds");
 const dsSchemaPath = join(dsPackageRoot, "src/db/schema");
 
@@ -97,7 +98,7 @@ describe("Phase 5 dal-codegen", () => {
       schemaPath: "src/__tests__/fixtures/phase5-schema",
       outputDir: codegenOutputDir,
       schemaOutputPath: "src/__tests__/tmp-generated-schema.ts",
-      entityRecordsOutputPath: "src/__tests__/tmp-entity-records.ts",
+      entityRecordsOutputPath: testEntityRecords,
       mappersOutputPath: "src/__tests__/tmp-graphql-codegen.mappers.ts",
       configPath: "dal.config.yaml",
     });
@@ -163,7 +164,7 @@ describe("Phase 5 dal-codegen", () => {
       schemaPath: "src/db/schema",
       outputDir: "src/__tests__/tmp-generated-ds",
       schemaOutputPath: "src/__tests__/tmp-generated-ds-schema.ts",
-      entityRecordsOutputPath: "src/__tests__/tmp-generated-ds-entity-records.ts",
+      entityRecordsOutputPath: testEntityRecords,
       mappersOutputPath: "src/__tests__/tmp-generated-ds-mappers.ts",
       configPath: "dal.config.yaml",
     });
