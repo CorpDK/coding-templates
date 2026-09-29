@@ -10,8 +10,9 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 
 const packageRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
 const fixtureDir = join(packageRoot, "src/__tests__/fixtures/phase5-schema");
-const codegenOutputDir = "src/__tests__/tmp-generated";
-const testEntityRecords = "src/__tests__/entity-records.ts";
+const codegenRunDir = "src/__tests__/tmp-generated";
+const codegenOutputDir = `${codegenRunDir}/dal`;
+const testEntityRecords = `${codegenRunDir}/entity-records.ts`;
 const dsPackageRoot = join(packageRoot, "../../templates/ds");
 const dsSchemaPath = join(dsPackageRoot, "src/db/schema");
 
@@ -159,13 +160,14 @@ describe("Phase 5 dal-codegen", () => {
   });
 
   it("runDalCodegen supports ds template relation navigation in GraphQL schema", async () => {
+    const dsCodegenRunDir = "src/__tests__/tmp-generated-ds";
     await runDalCodegen({
       packageRoot: dsPackageRoot,
       schemaPath: "src/db/schema",
-      outputDir: "src/__tests__/tmp-generated-ds",
-      schemaOutputPath: "src/__tests__/tmp-generated-ds/generated-schema.ts",
-      entityRecordsOutputPath: testEntityRecords,
-      mappersOutputPath: "src/__tests__/tmp-generated-ds/graphql-codegen.mappers.ts",
+      outputDir: `${dsCodegenRunDir}/dal`,
+      schemaOutputPath: `${dsCodegenRunDir}/generated-schema.ts`,
+      entityRecordsOutputPath: `${dsCodegenRunDir}/entity-records.ts`,
+      mappersOutputPath: `${dsCodegenRunDir}/graphql-codegen.mappers.ts`,
       configPath: "dal.config.yaml",
     });
 

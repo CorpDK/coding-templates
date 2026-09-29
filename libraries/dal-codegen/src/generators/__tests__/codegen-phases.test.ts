@@ -8,9 +8,10 @@ import { loadEntities } from "../../model.js";
 const packageRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
 const schemaRel = "src/__tests__/fixtures/phase5-schema";
 const schemaPhaseDir = "src/__tests__/tmp-phase1-only";
-const implOutputDir = "src/__tests__/tmp-phase3-only";
+const implRunDir = "src/__tests__/tmp-phase3-only";
+const implOutputDir = `${implRunDir}/dal`;
 const schemaPhaseEntityRecords = `${schemaPhaseDir}/entity-records.ts`;
-const implEntityRecords = "src/__tests__/entity-records.ts";
+const implEntityRecords = `${implRunDir}/entity-records.ts`;
 
 describe("3-phase dal-codegen outputs", () => {
   it("schema phase emits mappers wired to entity-records Record types", async () => {
@@ -77,7 +78,7 @@ describe("3-phase dal-codegen outputs", () => {
     await runDalCodegenSchema({
       packageRoot,
       schemaPath: schemaRel,
-      outputDir: `${implOutputDir}/unused-dal`,
+      outputDir: `${implRunDir}/unused-dal`,
       schemaOutputPath: "src/__tests__/unused-schema-for-impl.ts",
       entityRecordsOutputPath: implEntityRecords,
       mappersOutputPath: "src/__tests__/unused-mappers-for-impl.ts",
@@ -123,8 +124,7 @@ describe("3-phase dal-codegen outputs", () => {
     );
     expect(missing).toBeNull();
 
-    rmSync(out, { recursive: true, force: true });
-    rmSync(join(packageRoot, implEntityRecords), { force: true });
+    rmSync(join(packageRoot, implRunDir), { recursive: true, force: true });
     rmSync(join(packageRoot, "src/__tests__/unused-schema-for-impl.ts"), { force: true });
     rmSync(join(packageRoot, "src/__tests__/unused-mappers-for-impl.ts"), { force: true });
   });
