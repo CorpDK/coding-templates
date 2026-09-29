@@ -28,7 +28,7 @@
       "outputs": [".next/**", "!.next/cache/**", "dist/**"]
     },
     "@corpdk/ds#build": {
-      "dependsOn": ["^build", "dal:codegen"],
+      "dependsOn": ["^build", "codegen"],
       "outputs": ["dist/**"]
     },
     "dev": {

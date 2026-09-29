@@ -1,4 +1,5 @@
 import type { CodegenConfig } from "@graphql-codegen/cli";
+import { graphqlCodegenMappers } from "./src/generated/dal/graphql-codegen.mappers.js";
 
 const config: CodegenConfig = {
   schema: ["./src/generated/dal/generated-schema.ts"],
@@ -9,6 +10,11 @@ const config: CodegenConfig = {
     },
     "./src/generated/graphql/resolvers.generated.ts": {
       plugins: ["typescript", "typescript-resolvers"],
+      config: {
+        contextType: "../dal/resolvers/generated-resolvers.js#DalContext",
+        useTypeImports: true,
+        mappers: { ...graphqlCodegenMappers },
+      },
     },
     "../ds-cli/src/generated/": {
       preset: "@corpdk/codegen-cli",

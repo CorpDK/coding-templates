@@ -65,21 +65,28 @@ function appendRelationResolverField(
       entity.columns.find((c) => c.drizzleKey === rel.ownerFkDrizzleKey)?.graphqlName;
     if (!fkField && rel.kind === "many-to-one") return;
     if (rel.kind === "one-to-one" && !fkField) {
-      resolverFields.push(`    ${rel.fieldName}: (parent: Record<string, unknown>, _: unknown, ctx: DalContext) =>
-      ctx.loaders.${loaderKey}!.load(parent.id as string),`);
+      resolverFields.push(`    ${rel.fieldName}: (parent: ResolversParentTypes["${entity.graphqlType}"], _: unknown, ctx: DalContext) =>
+      ctx.loaders.${loaderKey}!.load(parent.id as string) as Promise<ResolversTypes["${rel.targetGraphqlType}"]>,`);
       return;
     }
-    resolverFields.push(`    ${rel.fieldName}: (parent: Record<string, unknown>, _: unknown, ctx: DalContext) => {
+    const fkColumn = entity.columns.find((c) => c.graphqlName === fkField);
+    const fkRequired = fkColumn?.notNull ?? true;
+    if (fkRequired) {
+      resolverFields.push(`    ${rel.fieldName}: (parent: ResolversParentTypes["${entity.graphqlType}"], _: unknown, ctx: DalContext) =>
+      ctx.loaders.${loaderKey}!.load(parent.${fkField} as string) as Promise<ResolversTypes["${rel.targetGraphqlType}"]>,`);
+      return;
+    }
+    resolverFields.push(`    ${rel.fieldName}: async (parent: ResolversParentTypes["${entity.graphqlType}"], _: unknown, ctx: DalContext) => {
       const fk = parent.${fkField} as string | null | undefined;
       if (fk == null) return null;
-      return ctx.loaders.${loaderKey}!.load(fk);
+      return (await ctx.loaders.${loaderKey}!.load(fk)) as ResolversTypes["${rel.targetGraphqlType}"];
     },`);
     return;
   }
   if (rel.kind === "one-to-many" || rel.kind === "many-to-many") {
-    resolverFields.push(`    ${rel.fieldName}: (parent: Record<string, unknown>, _: unknown, ctx: DalContext) => {
+    resolverFields.push(`    ${rel.fieldName}: (parent: ResolversParentTypes["${entity.graphqlType}"], _: unknown, ctx: DalContext) => {
       const id = parent.id as string;
-      return ctx.loaders.${loaderKey}!.load(id);
+      return ctx.loaders.${loaderKey}!.load(id) as Promise<ResolversTypes["${rel.targetGraphqlType}"][]>;
     },`);
   }
 }
@@ -116,8 +123,8 @@ export function generateResolvers(entities: EntityModel[]): string {
     const full = entity.auditProfile === "full";
     const topic = `${e.toUpperCase()}_CHANGED`;
 
-    queryFields.push(`    ${list}: (_: unknown, args: Record<string, unknown>, ctx: DalContext, info: GraphQLResolveInfo) =>
-      ctx.repositories.${e}.list(
+    queryFields.push(`    ${list}: async (_: unknown, args: Record<string, unknown>, ctx: DalContext, info: GraphQLResolveInfo) =>
+      (await ctx.repositories.${e}.list(
         {
           filter: args.filter as never,
           sort: args.sort as never,
@@ -125,13 +132,13 @@ export function generateResolvers(entities: EntityModel[]): string {
           includeDeleted: args.includeDeleted as boolean | null,
         },
         info,
-      ),
+      )) as ResolversTypes["${E}"][],
 
-    ${e}: (_: unknown, args: { id: string; includeDeleted?: boolean | null }, ctx: DalContext, info: GraphQLResolveInfo) =>
-      ctx.repositories.${e}.findById(args.id, { includeDeleted: args.includeDeleted }, info),
+    ${e}: async (_: unknown, args: { id: string; includeDeleted?: boolean | null }, ctx: DalContext, info: GraphQLResolveInfo) =>
+      (await ctx.repositories.${e}.findById(args.id, { includeDeleted: args.includeDeleted }, info)) as ResolversTypes["${E}"] | null,
 
-    ${e}Connection: (_: unknown, args: Record<string, unknown>, ctx: DalContext, info: GraphQLResolveInfo) =>
-      ctx.repositories.${e}.listConnection(
+    ${e}Connection: async (_: unknown, args: Record<string, unknown>, ctx: DalContext, info: GraphQLResolveInfo) =>
+      (await ctx.repositories.${e}.listConnection(
         {
           filter: args.filter as never,
           sort: args.sort as never,
@@ -142,7 +149,7 @@ export function generateResolvers(entities: EntityModel[]): string {
           includeDeleted: args.includeDeleted as boolean | null,
         },
         info,
-      ),
+      )) as ResolversTypes["${E}Connection"],
 
     ${list}Count: (_: unknown, args: Record<string, unknown>, ctx: DalContext) =>
       ctx.repositories.${e}.count({
@@ -150,12 +157,13 @@ export function generateResolvers(entities: EntityModel[]): string {
         includeDeleted: args.includeDeleted as boolean | null,
       }),
 
-    ${e}Aggregate: async (_: unknown, args: Record<string, unknown>, ctx: DalContext) => ({
-      count: await ctx.repositories.${e}.count({
-        filter: args.filter as never,
-        includeDeleted: args.includeDeleted as boolean | null,
-      }),
-    }),`);
+    ${e}Aggregate: async (_: unknown, args: Record<string, unknown>, ctx: DalContext) =>
+      ({
+        count: await ctx.repositories.${e}.count({
+          filter: args.filter as never,
+          includeDeleted: args.includeDeleted as boolean | null,
+        }),
+      }) as ResolversTypes["${E}Aggregate"],`);
 
     mutationFields.push(`    create${E}: async (_: unknown, args: { input: Record<string, unknown> }, ctx: DalContext) => {
       const result = await ctx.repositories.${e}.create(args.input as never, { actorId: ctx.actorId });
@@ -163,7 +171,7 @@ export function generateResolvers(entities: EntityModel[]): string {
         const event = ctx.repositories.${e}.toChangeEvent("CREATED", [result.${e}.id]);
         ctx.pubsub.publish("${topic}", { ${e}Changed: event });
       }
-      return result;
+      return result as ResolversTypes["Create${E}Payload"];
     },
 
     bulkCreate${E}: async (_: unknown, args: { inputs: Record<string, unknown>[]; atomic?: boolean | null }, ctx: DalContext) => {
@@ -178,7 +186,7 @@ export function generateResolvers(entities: EntityModel[]): string {
           ctx.pubsub.publish("${topic}", { ${e}Changed: event });
         }
       }
-      return result;
+      return result as ResolversTypes["BulkCreate${E}Result"];
     },
 
     bulkDelete${E}: async (_: unknown, args: { ids: string[]; atomic?: boolean | null }, ctx: DalContext) => {
@@ -193,7 +201,7 @@ export function generateResolvers(entities: EntityModel[]): string {
           ctx.pubsub.publish("${topic}", { ${e}Changed: event });
         }
       }
-      return result;
+      return result as ResolversTypes["BulkDelete${E}Result"];
     },
 
     bulkDelete${E}ByFilter: async (_: unknown, args: { filter: Record<string, unknown>; confirmDeleteAll?: boolean | null }, ctx: DalContext) => {
@@ -203,7 +211,7 @@ export function generateResolvers(entities: EntityModel[]): string {
         const event = ctx.repositories.${e}.toChangeEvent("DELETED", matchedIds);
         ctx.pubsub.publish("${topic}", { ${e}Changed: event });
       }
-      return result;
+      return result as ResolversTypes["BulkMutationResult"];
     },`);
 
     if (full) {
@@ -213,7 +221,7 @@ export function generateResolvers(entities: EntityModel[]): string {
         const event = ctx.repositories.${e}.toChangeEvent("UPDATED", [result.${e}.id]);
         ctx.pubsub.publish("${topic}", { ${e}Changed: event });
       }
-      return result;
+      return result as ResolversTypes["Update${E}Payload"];
     },
 
     bulkUpdate${E}: async (_: unknown, args: { updates: Array<{ id: string; input: Record<string, unknown> }>; atomic?: boolean | null }, ctx: DalContext) => {
@@ -228,7 +236,7 @@ export function generateResolvers(entities: EntityModel[]): string {
           ctx.pubsub.publish("${topic}", { ${e}Changed: event });
         }
       }
-      return result;
+      return result as ResolversTypes["BulkUpdate${E}Result"];
     },
 
     bulkUpdate${E}ByFilter: async (_: unknown, args: { filter: Record<string, unknown>; input: Record<string, unknown>; confirmUpdateAll?: boolean | null }, ctx: DalContext) => {
@@ -238,7 +246,7 @@ export function generateResolvers(entities: EntityModel[]): string {
         const event = ctx.repositories.${e}.toChangeEvent("UPDATED", matchedIds);
         ctx.pubsub.publish("${topic}", { ${e}Changed: event });
       }
-      return result;
+      return result as ResolversTypes["BulkMutationResult"];
     },`);
     }
 
@@ -248,7 +256,7 @@ export function generateResolvers(entities: EntityModel[]): string {
         const event = ctx.repositories.${e}.toChangeEvent("DELETED", [args.id]);
         ctx.pubsub.publish("${topic}", { ${e}Changed: event });
       }
-      return result;
+      return result as ResolversTypes["Delete${E}Payload"];
     },`);
 
     subscriptionFields.push(`    ${e}Changed: {
@@ -262,6 +270,7 @@ export function generateResolvers(entities: EntityModel[]): string {
           }
         }
       },
+      resolve: (payload: { ${e}Changed: ResolversTypes["${E}ChangeEvent"] }) => payload.${e}Changed,
     },`);
   }
 
@@ -290,15 +299,16 @@ export function generateResolvers(entities: EntityModel[]): string {
       if (typeof v !== "string") throw new TypeError("DateTime must be a string");
       return v;
     },
-    parseLiteral: (ast: { kind: string; value?: string }) => {
+    parseLiteral: (ast: ValueNode) => {
       if (ast.kind !== Kind.STRING) throw new TypeError("DateTime must be a string");
-      return ast.value ?? "";
+      return ast.value;
     },
-  },`;
+  } as GraphQLScalarType,`;
 
   return `// AUTO-GENERATED by @corpdk/dal-codegen — do not edit
-import { Kind, type GraphQLResolveInfo } from "graphql";
+import { GraphQLScalarType, Kind, type GraphQLResolveInfo, type ValueNode } from "graphql";
 import { DataLoader } from "@corpdk/dal-core";
+import type { Resolvers, ResolversParentTypes, ResolversTypes } from "../../graphql/resolvers.generated.js";
 import type { PubSub } from "../generated-pubsub.js";
 ${repoImports}
 
@@ -368,6 +378,6 @@ ${subscriptionFields.join("\n\n")}
   },
 
 ${fieldResolvers}
-};
+} satisfies Resolvers<DalContext>;
 `;
 }
