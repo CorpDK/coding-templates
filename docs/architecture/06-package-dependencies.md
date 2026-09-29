@@ -35,7 +35,7 @@ Dependencies used across multiple workspace packages.
 | -------------------------------- | -------- | -------------------------------------------------------------------------------- |
 | graphql                          | ^16.13.2 | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file, ui, ui-hprt, ds-sdk, codegen-cli |
 | graphql-yoga                     | ^5.18.1  | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file, pub-sub                          |
-| graphql-ws                       | ^6.0.8   | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file, ui, ui-hprt                      |
+| graphql-ws                       | ^6.0.8   | ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file, ui, ui-hprt (`@corpdk/ds` uses SSE only) |
 | @graphql-yoga/redis-event-target | ^3.0.0   | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file, pub-sub                          |
 
 ### UI Framework

@@ -90,11 +90,11 @@ Codegen-only (unusual outside CI): `DAL_SCHEMA_PATH`, `DAL_OUTPUT_DIR`, `DAL_CON
 | Variable                | Description                                                                                                        |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | `DS_HTTP_URL`           | Full URL of the DS HTTP endpoint (e.g. `http://localhost:4000/graphql`) — used by Next.js server-side rewrites     |
-| `NEXT_PUBLIC_DS_WS_URL` | Full WebSocket URL of the DS endpoint (e.g. `ws://localhost:4000/graphql`) — used by the browser for subscriptions |
+| `NEXT_PUBLIC_DS_WS_URL` | Full WebSocket URL of the DS endpoint (e.g. `ws://localhost:4000/graphql`) — used by the browser for subscriptions when the UI client uses graphql-ws |
 
 `DS_HTTP_URL` is a server-side variable (no `NEXT_PUBLIC_` prefix). It is proxied by Next.js rewrites so the browser never sees the backend origin.
 
-`NEXT_PUBLIC_DS_WS_URL` is exposed to the browser because Next.js cannot proxy WebSocket connections.
+`NEXT_PUBLIC_DS_WS_URL` is exposed to the browser because Next.js cannot proxy WebSocket connections. When the backend is **`@corpdk/ds`**, the server delivers subscriptions over **SSE on the same HTTP `/graphql` URL** instead of WebSocket; UI templates still expect `NEXT_PUBLIC_DS_WS_URL` until migrated — see [DS subscription transport (SSE)](../developer/11-ds-subscription-sse.md).
 
 ---
 

@@ -30,7 +30,7 @@ Not every DS variant is compatible with every UI variant. This table shows valid
 
 | DS package | Storage                                   | ORM / Driver        | Real-time optimised     |
 | ---------- | ----------------------------------------- | ------------------- | ----------------------- |
-| `ds`       | PostgreSQL / MySQL / SQLite / CockroachDB | Drizzle             | Yes                     |
+| `ds`       | PostgreSQL / MySQL / SQLite / CockroachDB | Drizzle             | Yes (SSE on HTTP `/graphql`; see [DS subscription SSE](../developer/11-ds-subscription-sse.md)) |
 | `ds-no-sql`| PostgreSQL / MySQL / SQLite / CockroachDB / MongoDB / DocumentDB | Prisma | No       |
 | `ds-cdb`   | Couchbase Capella / self-hosted           | Native SDK + Zod    | Yes                     |
 | `ds-mongo` | MongoDB Atlas / self-hosted               | Native driver + Zod | Yes                     |

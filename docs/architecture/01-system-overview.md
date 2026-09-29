@@ -11,7 +11,7 @@
               │  @corpdk/ui          @corpdk/ui-hprt          │
               │  Apollo Client       urql + Graphcache        │
               └──────┬───────────────────┬────────────────────┘
-                     │ HTTP + WS         │ HTTP + WS
+                     │ HTTP (+ SSE sub)  │ HTTP + WS
               ┌──────▼──────┐    ┌───────▼───────────┐
               │ @corpdk/ds  │    │ @corpdk/ds-no-sql  │
               │ Yoga+Drizzle│    │ Yoga+Prisma        │
@@ -31,7 +31,7 @@ The system has two independently deployable layers: a **Data Service (DS)** and 
 
 ---
 
-## HTTP and WebSocket Routing
+## HTTP and subscription routing
 
 **HTTP traffic** (queries and mutations) flows through a Next.js rewrite:
 
@@ -39,16 +39,17 @@ The system has two independently deployable layers: a **Data Service (DS)** and 
 Browser → /api/graphql → Next.js rewrite → DS_HTTP_URL (server-side)
 ```
 
-**WebSocket traffic** (subscriptions) connects directly from the browser:
+**Subscriptions** depend on the DS template:
 
-```text
-Browser → NEXT_PUBLIC_DS_WS_URL → DS WebSocket server
-```
+| DS | Server transport | Typical UI (today) |
+| --- | --- | --- |
+| `@corpdk/ds` | SSE on the same `/graphql` HTTP route (`Accept: text/event-stream`) | UI templates still use graphql-ws + `NEXT_PUBLIC_DS_WS_URL` until migrated — see [DS subscription transport (SSE)](../developer/11-ds-subscription-sse.md) |
+| Other DS variants | Yoga SSE and/or graphql-ws on the HTTP server | Browser WebSocket via `NEXT_PUBLIC_DS_WS_URL` (Next.js cannot proxy WS) |
 
-**Why the split?**
+**Why split HTTP proxy vs direct WS (legacy UI path)?**
 
 - HTTP proxying via Next.js rewrites keeps the DS origin hidden from the browser (no CORS configuration needed) and avoids exposing internal service URLs.
-- Next.js cannot proxy WebSocket connections, so the DS WebSocket URL must be a public `NEXT_PUBLIC_` variable. This is acceptable because subscription endpoints don't expose sensitive server configuration.
+- Next.js cannot proxy WebSocket connections, so the DS WebSocket URL is exposed as a public `NEXT_PUBLIC_` variable when the client uses graphql-ws. SSE subscriptions can use the same proxied HTTP URL as queries.
 
 ---
 
@@ -79,7 +80,7 @@ Turbo `@corpdk/ds#dev` declares `dependsOn: ["^build", "codegen", "dal:codegen:i
 
 ## Real-Time Subscriptions
 
-Every mutation publishes a PubSub event. Clients subscribed via WebSocket receive updates automatically — no polling required.
+Every mutation publishes a PubSub event. Subscribed clients receive updates over SSE (`@corpdk/ds`) or WebSocket (other DS variants and current UI templates) — no polling required.
 
 The PubSub transport is selected at startup by `@corpdk/pub-sub`:
 
