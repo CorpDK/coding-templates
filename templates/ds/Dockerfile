@@ -40,7 +40,6 @@ RUN pnpm --filter @corpdk/dal-core build && \
     pnpm --filter @corpdk/pub-sub build && \
     pnpm --filter @corpdk/codegen-cli build && \
     pnpm --filter @corpdk/ds dal:codegen && \
-    pnpm --filter @corpdk/ds codegen && \
     pnpm --filter @corpdk/ds-sdk build && \
     pnpm --filter @corpdk/ds build && \
     pnpm --filter @corpdk/ds db:generate

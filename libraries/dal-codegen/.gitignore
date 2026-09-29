@@ -1,3 +1,4 @@
 src/__tests__/tmp-*
 src/__tests__/tmp-generated/
+src/__tests__/entity-records.ts
 src/generated/

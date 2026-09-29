@@ -163,9 +163,9 @@ describe("Phase 5 dal-codegen", () => {
       packageRoot: dsPackageRoot,
       schemaPath: "src/db/schema",
       outputDir: "src/__tests__/tmp-generated-ds",
-      schemaOutputPath: "src/__tests__/tmp-generated-ds-schema.ts",
+      schemaOutputPath: "src/__tests__/tmp-generated-ds/generated-schema.ts",
       entityRecordsOutputPath: testEntityRecords,
-      mappersOutputPath: "src/__tests__/tmp-generated-ds-mappers.ts",
+      mappersOutputPath: "src/__tests__/tmp-generated-ds/graphql-codegen.mappers.ts",
       configPath: "dal.config.yaml",
     });
 
