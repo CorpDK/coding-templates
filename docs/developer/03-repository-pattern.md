@@ -16,7 +16,7 @@ The primary `@corpdk/ds` template uses **DAL automation** — no hand-written en
 | **Generated repos** | `src/generated/dal/repositories/generated-<entity>.repository.ts` |
 | **Bootstrap wiring** | `src/schema.ts` imports `typeDefs` from `src/generated/generated-schema.ts` and `generatedResolvers`, `createDalContext`, `pubsub` from `src/generated/dal/index.ts`; bootstrap SDL/resolvers/pubsub topics are emitted by `@corpdk/dal-codegen` |
 
-Adding an entity: add a Drizzle table to `src/db/schema/`, run `pnpm dal:codegen`, then `pnpm codegen` (updates SDK/CLI **and** `src/generated/graphql/resolvers.generated.ts` used by generated resolvers). See [GraphQL DAL Requirements](graphql-dal-requirements.md) and [DAL Entity Design Guidelines](dal-entity-design.md).
+Adding an entity: add a Drizzle table to `src/db/schema/`, then run **`pnpm dal:codegen`** (schema → graphql-codegen for SDK/CLI and `src/generated/graphql/resolvers.generated.ts` → DAL impl). See [GraphQL DAL Requirements](graphql-dal-requirements.md) and [DAL Entity Design Guidelines](dal-entity-design.md).
 
 The sections below describe the **manual repository pattern** used by other DS variants (`ds-no-sql`, `ds-mongo`, etc.).
 

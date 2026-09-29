@@ -138,7 +138,7 @@ Variable merging order: `--input <file>` → piped stdin → explicit flags (fla
 },
 ```
 
-The preset lives in `libraries/codegen-cli/` and is compiled with `tsup`. The `codegen` Turbo task declares `dependsOn: ["@corpdk/codegen-cli#build", "dal:codegen"]` on `@corpdk/ds` so DAL SDL exists before graphql-codegen runs.
+The preset lives in `libraries/codegen-cli/` and is compiled with `tsup`. On `@corpdk/ds`, Turbo `codegen` depends on `dal:codegen:schema` (and `@corpdk/codegen-cli#build`) so merged SDL and entity mappers exist before graphql-codegen runs; `dal:codegen:impl` runs after `codegen` so generated resolvers can satisfy graphql-codegen `Resolvers` types.
 
 ### Scaffolded binary name
 

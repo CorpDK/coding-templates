@@ -27,7 +27,7 @@ Implementation guides, coding patterns, and standards for contributors to the co
 ## Design Principles
 
 - **Repository Pattern** — resolvers call repository methods, never DB-specific APIs directly. **`templates/ds`**: generated repos in `src/generated/dal/` via `pnpm dal:codegen`
-- **GraphQL SDL** — manual DS variants use `src/schema/*.graphqls`; **`templates/ds`** generates entity + bootstrap SDL, resolvers, and pubsub topics under `src/generated/dal/` from Drizzle schema
+- **GraphQL SDL** — manual DS variants use `src/schema/*.graphqls`; **`templates/ds`** emits merged SDL at `src/generated/generated-schema.ts` and DAL resolvers/pubsub under `src/generated/dal/` from Drizzle schema (see [02-graphql-schema.md](02-graphql-schema.md))
 - **Pure ESM for DS packages** — `module: NodeNext` with explicit `.js` extensions on imports
 - **Component size limits** — Pages < 100 lines, Views < 250 lines, UI components < 50 lines
 

@@ -516,8 +516,11 @@ Per entity, codegen emits:
 | ------- | ---- |
 | **Schema input** | Configured Drizzle schema path(s) — not metadata YAML |
 | **Workspace config** | Optional **`dal/dal.config.yaml`** for workspace-wide settings (e.g. index **`strict`** mode — §17.1; filter complexity limits — §10.7) |
-| **Command** | `pnpm dal:codegen` |
-| **Output** | Full idempotent regen: merged SDL at **`src/generated/generated-schema.ts`**, DAL artifacts under **`src/generated/dal/`** (wiped each run) — **gitignored** (run `pnpm dal:codegen` locally; `@corpdk/ds#dev` / `#build` depend on it via Turbo) |
+| **Command** | `pnpm dal:codegen` (meta: **`dal:codegen:schema`** → **`pnpm codegen`** → **`dal:codegen:impl`**) |
+| **Phase 1 output** | **`src/generated/generated-schema.ts`**, **`src/generated/entity-records.ts`**, **`src/generated/graphql-codegen.mappers.ts`** (gitignored) |
+| **Phase 2 output** | **`src/generated/graphql/resolvers.generated.ts`** (graphql-codegen; gitignored) — plus `@corpdk/ds-sdk` / `@corpdk/ds-cli` SDK outputs |
+| **Phase 3 output** | **`src/generated/dal/`** repositories, resolvers, pubsub (wiped each impl run; gitignored) |
+| **Output** | Full idempotent regen across all phases above — run locally or via Turbo before `@corpdk/ds#dev` / `#build` |
 | **Invalid schema** | **Fails codegen** (non-zero exit); CI treats this as a gate |
 | **Turbo pipeline** | Only **`@corpdk/ds`** defines `dal:codegen`; Turbo wires it into `@corpdk/ds#dev`, `@corpdk/ds#build`, and DS `codegen` |
 | **Local dev** | Optional **`--watch`** on the Drizzle schema directory for iterative regen |

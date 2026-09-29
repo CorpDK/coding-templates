@@ -57,7 +57,7 @@ All DS variants expose the same GraphQL API surface (schema-identical). Rather t
 
 ### GraphQL SDL
 
-**`templates/ds` (DAL):** entity + bootstrap SDL, resolvers, and pubsub topics are emitted to gitignored `src/generated/dal/` via `pnpm dal:codegen`; `schema.ts` imports the generated barrel only.
+**`templates/ds` (DAL):** merged entity + bootstrap SDL at gitignored `src/generated/generated-schema.ts`; resolvers, repositories, and pubsub under `src/generated/dal/` via `pnpm dal:codegen` (`dal:codegen:schema` → `codegen` → `dal:codegen:impl`). `schema.ts` imports `typeDefs` from `generated-schema.ts` and resolvers/context from the `dal/` barrel.
 
 **Manual DS variants:** schema is defined as multiple `.graphqls` files in `src/schema/`, not inline TypeScript strings. `base.graphqls` declares empty root types; feature files extend them. The codegen glob (`./src/schema/**/*.graphqls`) picks up new files automatically.
 

@@ -73,7 +73,7 @@ manual DS variants: src/schema/*.graphqls
 **Why a single shared SDK?**
 All DS variants are schema-identical — they expose the same GraphQL API regardless of the underlying storage backend. Consolidating into one `@corpdk/ds-sdk` means UI packages have a single typed import regardless of which DS variant is deployed. It also means codegen only needs to run once per schema change.
 
-Turbo `@corpdk/ds#dev` declares `dependsOn: ["^build", "dal:codegen"]`, so gitignored DAL output exists before DS dev or graphql-codegen; other packages use global `dev` with `^build` only.
+Turbo `@corpdk/ds#dev` declares `dependsOn: ["^build", "codegen", "dal:codegen:impl"]`, so gitignored SDL, mappers, resolver types, and DAL impl exist before the Yoga server starts; other packages use global `dev` with `^build` only.
 
 ---
 
