@@ -1,3 +1,4 @@
+import { isNull } from "drizzle-orm";
 import { index, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 import { labels } from "./labels.js";
 import { users } from "./users.js";
@@ -32,6 +33,8 @@ export const userLabels = pgTable(
   (table) => [
     index("user_labels_user_id_idx").on(table.userId),
     index("user_labels_label_id_idx").on(table.labelId),
-    uniqueIndex("user_labels_user_id_label_id_uniq").on(table.userId, table.labelId),
+    uniqueIndex("user_labels_user_id_label_id_uniq")
+      .on(table.userId, table.labelId)
+      .where(isNull(table.deletedAt)),
   ],
 );
