@@ -57,7 +57,7 @@ Browser → NEXT_PUBLIC_DS_WS_URL → DS WebSocket server
 All DS packages share one GraphQL schema and generate a single shared TypeScript SDK:
 
 ```text
-templates/ds: Drizzle schema → dal:codegen → src/generated/dal/generated-schema.ts
+templates/ds: Drizzle schema → dal:codegen → src/generated/generated-schema.ts (+ src/generated/dal/)
 manual DS variants: src/schema/*.graphqls
         │
         ▼

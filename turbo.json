@@ -5,12 +5,12 @@
     "dal:codegen": {
       "dependsOn": ["@corpdk/dal-codegen#build", "@corpdk/dal-core#build"],
       "inputs": ["src/db/schema/**", "dal/dal.config.yaml"],
-      "outputs": ["src/generated/dal/**"],
+      "outputs": ["src/generated/dal/**", "src/generated/generated-schema.ts"],
       "cache": true
     },
     "codegen": {
       "dependsOn": ["@corpdk/codegen-cli#build", "dal:codegen"],
-      "inputs": ["src/**/*.ts", "prisma/schema.prisma", "src/db/schema/**", "src/generated/dal/generated-schema.ts"],
+      "inputs": ["src/**/*.ts", "prisma/schema.prisma", "src/db/schema/**", "src/generated/generated-schema.ts"],
       "outputs": [
         "../ds-sdk/src/generated/**",
         "../ds-cli/src/generated/**",

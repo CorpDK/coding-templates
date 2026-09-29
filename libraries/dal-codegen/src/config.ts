@@ -28,8 +28,10 @@ export interface CodegenOptions {
   packageRoot: string;
   /** Relative path to Drizzle schema dir or file from package root. */
   schemaPath: string;
-  /** Relative output dir from package root. */
+  /** Relative output dir from package root (wiped and regenerated each run). */
   outputDir: string;
+  /** Relative path to merged GraphQL SDL module from package root (outside outputDir). */
+  schemaOutputPath: string;
   /** Relative path to dal.config.yaml from package root. */
   configPath: string;
 }

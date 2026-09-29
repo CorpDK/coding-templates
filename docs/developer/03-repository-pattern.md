@@ -11,9 +11,9 @@ The primary `@corpdk/ds` template uses **DAL automation** — no hand-written en
 | Concern | Location |
 | ------- | -------- |
 | **Authoring surface** | Drizzle entity tables in `src/db/schema/` (UUID PK, audit columns, JSDoc comments) |
-| **Codegen command** | `pnpm dal:codegen` → `src/generated/dal/` (gitignored; Turbo runs before dev) |
+| **Codegen command** | `pnpm dal:codegen` → `src/generated/generated-schema.ts` + `src/generated/dal/` (gitignored; Turbo runs before dev) |
 | **Generated repos** | `src/generated/dal/repositories/generated-<entity>.repository.ts` |
-| **Bootstrap wiring** | `src/schema.ts` imports from `src/generated/dal/index.ts` barrel (`typeDefs`, `generatedResolvers`, `createDalContext`, `pubsub`); bootstrap SDL/resolvers/pubsub topics are emitted by `@corpdk/dal-codegen` |
+| **Bootstrap wiring** | `src/schema.ts` imports `typeDefs` from `src/generated/generated-schema.ts` and `generatedResolvers`, `createDalContext`, `pubsub` from `src/generated/dal/index.ts`; bootstrap SDL/resolvers/pubsub topics are emitted by `@corpdk/dal-codegen` |
 
 Adding an entity: add a Drizzle table to `src/db/schema/`, run `pnpm dal:codegen`, then `pnpm codegen` (updates SDK/CLI **and** `src/generated/graphql/resolvers.generated.ts` used by generated resolvers). See [GraphQL DAL Requirements](graphql-dal-requirements.md) and [DAL Entity Design Guidelines](dal-entity-design.md).
 

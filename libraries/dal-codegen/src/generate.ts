@@ -1,5 +1,5 @@
 import { mkdirSync, writeFileSync, rmSync, existsSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { loadDalConfig, type CodegenOptions } from "./config.js";
 import { formatLintViolations, lintExitCode, runEntityLint } from "./entity-lint.js";
 import { loadEntities } from "./model.js";
@@ -23,6 +23,7 @@ export async function runDalCodegen(options: CodegenOptions): Promise<void> {
   const config = loadDalConfig(join(options.packageRoot, options.configPath));
   const schemaPath = join(options.packageRoot, options.schemaPath);
   const outputDir = join(options.packageRoot, options.outputDir);
+  const schemaOutputFile = join(options.packageRoot, options.schemaOutputPath);
 
   const entities = await loadEntities(schemaPath, config.strict);
   if (entities.length === 0) {
@@ -51,7 +52,8 @@ export async function runDalCodegen(options: CodegenOptions): Promise<void> {
   mkdirSync(repoDir, { recursive: true });
   mkdirSync(resolverDir, { recursive: true });
 
-  writeFile(join(outputDir, "generated-schema.ts"), generateSchemaModule(entities));
+  mkdirSync(dirname(schemaOutputFile), { recursive: true });
+  writeFile(schemaOutputFile, generateSchemaModule(entities));
   writeFile(join(outputDir, "generated-pubsub.ts"), generatePubSub(entities));
   writeFile(
     join(outputDir, "repositories", "generated-relation-descriptors.ts"),
@@ -73,8 +75,7 @@ export async function runDalCodegen(options: CodegenOptions): Promise<void> {
 
   writeFile(
     join(outputDir, "index.ts"),
-    `${GENERATED_BANNER}export * from "./generated-schema.js";
-export * from "./generated-pubsub.js";
+    `${GENERATED_BANNER}export * from "./generated-pubsub.js";
 export * from "./repositories/index.js";
 export * from "./resolvers/generated-resolvers.js";
 `,
@@ -97,5 +98,7 @@ export * from "./resolvers/generated-resolvers.js";
     ),
   );
 
-  console.log(`dal-codegen: generated ${entities.length} entity(s) → ${options.outputDir}`);
+  console.log(
+    `dal-codegen: generated ${entities.length} entity(s) → ${options.outputDir} (schema → ${options.schemaOutputPath})`,
+  );
 }

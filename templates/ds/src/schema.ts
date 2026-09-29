@@ -1,6 +1,6 @@
 import { createSchema } from "graphql-yoga";
+import { typeDefs } from "./generated/generated-schema.js";
 import {
-  typeDefs,
   generatedResolvers,
   createDalContext,
   pubsub,

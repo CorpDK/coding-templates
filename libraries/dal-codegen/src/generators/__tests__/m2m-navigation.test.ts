@@ -36,6 +36,7 @@ describe("many-to-many navigation", () => {
       packageRoot,
       schemaPath: "src/__tests__/fixtures/m2m-schema",
       outputDir: m2mOutputDir,
+      schemaOutputPath: "src/__tests__/tmp-generated-m2m-schema.ts",
       configPath: "dal.config.yaml",
     });
 

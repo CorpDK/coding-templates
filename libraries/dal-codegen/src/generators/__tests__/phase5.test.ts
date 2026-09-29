@@ -96,6 +96,7 @@ describe("Phase 5 dal-codegen", () => {
       packageRoot,
       schemaPath: "src/__tests__/fixtures/phase5-schema",
       outputDir: codegenOutputDir,
+      schemaOutputPath: "src/__tests__/tmp-generated-schema.ts",
       configPath: "dal.config.yaml",
     });
 
@@ -159,6 +160,7 @@ describe("Phase 5 dal-codegen", () => {
       packageRoot: dsPackageRoot,
       schemaPath: "src/db/schema",
       outputDir: "src/__tests__/tmp-generated-ds",
+      schemaOutputPath: "src/__tests__/tmp-generated-ds-schema.ts",
       configPath: "dal.config.yaml",
     });
 

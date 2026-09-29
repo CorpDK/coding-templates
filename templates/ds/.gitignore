@@ -3,5 +3,6 @@ node_modules/
 *.tsbuildinfo
 .env
 src/generated/graphql/
+src/generated/generated-schema.ts
 src/generated/dal/
 drizzle/migrations/

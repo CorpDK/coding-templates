@@ -2,7 +2,7 @@ import type { CodegenConfig } from "@graphql-codegen/cli";
 import { graphqlCodegenMappers } from "./src/generated/dal/graphql-codegen.mappers.js";
 
 const config: CodegenConfig = {
-  schema: ["./src/generated/dal/generated-schema.ts"],
+  schema: ["./src/generated/generated-schema.ts"],
   generates: {
     "../ds-sdk/src/generated/": {
       preset: "client",
