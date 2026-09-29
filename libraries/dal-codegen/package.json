@@ -1,0 +1,40 @@
+{
+  "name": "@corpdk/dal-codegen",
+  "version": "2026.3.0-alpha.1",
+  "type": "module",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "bin": {
+    "dal-codegen": "./dist/cli.js",
+    "dal-entity-lint": "./dist/lint-cli.js"
+  },
+  "files": ["dist"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "clean": "rm -rf dist node_modules .turbo *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@corpdk/dal-core": "workspace:*",
+    "drizzle-orm": "^0.45.2",
+    "graphql": "^16.13.2",
+    "yaml": "^2.8.3"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.37",
+    "tsx": "^4.21.0",
+    "typescript": "^6.0.2",
+    "@vitest/coverage-v8": "4.1.2",
+    "vitest": "^4.1.2"
+  }
+}

@@ -1,8 +1,7 @@
 name: SonarQube Analysis
 
-# Thin caller — delegates to the org-wide reusable workflow at
-# CorpDK/.github/.github/workflows/sonar.yml. Repo-specific config
-# (paths, exclusions, project key) lives in ./sonar-project.properties.
+# Runs DAL unit tests with coverage, then SonarCloud scan. Repo-specific
+# config (paths, exclusions, project key, lcov paths) lives in sonar-project.properties.
 
 on:
   push:
@@ -20,8 +19,29 @@ concurrency:
 
 jobs:
   sonar:
-    uses: CorpDK/.github/.github/workflows/sonar.yml@main
-    with:
-      sonar-host-url: ${{ vars.SONAR_HOST_URL }}
-    secrets:
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm --filter @corpdk/dal-core build
+      - run: pnpm --filter @corpdk/dal-codegen build
+      - run: pnpm --filter @corpdk/dal-core test:coverage
+      - run: pnpm --filter @corpdk/dal-codegen test:coverage
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}

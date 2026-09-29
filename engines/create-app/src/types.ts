@@ -1,7 +1,7 @@
 export type PackageId =
   | "ds"
   | "ds-sdk"
-  | "ds-hprt"
+  | "ds-no-sql"
   | "ds-cdb"
   | "ds-mongo"
   | "ds-ddb"

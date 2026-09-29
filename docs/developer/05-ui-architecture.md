@@ -33,7 +33,7 @@ These concerns belong to each individual app (`templates/ui`, `templates/ui-hprt
 
 - App Router — all routes under `app/`
 - `next.config.ts` proxies `/api/graphql/*` to `DS_HTTP_URL` (avoids CORS, hides backend origin)
-- WebSocket connects directly via `NEXT_PUBLIC_DS_WS_URL` (Next.js cannot proxy WS)
+- WebSocket connects directly via `NEXT_PUBLIC_DS_WS_URL` (Next.js cannot proxy WS). Pairing with **`@corpdk/ds`** requires a future SSE client migration — the DS no longer listens on WebSocket ([11-ds-subscription-sse.md](11-ds-subscription-sse.md)).
 - `output: 'standalone'` required for Docker — bundles the Next.js server into `server.js`
 
 ### GraphQL Client

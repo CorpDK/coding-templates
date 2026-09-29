@@ -14,8 +14,8 @@ Use `pnpm create-app` to scaffold a new project from any combination of these te
 | ---------------- | ------------------ | -------------------------------------------------------------------------------- |
 | **UI**           | `@corpdk/ui`       | Next.js + Apollo Client (standard CRUD)                                          |
 | **UI**           | `@corpdk/ui-hprt`  | Next.js + urql + Graphcache (high-frequency real-time)                           |
-| **Data Service** | `@corpdk/ds`       | GraphQL Yoga + Prisma (relational SQL)                                           |
-| **Data Service** | `@corpdk/ds-hprt`  | GraphQL Yoga + Drizzle (relational SQL, high-performance real-time)              |
+| **Data Service** | `@corpdk/ds`       | GraphQL Yoga + Drizzle (relational SQL) — primary/default DS                     |
+| **Data Service** | `@corpdk/ds-no-sql`| GraphQL Yoga + Prisma (databases Drizzle does not support)                       |
 | **Data Service** | `@corpdk/ds-cdb`   | GraphQL Yoga + Couchbase SDK + Zod                                               |
 | **Data Service** | `@corpdk/ds-mongo` | GraphQL Yoga + MongoDB native driver + Zod                                       |
 | **Data Service** | `@corpdk/ds-ddb`   | GraphQL Yoga + DocumentDB (documentdb.io) + Zod                                  |
