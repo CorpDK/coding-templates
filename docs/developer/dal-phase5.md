@@ -16,6 +16,9 @@ Codegen infers from Drizzle:
 | ------ | -------- |
 | `varchar` / `char` `.length` | `maxLength` on `ColumnModel` |
 | Table `check()` SQL referencing a column | `minExclusive: 0` for `> 0`, `minInclusive: 0` for `>= 0` |
+| `check()` with `char_length(column) >= N` (or `length(column) >= N`) | `minLength: N` |
+
+The DS template commerce schema demonstrates Phase 5 constraints on real entities: `tags.label` (varchar 30, min length 2) and `orderLines.quantity` (check `> 0`).
 
 GraphQL field descriptions append `Validation: …` hints. Generated repositories call `validateColumnConstraints` before insert/update.
 

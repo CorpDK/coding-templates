@@ -14,44 +14,81 @@ const codegenOutputDir = "src/__tests__/tmp-generated";
 const dsPackageRoot = join(packageRoot, "../../templates/ds");
 const dsSchemaPath = join(dsPackageRoot, "src/db/schema");
 
+function constraintMetaFromEntity(
+  entity: NonNullable<Awaited<ReturnType<typeof loadEntities>>[number]>,
+): ColumnConstraintMeta[] {
+  return entity.columns
+    .filter(
+      (c) =>
+        c.isBusiness &&
+        (c.maxLength != null ||
+          c.minLength != null ||
+          c.minExclusive != null ||
+          c.minInclusive != null),
+    )
+    .map((c) => ({
+      graphqlName: c.graphqlName,
+      drizzleKey: c.drizzleKey,
+      ...(c.maxLength != null ? { maxLength: c.maxLength } : {}),
+      ...(c.minLength != null ? { minLength: c.minLength } : {}),
+      ...(c.minExclusive != null ? { minExclusive: c.minExclusive } : {}),
+      ...(c.minInclusive != null ? { minInclusive: c.minInclusive } : {}),
+    }));
+}
+
 describe("Phase 5 dal-codegen", () => {
-  it("infers maxLength and check constraints on columns", async () => {
-    const entities = await loadEntities(fixtureDir, false);
-    const widget = entities.find((e) => e.exportName === "phase5Widgets");
-    expect(widget).toBeDefined();
-    const codeCol = widget!.columns.find((c) => c.drizzleKey === "code");
-    expect(codeCol?.maxLength).toBe(12);
-    const qtyCol = widget!.columns.find((c) => c.drizzleKey === "qty");
-    expect(qtyCol?.minExclusive).toBe(0);
-    expect(columnGraphqlDescription(codeCol!)).toMatch(/max length 12/);
+  it("infers maxLength, minLength, and check constraints on commerce schema columns", async () => {
+    const entities = await loadEntities(dsSchemaPath, false);
+    const tags = entities.find((e) => e.exportName === "tags");
+    const orderLines = entities.find((e) => e.exportName === "orderLines");
+    expect(tags).toBeDefined();
+    expect(orderLines).toBeDefined();
+
+    const labelCol = tags!.columns.find((c) => c.drizzleKey === "label");
+    expect(labelCol?.maxLength).toBe(30);
+    expect(labelCol?.minLength).toBe(2);
+    expect(columnGraphqlDescription(labelCol!)).toMatch(/max length 30/);
+    expect(columnGraphqlDescription(labelCol!)).toMatch(/min length 2/);
+
+    const quantityCol = orderLines!.columns.find((c) => c.drizzleKey === "quantity");
+    expect(quantityCol?.minExclusive).toBe(0);
   });
 
   it("inferred column constraints reject invalid create input", async () => {
-    const entities = await loadEntities(fixtureDir, false);
-    const widget = entities.find((e) => e.exportName === "phase5Widgets")!;
-    const constraints: ColumnConstraintMeta[] = widget.columns
-      .filter((c) => c.isBusiness && (c.maxLength != null || c.minExclusive != null))
-      .map((c) => ({
-        graphqlName: c.graphqlName,
-        drizzleKey: c.drizzleKey,
-        ...(c.maxLength != null ? { maxLength: c.maxLength } : {}),
-        ...(c.minExclusive != null ? { minExclusive: c.minExclusive } : {}),
-      }));
+    const entities = await loadEntities(dsSchemaPath, false);
+    const tags = entities.find((e) => e.exportName === "tags")!;
+    const orderLines = entities.find((e) => e.exportName === "orderLines")!;
 
+    const tagConstraints = constraintMetaFromEntity(tags);
     expect(() =>
-      validateColumnConstraints({ code: "x".repeat(13), qty: 5, note: "ok" }, constraints, "create"),
-    ).toThrow(/at most 12/);
+      validateColumnConstraints({ label: "x".repeat(31) }, tagConstraints, "create"),
+    ).toThrow(/at most 30/);
+    expect(() => validateColumnConstraints({ label: "x" }, tagConstraints, "create")).toThrow(
+      /at least 2/,
+    );
 
+    const lineConstraints = constraintMetaFromEntity(orderLines);
     expect(() =>
-      validateColumnConstraints({ code: "ABC", qty: 0, note: "ok" }, constraints, "create"),
+      validateColumnConstraints({ quantity: 0 }, lineConstraints, "create"),
     ).toThrow(/greater than 0/);
+  });
+
+  it("infers constraints on isolated phase5 fixture entity", async () => {
+    const entities = await loadEntities(fixtureDir, false);
+    const fixture = entities.find((e) => e.exportName === "phase5ConstraintFixtures");
+    expect(fixture).toBeDefined();
+    const labelCol = fixture!.columns.find((c) => c.drizzleKey === "label");
+    expect(labelCol?.maxLength).toBe(30);
+    expect(labelCol?.minLength).toBe(2);
+    const quantityCol = fixture!.columns.find((c) => c.drizzleKey === "quantity");
+    expect(quantityCol?.minExclusive).toBe(0);
   });
 
   it("registers IntFilter when integer columns exist", async () => {
     const entities = await loadEntities(fixtureDir, false);
     const schema = buildDalGraphQLSchema(entities);
     expect(schema.getType("IntFilter")).toBeDefined();
-    expect(schema.getType("Phase5WidgetField")).toBeDefined();
+    expect(schema.getType("Phase5ConstraintFixtureField")).toBeDefined();
   });
 
   it("runDalCodegen emits repository and resolver artifacts for the fixture", async () => {
@@ -65,7 +102,7 @@ describe("Phase 5 dal-codegen", () => {
     const repoPath = join(
       packageRoot,
       codegenOutputDir,
-      "repositories/generated-phase5Widget.repository.ts",
+      "repositories/generated-phase5ConstraintFixture.repository.ts",
     );
     const resolverPath = join(packageRoot, codegenOutputDir, "resolvers/generated-resolvers.ts");
     const manifestPath = join(packageRoot, codegenOutputDir, "manifest.json");
@@ -78,7 +115,10 @@ describe("Phase 5 dal-codegen", () => {
       entities: Array<{ exportName: string; graphqlType: string }>;
     };
     expect(manifest.entities).toEqual([
-      expect.objectContaining({ exportName: "phase5Widgets", graphqlType: "Phase5Widget" }),
+      expect.objectContaining({
+        exportName: "phase5ConstraintFixtures",
+        graphqlType: "Phase5ConstraintFixture",
+      }),
     ]);
 
     const resolverUrl = pathToFileURL(resolverPath).href;
@@ -95,9 +135,9 @@ describe("Phase 5 dal-codegen", () => {
     };
 
     const ctx = createDalContext(pubsub as never);
-    expect(ctx.repositories.phase5Widget).toBeDefined();
+    expect(ctx.repositories.phase5ConstraintFixture).toBeDefined();
 
-    const missing = await generatedResolvers.Query.phase5Widget(
+    const missing = await generatedResolvers.Query.phase5ConstraintFixture(
       {},
       { id: "550e8400-e29b-41d4-a716-446655440000" },
       ctx,
@@ -105,13 +145,13 @@ describe("Phase 5 dal-codegen", () => {
     );
     expect(missing).toBeNull();
 
-    const invalidCreate = await generatedResolvers.Mutation.createPhase5Widget(
+    const invalidCreate = await generatedResolvers.Mutation.createPhase5ConstraintFixture(
       {},
-      { input: { code: "x".repeat(13), qty: 5, note: "ok" } },
+      { input: { label: "x".repeat(31), quantity: 5, note: "ok" } },
       ctx,
     );
     expect(invalidCreate.userErrors.length).toBeGreaterThan(0);
-    expect(invalidCreate.phase5Widget).toBeNull();
+    expect(invalidCreate.phase5ConstraintFixture).toBeNull();
   });
 
   it("runDalCodegen supports ds template relation navigation in GraphQL schema", async () => {

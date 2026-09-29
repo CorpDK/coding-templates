@@ -70,6 +70,7 @@ export interface ColumnModel {
   /** FK scalars omitted from GraphQL output (Phase 2 — §2.7). */
   omitFromOutput?: boolean;
   maxLength?: number;
+  minLength?: number;
   minExclusive?: number;
   minInclusive?: number;
 }
@@ -251,7 +252,10 @@ function buildColumnModel(
   col: ReturnType<typeof getTableColumns>[string],
   strict: boolean,
   columnComments: Map<string, Map<string, string>>,
-  checkConstraints: Map<string, { minExclusive?: number; minInclusive?: number }>,
+  checkConstraints: Map<
+    string,
+    { minLength?: number; minExclusive?: number; minInclusive?: number }
+  >,
 ): ColumnModel {
   const kind = inferColumnKind(exportName, drizzleKey, col);
   if (kind === "unsupported") {
@@ -287,6 +291,7 @@ function buildColumnModel(
     isServerManaged: isServerManaged(drizzleKey),
     isBusiness: !isServerManaged(drizzleKey),
     maxLength: lengthMeta,
+    minLength: checkMeta?.minLength,
     minExclusive: checkMeta?.minExclusive,
     minInclusive: checkMeta?.minInclusive,
   };

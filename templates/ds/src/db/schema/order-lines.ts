@@ -1,4 +1,5 @@
-import { index, integer, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { check, index, integer, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 import { items } from "./items.js";
 import { orders } from "./orders.js";
 
@@ -34,5 +35,6 @@ export const orderLines = pgTable(
   (table) => [
     index("order_lines_order_id_idx").on(table.orderId),
     index("order_lines_item_id_idx").on(table.itemId),
+    check("order_lines_quantity_positive", sql`${table.quantity} > 0`),
   ],
 );

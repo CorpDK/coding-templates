@@ -102,6 +102,16 @@ describe("Column constraints (P2)", () => {
     ).toThrow(/at most 10/);
   });
 
+  it("rejects strings under minLength", () => {
+    expect(() =>
+      validateColumnConstraints(
+        { label: "x" },
+        [{ graphqlName: "label", drizzleKey: "label", minLength: 2 }],
+        "create",
+      ),
+    ).toThrow(/at least 2/);
+  });
+
   it("enforces minExclusive from inferred checks", () => {
     expect(() =>
       validateColumnConstraints(

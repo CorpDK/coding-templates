@@ -125,6 +125,7 @@ export function constraintMetadataBlock(entity: EntityModel): string {
         `drizzleKey: "${c.drizzleKey}"`,
       ];
       if (c.maxLength != null) parts.push(`maxLength: ${c.maxLength}`);
+      if (c.minLength != null) parts.push(`minLength: ${c.minLength}`);
       if (c.minExclusive != null) parts.push(`minExclusive: ${c.minExclusive}`);
       if (c.minInclusive != null) parts.push(`minInclusive: ${c.minInclusive}`);
       return `  { ${parts.join(", ")} },`;

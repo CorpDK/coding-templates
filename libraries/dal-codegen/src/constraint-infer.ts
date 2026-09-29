@@ -3,6 +3,7 @@ import type { Check } from "drizzle-orm/pg-core";
 
 export interface InferredColumnConstraints {
   maxLength?: number;
+  minLength?: number;
   minExclusive?: number;
   minInclusive?: number;
 }
@@ -25,8 +26,21 @@ function sqlCheckText(check: Check): string {
 function parseCheckForColumn(
   drizzleKey: string,
   text: string,
-): Pick<InferredColumnConstraints, "minExclusive" | "minInclusive"> {
+): Pick<InferredColumnConstraints, "minLength" | "minExclusive" | "minInclusive"> {
   const marker = `@${drizzleKey}@`;
+  const escapedMarker = marker.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const charLenMin = text.match(
+    new RegExp(`char_length\\(\\s*${escapedMarker}\\s*\\)\\s*>=\\s*(\\d+)`),
+  );
+  if (charLenMin) {
+    return { minLength: Number(charLenMin[1]) };
+  }
+  const lengthMin = text.match(
+    new RegExp(`length\\(\\s*${escapedMarker}\\s*\\)\\s*>=\\s*(\\d+)`),
+  );
+  if (lengthMin) {
+    return { minLength: Number(lengthMin[1]) };
+  }
   if (!text.includes(marker)) return {};
   const rest = text.split(marker)[1]?.trim() ?? "";
   if (/^>\s*0(?:\s|$)/.test(rest)) {
@@ -54,7 +68,13 @@ export function inferCheckConstraintsForTable(
     const text = sqlCheckText(check);
     for (const key of drizzleKeys) {
       const parsed = parseCheckForColumn(key, text);
-      if (parsed.minExclusive == null && parsed.minInclusive == null) continue;
+      if (
+        parsed.minLength == null &&
+        parsed.minExclusive == null &&
+        parsed.minInclusive == null
+      ) {
+        continue;
+      }
       const existing = byKey.get(key) ?? {};
       byKey.set(key, { ...existing, ...parsed });
     }
@@ -66,6 +86,9 @@ export function formatValidationHint(constraints: InferredColumnConstraints): st
   const parts: string[] = [];
   if (constraints.maxLength != null) {
     parts.push(`max length ${constraints.maxLength}`);
+  }
+  if (constraints.minLength != null) {
+    parts.push(`min length ${constraints.minLength}`);
   }
   if (constraints.minExclusive != null) {
     parts.push(`must be > ${constraints.minExclusive}`);

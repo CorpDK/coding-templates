@@ -4,6 +4,7 @@ export interface ColumnConstraintMeta {
   graphqlName: string;
   drizzleKey: string;
   maxLength?: number;
+  minLength?: number;
   /** Column value must be > minExclusive (e.g. 0 for strictly positive). */
   minExclusive?: number;
   /** Column value must be >= minInclusive. */
@@ -23,6 +24,12 @@ function assertStringLength(
   if (meta.maxLength != null && value.length > meta.maxLength) {
     throw new ValidationError(
       `${meta.graphqlName} must be at most ${meta.maxLength} characters`,
+      path,
+    );
+  }
+  if (meta.minLength != null && value.length < meta.minLength) {
+    throw new ValidationError(
+      `${meta.graphqlName} must be at least ${meta.minLength} characters`,
       path,
     );
   }

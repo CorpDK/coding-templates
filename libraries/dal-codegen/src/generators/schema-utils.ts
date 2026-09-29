@@ -68,6 +68,7 @@ export function filterForColumn(col: ColumnModel): string {
 export function columnGraphqlDescription(col: ColumnModel): string | undefined {
   const hint = formatValidationHint({
     maxLength: col.maxLength,
+    minLength: col.minLength,
     minExclusive: col.minExclusive,
     minInclusive: col.minInclusive,
   });
@@ -101,6 +102,9 @@ export function businessColumnsWithConstraints(entity: EntityModel): ColumnModel
   return entity.columns.filter(
     (c) =>
       c.isBusiness &&
-      (c.maxLength != null || c.minExclusive != null || c.minInclusive != null),
+      (c.maxLength != null ||
+        c.minLength != null ||
+        c.minExclusive != null ||
+        c.minInclusive != null),
   );
 }

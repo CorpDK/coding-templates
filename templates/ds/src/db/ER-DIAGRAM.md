@@ -9,7 +9,8 @@ Reference ER for `@corpdk/ds`: a small catalog-and-checkout domain wired end-to-
 - **Catalog**: `categories` group `items`; each `item` has optional `item_details` (1:1). `tags` classify items through enriched junction `item_tags` (M:N).
 - **Checkout**: `users` are customers. Each user places many `orders` (1:M). Each order has many `order_lines` (1:M); **each line references exactly one `item`** via `item_id` (with `quantity` for units).
 - **Segmentation**: `labels` tag users through pure junction `user_labels` (M:N, soft-deletable links) — distinct from item `tags`.
-- **Supporting (no FK into core ER)**: `audit_events` append-only log; `phase5_widgets` standalone constraint demo for Phase 5 codegen.
+- **Supporting (no FK into core ER)**: `audit_events` append-only log.
+- **Phase 5 constraints (commerce)**: `tags.label` (2–30 chars) and `order_lines.quantity` (must be &gt; 0).
 
 ```mermaid
 erDiagram
@@ -71,7 +72,7 @@ erDiagram
 
     tags {
         uuid id PK
-        varchar label
+        varchar label "2-30 chars"
         timestamptz deleted_at "soft delete"
         text deleted_by
         timestamptz created_at
@@ -107,7 +108,7 @@ erDiagram
         uuid id PK
         uuid order_id FK
         uuid item_id FK "one item per line"
-        integer quantity
+        integer quantity "check > 0"
         varchar sku "snapshot"
         text description
         timestamptz created_at
@@ -145,16 +146,6 @@ erDiagram
         text created_by
     }
 
-    phase5_widgets {
-        uuid id PK
-        varchar code "max 12"
-        integer qty "check > 0"
-        text note
-        timestamptz created_at
-        timestamptz updated_at
-        text created_by
-        text updated_by
-    }
 ```
 
 ## Entity profiles
@@ -165,14 +156,13 @@ erDiagram
 | **categories** | full | hard | 1:M parent of items |
 | **items** | full | soft | M:1 → categories; 1:1 → itemDetails; M:N → tags via itemTags; 1:M ← orderLines |
 | **itemDetails** | full | hard | 1:1 dependent of items (`itemId` unique FK) |
-| **tags** | append-only | soft | M:N → items via itemTags |
+| **tags** | append-only | soft | M:N → items via itemTags; `label` 2–30 chars |
 | **itemTags** | full | hard | Enriched M:N junction (`assignedAt` + unique item+tag pair) |
 | **orders** | full | soft | M:1 → users; 1:M parent of orderLines; PII `customerName` snapshot |
-| **orderLines** | full | hard | M:1 → orders; M:1 → items (one catalog item per line); `quantity` |
+| **orderLines** | full | hard | M:1 → orders; M:1 → items (one catalog item per line); `quantity` check &gt; 0 |
 | **labels** | full | hard | M:N → users via userLabels (distinct from item `tags`) |
 | **userLabels** | full | soft | Pure M:N junction (FKs + audit only); unique user+label pair |
 | **auditEvents** | append-only | hard | Standalone — no FK relations; `payload` required |
-| **phase5Widgets** | full | hard | Standalone — `code` varchar(12), check `qty > 0` |
 
 ## Notes
 
@@ -182,6 +172,5 @@ erDiagram
 - **Order lines ↔ items**: each line row associates with **one** catalog item (`item_id`); `quantity` counts units; `sku` / `description` are snapshots at order time.
 - **Enriched junction (`itemTags`)**: M:N link table with business column `assignedAt` beyond the two FKs — not a pure link table.
 - **Pure junction (`userLabels`)**: M:N link for navigation validation — FKs and audit columns only (contrast with `itemTags`); soft-deletable links without touching `users` / `labels`.
-- **Phase 5 constraints (`phase5Widgets`)**: standalone row with `code` maxLength(12) and PostgreSQL check `qty > 0` — no `relations()` entry.
 - **Append-only**: `tags` and `auditEvents` have `createdAt` + `createdBy` only — no `updatedAt` / `updatedBy`; `auditEvents.payload` is required (`notNull`).
 - **Soft delete**: `deletedAt` (+ optional `deletedBy`) on `items`, `tags`, `orders`, and junction `userLabels`.
