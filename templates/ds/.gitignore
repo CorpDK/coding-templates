@@ -2,6 +2,6 @@ dist/
 node_modules/
 *.tsbuildinfo
 .env
-src/types/resolvers.generated.ts
+src/generated/graphql/
 src/generated/dal/
 drizzle/migrations/

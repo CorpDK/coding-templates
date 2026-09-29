@@ -11,7 +11,11 @@
     "codegen": {
       "dependsOn": ["@corpdk/codegen-cli#build", "dal:codegen"],
       "inputs": ["src/**/*.ts", "prisma/schema.prisma", "src/db/schema/**", "src/generated/dal/generated-schema.ts"],
-      "outputs": ["../ds-sdk/src/generated/**", "../ds-cli/src/generated/**"],
+      "outputs": [
+        "../ds-sdk/src/generated/**",
+        "../ds-cli/src/generated/**",
+        "src/generated/graphql/**"
+      ],
       "cache": true
     },
     "db:generate": {

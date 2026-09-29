@@ -7,7 +7,7 @@ const config: CodegenConfig = {
       preset: "client",
       presetConfig: { fragmentMasking: false },
     },
-    "./src/types/resolvers.generated.ts": {
+    "./src/generated/graphql/resolvers.generated.ts": {
       plugins: ["typescript", "typescript-resolvers"],
     },
     "../ds-cli/src/generated/": {

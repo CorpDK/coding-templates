@@ -11,6 +11,7 @@ src/generated/dal/index.ts               ← barrel: typeDefs, pubsub, repositor
 src/generated/dal/generated-schema.ts    ← auto-generated merged SDL (entities + bootstrap) as `typeDefs` export (gitignored)
 src/generated/dal/generated-pubsub.ts    ← auto-generated PubSubTopics + pubsub instance (gitignored)
 src/generated/dal/manifest.json          ← entity metadata (audit profile, delete strategy)
+src/generated/graphql/resolvers.generated.ts ← graphql-codegen resolver types (gitignored; separate from DAL output)
 src/schema.ts                            ← imports from generated/dal barrel only
 ```
 

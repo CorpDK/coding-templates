@@ -27,10 +27,11 @@ pnpm codegen
 
 For the Drizzle `@corpdk/ds` template, Turbo runs **`dal:codegen`** first (gitignored `packages/ds/src/generated/dal/`) so entity SDL exists before `graphql-codegen`. Run `pnpm --filter @<scope>/ds dal:codegen` manually only if imports fail outside Turbo.
 
-This runs `graphql-codegen` against the DS package and writes into two places:
+This runs `graphql-codegen` against the DS package and writes into three places:
 
 - `packages/ds-sdk/src/generated/` — TypedDocumentNode types for the UI
 - `packages/ds-cli/src/generated/` — executable CLI + man page + GNU info page
+- `packages/ds/src/generated/graphql/` — TypeScript resolver types (`resolvers.generated.ts`; gitignored, for custom resolver typing)
 
 Turbo runs this automatically before every build, but run it manually the first time so your UI picks up the types.
 
