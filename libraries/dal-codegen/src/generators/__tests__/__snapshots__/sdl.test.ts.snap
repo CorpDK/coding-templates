@@ -358,7 +358,9 @@ input StringFilter {
   notIn: [String!]
 }
 
-"""Real-time event streams delivered over WebSocket."""
+"""
+Real-time event streams over HTTP SSE on /graphql (Accept: text/event-stream).
+"""
 type Subscription {
   """Subscribe to item create/update/delete events."""
   itemChanged(subscribeTo: [ChangeOperation!]): ItemChangeEvent!

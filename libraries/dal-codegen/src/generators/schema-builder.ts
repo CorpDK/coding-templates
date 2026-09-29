@@ -81,7 +81,8 @@ export function buildDalGraphQLSchema(entities: EntityModel[]): GraphQLSchema {
 
   const subscriptionType = new GraphQLObjectType({
     name: "Subscription",
-    description: "Real-time event streams delivered over WebSocket.",
+    description:
+      "Real-time event streams over HTTP SSE on /graphql (Accept: text/event-stream).",
     fields: mergeFieldMaps(subscriptionFields),
   });
 
