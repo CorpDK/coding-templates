@@ -25,10 +25,13 @@ Generate the TypedDocumentNode SDK and CLI from your GraphQL schema:
 pnpm codegen
 ```
 
-This runs `graphql-codegen` against the DS package and writes into two places:
+For the Drizzle `@corpdk/ds` template, Turbo runs **`dal:codegen:schema` → `codegen` → `dal:codegen:impl`** (gitignored `packages/ds/src/generated/*`) so SDL, mappers, resolver types, and DAL impl stay in sync. The meta script `pnpm --filter @<scope>/ds dal:codegen` runs all three steps in order when working outside Turbo.
+
+This runs `graphql-codegen` against the DS package and writes into three places:
 
 - `packages/ds-sdk/src/generated/` — TypedDocumentNode types for the UI
 - `packages/ds-cli/src/generated/` — executable CLI + man page + GNU info page
+- `packages/ds/src/generated/graphql/` — TypeScript resolver types (`resolvers.generated.ts`; gitignored, for custom resolver typing)
 
 Turbo runs this automatically before every build, but run it manually the first time so your UI picks up the types.
 

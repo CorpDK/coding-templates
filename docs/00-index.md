@@ -27,11 +27,16 @@ Welcome to the coding-templates documentation! This monorepo provides production
 - [GraphQL Schema](developer/02-graphql-schema.md) — SDL layout, docstring rules, entity patterns
 - [Repository Pattern](developer/03-repository-pattern.md) — IRepository interface, adding new entities
 - [PubSub Internals](developer/04-pubsub-internals.md) — factory pattern, topic wiring, resolver integration
+- [DS subscription transport (SSE)](developer/11-ds-subscription-sse.md) — `@corpdk/ds` SSE subscriptions; UI WS migration deferred
 - [UI Architecture](developer/05-ui-architecture.md) — UI template state and app-level config
 - [UI Status Dashboard](developer/06-ui-status.md) — living capability matrix across all UI packages
 - [Git Conventions](developer/07-git-conventions.md) — Conventional Commits format and examples
 - [Coding Guidelines](developer/08-coding-guidelines.md) — code style, component patterns, review checklist
 - [Enhancement Backlog](developer/09-enhancement-backlog.md) — future improvements for UI and DS packages
+- [DAL Entity Design](developer/dal-entity-design.md) — Drizzle entity tables, audit profiles, relations, indexes
+- [DAL PostgreSQL Type Mapping](developer/dal-pg-type-mapping.md) — PG types → GraphQL scalars and filters
+- [GraphQL DAL Requirements](developer/graphql-dal-requirements.md) — inference rules, queries, mutations, filters, pagination
+- [DAL Phase 2–5 notes](developer/dal-phase2.md) — phased delivery (filters, cursors, index lint, constraints)
 
 ### User Guides (create-app)
 
@@ -53,6 +58,7 @@ Welcome to the coding-templates documentation! This monorepo provides production
 | **Configure environment**   | [Environment Variables](admin/01-environment-variables.md)    |
 | **Deploy with Docker**      | [Docker Deployment](admin/02-docker-deployment.md)            |
 | **Add a GraphQL entity**    | [Repository Pattern](developer/03-repository-pattern.md)      |
+| **Design a DAL entity**     | [DAL Entity Design](developer/dal-entity-design.md)           |
 | **Add a subscription**      | [PubSub Internals](developer/04-pubsub-internals.md)          |
 | **Choose a DS variant**     | [Data Service Design](architecture/03-data-service-design.md) |
 | **Write a commit message**  | [Git Conventions](developer/07-git-conventions.md)            |
@@ -104,11 +110,16 @@ Welcome to the coding-templates documentation! This monorepo provides production
 | [developer/02-graphql-schema.md](developer/02-graphql-schema.md)                   | SDL conventions               |
 | [developer/03-repository-pattern.md](developer/03-repository-pattern.md)           | Repository interface          |
 | [developer/04-pubsub-internals.md](developer/04-pubsub-internals.md)               | PubSub wiring                 |
+| [developer/11-ds-subscription-sse.md](developer/11-ds-subscription-sse.md)         | `@corpdk/ds` SSE subscriptions |
 | [developer/05-ui-architecture.md](developer/05-ui-architecture.md)                 | UI template state             |
 | [developer/06-ui-status.md](developer/06-ui-status.md)                             | Capability matrix             |
 | [developer/07-git-conventions.md](developer/07-git-conventions.md)                 | Commit format                 |
 | [developer/08-coding-guidelines.md](developer/08-coding-guidelines.md)             | Code style guide              |
 | [developer/09-enhancement-backlog.md](developer/09-enhancement-backlog.md)         | Future improvements           |
+| [developer/dal-entity-design.md](developer/dal-entity-design.md)                   | DAL Drizzle entity design     |
+| [developer/dal-pg-type-mapping.md](developer/dal-pg-type-mapping.md)               | PG → GraphQL type mapping     |
+| [developer/graphql-dal-requirements.md](developer/graphql-dal-requirements.md)   | GraphQL DAL requirements      |
+| [developer/dal-phase2.md](developer/dal-phase2.md) … [dal-phase5.md](developer/dal-phase5.md) | DAL phase delivery notes |
 
 ---
 

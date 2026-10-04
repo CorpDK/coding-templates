@@ -2,5 +2,11 @@ dist/
 node_modules/
 *.tsbuildinfo
 .env
-generated/
-src/types/resolvers.generated.ts
+src/generated/graphql/
+src/generated/generated-schema.ts
+src/generated/entity-records.ts
+src/generated/graphql-codegen.mappers.ts
+src/generated/dal/
+src/__tests__/entity-records.ts
+src/__tests__/tmp-generated-ds/
+drizzle/migrations/

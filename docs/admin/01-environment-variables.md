@@ -6,23 +6,34 @@ Each package reads from its own `.env` file. Copy `.env.example` to `.env` in ea
 
 ## Data Service Packages
 
-### `ds` (GraphQL Yoga + Prisma)
+### `ds` (GraphQL Yoga + Drizzle — primary/default DS)
 
 | Variable       | Description                                                             |
 | -------------- | ----------------------------------------------------------------------- |
 | `DS_PORT`      | Port the GraphQL Yoga server listens on                                 |
-| `DATABASE_URL` | Prisma connection string (PostgreSQL, MySQL, SQLite, CockroachDB)       |
+| `DATABASE_URL` | Drizzle connection string (PostgreSQL, MySQL, SQLite, CockroachDB)      |
 | `REDIS_URL`    | _(optional)_ Redis/Valkey URL — enables Redis pub/sub for subscriptions |
+
+Optional DAL runtime overrides (see [GraphQL DAL Requirements](../developer/graphql-dal-requirements.md)):
+
+| Variable               | Description                                                                 |
+| ---------------------- | --------------------------------------------------------------------------- |
+| `DAL_CURSOR_SECRET`    | HMAC-SHA256 signing secret for pagination cursors; unset = unsigned cursors |
+| `DAL_FILTER_MAX_DEPTH` | Override default filter AST depth cap (`2`)                                 |
+| `DAL_FILTER_MAX_NODES` | Override default filter AST node cap (`50`)                                 |
+| `DAL_BULK_FILTER_MAX`  | Max rows matched by filter-based bulk mutations (default `1000`)          |
+
+Codegen-only (unusual outside CI): `DAL_SCHEMA_PATH`, `DAL_OUTPUT_DIR`, `DAL_CONFIG_PATH` — defaults match `templates/ds` layout.
 
 ---
 
-### `ds-hprt` (GraphQL Yoga + Drizzle)
+### `ds-no-sql` (GraphQL Yoga + Prisma)
 
-| Variable               | Description                                                             |
-| ---------------------- | ----------------------------------------------------------------------- |
-| `DS_HPRT_PORT`         | Port the GraphQL Yoga server listens on                                 |
-| `DS_HPRT_DATABASE_URL` | Drizzle connection string                                               |
-| `REDIS_URL`            | _(optional)_ Redis/Valkey URL — enables Redis pub/sub for subscriptions |
+| Variable         | Description                                                             |
+| ---------------- | ----------------------------------------------------------------------- |
+| `DS_NO_SQL_PORT` | Port the GraphQL Yoga server listens on                                 |
+| `DATABASE_URL`   | Prisma connection string (PostgreSQL, MySQL, SQLite, CockroachDB, MongoDB) |
+| `REDIS_URL`      | _(optional)_ Redis/Valkey URL — enables Redis pub/sub for subscriptions |
 
 ---
 
@@ -79,11 +90,11 @@ Each package reads from its own `.env` file. Copy `.env.example` to `.env` in ea
 | Variable                | Description                                                                                                        |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | `DS_HTTP_URL`           | Full URL of the DS HTTP endpoint (e.g. `http://localhost:4000/graphql`) — used by Next.js server-side rewrites     |
-| `NEXT_PUBLIC_DS_WS_URL` | Full WebSocket URL of the DS endpoint (e.g. `ws://localhost:4000/graphql`) — used by the browser for subscriptions |
+| `NEXT_PUBLIC_DS_WS_URL` | Full WebSocket URL of the DS endpoint (e.g. `ws://localhost:4000/graphql`) — used by the browser for subscriptions when the UI client uses graphql-ws |
 
 `DS_HTTP_URL` is a server-side variable (no `NEXT_PUBLIC_` prefix). It is proxied by Next.js rewrites so the browser never sees the backend origin.
 
-`NEXT_PUBLIC_DS_WS_URL` is exposed to the browser because Next.js cannot proxy WebSocket connections.
+`NEXT_PUBLIC_DS_WS_URL` is exposed to the browser because Next.js cannot proxy WebSocket connections. When the backend is **`@corpdk/ds`**, the server delivers subscriptions over **SSE on the same HTTP `/graphql` URL** instead of WebSocket; UI templates still expect `NEXT_PUBLIC_DS_WS_URL` until migrated — see [DS subscription transport (SSE)](../developer/11-ds-subscription-sse.md).
 
 ---
 

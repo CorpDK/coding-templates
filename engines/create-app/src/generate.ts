@@ -64,7 +64,7 @@ export function generateWorkspaceYaml(selected: Set<PackageId>): string {
 /** App-level packages that live in packages/ — shared libs are npm deps */
 const APP_PACKAGE_IDS = new Set<PackageId>([
   "ds",
-  "ds-hprt",
+  "ds-no-sql",
   "ds-cdb",
   "ds-mongo",
   "ds-ddb",

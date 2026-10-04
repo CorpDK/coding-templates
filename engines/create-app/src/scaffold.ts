@@ -132,7 +132,7 @@ async function copyPackage(
 
   // Post-copy: Drizzle driver swap
   if (
-    pkgId === "ds-hprt" &&
+    pkgId === "ds" &&
     config.db &&
     config.db !== "postgresql" &&
     config.db !== "cockroachdb"
@@ -193,6 +193,12 @@ async function copyBundledLibraries(
       transformFileContent(content, relPath, ctx),
     );
   }
+}
+
+function dsPackageDirectory(ds: ScaffoldConfig["ds"]): string {
+  if (ds === "standard") return "ds-no-sql";
+  if (ds === "hprt") return "ds";
+  return `ds-${ds}`;
 }
 
 async function scaffoldMonorepo(
@@ -308,7 +314,7 @@ async function scaffoldMonorepo(
   };
 
   if (config.ds !== "none") {
-    const dir = config.ds === "standard" ? "ds" : `ds-${config.ds}`;
+    const dir = dsPackageDirectory(config.ds);
     const src = path.join(dockerTemplateDir, "Dockerfile.ds");
     const content = await fs.readFile(src, "utf8");
     await fs.writeFile(

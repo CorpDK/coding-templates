@@ -2,9 +2,28 @@
 
 ---
 
-## Schema Directory Layout
+## DAL-automated `templates/ds`
 
-The GraphQL schema lives in `src/schema/` — a directory of `.graphqls` files, not inline TypeScript. `schema.ts` scans the directory at runtime, sorts files alphabetically, and merges them into a single SDL string.
+Domain GraphQL SDL is **generated** from Drizzle schema — not hand-written.
+
+```text
+src/generated/generated-schema.ts        ← phase 1: merged SDL as `typeDefs` (gitignored)
+src/generated/entity-records.ts            ← phase 1: standalone `*Record` types for mappers + repos (gitignored)
+src/generated/graphql-codegen.mappers.ts   ← phase 1: entity → `*Record` paths for graphql-codegen (gitignored)
+src/generated/dal/index.ts                 ← phase 3: barrel pubsub, repositories, resolvers (gitignored; wiped each impl run)
+src/generated/dal/generated-pubsub.ts      ← phase 3 (gitignored)
+src/generated/dal/manifest.json            ← phase 3 entity metadata (gitignored)
+src/generated/graphql/resolvers.generated.ts ← phase 2: graphql-codegen resolver types (gitignored)
+src/schema.ts                              ← `typeDefs` from generated-schema; resolvers/context from generated/dal barrel
+```
+
+Run **`pnpm dal:codegen`** after changing `src/db/schema/` (runs **phase 1** schema → **`pnpm codegen`** → **phase 3** impl). Phase 1 must complete before graphql-codegen so SDL and mappers exist; phase 3 runs after graphql-codegen so generated resolvers can `satisfies Resolvers<DalContext>`. Turbo wires `dal:codegen:schema` → `codegen` → `dal:codegen:impl` before `@corpdk/ds#build` and `@corpdk/ds#dev`.
+
+---
+
+## Schema Directory Layout (manual DS variants)
+
+Non-DAL DS packages keep GraphQL schema in `src/schema/` — a directory of `.graphqls` files, not inline TypeScript. `schema.ts` scans the directory at runtime, sorts files alphabetically, and merges them into a single SDL string.
 
 ```text
 src/schema/
@@ -161,7 +180,7 @@ type Subscription {
 ## Code Review Checklist
 
 - [ ] All GraphQL types, fields, and arguments have `"""docstrings"""`
-- [ ] GraphQL SDL is in `src/schema/*.graphqls`, not inline in TypeScript
+- [ ] **`templates/ds`:** Drizzle JSDoc on tables/columns; run `pnpm dal:codegen` after schema changes — **manual DS variants:** SDL in `src/schema/*.graphqls`, not inline in TypeScript
 - [ ] Every mutation has a corresponding subscription
 - [ ] Subscription field name matches the publish payload key (see [PubSub Internals](04-pubsub-internals.md))
 

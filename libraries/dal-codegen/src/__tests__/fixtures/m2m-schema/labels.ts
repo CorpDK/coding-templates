@@ -1,0 +1,10 @@
+import { pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+
+export const labels = pgTable("labels", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  label: varchar("label", { length: 64 }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  createdBy: text("created_by").notNull().default("system"),
+  updatedBy: text("updated_by").notNull().default("system"),
+});

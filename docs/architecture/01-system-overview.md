@@ -11,10 +11,10 @@
               │  @corpdk/ui          @corpdk/ui-hprt          │
               │  Apollo Client       urql + Graphcache        │
               └──────┬───────────────────┬────────────────────┘
-                     │ HTTP + WS         │ HTTP + WS
+                     │ HTTP (+ SSE sub)  │ HTTP + WS
               ┌──────▼──────┐    ┌───────▼───────────┐
-              │ @corpdk/ds  │    │ @corpdk/ds-hprt    │
-              │ Yoga+Prisma │    │ Yoga+Drizzle       │
+              │ @corpdk/ds  │    │ @corpdk/ds-no-sql  │
+              │ Yoga+Drizzle│    │ Yoga+Prisma        │
               └──────┬──────┘    └───────┬────────────┘
                      └─────────┬─────────┘
               ┌────────────────▼────────────────────────────┐
@@ -31,7 +31,7 @@ The system has two independently deployable layers: a **Data Service (DS)** and 
 
 ---
 
-## HTTP and WebSocket Routing
+## HTTP and subscription routing
 
 **HTTP traffic** (queries and mutations) flows through a Next.js rewrite:
 
@@ -39,16 +39,17 @@ The system has two independently deployable layers: a **Data Service (DS)** and 
 Browser → /api/graphql → Next.js rewrite → DS_HTTP_URL (server-side)
 ```
 
-**WebSocket traffic** (subscriptions) connects directly from the browser:
+**Subscriptions** depend on the DS template:
 
-```text
-Browser → NEXT_PUBLIC_DS_WS_URL → DS WebSocket server
-```
+| DS | Server transport | Typical UI (today) |
+| --- | --- | --- |
+| `@corpdk/ds` | SSE on the same `/graphql` HTTP route (`Accept: text/event-stream`) | UI templates still use graphql-ws + `NEXT_PUBLIC_DS_WS_URL` until migrated — see [DS subscription transport (SSE)](../developer/11-ds-subscription-sse.md) |
+| Other DS variants | Yoga SSE and/or graphql-ws on the HTTP server | Browser WebSocket via `NEXT_PUBLIC_DS_WS_URL` (Next.js cannot proxy WS) |
 
-**Why the split?**
+**Why split HTTP proxy vs direct WS (legacy UI path)?**
 
 - HTTP proxying via Next.js rewrites keeps the DS origin hidden from the browser (no CORS configuration needed) and avoids exposing internal service URLs.
-- Next.js cannot proxy WebSocket connections, so the DS WebSocket URL must be a public `NEXT_PUBLIC_` variable. This is acceptable because subscription endpoints don't expose sensitive server configuration.
+- Next.js cannot proxy WebSocket connections, so the DS WebSocket URL is exposed as a public `NEXT_PUBLIC_` variable when the client uses graphql-ws. SSE subscriptions can use the same proxied HTTP URL as queries.
 
 ---
 
@@ -57,10 +58,11 @@ Browser → NEXT_PUBLIC_DS_WS_URL → DS WebSocket server
 All DS packages share one GraphQL schema and generate a single shared TypeScript SDK:
 
 ```text
-DS package (src/schema/*.graphqls)
+templates/ds: Drizzle schema → dal:codegen → src/generated/generated-schema.ts (+ src/generated/dal/)
+manual DS variants: src/schema/*.graphqls
         │
         ▼
-  graphql-codegen
+  graphql-codegen (per DS package)
         │
         ▼
 @corpdk/ds-sdk  ← TypedDocumentNode types + hooks
@@ -72,13 +74,13 @@ DS package (src/schema/*.graphqls)
 **Why a single shared SDK?**
 All DS variants are schema-identical — they expose the same GraphQL API regardless of the underlying storage backend. Consolidating into one `@corpdk/ds-sdk` means UI packages have a single typed import regardless of which DS variant is deployed. It also means codegen only needs to run once per schema change.
 
-The `dev` Turbo task declares `dependsOn: ["^build"]`, ensuring codegen and the SDK build complete before any UI dev server starts.
+Turbo `@corpdk/ds#dev` declares `dependsOn: ["^build", "codegen", "dal:codegen:impl"]`, so gitignored SDL, mappers, resolver types, and DAL impl exist before the Yoga server starts; other packages use global `dev` with `^build` only.
 
 ---
 
 ## Real-Time Subscriptions
 
-Every mutation publishes a PubSub event. Clients subscribed via WebSocket receive updates automatically — no polling required.
+Every mutation publishes a PubSub event. Subscribed clients receive updates over SSE (`@corpdk/ds`) or WebSocket (other DS variants and current UI templates) — no polling required.
 
 The PubSub transport is selected at startup by `@corpdk/pub-sub`:
 
@@ -96,17 +98,23 @@ See [PubSub Internals](../developer/04-pubsub-internals.md) for implementation d
 ## Turbo Task Pipeline
 
 ```text
-codegen → build → dev / start
+dal:codegen:schema → codegen → dal:codegen:impl → build → dev / start
+(dal:codegen meta-task = all three DAL/codegen steps)
 ```
 
-| Task      | Depends on                         | Cache                   |
-| --------- | ---------------------------------- | ----------------------- |
-| `codegen` | —                                  | Yes (cached per schema) |
-| `build`   | `^build` (upstream packages first) | Yes                     |
-| `dev`     | `^build`                           | No                      |
-| `start`   | `^build`                           | No                      |
+| Task                   | Depends on                                              | Cache |
+| ---------------------- | ------------------------------------------------------- | ----- |
+| `dal:codegen:schema`   | `@corpdk/dal-core#build`, `@corpdk/dal-codegen#build`   | Yes   |
+| `codegen`              | `dal:codegen:schema`, `@corpdk/codegen-cli#build`       | Yes   |
+| `dal:codegen:impl`     | `codegen`, `@corpdk/dal-core#build`, `@corpdk/dal-codegen#build` | Yes |
+| `dal:codegen`          | `dal:codegen:schema`, `codegen`, `dal:codegen:impl`     | Yes   |
+| `@corpdk/ds#build`     | `^build`, `dal:codegen:impl`                            | Yes   |
+| `build`                | `^build` (upstream packages first)                      | Yes   |
+| `dev`                  | `^build`                                                | No    |
+| `@corpdk/ds#dev`       | `^build`, `codegen`, `dal:codegen:impl`                 | No    |
+| `start`                | `build`                                                 | No    |
 
-`dev` depending on `^build` is the critical design choice: it ensures the shared packages (`packages/ui-*`) and `@corpdk/ds-sdk` are built before any consumer app's dev server starts. Without this, first-launch type errors occur when the SDK doesn't exist yet.
+Only **`@corpdk/ds`** defines the `dal:codegen:*` tasks. `@corpdk/ds#dev` waits on **`codegen`** and **`dal:codegen:impl`** so resolver types and repositories exist before the Yoga server starts.
 
 ---
 
@@ -116,7 +124,7 @@ Each package category has a different module system, driven by its runtime envir
 
 | Package type                      | `module` setting     | Import extension | Reason                                            |
 | --------------------------------- | -------------------- | ---------------- | ------------------------------------------------- |
-| DS server (`ds`, `ds-hprt`, etc.) | `NodeNext`           | Must use `.js`   | Node.js ESM runtime; explicit extensions required |
+| DS server (`ds`, `ds-no-sql`, etc.) | `NodeNext`         | Must use `.js`   | Node.js ESM runtime; explicit extensions required |
 | `ds-sdk`                          | `ESNext` / `bundler` | Must omit `.js`  | Consumed by Next.js bundler, not Node.js directly |
 | UI apps (`ui`, `ui-hprt`)         | Next.js managed      | N/A              | Next.js controls compilation                      |
 | Shared packages (`packages/ui-*`) | `ESNext` / `bundler` | Must omit `.js`  | Consumed by Next.js bundler                       |

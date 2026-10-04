@@ -1,18 +1,21 @@
 import type { CodegenConfig } from "@graphql-codegen/cli";
+import { graphqlCodegenMappers } from "./src/generated/graphql-codegen.mappers.js";
 
 const config: CodegenConfig = {
-  schema: "./src/schema/**/*.graphqls",
+  schema: ["./src/generated/generated-schema.ts"],
   generates: {
-    // Client SDK — TypedDocumentNode works with Apollo Client and urql
     "../ds-sdk/src/generated/": {
       preset: "client",
       presetConfig: { fragmentMasking: false },
     },
-    // Server-side resolver types
-    "./src/types/resolvers.generated.ts": {
+    "./src/generated/graphql/resolvers.generated.ts": {
       plugins: ["typescript", "typescript-resolvers"],
+      config: {
+        contextType: "../dal/resolvers/generated-resolvers.js#DalContext",
+        useTypeImports: true,
+        mappers: { ...graphqlCodegenMappers },
+      },
     },
-    // CLI for automation and LLM access
     "../ds-cli/src/generated/": {
       preset: "@corpdk/codegen-cli",
       presetConfig: {

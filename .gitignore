@@ -32,3 +32,9 @@ yarn-error.log*
 
 # Vercel
 .vercel
+
+# Test coverage output (generated locally and in CI)
+**/coverage/
+
+# DAL codegen integration-test artifacts
+**/__tests__/tmp-generated*/
