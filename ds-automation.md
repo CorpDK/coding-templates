@@ -21,3 +21,4 @@ This spec has been split into:
 - [Entity Design Guidelines](docs/developer/dal-entity-design.md)
 - [DAL PostgreSQL Type Reference](docs/developer/dal-pg-type-mapping.md)
 - [GraphQL DAL Requirements](docs/developer/graphql-dal-requirements.md)
+- [DS automation upgrades (`create-ds`)](docs/developer/ds-automation-upgrades.md) — scaffold, semver upgrades, playbook

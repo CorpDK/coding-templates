@@ -11,7 +11,8 @@
     "db:generate": "turbo run db:generate --filter=@corpdk/ds",
     "clean": "turbo run clean",
     "storybook": "pnpm --filter @corpdk/ui-showcase dev",
-    "create-app": "node engines/create-app/dist/index.js"
+    "create-app": "node engines/create-app/dist/index.js",
+    "create-ds": "node engines/create-ds/dist/index.js"
   },
   "devDependencies": {
     "turbo": "^2.8.21",

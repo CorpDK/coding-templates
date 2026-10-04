@@ -187,6 +187,14 @@ Dependencies used across multiple workspace packages.
 | @clack/prompts | ^1.1.0  | runtime |
 | tsup           | ^8.5.1  | dev     |
 
+### create-ds (@corpdk/create-ds)
+
+| Package        | Version | Type    |
+| -------------- | ------- | ------- |
+| @clack/prompts | ^1.1.0  | runtime |
+| yaml           | ^2.8.3  | runtime |
+| tsup           | ^8.5.1  | dev     |
+
 ---
 
 ## Shared Dev Dependencies

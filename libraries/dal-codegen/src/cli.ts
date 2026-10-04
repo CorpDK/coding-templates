@@ -7,11 +7,27 @@ function parseMode(argv: string[]): DalCodegenMode {
   const flag = argv.find((a) => a.startsWith("--mode="));
   if (flag) {
     const value = flag.slice("--mode=".length);
-    if (value === "schema" || value === "impl" || value === "all") return value;
-    throw new Error(`Invalid --mode=${value} (expected schema | impl | all)`);
+    if (
+      value === "schema" ||
+      value === "impl" ||
+      value === "all" ||
+      value === "bootstrap"
+    ) {
+      return value;
+    }
+    throw new Error(
+      `Invalid --mode=${value} (expected schema | impl | all | bootstrap)`,
+    );
   }
   const envMode = process.env.DAL_CODEGEN_MODE;
-  if (envMode === "schema" || envMode === "impl" || envMode === "all") return envMode;
+  if (
+    envMode === "schema" ||
+    envMode === "impl" ||
+    envMode === "all" ||
+    envMode === "bootstrap"
+  ) {
+    return envMode;
+  }
   return "all";
 }
 

@@ -1,0 +1,107 @@
+import fs from "node:fs/promises";
+import path from "node:path";
+import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
+import { spinner } from "@clack/prompts";
+import {
+  UPGRADE_RELATIVE_FILES,
+  resolveCanonicalDsTemplateDir,
+  isProtectedRelativePath,
+} from "./template.js";
+import {
+  execAsync,
+  pathExists,
+  readJson,
+  writeJson,
+} from "./utils.js";
+import { mergePackageJson } from "./package-merge.js";
+
+export interface UpgradeOptions {
+  packageDir: string;
+  repoRoot: string;
+}
+
+function mergeDalConfig(templateRaw: string, consumerRaw: string | null): string {
+  const template = (parseYaml(templateRaw) as Record<string, unknown>) ?? {};
+  const consumer = consumerRaw
+    ? ((parseYaml(consumerRaw) as Record<string, unknown>) ?? {})
+    : {};
+  return stringifyYaml({ ...template, ...consumer });
+}
+
+export async function runUpgrade(options: UpgradeOptions): Promise<void> {
+  const s = spinner();
+  const packageDir = path.resolve(options.packageDir);
+  const templateDir = await resolveCanonicalDsTemplateDir(options.repoRoot);
+  const dalCodegenLint = path.join(
+    options.repoRoot,
+    "libraries/dal-codegen/dist/lint-cli.js",
+  );
+
+  if (!(await pathExists(path.join(packageDir, "dal/dal.config.yaml")))) {
+    throw new Error(
+      `Not a DAL DS package (missing dal/dal.config.yaml): ${packageDir}`,
+    );
+  }
+
+  if (!(await pathExists(templateDir))) {
+    throw new Error(`Canonical DS template not found: ${templateDir}`);
+  }
+
+  s.start("Merging automation stack from canonical template");
+
+  for (const rel of UPGRADE_RELATIVE_FILES) {
+    if (isProtectedRelativePath(rel)) continue;
+
+    const templatePath = path.join(templateDir, rel);
+    const destPath = path.join(packageDir, rel);
+
+    if (!(await pathExists(templatePath))) continue;
+
+    if (rel === "package.json") {
+      const consumer = await readJson<Parameters<typeof mergePackageJson>[0]>(
+        destPath,
+      );
+      const template = await readJson<Parameters<typeof mergePackageJson>[1]>(
+        templatePath,
+      );
+      await writeJson(destPath, mergePackageJson(consumer, template));
+      continue;
+    }
+
+    if (rel === "dal/dal.config.yaml") {
+      const templateRaw = await fs.readFile(templatePath, "utf8");
+      const consumerRaw = (await pathExists(destPath))
+        ? await fs.readFile(destPath, "utf8")
+        : null;
+      await fs.mkdir(path.dirname(destPath), { recursive: true });
+      await fs.writeFile(
+        destPath,
+        mergeDalConfig(templateRaw, consumerRaw),
+        "utf8",
+      );
+      continue;
+    }
+
+    await fs.mkdir(path.dirname(destPath), { recursive: true });
+    await fs.copyFile(templatePath, destPath);
+  }
+
+  s.stop("Template deltas merged (src/db/schema/** untouched)");
+
+  s.start("Running entity:lint");
+  try {
+    if (await pathExists(dalCodegenLint)) {
+      await execAsync(`node "${dalCodegenLint}"`, {
+        cwd: packageDir,
+      });
+    } else {
+      await execAsync("pnpm exec dal-entity-lint", { cwd: packageDir });
+    }
+    s.stop("entity:lint passed");
+  } catch (err: unknown) {
+    s.stop("entity:lint reported issues (see output above)");
+    if (err instanceof Error && "stderr" in err) {
+      console.error(String((err as { stderr?: string }).stderr ?? err.message));
+    }
+  }
+}

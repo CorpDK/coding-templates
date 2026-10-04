@@ -16,7 +16,8 @@ coding-templates/
 ├── CLAUDE.md                       ← this file
 ├── docs/                           ← all documentation (user / admin / developer)
 ├── engines/
-│   └── create-app/  (@corpdk/create-app)   Interactive CLI scaffolding tool
+│   ├── create-app/  (@corpdk/create-app)   Interactive CLI scaffolding tool
+│   └── create-ds/   (@corpdk/create-ds)    DS scaffold + DAL automation upgrade CLI
 ├── libraries/
 │   ├── codegen-cli/ (@corpdk/codegen-cli)   GraphQL codegen plugin for resolver types + SDK generation
 │   ├── dal-core/    (@corpdk/dal-core)      DAL shared types, filters, scalars, mutation error taxonomy
@@ -71,6 +72,7 @@ coding-templates/
 | `codegen-cli`   | `@corpdk/codegen-cli`   | GraphQL codegen plugin for resolver types + SDK generation                                                     |
 | `eslint-config` | `@corpdk/eslint-config` | Shared ESLint flat config (base + Next.js) for all packages                                                    |
 | `create-app`    | `@corpdk/create-app`    | Interactive CLI scaffolding tool for full-stack, DS-only, or UI-only projects                                  |
+| `create-ds`     | `@corpdk/create-ds`     | Scaffold and upgrade DAL-automated DS packages (`init` / `upgrade`; schema dir stays team-owned)               |
 | `ui-showcase`   | `@corpdk/ui-showcase`   | Storybook showcase — visual testing for all shared `packages/ui-*` components                                  |
 
 ### Key Design Decisions
@@ -120,6 +122,8 @@ pnpm codegen                        # Run graphql-codegen for @corpdk/ds (root s
 pnpm storybook                      # Start Storybook for ui-showcase (port 6006)
 pnpm --filter @corpdk/ds codegen    # Run graphql-codegen for ds
 pnpm create-app                     # Run the interactive scaffolding CLI
+pnpm create-ds init [dir]           # Scaffold DS-only DAL package
+pnpm create-ds upgrade [dir]        # Merge templates/ds automation deltas
 ```
 
 Each package requires its own `.env` file — copy from `.env.example` in the package directory.

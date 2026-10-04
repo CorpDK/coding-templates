@@ -37,6 +37,7 @@ Welcome to the coding-templates documentation! This monorepo provides production
 - [DAL PostgreSQL Type Mapping](developer/dal-pg-type-mapping.md) — PG types → GraphQL scalars and filters
 - [GraphQL DAL Requirements](developer/graphql-dal-requirements.md) — inference rules, queries, mutations, filters, pagination
 - [DAL Phase 2–5 notes](developer/dal-phase2.md) — phased delivery (filters, cursors, index lint, constraints)
+- [DS automation upgrades (`create-ds`)](developer/ds-automation-upgrades.md) — scaffold and upgrade DAL DS packages
 
 ### User Guides (create-app)
 

@@ -12,7 +12,8 @@ coding-templates/
 ├── pnpm-workspace.yaml             ← packages: ["templates/*", "engines/*", "libraries/*", "packages/*"]
 ├── turbo.json                      ← task pipeline (codegen → build → dev/start)
 ├── engines/
-│   └── create-app/  (@corpdk/create-app)   Interactive CLI scaffolding tool
+│   ├── create-app/  (@corpdk/create-app)   Interactive CLI scaffolding tool
+│   └── create-ds/   (@corpdk/create-ds)    DS-only scaffold + automation upgrade CLI
 ├── libraries/
 │   ├── codegen-cli/ (@corpdk/codegen-cli)   GraphQL codegen plugin for resolver types + SDK generation
 │   ├── dal-core/    (@corpdk/dal-core)      DAL shared types, filters, scalars, mutation error taxonomy

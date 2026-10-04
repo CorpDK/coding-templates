@@ -23,7 +23,7 @@ export function loadDalConfig(configPath: string): Required<DalConfig> {
   };
 }
 
-export type DalCodegenMode = "schema" | "impl" | "all";
+export type DalCodegenMode = "schema" | "impl" | "all" | "bootstrap";
 
 export interface CodegenOptions {
   /** Absolute path to package root (templates/ds). */
