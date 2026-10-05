@@ -12,7 +12,7 @@ Add Vitest to `ui-core` and `ui-forms` — these are the most testable packages 
 
 ### 2. CalVer Graduation (alpha → stable)
 
-Packages are versioned using **CalVer `YYYY.MM.MICRO`** (e.g. `2026.3.0`). Current packages are at `2026.3.0-alpha.1`. Once the package APIs stabilize, drop the pre-release tag to publish the first stable release (`2026.3.0` or the next calendar period). See [02-monorepo-design.md](../architecture/02-monorepo-design.md) for the full CalVer format rules.
+Packages are versioned using **CalVer `YYYY.MM.MICRO`** (e.g. `2026.10.0`). Current packages are at `2026.10.0-alpha.1`. Once the package APIs stabilize, drop the pre-release tag to publish the first stable release (`2026.10.0` or the next calendar period). See [02-monorepo-design.md](../architecture/02-monorepo-design.md) for the full CalVer format rules.
 
 ### 3. i18n Scaffold Pattern
 

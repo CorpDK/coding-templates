@@ -29,6 +29,7 @@ const ROOT_FILES_TO_COPY = [
   "tsconfig.node.json",
   "tsconfig.react.json",
   "tsconfig.next.json",
+  "LICENSE",
   ".prettierrc",
   ".prettierignore",
   ".editorconfig",

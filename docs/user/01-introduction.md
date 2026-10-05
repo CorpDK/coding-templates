@@ -4,24 +4,26 @@
 
 Use `pnpm create-app` to scaffold a new project from any combination of these templates.
 
+To scaffold a new DAL-automated DS package or merge template upgrades into an existing one (team-owned **`src/db/schema/**`** only), use `pnpm create-ds init` or `pnpm create-ds upgrade` — see [DS automation upgrades](../developer/ds-automation-upgrades.md).
+
 ---
 
 ## What Gets Scaffolded
 
 `create-app` assembles a project from three layers:
 
-| Layer            | Templates          | Description                                                                      |
-| ---------------- | ------------------ | -------------------------------------------------------------------------------- |
-| **UI**           | `@corpdk/ui`       | Next.js + Apollo Client (standard CRUD)                                          |
-| **UI**           | `@corpdk/ui-hprt`  | Next.js + urql + Graphcache (high-frequency real-time)                           |
-| **Data Service** | `@corpdk/ds`       | GraphQL Yoga + Drizzle (relational SQL) — primary/default DS                     |
-| **Data Service** | `@corpdk/ds-no-sql`| GraphQL Yoga + Prisma (databases Drizzle does not support)                       |
-| **Data Service** | `@corpdk/ds-cdb`   | GraphQL Yoga + Couchbase SDK + Zod                                               |
-| **Data Service** | `@corpdk/ds-mongo` | GraphQL Yoga + MongoDB native driver + Zod                                       |
-| **Data Service** | `@corpdk/ds-ddb`   | GraphQL Yoga + DocumentDB (documentdb.io) + Zod                                  |
-| **Data Service** | `@corpdk/ds-file`  | GraphQL Yoga + JSON/YAML file storage + Zod (zero external dependencies)         |
-| **SDK**          | `@corpdk/ds-sdk`   | Auto-generated TypedDocumentNode SDK shared by all DS variants                   |
-| **CLI**          | `@corpdk/ds-cli`   | Auto-generated CLI for LLM/automation access (queries, mutations, subscriptions) |
+| Layer            | Templates           | Description                                                                      |
+| ---------------- | ------------------- | -------------------------------------------------------------------------------- |
+| **UI**           | `@corpdk/ui`        | Next.js + Apollo Client (standard CRUD)                                          |
+| **UI**           | `@corpdk/ui-hprt`   | Next.js + urql + Graphcache (high-frequency real-time)                           |
+| **Data Service** | `@corpdk/ds`        | GraphQL Yoga + Drizzle (relational SQL) — primary/default DS                     |
+| **Data Service** | `@corpdk/ds-no-sql` | GraphQL Yoga + Prisma (databases Drizzle does not support)                       |
+| **Data Service** | `@corpdk/ds-cdb`    | GraphQL Yoga + Couchbase SDK + Zod                                               |
+| **Data Service** | `@corpdk/ds-mongo`  | GraphQL Yoga + MongoDB native driver + Zod                                       |
+| **Data Service** | `@corpdk/ds-ddb`    | GraphQL Yoga + DocumentDB (documentdb.io) + Zod                                  |
+| **Data Service** | `@corpdk/ds-file`   | GraphQL Yoga + JSON/YAML file storage + Zod (zero external dependencies)         |
+| **SDK**          | `@corpdk/ds-sdk`    | Auto-generated TypedDocumentNode SDK shared by all DS variants                   |
+| **CLI**          | `@corpdk/ds-cli`    | Auto-generated CLI for LLM/automation access (queries, mutations, subscriptions) |
 
 You can scaffold a **full-stack** project (UI + DS), a **DS only** backend, or a **UI only** frontend that connects to an existing published DS.
 
@@ -35,8 +37,10 @@ You can scaffold a **full-stack** project (UI + DS), a **DS only** backend, or a
 | **DS only**    | A monorepo with `packages/ds` + `packages/ds-sdk` + `packages/ds-cli`                 |
 | **UI only**    | A standalone Next.js app pointing at a published `@scope/ds-sdk`                      |
 
+`create-ds init` scaffolds a **single** DAL DS package (not the full three-package monorepo above); see [DS automation upgrades](../developer/ds-automation-upgrades.md) for layout and codegen expectations.
+
 ---
 
 **Related**: [Interactive Mode](02-interactive-mode.md) | [CLI Reference](03-cli-reference.md) | [Post-Scaffold Setup](05-post-scaffold-setup.md)
 
-**Last updated**: March 31, 2026
+**Last updated**: October 5, 2026

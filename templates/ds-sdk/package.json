@@ -1,6 +1,6 @@
 {
   "name": "@corpdk/ds-sdk",
-  "version": "2026.3.0-alpha.1",
+  "version": "2026.10.0-alpha.1",
   "type": "module",
   "publishConfig": {
     "registry": "https://artifactory.corp.example.com/api/npm/npm-private/"
@@ -20,5 +20,6 @@
     "@types/node": "^20.19.37",
     "graphql": "^16.13.2",
     "typescript": "^6.0.2"
-  }
+  },
+  "license": "MIT"
 }

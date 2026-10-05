@@ -1,6 +1,6 @@
 # Package Dependencies
 
-Version reference for every third-party dependency used across the monorepo. Updated: 2026-03-29.
+Version reference for every third-party dependency used across the monorepo. Updated: 2026-10-05.
 
 ---
 
@@ -31,12 +31,12 @@ Dependencies used across multiple workspace packages.
 
 ### GraphQL Stack
 
-| Package                          | Version  | Used by                                                                          |
-| -------------------------------- | -------- | -------------------------------------------------------------------------------- |
-| graphql                          | ^16.13.2 | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file, ui, ui-hprt, ds-sdk, codegen-cli |
-| graphql-yoga                     | ^5.18.1  | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file, pub-sub                          |
+| Package                          | Version  | Used by                                                                                |
+| -------------------------------- | -------- | -------------------------------------------------------------------------------------- |
+| graphql                          | ^16.13.2 | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file, ui, ui-hprt, ds-sdk, codegen-cli     |
+| graphql-yoga                     | ^5.18.1  | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file, pub-sub                              |
 | graphql-ws                       | ^6.0.8   | ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file, ui, ui-hprt (`@corpdk/ds` uses SSE only) |
-| @graphql-yoga/redis-event-target | ^3.0.0   | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file, pub-sub                          |
+| @graphql-yoga/redis-event-target | ^3.0.0   | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file, pub-sub                              |
 
 ### UI Framework
 
@@ -51,14 +51,14 @@ Dependencies used across multiple workspace packages.
 
 ### Validation & Schema
 
-| Package | Version | Used by                                                  |
-| ------- | ------- | -------------------------------------------------------- |
+| Package | Version | Used by                                                |
+| ------- | ------- | ------------------------------------------------------ |
 | zod     | ^4.3.6  | ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file, ui-forms |
 
 ### Infrastructure
 
-| Package | Version | Used by                                                 |
-| ------- | ------- | ------------------------------------------------------- |
+| Package | Version | Used by                                                   |
+| ------- | ------- | --------------------------------------------------------- |
 | ioredis | ^5.10.1 | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file, pub-sub |
 | ws      | ^8.20.0 | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file          |
 
@@ -78,16 +78,16 @@ Dependencies used across multiple workspace packages.
 
 ### DS Templates
 
-| Package        | Version  | Used by          |
-| -------------- | -------- | ---------------- |
-| @prisma/client | ^7.6.0   | ds-no-sql        |
-| prisma         | ^7.6.0   | ds-no-sql (devDep) |
+| Package        | Version  | Used by                   |
+| -------------- | -------- | ------------------------- |
+| @prisma/client | ^7.6.0   | ds-no-sql                 |
+| prisma         | ^7.6.0   | ds-no-sql (devDep)        |
 | drizzle-orm    | ^0.45.2  | ds, dal-core, dal-codegen |
-| drizzle-kit    | ^0.31.10 | ds (devDep)      |
-| pg             | ^8.20.0  | ds               |
-| couchbase      | ^4.6.1   | ds-cdb           |
-| mongodb        | ^7.1.1   | ds-mongo, ds-ddb |
-| js-yaml        | ^4.1.0   | ds-file          |
+| drizzle-kit    | ^0.31.10 | ds (devDep)               |
+| pg             | ^8.20.0  | ds                        |
+| couchbase      | ^4.6.1   | ds-cdb                    |
+| mongodb        | ^7.1.1   | ds-mongo, ds-ddb          |
+| js-yaml        | ^4.1.0   | ds-file                   |
 
 ---
 
@@ -172,19 +172,27 @@ Dependencies used across multiple workspace packages.
 
 ### dal-codegen (@corpdk/dal-codegen)
 
-| Package           | Version  | Type    |
-| ----------------- | -------- | ------- |
-| @corpdk/dal-core  | workspace:* | runtime |
-| drizzle-orm       | ^0.45.2  | runtime |
-| graphql           | ^16.13.2 | runtime |
-| yaml              | ^2.8.3   | runtime |
-| vitest            | ^4.1.2   | dev     |
+| Package          | Version      | Type    |
+| ---------------- | ------------ | ------- |
+| @corpdk/dal-core | workspace:\* | runtime |
+| drizzle-orm      | ^0.45.2      | runtime |
+| graphql          | ^16.13.2     | runtime |
+| yaml             | ^2.8.3       | runtime |
+| vitest           | ^4.1.2       | dev     |
 
 ### create-app (@corpdk/create-app)
 
 | Package        | Version | Type    |
 | -------------- | ------- | ------- |
 | @clack/prompts | ^1.1.0  | runtime |
+| tsup           | ^8.5.1  | dev     |
+
+### create-ds (@corpdk/create-ds)
+
+| Package        | Version | Type    |
+| -------------- | ------- | ------- |
+| @clack/prompts | ^1.1.0  | runtime |
+| yaml           | ^2.8.3  | runtime |
 | tsup           | ^8.5.1  | dev     |
 
 ---
@@ -207,8 +215,8 @@ Common dev dependencies used across most workspace packages.
 
 ### GraphQL Codegen (DS templates devDeps)
 
-| Package                               | Version | Used by                                        |
-| ------------------------------------- | ------- | ---------------------------------------------- |
+| Package                               | Version | Used by                                          |
+| ------------------------------------- | ------- | ------------------------------------------------ |
 | @graphql-codegen/cli                  | ^6.2.1  | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file |
 | @graphql-codegen/client-preset        | ^5.2.4  | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file |
 | @graphql-codegen/typescript           | ^5.0.9  | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file |
@@ -273,9 +281,10 @@ Tracked here until applied. Remove entries as they are completed.
 | 2026-03-29 | @apollo/client                        | ^3.13.8  | ^4.1.6   | Major bump; ApolloProvider moved to @apollo/client/react; split() replaced by ApolloLink.split() |
 | 2026-03-29 | zod                                   | ^3.24.2  | ^4.3.6   | Major bump; root export maintains v3 compat, no source changes needed                            |
 | 2026-03-29 | typescript                            | ^5.9.3   | ^6.0.2   | Major bump; added rootDir to ui-\* tsconfig.build.json; ignoreDeprecations for tsup baseUrl      |
+| 2026-10-05 | publishable `@corpdk/*` (lockstep)    | —        | —        | CalVer `2026.3.0-alpha.1` → `2026.10.0-alpha.1`; `@corpdk/create-ds`; root MIT `LICENSE`         |
 
 ---
 
 **Related**: [Monorepo Design](02-monorepo-design.md) | [Monorepo Overview](../developer/01-monorepo-overview.md)
 
-**Last updated**: March 31, 2026
+**Last updated**: October 5, 2026

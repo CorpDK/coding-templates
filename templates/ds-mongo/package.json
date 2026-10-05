@@ -1,6 +1,6 @@
 {
   "name": "@corpdk/ds-mongo",
-  "version": "2026.3.0-alpha.1",
+  "version": "2026.10.0-alpha.1",
   "type": "module",
   "publishConfig": {
     "registry": "https://artifactory.corp.example.com/api/npm/npm-private/"
@@ -34,5 +34,6 @@
     "@types/ws": "^8.18.1",
     "tsx": "^4.21.0",
     "typescript": "^6.0.2"
-  }
+  },
+  "license": "MIT"
 }

@@ -1,6 +1,6 @@
 {
   "name": "@corpdk/ui-feedback",
-  "version": "2026.3.0-alpha.1",
+  "version": "2026.10.0-alpha.1",
   "type": "module",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
@@ -37,5 +37,6 @@
   "dependencies": {
     "sonner": "^2.0.7"
   },
-  "sideEffects": false
+  "sideEffects": false,
+  "license": "MIT"
 }

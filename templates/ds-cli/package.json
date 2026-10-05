@@ -1,6 +1,6 @@
 {
   "name": "@corpdk/ds-cli",
-  "version": "2026.3.0-alpha.1",
+  "version": "2026.10.0-alpha.1",
   "type": "module",
   "publishConfig": {
     "registry": "https://artifactory.corp.example.com/api/npm/npm-private/"
@@ -13,5 +13,6 @@
   ],
   "scripts": {
     "clean": "rm -rf src/generated node_modules .turbo"
-  }
+  },
+  "license": "MIT"
 }

@@ -1,6 +1,6 @@
 {
   "name": "@corpdk/coding-templates",
-  "version": "2026.3.0-alpha.1",
+  "version": "2026.10.0-alpha.1",
   "private": true,
   "scripts": {
     "dev": "turbo run dev --concurrency=20",
@@ -11,7 +11,8 @@
     "db:generate": "turbo run db:generate --filter=@corpdk/ds",
     "clean": "turbo run clean",
     "storybook": "pnpm --filter @corpdk/ui-showcase dev",
-    "create-app": "node engines/create-app/dist/index.js"
+    "create-app": "node engines/create-app/dist/index.js",
+    "create-ds": "node engines/create-ds/dist/index.js"
   },
   "devDependencies": {
     "turbo": "^2.8.21",
@@ -36,5 +37,6 @@
       "picomatch@>=4.0.0 <4.0.4": "^4.0.4"
     }
   },
-  "packageManager": "pnpm@10.33.2+sha512.a90faf6feeab71ad6c6e57f94e0fe1a12f5dcc22cd754db40ae9593eb6a3e0b6b12e3540218bb37ae083404b1f2ce6db2a4121e979829b4aff94b99f49da1cf8"
+  "packageManager": "pnpm@10.33.2+sha512.a90faf6feeab71ad6c6e57f94e0fe1a12f5dcc22cd754db40ae9593eb6a3e0b6b12e3540218bb37ae083404b1f2ce6db2a4121e979829b4aff94b99f49da1cf8",
+  "license": "MIT"
 }

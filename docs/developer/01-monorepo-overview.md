@@ -12,7 +12,8 @@ coding-templates/
 ├── pnpm-workspace.yaml             ← packages: ["templates/*", "engines/*", "libraries/*", "packages/*"]
 ├── turbo.json                      ← task pipeline (codegen → build → dev/start)
 ├── engines/
-│   └── create-app/  (@corpdk/create-app)   Interactive CLI scaffolding tool
+│   ├── create-app/  (@corpdk/create-app)   Interactive CLI scaffolding tool
+│   └── create-ds/   (@corpdk/create-ds)    DS-only scaffold + automation upgrade CLI
 ├── libraries/
 │   ├── codegen-cli/ (@corpdk/codegen-cli)   GraphQL codegen plugin for resolver types + SDK generation
 │   ├── dal-core/    (@corpdk/dal-core)      DAL shared types, filters, scalars, mutation error taxonomy
@@ -75,13 +76,14 @@ coding-templates/
 
 ### Engines and libraries
 
-| Package       | Scope                 | Description                                                 |
-| ------------- | --------------------- | ----------------------------------------------------------- |
-| `create-app`  | `@corpdk/create-app`  | Interactive CLI scaffolding tool                            |
-| `codegen-cli` | `@corpdk/codegen-cli` | GraphQL codegen plugin for resolver types + SDK generation  |
-| `dal-core`    | `@corpdk/dal-core`    | DAL shared types, filters, query translation, mutation errors |
-| `dal-codegen` | `@corpdk/dal-codegen` | Drizzle → GraphQL SDL + repositories + resolvers codegen    |
-| `pub-sub`     | `@corpdk/pub-sub`     | `createAppPubSub<T>()` — selects Redis or in-memory pub/sub |
+| Package       | Scope                 | Description                                                                        |
+| ------------- | --------------------- | ---------------------------------------------------------------------------------- |
+| `create-app`  | `@corpdk/create-app`  | Interactive CLI scaffolding tool                                                   |
+| `create-ds`   | `@corpdk/create-ds`   | DS-only scaffold + DAL automation upgrade CLI ([guide](ds-automation-upgrades.md)) |
+| `codegen-cli` | `@corpdk/codegen-cli` | GraphQL codegen plugin for resolver types + SDK generation                         |
+| `dal-core`    | `@corpdk/dal-core`    | DAL shared types, filters, query translation, mutation errors                      |
+| `dal-codegen` | `@corpdk/dal-codegen` | Drizzle → GraphQL SDL + repositories + resolvers codegen                           |
+| `pub-sub`     | `@corpdk/pub-sub`     | `createAppPubSub<T>()` — selects Redis or in-memory pub/sub                        |
 
 For versioning strategy and key design decisions (module system, HTTP/WS routing, SDK strategy, repository pattern, pub/sub), see [Monorepo Design](../architecture/02-monorepo-design.md).
 
@@ -94,7 +96,9 @@ pnpm dev        # start all packages in dev mode (via Turbo)
 pnpm build      # build all packages (codegen → build)
 pnpm codegen    # run graphql-codegen for @corpdk/ds
 pnpm storybook  # start Storybook for ui-showcase (port 6006)
-pnpm create-app # run the interactive scaffolding CLI
+pnpm create-app              # run the interactive scaffolding CLI
+pnpm create-ds init [dir]    # scaffold a DAL-automated DS package (see ds-automation-upgrades.md)
+pnpm create-ds upgrade [dir] # merge templates/ds automation deltas
 ```
 
 Per-package:
@@ -109,4 +113,4 @@ pnpm --filter @corpdk/ds codegen    # run codegen for ds
 
 **Related**: [Monorepo Design](../architecture/02-monorepo-design.md) | [Post-Scaffold Setup](../user/05-post-scaffold-setup.md)
 
-**Last updated**: March 31, 2026
+**Last updated**: October 5, 2026

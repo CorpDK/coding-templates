@@ -1,19 +1,9 @@
 #!/usr/bin/env node
 import { resolve } from "node:path";
+import { ensureSchemaTypeScriptLoader } from "./schema-loader.js";
 import { runDalCodegen } from "./generate.js";
-import type { CodegenOptions, DalCodegenMode } from "./config.js";
-
-function parseMode(argv: string[]): DalCodegenMode {
-  const flag = argv.find((a) => a.startsWith("--mode="));
-  if (flag) {
-    const value = flag.slice("--mode=".length);
-    if (value === "schema" || value === "impl" || value === "all") return value;
-    throw new Error(`Invalid --mode=${value} (expected schema | impl | all)`);
-  }
-  const envMode = process.env.DAL_CODEGEN_MODE;
-  if (envMode === "schema" || envMode === "impl" || envMode === "all") return envMode;
-  return "all";
-}
+import type { CodegenOptions } from "./config.js";
+import { parseDalCodegenMode } from "./parse-mode.js";
 
 const packageRoot = resolve(process.cwd());
 
@@ -26,14 +16,19 @@ const options: CodegenOptions = {
   entityRecordsOutputPath:
     process.env.DAL_ENTITY_RECORDS_PATH ?? "src/generated/entity-records.ts",
   mappersOutputPath:
-    process.env.DAL_MAPPERS_OUTPUT_PATH ?? "src/generated/graphql-codegen.mappers.ts",
+    process.env.DAL_MAPPERS_OUTPUT_PATH ??
+    "src/generated/graphql-codegen.mappers.ts",
   configPath: process.env.DAL_CONFIG_PATH ?? "dal/dal.config.yaml",
-  mode: parseMode(process.argv.slice(2)),
+  mode: parseDalCodegenMode(process.argv.slice(2)),
 };
 
 try {
+  await ensureSchemaTypeScriptLoader();
   await runDalCodegen(options);
 } catch (err) {
-  console.error("dal-codegen failed:", err instanceof Error ? err.message : err);
+  console.error(
+    "dal-codegen failed:",
+    err instanceof Error ? err.message : err,
+  );
   process.exit(1);
 }

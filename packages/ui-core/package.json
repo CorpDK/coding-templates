@@ -1,6 +1,6 @@
 {
   "name": "@corpdk/ui-core",
-  "version": "2026.3.0-alpha.1",
+  "version": "2026.10.0-alpha.1",
   "type": "module",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
@@ -84,5 +84,6 @@
     "zod": "^4.3.6",
     "zustand": "^5.0.12"
   },
-  "sideEffects": false
+  "sideEffects": false,
+  "license": "MIT"
 }

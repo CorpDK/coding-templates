@@ -1,6 +1,6 @@
 {
   "name": "@corpdk/ui-showcase",
-  "version": "2026.3.0-alpha.1",
+  "version": "0.1.0",
   "publishConfig": {
     "registry": "https://artifactory.corp.example.com/api/npm/npm-private/"
   },
@@ -46,5 +46,6 @@
     "typescript": "^6.0.2",
     "vite": "^8.0.3",
     "vitest": "^4.1.2"
-  }
+  },
+  "license": "MIT"
 }

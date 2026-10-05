@@ -1,0 +1,37 @@
+services:
+  postgres:
+    image: dhi.io/postgres:18-alpine3.23
+    container_name: corpdk-ds-postgres
+    restart: unless-stopped
+    ports:
+      - "${POSTGRES_HOST_PORT:-5433}:5432"
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: pass
+      POSTGRES_DB: corpdk_ds
+    volumes:
+      - corpdk_ds_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U user -d corpdk_ds"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  ds:
+    build:
+      context: ../..
+      dockerfile: templates/ds/Dockerfile
+    container_name: corpdk-ds
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${DS_HOST_PORT:-4000}:4000"
+    environment:
+      DS_PORT: "4000"
+      DATABASE_URL: postgresql://user:pass@postgres:5432/corpdk_ds
+
+volumes:
+  corpdk_ds_pgdata:

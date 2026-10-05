@@ -1,7 +1,7 @@
 {
   "name": "@corpdk/ds-no-sql",
   "description": "GraphQL Yoga data service with Prisma ORM for databases Drizzle does not support (e.g. MongoDB, DocumentDB)",
-  "version": "2026.3.0-alpha.1",
+  "version": "2026.10.0-alpha.1",
   "type": "module",
   "publishConfig": {
     "registry": "https://artifactory.corp.example.com/api/npm/npm-private/"
@@ -40,5 +40,6 @@
     "prisma": "^7.6.0",
     "tsx": "^4.21.0",
     "typescript": "^6.0.2"
-  }
+  },
+  "license": "MIT"
 }

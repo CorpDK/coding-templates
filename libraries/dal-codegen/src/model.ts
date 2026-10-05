@@ -16,6 +16,7 @@ import {
   inferLengthConstraint,
 } from "./constraint-infer.js";
 import { attachRelations } from "./relations.js";
+import { ensureSchemaTypeScriptLoader } from "./schema-loader.js";
 
 export type ColumnKind =
   | "uuid"
@@ -34,7 +35,11 @@ export type ColumnKind =
   | "interval"
   | "unsupported";
 
-export type RelationKind = "many-to-one" | "one-to-many" | "many-to-many" | "one-to-one";
+export type RelationKind =
+  | "many-to-one"
+  | "one-to-many"
+  | "many-to-many"
+  | "one-to-one";
 
 export interface RelationModel {
   fieldName: string;
@@ -89,7 +94,12 @@ export interface EntityModel {
   sourceFile: string;
 }
 
-const AUDIT_COLS = ["createdAt", "updatedAt", "createdBy", "updatedBy"] as const;
+const AUDIT_COLS = [
+  "createdAt",
+  "updatedAt",
+  "createdBy",
+  "updatedBy",
+] as const;
 const SOFT_DELETE_COLS = ["deletedAt", "deletedBy"] as const;
 
 interface DrizzleColumnWithTz {
@@ -142,7 +152,13 @@ function inferColumnKind(
     );
   }
   if (columnType === "PgTimestamp") {
-    requireWithTimezone(exportName, drizzleKey, col, "timestamp", "timestamptz");
+    requireWithTimezone(
+      exportName,
+      drizzleKey,
+      col,
+      "timestamp",
+      "timestamptz",
+    );
     return "timestamptz";
   }
   if (columnType === "PgTime") {
@@ -175,7 +191,12 @@ function inferAuditProfile(columns: ColumnModel[]): AuditProfile {
   const keys = new Set(columns.map((c) => c.drizzleKey));
   const has = (k: string) => keys.has(k);
   if (AUDIT_COLS.every(has)) return "full";
-  if (has("createdAt") && has("createdBy") && !has("updatedAt") && !has("updatedBy")) {
+  if (
+    has("createdAt") &&
+    has("createdBy") &&
+    !has("updatedAt") &&
+    !has("updatedBy")
+  ) {
     return "append-only";
   }
   throw new Error(
@@ -207,14 +228,11 @@ export function collectSchemaFiles(schemaPath: string): string[] {
   return nonIndex.length > 0 ? nonIndex : files;
 }
 
-export async function importSchemaModule(file: string): Promise<Record<string, unknown>> {
-  try {
-    return (await import(pathToFileURL(file).href)) as Record<string, unknown>;
-  } catch {
-    const { register } = await import("tsx/esm/api");
-    register();
-    return (await import(pathToFileURL(file).href)) as Record<string, unknown>;
-  }
+export async function importSchemaModule(
+  file: string,
+): Promise<Record<string, unknown>> {
+  await ensureSchemaTypeScriptLoader();
+  return (await import(pathToFileURL(file).href)) as Record<string, unknown>;
 }
 
 function inferEnumMetadata(
@@ -223,10 +241,14 @@ function inferEnumMetadata(
   col: DrizzleColumnWithEnum,
 ): { enumName: string; enumValues: string[] } {
   const pgEnumRef = col.enum;
-  const enumName = pgEnumRef?.enumName ? pgEnumNameToGraphql(pgEnumRef.enumName) : undefined;
+  const enumName = pgEnumRef?.enumName
+    ? pgEnumNameToGraphql(pgEnumRef.enumName)
+    : undefined;
   const enumValues = pgEnumRef?.enumValues ?? col.enumValues;
   if (!enumName || !enumValues?.length) {
-    throw new Error(`Column '${exportName}.${drizzleKey}' is enum but enum metadata is missing`);
+    throw new Error(
+      `Column '${exportName}.${drizzleKey}' is enum but enum metadata is missing`,
+    );
   }
   return { enumName, enumValues };
 }
@@ -236,11 +258,19 @@ function inferStaticDefault(col: {
   default?: unknown;
   defaultFn?: unknown;
 }): string | boolean | number | undefined {
-  if (!col.hasDefault || col.default === undefined || col.defaultFn !== undefined) {
+  if (
+    !col.hasDefault ||
+    col.default === undefined ||
+    col.defaultFn !== undefined
+  ) {
     return undefined;
   }
   const dv = col.default;
-  if (typeof dv === "string" || typeof dv === "boolean" || typeof dv === "number") {
+  if (
+    typeof dv === "string" ||
+    typeof dv === "boolean" ||
+    typeof dv === "number"
+  ) {
     return dv;
   }
   return undefined;
@@ -265,15 +295,24 @@ function buildColumnModel(
   }
   const comment = columnComments.get(exportName)?.get(drizzleKey) ?? "";
   if (strict && !comment) {
-    throw new Error(`Missing comment on ${exportName}.${drizzleKey} (strict mode)`);
+    throw new Error(
+      `Missing comment on ${exportName}.${drizzleKey} (strict mode)`,
+    );
   }
   const colWithEnum = col as typeof col & DrizzleColumnWithEnum;
   let enumName: string | undefined;
   let enumValues: string[] | undefined;
   if (kind === "enum") {
-    ({ enumName, enumValues } = inferEnumMetadata(exportName, drizzleKey, colWithEnum));
+    ({ enumName, enumValues } = inferEnumMetadata(
+      exportName,
+      drizzleKey,
+      colWithEnum,
+    ));
   }
-  const colWithDefault = col as typeof col & { default?: unknown; defaultFn?: unknown };
+  const colWithDefault = col as typeof col & {
+    default?: unknown;
+    defaultFn?: unknown;
+  };
   const defaultValue = inferStaticDefault(colWithDefault);
   const lengthMeta = inferLengthConstraint(col);
   const checkMeta = checkConstraints.get(drizzleKey);
@@ -307,9 +346,19 @@ function buildEntityFromTable(
 ): EntityModel {
   const config = getTableConfig(value as Parameters<typeof getTableConfig>[0]);
   const cols = getTableColumns(value as Parameters<typeof getTableColumns>[0]);
-  const checkConstraints = inferCheckConstraintsForTable(config.checks, Object.keys(cols));
+  const checkConstraints = inferCheckConstraintsForTable(
+    config.checks,
+    Object.keys(cols),
+  );
   const colModels = Object.entries(cols).map(([drizzleKey, col]) =>
-    buildColumnModel(exportName, drizzleKey, col, strict, columnComments, checkConstraints),
+    buildColumnModel(
+      exportName,
+      drizzleKey,
+      col,
+      strict,
+      columnComments,
+      checkConstraints,
+    ),
   );
   if (!colModels.some((c) => c.drizzleKey === "id" && c.kind === "uuid")) {
     throw new Error(`Entity '${exportName}' must have uuid 'id' primary key`);
@@ -334,7 +383,10 @@ function buildEntityFromTable(
   };
 }
 
-export async function loadEntities(schemaPath: string, strict: boolean): Promise<EntityModel[]> {
+export async function loadEntities(
+  schemaPath: string,
+  strict: boolean,
+): Promise<EntityModel[]> {
   const files = collectSchemaFiles(schemaPath);
   const entities: EntityModel[] = [];
   const schemaModules: Record<string, unknown>[] = [];
@@ -346,7 +398,16 @@ export async function loadEntities(schemaPath: string, strict: boolean): Promise
 
     for (const [exportName, value] of Object.entries(mod)) {
       if (!isTable(value)) continue;
-      entities.push(buildEntityFromTable(exportName, value, file, strict, tableComments, columnComments));
+      entities.push(
+        buildEntityFromTable(
+          exportName,
+          value,
+          file,
+          strict,
+          tableComments,
+          columnComments,
+        ),
+      );
     }
   }
 

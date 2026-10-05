@@ -34,6 +34,7 @@ export function generateRootPackageJson(
     name: `@${orgScope}/${projectName}`,
     version: "0.1.0",
     private: true,
+    license: "MIT",
     scripts,
     devDependencies: {
       turbo: source.devDependencies["turbo"] ?? "^2.5.4",
