@@ -81,6 +81,7 @@ jobs:
             before="${{ github.event.before }}"
             prev=""
             if [[ -n "${before}" && "${before}" != "0000000000000000000000000000000000000000" ]]; then
+              git fetch --depth=1 origin "${before}" 2>/dev/null || true
               prev="$(git show "${before}:libraries/dal-core/package.json" 2>/dev/null \
                 | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).version" \
                 || true)"
@@ -88,6 +89,8 @@ jobs:
             if [[ -n "${prev}" && "${prev}" == "${curr}" ]]; then
               echo "Main push with unchanged CalVer (${curr}); skipping (no live publish)."
               run_job="false"
+            elif [[ -n "${before}" && "${before}" != "0000000000000000000000000000000000000000" && -z "${prev}" ]]; then
+              echo "Main push: could not read previous CalVer at ${before}; dry-run only (fail closed)."
             else
               live="true"
               echo "Main push with CalVer ${prev:-<none>} → ${curr} — live publish."

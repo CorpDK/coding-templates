@@ -60,7 +60,7 @@ Release notes list all five packages at the release CalVer and link back to this
 
 ### What CI runs
 
-1. Verify every package in the set has the **same** `version` as the release (from tag, input, or `libraries/dal-core/package.json`).
+1. Verify every package in the set has the **same** `version` as the release (from input or `libraries/dal-core/package.json`).
 2. `pnpm turbo run build` for all five packages (respects dependency order via Turbo).
 3. `pnpm --filter @corpdk/dal-core test` and `@corpdk/dal-codegen test` (same coverage as [`.github/workflows/dal.yml`](../../.github/workflows/dal.yml) for libraries).
 4. `pnpm publish --no-git-checks` in dependency order; `--dry-run` when not releasing; live runs add `--provenance`.
