@@ -152,6 +152,20 @@ jobs:
           echo "[dry-run] Would create tag ${tag} on origin from $(git rev-parse --short HEAD) if absent."
           echo "[dry-run] Would create GitHub Release for ${tag} after successful publish if absent."
 
+      - name: Ensure npm supports trusted publishing
+        if: steps.gate.outputs.run == 'true'
+        run: npm install -g npm@^11.15.0
+
+      - name: Publish DS automation packages
+        if: steps.gate.outputs.run == 'true'
+        run: |
+          chmod +x .github/scripts/publish-ds-automation.sh
+          args=("${{ steps.version.outputs.value }}")
+          if [[ "${{ steps.dry.outputs.value }}" == "true" ]]; then
+            args+=(--dry-run)
+          fi
+          .github/scripts/publish-ds-automation.sh "${args[@]}"
+
       - name: Ensure git tag (live publish)
         if: steps.gate.outputs.run == 'true' && steps.dry.outputs.value != 'true'
         env:
@@ -166,20 +180,6 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git tag -a "${TAG}" -m "DS automation CalVer ${VERSION}"
           git push origin "refs/tags/${TAG}"
-
-      - name: Ensure npm supports trusted publishing
-        if: steps.gate.outputs.run == 'true'
-        run: npm install -g npm@^11.15.0
-
-      - name: Publish DS automation packages
-        if: steps.gate.outputs.run == 'true'
-        run: |
-          chmod +x .github/scripts/publish-ds-automation.sh
-          args=("${{ steps.version.outputs.value }}")
-          if [[ "${{ steps.dry.outputs.value }}" == "true" ]]; then
-            args+=(--dry-run)
-          fi
-          .github/scripts/publish-ds-automation.sh "${args[@]}"
 
       - name: Create GitHub Release (live publish)
         if: steps.gate.outputs.run == 'true' && steps.dry.outputs.value != 'true'
