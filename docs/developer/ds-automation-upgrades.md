@@ -32,18 +32,23 @@ pnpm dlx @corpdk/create-ds upgrade ./packages/my-ds
 
 - Drizzle schema directory (starter or demo)
 - `dal/dal.config.yaml`
-- `package.json` scripts/deps aligned with the canonical template (`workspace:*` in monorepo; semver when published)
+- `package.json` at version **`0.1.0`**, scripts/deps aligned with the canonical template (`workspace:*` when resolving `templates/ds`; **`^@corpdk/create-ds` release version** for `@corpdk/*` when using the bundled canonical snapshot, e.g. `pnpm dlx`)
+- Does **not** copy template **`publishConfig`** (avoids inheriting monorepo Artifactory registry settings)
 - `.gitignore` entries for `src/generated/**`
-- Yoga bootstrap via **`dal-codegen --mode=bootstrap`** (`src/schema.ts`, `src/index.ts`, `src/db/index.ts`)
+- Yoga bootstrap via **`dal-codegen --mode=bootstrap`** when the monorepo `dal-codegen` CLI is built; otherwise copies bootstrap files from the canonical template
+
+### Monorepo layout (`codegen.ts`)
+
+Scaffolded **`codegen.ts`** targets sibling **`../ds-sdk`** and **`../ds-cli`** (same as `templates/ds`). **`pnpm codegen`** / the middle step of **`pnpm dal:codegen`** expects those packages beside the DS package. DS-only repos outside this layout must add matching packages or adjust `generates` paths (see the header comment in `codegen.ts`).
 
 ### `upgrade` behavior
 
-1. Merges **`package.json`**: scripts normalized to `dal-codegen` / `dal-entity-lint` bins; **`@corpdk/dal-core`**, **`@corpdk/dal-codegen`**, **`@corpdk/pub-sub`**, **`@corpdk/codegen-cli`** versions taken from the canonical template; consumer **`name`**, **`version`**, and non-`@corpdk` deps preserved.
+1. Merges **`package.json`**: scripts normalized to `dal-codegen` / `dal-entity-lint` bins; **`@corpdk/dal-core`**, **`@corpdk/dal-codegen`**, **`@corpdk/pub-sub`**, **`@corpdk/codegen-cli`** versions taken from the canonical template (bundled canonical rewrites `workspace:*` `@corpdk/*` to **`^@corpdk/create-ds` release version**); consumer **`name`**, **`version`**, **`publishConfig`**, non-`@corpdk` deps, and top-level metadata such as **`private`**, **`license`**, **`engines`**, and **`packageManager`** preserved when already set.
 2. Merges **`dal/dal.config.yaml`**: template defaults + consumer overrides (consumer keys win).
 3. Overwrites automation files: `codegen.ts`, `drizzle.config.ts`, `tsconfig.json`, Docker assets, `.env.example`, `.gitignore`, bootstrap TypeScript entry files.
 4. **Skips** `src/db/schema/**` entirely.
-5. Runs **`entity:lint`** when `dal-entity-lint` is available.
-6. Prints **`pnpm dal:codegen`** as the required follow-up.
+5. Runs **`entity:lint`** only when the monorepo `libraries/dal-codegen/dist/lint-cli.js` exists or **`node_modules/.bin/dal-entity-lint`** is present (skipped after a bare merge until `pnpm install` in DS-only repos).
+6. Prints **`pnpm install`** then **`pnpm dal:codegen`** as required follow-up.
 
 ## Semver playbook
 
@@ -74,11 +79,10 @@ pnpm dal:codegen
 
 ## Maintainers
 
-When changing `templates/ds` automation files, refresh the bundled snapshot:
+When changing `templates/ds` automation files, refresh the bundled snapshot under **`engines/create-ds/canonical/`** (paths merged on upgrade):
 
-```bash
-cp templates/ds/package.json engines/create-ds/canonical/
-# … or re-run the copy list documented in engines/create-ds/README (if added)
-```
+`package.json`, `dal/dal.config.yaml`, `codegen.ts`, `drizzle.config.ts`, `tsconfig.json`, `Dockerfile`, `docker-compose.yml`, `docker-entrypoint.sh`, `.gitignore`, `.env.example`, `src/schema.ts`, `src/index.ts`, `src/db/index.ts`
+
+Copy from `templates/ds` (omit `src/db/schema/**`, `drizzle/**`, and generated output). Keep **`engines/create-ds/starter/`** in sync when changing the minimal default schema.
 
 Release **`@corpdk/create-ds`** on the same train as **`@corpdk/dal-codegen`** when upgrade deltas matter.

@@ -56,6 +56,7 @@ Welcome to the coding-templates documentation! This monorepo provides production
 | Task                        | Documentation                                                 |
 | --------------------------- | ------------------------------------------------------------- |
 | **Set up a new project**    | [Interactive Mode](user/02-interactive-mode.md)               |
+| **Scaffold / upgrade a DS** | [DS automation upgrades](developer/ds-automation-upgrades.md) |
 | **Configure environment**   | [Environment Variables](admin/01-environment-variables.md)    |
 | **Deploy with Docker**      | [Docker Deployment](admin/02-docker-deployment.md)            |
 | **Add a GraphQL entity**    | [Repository Pattern](developer/03-repository-pattern.md)      |
@@ -120,6 +121,7 @@ Welcome to the coding-templates documentation! This monorepo provides production
 | [developer/dal-entity-design.md](developer/dal-entity-design.md)                   | DAL Drizzle entity design     |
 | [developer/dal-pg-type-mapping.md](developer/dal-pg-type-mapping.md)               | PG → GraphQL type mapping     |
 | [developer/graphql-dal-requirements.md](developer/graphql-dal-requirements.md)   | GraphQL DAL requirements      |
+| [developer/ds-automation-upgrades.md](developer/ds-automation-upgrades.md)     | `create-ds` init / upgrade    |
 | [developer/dal-phase2.md](developer/dal-phase2.md) … [dal-phase5.md](developer/dal-phase5.md) | DAL phase delivery notes |
 
 ---

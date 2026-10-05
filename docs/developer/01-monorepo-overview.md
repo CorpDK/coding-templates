@@ -79,6 +79,7 @@ coding-templates/
 | Package       | Scope                 | Description                                                 |
 | ------------- | --------------------- | ----------------------------------------------------------- |
 | `create-app`  | `@corpdk/create-app`  | Interactive CLI scaffolding tool                            |
+| `create-ds`   | `@corpdk/create-ds`   | DS-only scaffold + DAL automation upgrade CLI ([guide](ds-automation-upgrades.md)) |
 | `codegen-cli` | `@corpdk/codegen-cli` | GraphQL codegen plugin for resolver types + SDK generation  |
 | `dal-core`    | `@corpdk/dal-core`    | DAL shared types, filters, query translation, mutation errors |
 | `dal-codegen` | `@corpdk/dal-codegen` | Drizzle → GraphQL SDL + repositories + resolvers codegen    |
@@ -96,6 +97,7 @@ pnpm build      # build all packages (codegen → build)
 pnpm codegen    # run graphql-codegen for @corpdk/ds
 pnpm storybook  # start Storybook for ui-showcase (port 6006)
 pnpm create-app # run the interactive scaffolding CLI
+pnpm create-ds  # scaffold or upgrade a DAL-automated DS package (see ds-automation-upgrades.md)
 ```
 
 Per-package:

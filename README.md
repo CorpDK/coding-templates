@@ -2,7 +2,7 @@
 
 A pnpm + Turborepo monorepo template for full-stack GraphQL applications under the `@corpdk` org.
 
-Run `pnpm create-app` to scaffold a new project.
+Run `pnpm create-app` to scaffold a full-stack project, or `pnpm create-ds` to scaffold or upgrade a DAL-automated DS package ([DS automation upgrades](docs/developer/ds-automation-upgrades.md)).
 
 ## Documentation
 
