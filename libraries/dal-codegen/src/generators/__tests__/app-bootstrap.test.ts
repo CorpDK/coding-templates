@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { describe, expect, it } from "vitest";
 import { runDalCodegenBootstrap } from "../../generate.js";
+import { generateAppBootstrapFiles } from "../app-bootstrap.js";
 
 describe("runDalCodegenBootstrap", () => {
   it("writes Yoga entry files under package root", async () => {
@@ -16,10 +17,15 @@ describe("runDalCodegenBootstrap", () => {
       mode: "bootstrap",
     });
 
-    const schemaTs = readFileSync(join(packageRoot, "src/schema.ts"), "utf8");
-    expect(schemaTs).toContain("createSchema");
-    expect(readFileSync(join(packageRoot, "src/index.ts"), "utf8")).toContain(
-      "DS_PORT",
+    const expected = generateAppBootstrapFiles();
+    expect(readFileSync(join(packageRoot, "src/schema.ts"), "utf8")).toBe(
+      expected.schemaTs,
+    );
+    expect(readFileSync(join(packageRoot, "src/index.ts"), "utf8")).toBe(
+      expected.indexTs,
+    );
+    expect(readFileSync(join(packageRoot, "src/db/index.ts"), "utf8")).toBe(
+      expected.dbIndexTs,
     );
   });
 });

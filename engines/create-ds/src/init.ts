@@ -1,7 +1,12 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { spinner } from "@clack/prompts";
-import { engineStarterDir, resolveCanonicalDsTemplateDir } from "./template.js";
+import {
+  engineStarterDir,
+  isBundledCanonicalTemplate,
+  readCreateDsReleaseVersion,
+  resolveCanonicalDsTemplateDir,
+} from "./template.js";
 import { copyDir, execAsync, pathExists, readJson, writeJson } from "./utils.js";
 import { mergePackageJson } from "./package-merge.js";
 
@@ -60,9 +65,13 @@ export async function runInit(options: InitOptions): Promise<void> {
   const templatePkg = await readJson<Record<string, unknown>>(
     path.join(templateDir, "package.json"),
   );
+  const mergeOptions = isBundledCanonicalTemplate(templateDir)
+    ? { publishedCorpdkVersions: await readCreateDsReleaseVersion() }
+    : undefined;
   const merged = mergePackageJson(
     { name: options.packageName },
     templatePkg as Parameters<typeof mergePackageJson>[1],
+    mergeOptions,
   );
   await writeJson(path.join(targetDir, "package.json"), merged);
 

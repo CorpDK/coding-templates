@@ -5,6 +5,8 @@ import { spinner } from "@clack/prompts";
 import {
   UPGRADE_RELATIVE_FILES,
   resolveCanonicalDsTemplateDir,
+  isBundledCanonicalTemplate,
+  readCreateDsReleaseVersion,
   isProtectedRelativePath,
 } from "./template.js";
 import {
@@ -49,6 +51,10 @@ export async function runUpgrade(options: UpgradeOptions): Promise<void> {
 
   s.start("Merging automation stack from canonical template");
 
+  const mergeOptions = isBundledCanonicalTemplate(templateDir)
+    ? { publishedCorpdkVersions: await readCreateDsReleaseVersion() }
+    : undefined;
+
   for (const rel of UPGRADE_RELATIVE_FILES) {
     if (isProtectedRelativePath(rel)) continue;
 
@@ -64,7 +70,7 @@ export async function runUpgrade(options: UpgradeOptions): Promise<void> {
       const template = await readJson<Parameters<typeof mergePackageJson>[1]>(
         templatePath,
       );
-      await writeJson(destPath, mergePackageJson(consumer, template));
+      await writeJson(destPath, mergePackageJson(consumer, template, mergeOptions));
       continue;
     }
 
@@ -103,5 +109,6 @@ export async function runUpgrade(options: UpgradeOptions): Promise<void> {
     if (err instanceof Error && "stderr" in err) {
       console.error(String((err as { stderr?: string }).stderr ?? err.message));
     }
+    throw err;
   }
 }

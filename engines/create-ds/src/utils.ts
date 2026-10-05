@@ -127,16 +127,3 @@ async function copyDirRecursive(
     }
   }
 }
-
-/** Deep-merge plain objects; `target` keys win over `source` for conflicts. */
-export function mergeRecords<T extends Record<string, unknown>>(
-  source: T,
-  target: Partial<T>,
-): T {
-  const out = { ...source };
-  for (const key of Object.keys(target) as (keyof T)[]) {
-    const value = target[key];
-    if (value !== undefined) out[key] = value as T[keyof T];
-  }
-  return out;
-}

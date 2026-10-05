@@ -1,6 +1,12 @@
 import type { CodegenConfig } from "@graphql-codegen/cli";
 import { graphqlCodegenMappers } from "./src/generated/graphql-codegen.mappers.js";
 
+/**
+ * Monorepo layout: this DS package must sit beside sibling `ds-sdk` and `ds-cli`
+ * packages (`../ds-sdk`, `../ds-cli`). `pnpm codegen` writes SDK and CLI artifacts
+ * there. DS-only repos outside this layout must add those packages or adjust paths.
+ */
+
 const config: CodegenConfig = {
   schema: ["./src/generated/generated-schema.ts"],
   generates: {

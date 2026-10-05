@@ -27,7 +27,29 @@ export function normalizeDalScripts(
   return out;
 }
 
-export function mergePackageJson(consumer: PkgJson, template: PkgJson): PkgJson {
+export type MergePackageJsonOptions = {
+  /** When set, `workspace:*` @corpdk/* deps use `^${publishedCorpdkVersions}` (published CLI init). */
+  publishedCorpdkVersions?: string;
+};
+
+function rewriteCorpdkWorkspaceDeps(
+  deps: Record<string, string> | undefined,
+  releaseVersion: string,
+): Record<string, string> {
+  const out = { ...(deps ?? {}) };
+  for (const [key, value] of Object.entries(out)) {
+    if (key.startsWith("@corpdk/") && value === "workspace:*") {
+      out[key] = `^${releaseVersion}`;
+    }
+  }
+  return out;
+}
+
+export function mergePackageJson(
+  consumer: PkgJson,
+  template: PkgJson,
+  options?: MergePackageJsonOptions,
+): PkgJson {
   const merged: PkgJson = {
     ...template,
     name: consumer.name ?? template.name,
@@ -53,6 +75,17 @@ export function mergePackageJson(consumer: PkgJson, template: PkgJson): PkgJson 
         merged.devDependencies![key] = value;
       }
     }
+  }
+
+  if (options?.publishedCorpdkVersions) {
+    merged.dependencies = rewriteCorpdkWorkspaceDeps(
+      merged.dependencies,
+      options.publishedCorpdkVersions,
+    );
+    merged.devDependencies = rewriteCorpdkWorkspaceDeps(
+      merged.devDependencies,
+      options.publishedCorpdkVersions,
+    );
   }
 
   return merged;

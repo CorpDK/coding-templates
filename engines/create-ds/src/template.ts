@@ -29,6 +29,22 @@ export function engineStarterDir(): string {
   return path.resolve(__dirname, "..", "starter");
 }
 
+export function isBundledCanonicalTemplate(templateDir: string): boolean {
+  const bundled = path.resolve(__dirname, "..", "canonical");
+  return path.resolve(templateDir) === bundled;
+}
+
+export async function readCreateDsReleaseVersion(): Promise<string> {
+  const { readJson } = await import("./utils.js");
+  const pkg = await readJson<{ version: string }>(
+    path.resolve(__dirname, "..", "package.json"),
+  );
+  if (!pkg.version) {
+    throw new Error("create-ds package.json missing version");
+  }
+  return pkg.version;
+}
+
 /** Relative paths under templates/ds merged on upgrade (never touches src/db/schema/**). */
 export const UPGRADE_RELATIVE_FILES = [
   "package.json",
