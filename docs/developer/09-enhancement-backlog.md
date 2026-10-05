@@ -70,13 +70,13 @@ Add `@opentelemetry/sdk-node` instrumentation to `templates/ds` for distributed 
 
 ### 3. DataLoader Batching
 
-**Status:** Done — per-request DataLoaders for navigation fields are emitted by `@corpdk/dal-codegen` ([GraphQL DAL Requirements §6.6](graphql-dal-requirements.md#66-association-output-fields-and-dataloaders)).
+**Status:** Done — `@corpdk/dal-codegen` `generateLoaderSetup()` + `createDalContext()` in `libraries/dal-codegen/src/generators/resolvers.ts` instantiate per-request `DataLoader`s and navigation resolvers call `ctx.loaders.*` (see `libraries/dal-codegen/src/generators/__tests__/m2m-navigation.test.ts`). Spec: [GraphQL DAL Requirements §6.6](graphql-dal-requirements.md#66-association-output-fields-and-dataloaders).
 
 GraphQL resolvers that load related entities (e.g. fetching a user for each item in a list) issue one query per item without batching. DataLoader coalesces these into a single batched query per tick; DAL codegen covers this for association fields in `templates/ds`.
 
 ### 4. Cursor-Based Pagination
 
-**Status:** Done — Relay-style `<entity>Connection` fields with keyset cursors are generated ([GraphQL DAL Requirements §13](graphql-dal-requirements.md#13-cursor-pagination)).
+**Status:** Done — `@corpdk/dal-codegen` `entity-schema.ts` emits `<Entity>Connection` / `Edge` query fields (`first`/`after`/…); generated repos delegate to `@corpdk/dal-core` `QueryEngine.listConnection()` via `libraries/dal-codegen/src/generators/repository.ts` (tests: `phase1.test.ts`, `libraries/dal-core/src/__tests__/query-engine.test.ts`). Spec: [GraphQL DAL Requirements §13](graphql-dal-requirements.md#13-cursor-pagination).
 
 Connection-spec cursor pagination replaces offset paging for generated list fields. Cursor pagination is stable under concurrent writes; DAL codegen emits `Connection` / `Edge` types for eligible entities in `templates/ds`.
 
