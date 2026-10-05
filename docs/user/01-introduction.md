@@ -41,4 +41,4 @@ You can scaffold a **full-stack** project (UI + DS), a **DS only** backend, or a
 
 **Related**: [Interactive Mode](02-interactive-mode.md) | [CLI Reference](03-cli-reference.md) | [Post-Scaffold Setup](05-post-scaffold-setup.md)
 
-**Last updated**: March 31, 2026
+**Last updated**: October 5, 2026

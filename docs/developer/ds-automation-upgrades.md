@@ -89,3 +89,9 @@ When changing `templates/ds` automation files, refresh the bundled snapshot unde
 Copy from `templates/ds` (omit `src/db/schema/**`, `drizzle/**`, and generated output). Keep **`engines/create-ds/starter/`** in sync when changing the minimal default schema.
 
 Release **`@corpdk/create-ds`** on the same train as **`@corpdk/dal-codegen`** when upgrade deltas matter.
+
+---
+
+**Related**: [Monorepo Overview](01-monorepo-overview.md) | [GraphQL DAL Requirements](graphql-dal-requirements.md) | [Monorepo Design — CalVer](../architecture/02-monorepo-design.md#calver-format-rules)
+
+**Last updated**: October 5, 2026

@@ -204,4 +204,4 @@ pnpm --filter './templates/**' publish --no-git-checks
 
 **Related**: [System Overview](01-system-overview.md) | [Package Dependencies](06-package-dependencies.md) | [Monorepo Overview](../developer/01-monorepo-overview.md)
 
-**Last updated**: March 31, 2026
+**Last updated**: October 5, 2026

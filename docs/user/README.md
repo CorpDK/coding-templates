@@ -26,4 +26,4 @@ End-user documentation for the `@corpdk/create-app` scaffolding tool. These guid
 
 **Related**: [Documentation Index](../00-index.md) | [Admin Guides](../admin/README.md) | [Developer Guides](../developer/README.md)
 
-**Last updated**: March 31, 2026
+**Last updated**: October 5, 2026

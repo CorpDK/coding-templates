@@ -138,4 +138,4 @@ Welcome to the coding-templates documentation! This monorepo provides production
 
 **Related**: [CLAUDE.md](../CLAUDE.md) | [Contributing](10-contributing.md)
 
-**Last updated**: March 31, 2026
+**Last updated**: October 5, 2026

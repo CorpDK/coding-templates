@@ -113,4 +113,4 @@ pnpm --filter @corpdk/ds codegen    # run codegen for ds
 
 **Related**: [Monorepo Design](../architecture/02-monorepo-design.md) | [Post-Scaffold Setup](../user/05-post-scaffold-setup.md)
 
-**Last updated**: March 31, 2026
+**Last updated**: October 5, 2026

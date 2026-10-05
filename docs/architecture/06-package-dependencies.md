@@ -286,4 +286,4 @@ Tracked here until applied. Remove entries as they are completed.
 
 **Related**: [Monorepo Design](02-monorepo-design.md) | [Monorepo Overview](../developer/01-monorepo-overview.md)
 
-**Last updated**: March 31, 2026
+**Last updated**: October 5, 2026

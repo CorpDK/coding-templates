@@ -28,4 +28,4 @@ System design, technology decisions, and architectural rationale for the coding-
 
 **Related**: [Documentation Index](../00-index.md) | [Developer Guides](../developer/README.md) | [Admin Guides](../admin/README.md)
 
-**Last updated**: March 31, 2026
+**Last updated**: October 5, 2026
