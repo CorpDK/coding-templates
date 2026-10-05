@@ -94,21 +94,30 @@ export async function runUpgrade(options: UpgradeOptions): Promise<void> {
 
   s.stop("Template deltas merged (src/db/schema/** untouched)");
 
-  s.start("Running entity:lint");
-  try {
-    if (await pathExists(dalCodegenLint)) {
-      await execAsync(`node "${dalCodegenLint}"`, {
-        cwd: packageDir,
-      });
-    } else {
-      await execAsync("pnpm exec dal-entity-lint", { cwd: packageDir });
+  const localEntityLint = path.join(
+    packageDir,
+    "node_modules/.bin/dal-entity-lint",
+  );
+  const canRunEntityLint =
+    (await pathExists(dalCodegenLint)) || (await pathExists(localEntityLint));
+
+  if (canRunEntityLint) {
+    s.start("Running entity:lint");
+    try {
+      if (await pathExists(dalCodegenLint)) {
+        await execAsync(`node "${dalCodegenLint}"`, {
+          cwd: packageDir,
+        });
+      } else {
+        await execAsync("pnpm exec dal-entity-lint", { cwd: packageDir });
+      }
+      s.stop("entity:lint passed");
+    } catch (err: unknown) {
+      s.stop("entity:lint reported issues (see output above)");
+      if (err instanceof Error && "stderr" in err) {
+        console.error(String((err as { stderr?: string }).stderr ?? err.message));
+      }
+      throw err;
     }
-    s.stop("entity:lint passed");
-  } catch (err: unknown) {
-    s.stop("entity:lint reported issues (see output above)");
-    if (err instanceof Error && "stderr" in err) {
-      console.error(String((err as { stderr?: string }).stderr ?? err.message));
-    }
-    throw err;
   }
 }

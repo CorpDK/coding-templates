@@ -55,7 +55,7 @@ export function mergePackageJson(
     name: consumer.name ?? template.name,
     version: consumer.version ?? template.version,
     description: consumer.description ?? template.description,
-    publishConfig: consumer.publishConfig ?? template.publishConfig,
+    publishConfig: consumer.publishConfig,
     scripts: normalizeDalScripts(template.scripts ?? {}),
     dependencies: { ...(template.dependencies ?? {}) },
     devDependencies: { ...(template.devDependencies ?? {}) },
