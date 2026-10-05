@@ -1,0 +1,93 @@
+name: Publish DS automation (npm)
+
+# Lockstep CalVer release for @corpdk DAL tooling on npmjs (public).
+# Templates stay on Artifactory — see docs/admin/04-npm-publish-ds-automation.md
+
+on:
+  push:
+    tags:
+      - "ds-automation/v*"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Use npm publish --dry-run (no upload)
+        type: boolean
+        default: true
+      version:
+        description: CalVer to verify (defaults to tag or package.json on main)
+        required: false
+        type: string
+  pull_request:
+    paths:
+      - ".github/workflows/publish-ds-automation.yml"
+      - ".github/scripts/publish-ds-automation.sh"
+      - "libraries/dal-core/**"
+      - "libraries/dal-codegen/**"
+      - "libraries/codegen-cli/**"
+      - "libraries/pub-sub/**"
+      - "engines/create-ds/**"
+
+concurrency:
+  group: publish-ds-automation-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Resolve release version
+        id: version
+        run: |
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref_type }}" == "tag" ]]; then
+            tag="${GITHUB_REF#refs/tags/ds-automation/v}"
+            echo "value=${tag}" >> "$GITHUB_OUTPUT"
+          elif [[ -n "${{ inputs.version }}" ]]; then
+            echo "value=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=$(node -p "require('./libraries/dal-core/package.json').version")" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Resolve dry-run mode
+        id: dry
+        run: |
+          dry="true"
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref_type }}" == "tag" ]]; then
+            dry="false"
+          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            dry="${{ inputs.dry_run }}"
+          fi
+          if [[ -z "${{ secrets.NPM_TOKEN }}" ]]; then
+            echo "NPM_TOKEN secret missing — forcing dry-run."
+            dry="true"
+          fi
+          echo "value=${dry}" >> "$GITHUB_OUTPUT"
+
+      - name: Configure npm auth
+        if: steps.dry.outputs.value != 'true'
+        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
+
+      - name: Publish DS automation packages
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          chmod +x .github/scripts/publish-ds-automation.sh
+          args=("${{ steps.version.outputs.value }}")
+          if [[ "${{ steps.dry.outputs.value }}" == "true" ]]; then
+            args+=(--dry-run)
+          fi
+          .github/scripts/publish-ds-automation.sh "${args[@]}"

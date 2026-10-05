@@ -11,6 +11,7 @@ Deployment, configuration, and infrastructure guides for the coding-templates mo
 | [01-environment-variables.md](01-environment-variables.md) | Full env var reference for DS, UI, and auth packages       |
 | [02-docker-deployment.md](02-docker-deployment.md)         | Dockerfile usage, build commands, standalone output config |
 | [03-pubsub-redis.md](03-pubsub-redis.md)                   | Redis vs in-memory transport selection and configuration   |
+| [04-npm-publish-ds-automation.md](04-npm-publish-ds-automation.md) | CI npm publish for DAL libraries and `create-ds` |
 
 ---
 
