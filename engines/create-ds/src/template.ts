@@ -72,10 +72,3 @@ export const UPGRADE_RELATIVE_FILES = [
   "src/index.ts",
   "src/db/index.ts",
 ] as const;
-
-export const PROTECTED_PREFIXES = ["src/db/schema/"] as const;
-
-export function isProtectedRelativePath(relPath: string): boolean {
-  const normalized = relPath.replace(/\\/g, "/");
-  return PROTECTED_PREFIXES.some((prefix) => normalized.startsWith(prefix));
-}

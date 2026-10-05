@@ -7,7 +7,6 @@ import {
   resolveCanonicalDsTemplateDir,
   isBundledCanonicalTemplate,
   readCreateDsReleaseVersion,
-  isProtectedRelativePath,
 } from "./template.js";
 import {
   execAsync,
@@ -145,7 +144,6 @@ export async function runUpgrade(options: UpgradeOptions): Promise<void> {
     : undefined;
 
   for (const rel of UPGRADE_RELATIVE_FILES) {
-    if (isProtectedRelativePath(rel)) continue;
     await copyUpgradeRelativeFile(rel, templateDir, packageDir, mergeOptions);
   }
 
