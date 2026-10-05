@@ -17,7 +17,7 @@ Implementation guides, coding patterns, and standards for contributors to the co
 | [06-ui-status.md](06-ui-status.md)                              | Living capability status matrix across all UI packages                                                |
 | [07-git-conventions.md](07-git-conventions.md)                  | Conventional Commits format and examples                                                              |
 | [08-coding-guidelines.md](08-coding-guidelines.md)              | Code style, component patterns, review checklist                                                      |
-| [09-enhancement-backlog.md](09-enhancement-backlog.md)          | Future improvements for UI and DS packages                                                            |
+| [09-enhancement-backlog.md](09-enhancement-backlog.md)          | Open UI work and `templates/ds` enhancements (see doc intro)                                          |
 | [dal-entity-design.md](dal-entity-design.md)                    | Drizzle entity table design — audit profiles, relations, indexes, schema scope                        |
 | [dal-pg-type-mapping.md](dal-pg-type-mapping.md)                | PostgreSQL → DAL type mapping — PG types, `ID` for uuid, custom scalars (`IntervalMs`, etc.), filters |
 | [graphql-dal-requirements.md](graphql-dal-requirements.md)      | GraphQL DAL requirements — inference rules, queries, mutations, filters, pagination                   |
