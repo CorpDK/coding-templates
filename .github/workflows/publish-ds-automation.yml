@@ -43,7 +43,7 @@ on:
 
 concurrency:
   group: publish-ds-automation-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 permissions:
   contents: write
