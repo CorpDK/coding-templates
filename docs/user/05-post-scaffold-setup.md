@@ -1,5 +1,8 @@
 # Post-Scaffold Setup
 
+For a single DS package from **`pnpm create-ds init`**, see
+[DS automation upgrades](../developer/ds-automation-upgrades.md) (`pnpm install`, then `pnpm dal:codegen`).
+
 After `pnpm create-app` finishes writing your project:
 
 ```bash
@@ -113,4 +116,4 @@ Man page: `man ./packages/ds-cli/src/generated/man/<projectName>.1`
 
 **Related**: [Environment Variables](../admin/01-environment-variables.md) | [Docker Deployment](../admin/02-docker-deployment.md) | [PubSub / Redis](../admin/03-pubsub-redis.md)
 
-**Last updated**: March 31, 2026
+**Last updated**: October 5, 2026

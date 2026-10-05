@@ -281,6 +281,7 @@ Tracked here until applied. Remove entries as they are completed.
 | 2026-03-29 | @apollo/client                        | ^3.13.8  | ^4.1.6   | Major bump; ApolloProvider moved to @apollo/client/react; split() replaced by ApolloLink.split() |
 | 2026-03-29 | zod                                   | ^3.24.2  | ^4.3.6   | Major bump; root export maintains v3 compat, no source changes needed                            |
 | 2026-03-29 | typescript                            | ^5.9.3   | ^6.0.2   | Major bump; added rootDir to ui-\* tsconfig.build.json; ignoreDeprecations for tsup baseUrl      |
+| 2026-10-05 | publishable `@corpdk/*` (lockstep)    | —        | —        | CalVer `2026.3.0-alpha.1` → `2026.10.0-alpha.1`; `@corpdk/create-ds`; root MIT `LICENSE`         |
 
 ---
 
