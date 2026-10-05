@@ -2,6 +2,7 @@ name: Publish DS automation (npm)
 
 # Lockstep CalVer release for @corpdk DAL tooling on npmjs (public).
 # Templates stay on Artifactory — see docs/admin/04-npm-publish-ds-automation.md
+# Live publish: CorpDK org Actions secret NPM_TOKEN (repo access includes this repository).
 
 on:
   push:
@@ -72,7 +73,7 @@ jobs:
             dry="${{ inputs.dry_run }}"
           fi
           if [[ -z "${{ secrets.NPM_TOKEN }}" ]]; then
-            echo "NPM_TOKEN secret missing — forcing dry-run."
+            echo "NPM_TOKEN org/repo secret missing or repo not linked — forcing dry-run."
             dry="true"
           fi
           echo "value=${dry}" >> "$GITHUB_OUTPUT"

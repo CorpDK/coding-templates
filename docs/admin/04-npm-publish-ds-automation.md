@@ -70,12 +70,27 @@ Configure `//registry.npmjs.org/:_authToken=${NPM_TOKEN}` in `~/.npmrc`, then om
 
 ## Authentication
 
-| Method | CI setup | Notes |
-| ------ | -------- | ----- |
-| **Granular token** (recommended to start) | Repository secret `NPM_TOKEN` with publish access to `@corpdk` | Used by `actions/setup-node` + `~/.npmrc` in the workflow |
-| **OIDC / provenance** (optional later) | `permissions: id-token: write` + npm trusted publishing on the org | Not required for the current workflow; add when org enables npm OIDC |
+### GitHub (CI secret)
 
-Ensure the `@corpdk` npm org grants the token **publish** on the five packages above. `"access": "public"` is already set in each package `publishConfig`.
+Store the npm token in GitHub as an **organization secret**, not a repository-only secret, so the same credential can be linked to multiple publish repos without duplication.
+
+| Step | Action |
+| ---- | ------ |
+| 1 | GitHub → **CorpDK** org → **Settings** → **Secrets and variables** → **Actions** → **New organization secret** |
+| 2 | Name: **`NPM_TOKEN`** (must match the workflow reference `secrets.NPM_TOKEN`) |
+| 3 | Value: npm automation token (see [npm token](#npm-token-value) below) — never commit tokens or paste them into issues or docs |
+| 4 | **Repository access**: **Selected repositories** → add **`coding-templates`**. To reuse the secret elsewhere, add each repo that runs an npm publish workflow the same way |
+
+Linked repositories see org secrets identically to repo secrets in Actions: `${{ secrets.NPM_TOKEN }}`. **No workflow YAML change** is required when moving from a repo secret to an org secret with the same name. Forks and repos without access do not receive the secret; tag/manual runs then **force dry-run** (see [Triggers](#triggers)).
+
+### npm token value
+
+| Method | Setup | Notes |
+| ------ | ------ | ----- |
+| **Granular token** (recommended) | [npmjs.com](https://www.npmjs.com/) → Access Tokens → **Granular** → **Publish** scoped to the five `@corpdk` packages in this doc (or the narrowest `@corpdk` scope your org allows) | Prefer least privilege over a full org-wide publish token; rotate on a schedule |
+| **OIDC / provenance** (optional later) | `permissions: id-token: write` + npm trusted publishing on the org | Not required for the current workflow; add when CorpDK enables npm OIDC |
+
+Ensure the `@corpdk` npm org grants the token **publish** on the five packages above. `"access": "public"` is already set in each package `publishConfig`. The workflow wires auth via `actions/setup-node` (registry URL) and `~/.npmrc` when not in dry-run mode.
 
 ---
 
