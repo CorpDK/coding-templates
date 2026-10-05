@@ -29,15 +29,20 @@ const CORP_DK_BUMP = new Set([
   "@corpdk/dal-codegen",
 ]);
 
-/** Use published CLI bins instead of monorepo-relative dal-codegen paths. */
+const DAL_CODEGEN_CLI =
+  "node ./node_modules/@corpdk/dal-codegen/dist/cli.js";
+const DAL_ENTITY_LINT_CLI =
+  "node ./node_modules/@corpdk/dal-codegen/dist/lint-cli.js";
+
+/** Invoke dal-codegen via installed package (works before pnpm .bin links exist). */
 export function normalizeDalScripts(
   scripts: Record<string, string>,
 ): Record<string, string> {
   const out = { ...scripts };
-  out["dal:codegen:schema"] = "dal-codegen --mode=schema";
-  out["dal:codegen:impl"] = "dal-codegen --mode=impl";
-  out["dal:codegen:bootstrap"] = "dal-codegen --mode=bootstrap";
-  out["entity:lint"] = "dal-entity-lint";
+  out["dal:codegen:schema"] = `${DAL_CODEGEN_CLI} --mode=schema`;
+  out["dal:codegen:impl"] = `${DAL_CODEGEN_CLI} --mode=impl`;
+  out["dal:codegen:bootstrap"] = `${DAL_CODEGEN_CLI} --mode=bootstrap`;
+  out["entity:lint"] = DAL_ENTITY_LINT_CLI;
   return out;
 }
 
@@ -50,13 +55,39 @@ function rewriteCorpdkWorkspaceDeps(
   deps: Record<string, string> | undefined,
   releaseVersion: string,
 ): Record<string, string> {
-  const out = { ...(deps ?? {}) };
+  if (!deps) return {};
+  const out = { ...deps };
   for (const [key, value] of Object.entries(out)) {
     if (key.startsWith("@corpdk/") && value === "workspace:*") {
       out[key] = `^${releaseVersion}`;
     }
   }
   return out;
+}
+
+function mergeConsumerDeps(
+  templateDeps: Record<string, string> | undefined,
+  consumerDeps: Record<string, string> | undefined,
+): Record<string, string> {
+  const merged = templateDeps ? { ...templateDeps } : {};
+  if (!consumerDeps) return merged;
+  for (const [key, value] of Object.entries(consumerDeps)) {
+    if (!CORP_DK_BUMP.has(key)) {
+      merged[key] = value;
+    }
+  }
+  return merged;
+}
+
+function copyPreservedConsumerFields(
+  merged: PkgJson,
+  consumer: PkgJson,
+): void {
+  for (const key of CONSUMER_PRESERVED_TOP_LEVEL) {
+    if (Object.prototype.hasOwnProperty.call(consumer, key)) {
+      merged[key] = consumer[key];
+    }
+  }
 }
 
 export function mergePackageJson(
@@ -71,25 +102,12 @@ export function mergePackageJson(
     description: consumer.description ?? template.description,
     publishConfig: consumer.publishConfig,
     scripts: normalizeDalScripts(template.scripts ?? {}),
-    dependencies: { ...(template.dependencies ?? {}) },
-    devDependencies: { ...(template.devDependencies ?? {}) },
+    dependencies: mergeConsumerDeps(template.dependencies, consumer.dependencies),
+    devDependencies: mergeConsumerDeps(
+      template.devDependencies,
+      consumer.devDependencies,
+    ),
   };
-
-  if (consumer.dependencies) {
-    for (const [key, value] of Object.entries(consumer.dependencies)) {
-      if (!CORP_DK_BUMP.has(key)) {
-        merged.dependencies![key] = value;
-      }
-    }
-  }
-
-  if (consumer.devDependencies) {
-    for (const [key, value] of Object.entries(consumer.devDependencies)) {
-      if (!CORP_DK_BUMP.has(key)) {
-        merged.devDependencies![key] = value;
-      }
-    }
-  }
 
   if (options?.publishedCorpdkVersions) {
     merged.dependencies = rewriteCorpdkWorkspaceDeps(
@@ -102,11 +120,7 @@ export function mergePackageJson(
     );
   }
 
-  for (const key of CONSUMER_PRESERVED_TOP_LEVEL) {
-    if (Object.prototype.hasOwnProperty.call(consumer, key)) {
-      merged[key] = consumer[key];
-    }
-  }
+  copyPreservedConsumerFields(merged, consumer);
 
   return merged;
 }

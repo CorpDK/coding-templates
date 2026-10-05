@@ -1,35 +1,8 @@
 #!/usr/bin/env node
 import { resolve } from "node:path";
 import { runDalCodegen } from "./generate.js";
-import type { CodegenOptions, DalCodegenMode } from "./config.js";
-
-function parseMode(argv: string[]): DalCodegenMode {
-  const flag = argv.find((a) => a.startsWith("--mode="));
-  if (flag) {
-    const value = flag.slice("--mode=".length);
-    if (
-      value === "schema" ||
-      value === "impl" ||
-      value === "all" ||
-      value === "bootstrap"
-    ) {
-      return value;
-    }
-    throw new Error(
-      `Invalid --mode=${value} (expected schema | impl | all | bootstrap)`,
-    );
-  }
-  const envMode = process.env.DAL_CODEGEN_MODE;
-  if (
-    envMode === "schema" ||
-    envMode === "impl" ||
-    envMode === "all" ||
-    envMode === "bootstrap"
-  ) {
-    return envMode;
-  }
-  return "all";
-}
+import type { CodegenOptions } from "./config.js";
+import { parseDalCodegenMode } from "./parse-mode.js";
 
 const packageRoot = resolve(process.cwd());
 
@@ -44,7 +17,7 @@ const options: CodegenOptions = {
   mappersOutputPath:
     process.env.DAL_MAPPERS_OUTPUT_PATH ?? "src/generated/graphql-codegen.mappers.ts",
   configPath: process.env.DAL_CONFIG_PATH ?? "dal/dal.config.yaml",
-  mode: parseMode(process.argv.slice(2)),
+  mode: parseDalCodegenMode(process.argv.slice(2)),
 };
 
 try {
