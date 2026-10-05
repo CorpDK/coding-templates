@@ -51,14 +51,16 @@ Scaffolded **`codegen.ts`** targets sibling **`../ds-sdk`** and **`../ds-cli`** 
 5. Runs **`entity:lint`** only when the monorepo `libraries/dal-codegen/dist/lint-cli.js` exists or **`node_modules/.bin/dal-entity-lint`** is present (skipped after a bare merge until `pnpm install` in DS-only repos).
 6. Prints **`pnpm install`** then **`pnpm dal:codegen`** as required follow-up.
 
-## Semver playbook
+## Upgrade playbook
+
+Published `@corpdk/*` libraries use [CalVer](../architecture/02-monorepo-design.md#calver-format-rules); rows below describe **compatibility impact**, not npm semver version fields.
 
 | Bump | When | Consumer action |
 | ---- | ---- | ----------------- |
 | **Patch** `@corpdk/dal-core` / `@corpdk/dal-codegen` | Bug fixes, lint rules, generated output tweaks | `create-ds upgrade` → `pnpm install` → `pnpm dal:codegen` |
 | **Minor** `@corpdk/dal-core` | New filter operators, relation behavior, optional env | Same; review `entity:lint` warnings |
 | **Major** `@corpdk/dal-core` or codegen breaking changes | GraphQL naming, payload shape, removed scalars | Upgrade tool + fix schema comments/indexes per release notes; run full test suite |
-| **Template-only** (scripts, Docker, bootstrap) | No library semver change | `create-ds upgrade` sufficient; schema untouched |
+| **Template-only** (scripts, Docker, bootstrap) | No `@corpdk` library release | `create-ds upgrade` sufficient; schema untouched |
 
 Always run the three-step codegen chain after upgrading libraries:
 
@@ -82,7 +84,7 @@ pnpm dal:codegen
 
 When changing `templates/ds` automation files, refresh the bundled snapshot under **`engines/create-ds/canonical/`** (paths merged on upgrade):
 
-`package.json`, `dal/dal.config.yaml`, `codegen.ts`, `drizzle.config.ts`, `tsconfig.json`, `Dockerfile`, `docker-compose.yml`, `docker-entrypoint.sh`, `.gitignore`, `.env.example`, `src/schema.ts`, `src/index.ts`, `src/db/index.ts`
+`package.json`, `LICENSE`, `dal/dal.config.yaml`, `codegen.ts`, `drizzle.config.ts`, `tsconfig.json`, `Dockerfile`, `docker-compose.yml`, `docker-entrypoint.sh`, `.gitignore`, `.env.example`, `src/schema.ts`, `src/index.ts`, `src/db/index.ts`
 
 Copy from `templates/ds` (omit `src/db/schema/**`, `drizzle/**`, and generated output). Keep **`engines/create-ds/starter/`** in sync when changing the minimal default schema.
 

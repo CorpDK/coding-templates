@@ -4,6 +4,8 @@
 
 Use `pnpm create-app` to scaffold a new project from any combination of these templates.
 
+To **init** or **upgrade** DAL automation around an existing `@corpdk/ds` package (schema dir stays team-owned), use `pnpm create-ds` — see [DS automation upgrades](../developer/ds-automation-upgrades.md).
+
 ---
 
 ## What Gets Scaffolded

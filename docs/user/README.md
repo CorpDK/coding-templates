@@ -1,6 +1,6 @@
 # User Guides
 
-End-user documentation for the `@corpdk/create-app` scaffolding tool. These guides walk you through creating a new full-stack, DS-only, or UI-only project from the coding-templates monorepo.
+End-user documentation for the `@corpdk/create-app` scaffolding tool. These guides walk you through creating a new full-stack, DS-only, or UI-only project from the coding-templates monorepo. For **`@corpdk/create-ds`** (DAL DS init/upgrade), see [DS automation upgrades](../developer/ds-automation-upgrades.md).
 
 ---
 
