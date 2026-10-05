@@ -30,6 +30,7 @@ Each `package.json` must include a monorepo **`repository`** object (`url` → t
 | ------ | -------------------------------------------------------------------------------------------------- |
 | File   | [`.github/workflows/publish-ds-automation.yml`](../../.github/workflows/publish-ds-automation.yml) |
 | Script | [`.github/scripts/publish-ds-automation.sh`](../../.github/scripts/publish-ds-automation.sh)       |
+| Node   | **24.x** (`actions/setup-node@v7`, `node-version: "24"`) — matches monorepo `engines.node`       |
 
 ### Triggers
 

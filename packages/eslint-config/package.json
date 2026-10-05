@@ -18,5 +18,8 @@
     "eslint": "^9",
     "eslint-config-next": ">=16"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": ">=24.0.0"
+  }
 }

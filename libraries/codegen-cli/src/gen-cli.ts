@@ -285,7 +285,7 @@ export function generateCli(
     "#!/usr/bin/env node",
     "// @generated — do not edit manually",
     "// Regenerate by running: pnpm codegen (in your DS package)",
-    "// Requires Node 18+ (fetch) and Node 22+ (WebSocket)",
+    "// Requires Node 24+ (fetch, WebSocket)",
     "",
     'import { parseArgs } from "node:util";',
     'import { readFileSync } from "node:fs";',

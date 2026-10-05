@@ -31,10 +31,13 @@
     "@graphql-codegen/typescript": "^5.0.9",
     "@graphql-codegen/typescript-resolvers": "^5.1.7",
     "@types/js-yaml": "^4.0.9",
-    "@types/node": "^20.19.37",
+    "@types/node": "^24.0.0",
     "@types/ws": "^8.18.1",
     "tsx": "^4.21.0",
     "typescript": "^6.0.2"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": ">=24.0.0"
+  }
 }

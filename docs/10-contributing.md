@@ -6,6 +6,8 @@
 
 ### Getting Started
 
+**Prerequisites:** Node.js **24.x LTS** (see `.node-version` / `.mise.toml` at the repo root) and **pnpm** via Corepack (`packageManager` in root `package.json`).
+
 1. Clone the repository and run `pnpm install` from the root
 2. Copy `.env.example` to `.env` in each package you plan to develop
 3. Run `pnpm dev` to start all packages in development mode
@@ -64,4 +66,4 @@ For issues, questions, or suggestions:
 
 **Related**: [Documentation Index](00-index.md) | [Coding Guidelines](developer/08-coding-guidelines.md) | [Git Conventions](developer/07-git-conventions.md)
 
-**Last updated**: March 31, 2026
+**Last updated**: October 5, 2026
