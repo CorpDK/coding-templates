@@ -67,10 +67,11 @@ Workflow permissions for live publish: `id-token: write` (OIDC token for npm) an
 ## Release checklist (maintainers)
 
 1. Bump **all five** `package.json` `version` fields to the same CalVer (and update [Package Dependencies](../architecture/06-package-dependencies.md) upgrade log if you track releases there).
-2. Merge to `main`.
-3. Confirm [trusted publishing](#configure-trusted-publishing-on-npmjs) is configured on npm for all five packages (one-time per package).
-4. Either push a tag — `git tag ds-automation/v2026.10.0-alpha.1 && git push origin ds-automation/v2026.10.0-alpha.1` — or run **workflow_dispatch** on `main` with `dry_run: false` (CI creates the same tag from HEAD when absent).
-5. Confirm the **Publish DS automation (npm)** workflow succeeded on GitHub Actions and that the matching **GitHub Release** exists under Releases.
+2. Merge to `main` (or validate on a PR — workflow **dry-run** on pull requests checks build/tests/packaging without npm auth).
+3. **First release only:** if any of the five packages are missing on npmjs, complete [First-time bootstrap](#first-time-bootstrap-packages-not-on-npm-yet) (local `npm login` / `NPM_TOKEN`, not OIDC).
+4. Confirm [trusted publishing](#configure-trusted-publishing-on-npmjs) is configured on npm for all five packages (one-time per package; only after each package exists on the registry).
+5. Either push a tag — `git tag ds-automation/v2026.10.0-alpha.1 && git push origin ds-automation/v2026.10.0-alpha.1` — or run **workflow_dispatch** on `main` with `dry_run: false` (CI creates the same tag from HEAD when absent).
+6. Confirm the **Publish DS automation (npm)** workflow succeeded on GitHub Actions and that the matching **GitHub Release** exists under Releases.
 
 ### Local dry-run (no token)
 
@@ -81,11 +82,82 @@ pnpm install --frozen-lockfile
 
 ### Local publish (maintainer machine)
 
-Use `npm login` or `//registry.npmjs.org/:_authToken=${NPM_TOKEN}` in `~/.npmrc`, then run the script without `--dry-run`. Prefer CI tag releases for auditability and provenance.
+Use `npm login` or `//registry.npmjs.org/:_authToken=${NPM_TOKEN}` in `~/.npmrc`, then run the script without `--dry-run`. Prefer CI tag releases for auditability and provenance after trusted publishing is configured (see [First-time bootstrap](#first-time-bootstrap-packages-not-on-npm-yet) if the packages are not on npm yet).
 
 ---
 
 ## Authentication
+
+### First-time bootstrap (packages not on npm yet)
+
+[npm trusted publishers](https://docs.npmjs.com/trusted-publishers) require **each package to already exist on the registry** before you can add a GitHub Actions trusted publisher. The five DS automation packages may never have been published; do this **once** from a maintainer machine, then configure trusted publishing and use CI for every later release.
+
+#### Prerequisites
+
+| Requirement | Detail |
+| ----------- | ------ |
+| **npm org** | The `@corpdk` organization exists on [npmjs.com](https://www.npmjs.com/org/corpdk). |
+| **Your account** | You are an npm **org owner** or have **publish** rights on scoped packages under `@corpdk` (team member with read-write, or package owner). |
+| **Monorepo** | Checkout `main` (or the branch that contains [`.github/scripts/publish-ds-automation.sh`](../../.github/scripts/publish-ds-automation.sh)) with all five `package.json` files at the **same** CalVer you intend to ship. |
+| **Scoped public access** | Each package already has `"publishConfig": { "access": "public" }`. The **first** publish of a scoped package must still pass `--access public` (the publish script does this). Scoped modules default to restricted until you publish as public. |
+
+Do **not** use GitHub Actions OIDC for this step — trusted publishing is configured **after** the initial tarball upload. Pull requests that touch DS automation still run the workflow in **dry-run** mode (build, tests, `npm publish --dry-run`) with **no** registry auth, which validates packaging before bootstrap.
+
+#### One-time publish (recommended: existing script)
+
+From the monorepo root, with Node/pnpm versions matching CI:
+
+```bash
+pnpm install --frozen-lockfile
+VERSION="$(node -p "require('./libraries/dal-core/package.json').version")"
+
+# Authenticate once (pick one):
+npm login --registry=https://registry.npmjs.org
+# OR: export NPM_TOKEN=...  and ensure ~/.npmrc contains:
+#     //registry.npmjs.org/:_authToken=${NPM_TOKEN}
+
+.github/scripts/publish-ds-automation.sh "${VERSION}"
+```
+
+The script verifies lockstep versions, runs `pnpm turbo run build` and the same DAL tests as CI, then `pnpm publish --no-git-checks --access public` in dependency order:
+
+1. `@corpdk/dal-core`
+2. `@corpdk/pub-sub`
+3. `@corpdk/codegen-cli`
+4. `@corpdk/dal-codegen`
+5. `@corpdk/create-ds`
+
+#### One-time publish (manual equivalent)
+
+If you cannot run the script, use the same steps explicitly:
+
+```bash
+pnpm install --frozen-lockfile
+VERSION="$(node -p "require('./libraries/dal-core/package.json').version")"
+# …verify all five package.json version fields equal ${VERSION}…
+
+pnpm turbo run build \
+  --filter=@corpdk/dal-core \
+  --filter=@corpdk/pub-sub \
+  --filter=@corpdk/codegen-cli \
+  --filter=@corpdk/dal-codegen \
+  --filter=@corpdk/create-ds
+
+pnpm --filter @corpdk/dal-core test
+pnpm --filter @corpdk/dal-codegen test
+
+for pkg in @corpdk/dal-core @corpdk/pub-sub @corpdk/codegen-cli @corpdk/dal-codegen @corpdk/create-ds; do
+  pnpm --filter "${pkg}" publish --no-git-checks --access public
+done
+```
+
+#### After bootstrap
+
+1. Confirm all five packages appear on npm at the expected version (e.g. `https://www.npmjs.com/package/@corpdk/dal-core`).
+2. Configure [trusted publishing](#configure-trusted-publishing-on-npmjs) on **each** package (UI or `npm trust github` loop below).
+3. Merge the publish workflow to `main` if it is not already there, then use **tag push**, **workflow_dispatch** with `dry_run: false`, or future CalVer bumps via CI — live CI publishes use OIDC + `--provenance`, not `NPM_TOKEN`.
+
+Subsequent version bumps still require the same lockstep CalVer edit across all five packages; only the **first** upload must be local/token auth.
 
 ### Primary: npm trusted publishing (GitHub Actions OIDC)
 

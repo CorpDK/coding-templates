@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 # Publish the lockstep DS automation package set to npmjs (public @corpdk scope).
 # Git tag ds-automation/v<CalVer> and GitHub Release are created by the workflow, not here.
+#
+# First time the packages are not on npm yet: use this script locally with npm login or
+# NPM_TOKEN (not GitHub OIDC). See docs/admin/04-npm-publish-ds-automation.md
+# § "First-time bootstrap (packages not on npm yet)" before configuring trusted publishers.
+#
 # Usage: publish-ds-automation.sh <expected-version> [--dry-run]
 set -euo pipefail
 
