@@ -154,7 +154,7 @@ done
 #### After bootstrap
 
 1. Confirm all five packages appear on npm at the expected version (e.g. `https://www.npmjs.com/package/@corpdk/dal-core`).
-2. Configure [trusted publishing](#configure-trusted-publishing-on-npmjs) on **each** package (UI or `npm trust github` loop below).
+2. Configure [trusted publishing](#configure-trusted-publishing-on-npmjs) on **each** package (UI or `npm github` / `npm trust github` loop below).
 3. Merge the publish workflow to `main` if it is not already there, then use **tag push**, **workflow_dispatch** with `dry_run: false`, or future CalVer bumps via CI — live CI publishes use OIDC + `--provenance`, not `NPM_TOKEN`.
 
 Subsequent version bumps still require the same lockstep CalVer edit across all five packages; only the **first** upload must be local/token auth.
@@ -199,19 +199,28 @@ For **each** of the five packages below, an npm org owner or package maintainer 
 | `@corpdk/dal-codegen` |
 | `@corpdk/create-ds` |
 
-**CLI equivalent** (logged-in maintainer, package must already exist on the registry):
+**CLI equivalent** (logged-in maintainer, package must already exist on the registry). Omit `--environment` when the workflow has no GitHub `environment:` (true for [`publish-ds-automation.yml`](../../.github/workflows/publish-ds-automation.yml)). Run `npm github --help` or `npm trust --help` on your machine — npm **11.12.x** exposes this as `npm trust github` (no `--allow-publish` flag); npm **≥11.15** adds optional `--allow-publish` / `--allow-stage-publish` for staged publish. **CI live publish** still requires npm CLI **≥11.15** in the workflow; older npm is fine for this one-time trust setup.
 
 ```bash
 for pkg in @corpdk/dal-core @corpdk/pub-sub @corpdk/codegen-cli @corpdk/dal-codegen @corpdk/create-ds; do
-  npm trust github "$pkg" \
+  npm github "$pkg" \
     --file publish-ds-automation.yml \
     --repository CorpDK/coding-templates \
-    --allow-publish \
     -y
 done
 ```
 
-**Verification:** After configuration, a tag push or manual `dry_run: false` run on `CorpDK/coding-templates` should publish without `secrets.NPM_TOKEN`. If publish fails with auth errors, confirm the workflow filename matches exactly (including `.yml`), the repo is `CorpDK/coding-templates`, and `id-token: write` is present on the workflow.
+If your npm reports `Unknown command: "github"`, use the same flags with `npm trust github` instead of `npm github`.
+
+**Verify trust configuration** (repeat for each package, or spot-check one):
+
+```bash
+npm trust list @corpdk/dal-core
+```
+
+Expect a GitHub Actions trusted publisher for workflow `publish-ds-automation.yml` on `CorpDK/coding-templates`. Use `--json` for machine-readable output.
+
+**Verification (CI):** After configuration, a tag push or manual `dry_run: false` run on `CorpDK/coding-templates` should publish without `secrets.NPM_TOKEN`. If publish fails with auth errors, confirm the workflow filename matches exactly (including `.yml`), the repo is `CorpDK/coding-templates`, and `id-token: write` is present on the workflow.
 
 ### Legacy optional: `NPM_TOKEN` (local or emergency)
 
