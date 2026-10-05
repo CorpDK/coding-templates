@@ -183,7 +183,7 @@ Registry credentials are configured via `.npmrc` (not checked into the repo):
 //artifactory.corp.example.com/api/npm/npm-private/:_authToken=${ARTIFACTORY_TOKEN}
 ```
 
-In CI, set `NPM_TOKEN` and `ARTIFACTORY_TOKEN` as pipeline secrets.
+In CI, set `ARTIFACTORY_TOKEN` as a pipeline secret (repo or org, per your registry setup). **DS automation** releases to npmjs use **trusted publishing (GitHub Actions OIDC)** — no long-lived `NPM_TOKEN` in that workflow; configure trusted publishers on npm per package. Local or break-glass npmjs publish may still use `NPM_TOKEN` in `~/.npmrc`. See [npm publish — DS automation packages](../admin/04-npm-publish-ds-automation.md#authentication).
 
 ### Publishing Workflow
 
@@ -199,6 +199,10 @@ pnpm --filter './templates/**' publish --no-git-checks
 ```
 
 `--no-git-checks` is required in CI where the working tree may be detached or shallow. Omit it locally to enforce clean-tree publishing.
+
+### CI — DS automation (npmjs)
+
+The **DS automation** subset (`dal-core`, `pub-sub`, `codegen-cli`, `dal-codegen`, `create-ds`) is published to npmjs in **lockstep CalVer** via GitHub Actions on tags `ds-automation/v*`. Templates are not included. See [npm publish — DS automation packages](../admin/04-npm-publish-ds-automation.md).
 
 ---
 

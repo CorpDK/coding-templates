@@ -11,6 +11,7 @@ Welcome to the coding-templates documentation! This monorepo provides production
 - [Environment Variables](admin/01-environment-variables.md) — full env var reference for every package
 - [Docker Deployment](admin/02-docker-deployment.md) — Dockerfile usage, build commands, runtime config
 - [PubSub / Redis](admin/03-pubsub-redis.md) — transport selection and Redis configuration
+- [npm — DS automation publish](admin/04-npm-publish-ds-automation.md) — CalVer lockstep release to npmjs
 
 ### Architecture
 
@@ -57,6 +58,7 @@ Welcome to the coding-templates documentation! This monorepo provides production
 | --------------------------- | ------------------------------------------------------------- |
 | **Set up a new project**    | [Interactive Mode](user/02-interactive-mode.md)               |
 | **Scaffold / upgrade a DS** | [DS automation upgrades](developer/ds-automation-upgrades.md) |
+| **Release DS automation to npm** | [npm — DS automation publish](admin/04-npm-publish-ds-automation.md) |
 | **Configure environment**   | [Environment Variables](admin/01-environment-variables.md)    |
 | **Deploy with Docker**      | [Docker Deployment](admin/02-docker-deployment.md)            |
 | **Add a GraphQL entity**    | [Repository Pattern](developer/03-repository-pattern.md)      |
