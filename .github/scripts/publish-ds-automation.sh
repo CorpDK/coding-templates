@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Publish the lockstep DS automation package set to npmjs (public @corpdk scope).
 # Git tag ds-automation/v<CalVer> and GitHub Release are created by CI on live main publish, not here.
+# Repair stale latest without republish: npm dist-tag add @corpdk/<pkg>@<CalVer> latest (see admin doc § dist-tags).
 # Live CI publish runs only on push to main when libraries/dal-core CalVer changed (see workflow).
 #
 # First time the packages are not on npm yet: use this script locally with npm login or
@@ -74,7 +75,8 @@ echo "Running DAL unit tests…"
 pnpm --filter @corpdk/dal-core test
 pnpm --filter @corpdk/dal-codegen test
 
-publish_flags=(--no-git-checks --access public)
+# Prerelease CalVer (e.g. 2026.10.0-alpha.N) would otherwise get dist-tag "alpha", not "latest".
+publish_flags=(--no-git-checks --access public --tag latest)
 if [[ "${DRY_RUN}" == true ]]; then
   publish_flags+=(--dry-run)
   echo "Dry run: npm publish will not upload tarballs."
