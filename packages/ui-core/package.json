@@ -85,5 +85,8 @@
     "zustand": "^5.0.12"
   },
   "sideEffects": false,
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": ">=24.0.0"
+  }
 }

@@ -30,6 +30,7 @@ Each `package.json` must include a monorepo **`repository`** object (`url` → t
 | ------ | -------------------------------------------------------------------------------------------------- |
 | File   | [`.github/workflows/publish-ds-automation.yml`](../../.github/workflows/publish-ds-automation.yml) |
 | Script | [`.github/scripts/publish-ds-automation.sh`](../../.github/scripts/publish-ds-automation.sh)       |
+| Node   | **24.x** (`actions/setup-node@v7`, `node-version: "24"`) — matches monorepo `engines.node`       |
 
 ### Triggers
 
@@ -67,10 +68,35 @@ Release notes list all five packages at the release CalVer and link back to this
 1. Verify every package in the set has the **same** `version` as the release (from input or `libraries/dal-core/package.json`).
 2. `pnpm turbo run build` for all five packages (respects dependency order via Turbo).
 3. `pnpm --filter @corpdk/dal-core test` and `@corpdk/dal-codegen test` (same coverage as [`.github/workflows/dal.yml`](../../.github/workflows/dal.yml) for libraries).
-4. `pnpm publish --no-git-checks` in dependency order; `--dry-run` when not releasing; live runs add `--provenance`.
+4. `pnpm publish --no-git-checks --tag latest` in dependency order; `--dry-run` when not releasing; live runs add `--provenance`.
 5. On live publish only: ensure git tag `ds-automation/v<CalVer>` on the release commit, then `gh release create` with generated notes (`permissions.contents: write`).
 
 Workflow permissions for live publish: `id-token: write` (OIDC token for npm) and `contents: write` (releases and tag push). `actions/setup-node@v7` sets `registry-url: https://registry.npmjs.org` without a static `NODE_AUTH_TOKEN`; npm CLI ≥ 11.15 exchanges the GitHub OIDC token with the registry when trusted publishing is configured.
+
+### Dist-tags (`latest` vs prerelease)
+
+npm assigns a **dist-tag** on every publish. `npm install @corpdk/create-ds` (no `@version`) resolves the version behind the **`latest`** tag.
+
+For semver **prereleases** (CalVer with `-alpha.N`, `-beta.N`, etc.), npm’s default is **not** `latest`: it tags the tarball with the prerelease identifier (e.g. `alpha`). A successful CI publish can therefore upload `2026.10.0-alpha.3` while **`latest` still points at an older build** (e.g. `2026.10.0-alpha.1`) until something moves the tag.
+
+Until the stack ships a stable (non-prerelease) CalVer line, maintainers want **`latest` on every lockstep alpha** so downstream `create-ds` / semver ranges behave predictably. [`.github/scripts/publish-ds-automation.sh`](../../.github/scripts/publish-ds-automation.sh) passes **`--tag latest`** on every live and dry-run publish (local and CI).
+
+**Check tags after a release:**
+
+```bash
+npm view @corpdk/create-ds dist-tags
+```
+
+**One-time repair** (no republish): point `latest` at the version that already exists on the registry:
+
+```bash
+VERSION=2026.10.0-alpha.3   # replace with the CalVer you shipped
+for pkg in @corpdk/dal-core @corpdk/pub-sub @corpdk/codegen-cli @corpdk/dal-codegen @corpdk/create-ds; do
+  npm dist-tag add "${pkg}@${VERSION}" latest
+done
+```
+
+Requires npm login with publish access on each package.
 
 ---
 
@@ -81,7 +107,7 @@ Workflow permissions for live publish: `id-token: write` (OIDC token for npm) an
 3. **First release only:** if any of the five packages are missing on npmjs, complete [First-time bootstrap](#first-time-bootstrap-packages-not-on-npm-yet) (local `npm login` / `NPM_TOKEN`, not OIDC) **before** merge or use break-glass dispatch after bootstrap.
 4. Confirm [trusted publishing](#configure-trusted-publishing-on-npmjs) is configured on npm for all five packages (one-time per package; only after each package exists on the registry).
 5. **Merge to `main`.** CI detects the CalVer bump in `libraries/dal-core`, live-publishes all five packages, creates tag `ds-automation/v<CalVer>`, and opens the GitHub Release. Maintainers do **not** push release tags manually for normal releases.
-6. Confirm **Publish DS automation (npm)** succeeded on the merge commit and that the **GitHub Release** for `ds-automation/v<CalVer>` exists.
+6. Confirm **Publish DS automation (npm)** succeeded on the merge commit, that the **GitHub Release** for `ds-automation/v<CalVer>` exists, and that `npm view @corpdk/create-ds dist-tags` shows **`latest`** at that CalVer (see [Dist-tags](#dist-tags-latest-vs-prerelease) if not).
 
 **Break-glass:** On `main`, **workflow_dispatch** with `dry_run: false` repeats live publish + tag + release (skips if tag/release already exist). Use only if merge publish failed; do not use from feature branches.
 
@@ -131,7 +157,7 @@ npm login --registry=https://registry.npmjs.org
 .github/scripts/publish-ds-automation.sh "${VERSION}"
 ```
 
-The script verifies lockstep versions, runs `pnpm turbo run build` and the same DAL tests as CI, then `pnpm publish --no-git-checks --access public` in dependency order:
+The script verifies lockstep versions, runs `pnpm turbo run build` and the same DAL tests as CI, then `pnpm publish --no-git-checks --access public --tag latest` in dependency order:
 
 1. `@corpdk/dal-core`
 2. `@corpdk/pub-sub`
@@ -159,7 +185,7 @@ pnpm --filter @corpdk/dal-core test
 pnpm --filter @corpdk/dal-codegen test
 
 for pkg in @corpdk/dal-core @corpdk/pub-sub @corpdk/codegen-cli @corpdk/dal-codegen @corpdk/create-ds; do
-  pnpm --filter "${pkg}" publish --no-git-checks --access public
+  pnpm --filter "${pkg}" publish --no-git-checks --access public --tag latest
 done
 ```
 
@@ -180,7 +206,7 @@ CI live publishes use [npm trusted publishers](https://docs.npmjs.com/trusted-pu
 | GitHub workflow | [`publish-ds-automation.yml`](../../.github/workflows/publish-ds-automation.yml) with `permissions.id-token: write` |
 | npm CLI in CI   | ≥ **11.15.0** (workflow runs `npm install -g npm@^11.15.0`)                                                         |
 | Registry        | `https://registry.npmjs.org` via `actions/setup-node` `registry-url`                                                |
-| Publish flags   | `--provenance` on live CI publishes                                                                                 |
+| Publish flags   | `--tag latest` (all publishes); `--provenance` on live CI publishes only                                            |
 
 Each `@corpdk` package must exist on npmjs before you add a trusted publisher. Trusted publishing is **per package** (repeat for all five).
 

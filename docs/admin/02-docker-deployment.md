@@ -33,6 +33,7 @@ const nextConfig: NextConfig = {
 
 ## DS Dockerfile Notes
 
+- Base image: **`node:24-alpine`** (aligned with monorepo Node 24 LTS)
 - Build context is always the monorepo root
 - `@corpdk/ds-sdk` is resolved at build time; Docker's `COPY` dereferences pnpm symlinks so it is self-contained in `node_modules` at runtime
 - **`templates/ds` (DAL):** `dal:codegen` runs during the Docker build and emits gitignored SDL at `src/generated/generated-schema.ts` plus DAL artifacts under `src/generated/dal/`; `tsc` compiles generated TypeScript into `dist/` — no manual `src/schema/*.graphqls` copy step

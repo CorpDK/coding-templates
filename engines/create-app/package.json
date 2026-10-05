@@ -21,9 +21,12 @@
     "@clack/prompts": "^1.1.0"
   },
   "devDependencies": {
-    "@types/node": "^20.19.37",
+    "@types/node": "^24.0.0",
     "tsup": "^8.5.1",
     "typescript": "^6.0.2"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": ">=24.0.0"
+  }
 }

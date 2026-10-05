@@ -1,7 +1,7 @@
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 
-/** Register tsx so Drizzle schema `.ts` files resolve sibling `./foo.js` imports on Node 22+. */
+/** Register tsx so Drizzle schema `.ts` files resolve sibling `./foo.js` imports on Node 24+. */
 let ready: Promise<void> | undefined;
 
 export function ensureSchemaTypeScriptLoader(): Promise<void> {

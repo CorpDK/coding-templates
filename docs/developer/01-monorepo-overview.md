@@ -2,6 +2,8 @@
 
 `coding-templates` is a pnpm + Turborepo monorepo under the `@corpdk` org. It provides production-ready templates and shared libraries for full-stack GraphQL applications.
 
+**Runtime:** Node.js **24.x LTS** (`engines.node`: `>=24.0.0` on all workspace packages). Pin locally with [mise](https://mise.jdx.dev/) (`.mise.toml`), [nvm](https://github.com/nvm-sh/nvm) / [fnm](https://github.com/Schniz/fnm) (`.node-version`), or any version manager that reads those files. GitHub Actions and Docker templates use the same major.
+
 ---
 
 ## Repository Layout
