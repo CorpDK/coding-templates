@@ -2,7 +2,7 @@ name: Publish DS automation (npm)
 
 # Lockstep CalVer release for @corpdk DAL tooling on npmjs (public).
 # Templates stay on Artifactory — see docs/admin/04-npm-publish-ds-automation.md
-# Live publish: CorpDK org Actions secret NPM_TOKEN (repo access includes this repository).
+# Live publish: npm Trusted Publishing (GitHub Actions OIDC) — configure each package on npmjs.
 # Live publish also creates a GitHub Release for tag ds-automation/v<CalVer> (tag push or
 # workflow_dispatch with dry_run false). Manual dispatch creates the tag from HEAD when missing.
 
@@ -36,6 +36,7 @@ concurrency:
 
 permissions:
   contents: write
+  id-token: write
 
 jobs:
   publish:
@@ -45,11 +46,12 @@ jobs:
 
       - uses: pnpm/action-setup@v4
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
           cache: pnpm
           registry-url: https://registry.npmjs.org
+          package-manager-cache: false
 
       - run: pnpm install --frozen-lockfile
 
@@ -69,14 +71,18 @@ jobs:
         id: dry
         run: |
           dry="true"
-          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref_type }}" == "tag" ]]; then
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "Pull request — dry-run only (no npm upload, no release)."
+          elif [[ "${{ github.event_name }}" == "push" && "${{ github.ref_type }}" == "tag" ]]; then
             dry="false"
+            echo "Tag push — live publish via npm trusted publishing (OIDC)."
           elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
             dry="${{ inputs.dry_run }}"
-          fi
-          if [[ -z "${{ secrets.NPM_TOKEN }}" ]]; then
-            echo "NPM_TOKEN org/repo secret missing or repo not linked — forcing dry-run."
-            dry="true"
+            if [[ "${dry}" == "false" ]]; then
+              echo "Manual dispatch — live publish via npm trusted publishing (OIDC)."
+            else
+              echo "Manual dispatch — dry-run (dry_run input true)."
+            fi
           fi
           echo "value=${dry}" >> "$GITHUB_OUTPUT"
 
@@ -112,13 +118,10 @@ jobs:
           git tag -a "${TAG}" -m "DS automation CalVer ${VERSION}"
           git push origin "refs/tags/${TAG}"
 
-      - name: Configure npm auth
-        if: steps.dry.outputs.value != 'true'
-        run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
+      - name: Ensure npm supports trusted publishing
+        run: npm install -g npm@^11.15.0
 
       - name: Publish DS automation packages
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
           chmod +x .github/scripts/publish-ds-automation.sh
           args=("${{ steps.version.outputs.value }}")

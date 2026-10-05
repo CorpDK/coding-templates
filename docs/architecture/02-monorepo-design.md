@@ -183,7 +183,7 @@ Registry credentials are configured via `.npmrc` (not checked into the repo):
 //artifactory.corp.example.com/api/npm/npm-private/:_authToken=${ARTIFACTORY_TOKEN}
 ```
 
-In CI, set `ARTIFACTORY_TOKEN` as a pipeline secret (repo or org, per your registry setup). For npmjs, store **`NPM_TOKEN` as a CorpDK GitHub organization secret** and grant repository access to `coding-templates` (and any other repo that publishes `@corpdk` packages); workflows reference `secrets.NPM_TOKEN` unchanged. See [npm publish — DS automation packages](../admin/04-npm-publish-ds-automation.md#authentication).
+In CI, set `ARTIFACTORY_TOKEN` as a pipeline secret (repo or org, per your registry setup). **DS automation** releases to npmjs use **trusted publishing (GitHub Actions OIDC)** — no long-lived `NPM_TOKEN` in that workflow; configure trusted publishers on npm per package. Local or break-glass npmjs publish may still use `NPM_TOKEN` in `~/.npmrc`. See [npm publish — DS automation packages](../admin/04-npm-publish-ds-automation.md#authentication).
 
 ### Publishing Workflow
 

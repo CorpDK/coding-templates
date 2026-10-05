@@ -33,19 +33,18 @@ These five packages ship together at the same CalVer (e.g. `2026.10.0-alpha.1`):
 
 | Trigger | Behavior |
 | ------- | -------- |
-| **Git tag** `ds-automation/v<CalVer>` | Live publish when `NPM_TOKEN` is configured (e.g. `ds-automation/v2026.10.0-alpha.1`); creates a **GitHub Release** for that tag after npm publish |
-| **workflow_dispatch** | Manual run; **dry-run defaults to true**. With `dry_run: false` and `NPM_TOKEN`, creates the tag from **HEAD** if missing, publishes, then creates the GitHub Release |
+| **Git tag** `ds-automation/v<CalVer>` | **Live publish** via npm trusted publishing (OIDC); creates a **GitHub Release** for that tag after npm publish |
+| **workflow_dispatch** | Manual run; **dry-run defaults to true**. With `dry_run: false`, creates the tag from **HEAD** if missing, publishes via OIDC, then creates the GitHub Release |
 | **pull_request** (paths under DS automation + workflow) | Always **dry-run** (validates build, tests, and publish packaging) |
 
-If `NPM_TOKEN` is absent, tag and manual runs still execute but **force dry-run** so forks and PRs never upload. Dry-run never creates git tags or GitHub Releases; it logs what would happen.
+Dry-run never needs npm auth, never creates git tags or GitHub Releases, and logs what would happen on a live run.
 
 ### Outcomes (trigger × dry-run)
 
 | Trigger | Effective dry-run | Git tag | npm publish | GitHub Release |
 | ------- | ----------------- | ------- | ----------- | -------------- |
-| Tag push `ds-automation/v*` | `false` (if `NPM_TOKEN` set) | Already on ref; not recreated | Live upload | Created after publish if missing |
-| Tag push | forced `true` (no `NPM_TOKEN`) | Unchanged | `--dry-run` only | No |
-| **workflow_dispatch** `dry_run: false` | `false` (if `NPM_TOKEN` set) | `ds-automation/v<version>` pushed from HEAD if absent | Live upload | Created after publish if missing |
+| Tag push `ds-automation/v*` | `false` | Already on ref; not recreated | Live upload (OIDC + `--provenance`) | Created after publish if missing |
+| **workflow_dispatch** `dry_run: false` | `false` | `ds-automation/v<version>` pushed from HEAD if absent | Live upload (OIDC + `--provenance`) | Created after publish if missing |
 | **workflow_dispatch** `dry_run: true` | `true` | No; logs intent | `--dry-run` only | No; logs intent |
 | **pull_request** | `true` | No | `--dry-run` only | No |
 
@@ -58,8 +57,10 @@ Release notes list all five packages at the release CalVer and link back to this
 1. Verify every package in the set has the **same** `version` as the release (from tag, input, or `libraries/dal-core/package.json`).
 2. `pnpm turbo run build` for all five packages (respects dependency order via Turbo).
 3. `pnpm --filter @corpdk/dal-core test` and `@corpdk/dal-codegen test` (same coverage as [`.github/workflows/dal.yml`](../../.github/workflows/dal.yml) for libraries).
-4. `pnpm publish --no-git-checks` in dependency order; `--dry-run` when not releasing.
+4. `pnpm publish --no-git-checks` in dependency order; `--dry-run` when not releasing; live runs add `--provenance`.
 5. On live publish only: ensure git tag `ds-automation/v<CalVer>` (manual dispatch from HEAD if missing), then `gh release create` with generated notes (`permissions.contents: write`).
+
+Workflow permissions for live publish: `id-token: write` (OIDC token for npm) and `contents: write` (releases and tag push). `actions/setup-node@v7` sets `registry-url: https://registry.npmjs.org` without a static `NODE_AUTH_TOKEN`; npm CLI ≥ 11.15 exchanges the GitHub OIDC token with the registry when trusted publishing is configured.
 
 ---
 
@@ -67,8 +68,9 @@ Release notes list all five packages at the release CalVer and link back to this
 
 1. Bump **all five** `package.json` `version` fields to the same CalVer (and update [Package Dependencies](../architecture/06-package-dependencies.md) upgrade log if you track releases there).
 2. Merge to `main`.
-3. Either push a tag — `git tag ds-automation/v2026.10.0-alpha.1 && git push origin ds-automation/v2026.10.0-alpha.1` — or run **workflow_dispatch** on `main` with `dry_run: false` (CI creates the same tag from HEAD when absent).
-4. Confirm the **Publish DS automation (npm)** workflow succeeded on GitHub Actions and that the matching **GitHub Release** exists under Releases.
+3. Confirm [trusted publishing](#configure-trusted-publishing-on-npmjs) is configured on npm for all five packages (one-time per package).
+4. Either push a tag — `git tag ds-automation/v2026.10.0-alpha.1 && git push origin ds-automation/v2026.10.0-alpha.1` — or run **workflow_dispatch** on `main` with `dry_run: false` (CI creates the same tag from HEAD when absent).
+5. Confirm the **Publish DS automation (npm)** workflow succeeded on GitHub Actions and that the matching **GitHub Release** exists under Releases.
 
 ### Local dry-run (no token)
 
@@ -79,33 +81,81 @@ pnpm install --frozen-lockfile
 
 ### Local publish (maintainer machine)
 
-Configure `//registry.npmjs.org/:_authToken=${NPM_TOKEN}` in `~/.npmrc`, then omit `--dry-run`. Prefer CI tag releases for auditability.
+Use `npm login` or `//registry.npmjs.org/:_authToken=${NPM_TOKEN}` in `~/.npmrc`, then run the script without `--dry-run`. Prefer CI tag releases for auditability and provenance.
 
 ---
 
 ## Authentication
 
-### GitHub (CI secret)
+### Primary: npm trusted publishing (GitHub Actions OIDC)
 
-Store the npm token in GitHub as an **organization secret**, not a repository-only secret, so the same credential can be linked to multiple publish repos without duplication.
+CI live publishes use [npm trusted publishers](https://docs.npmjs.com/trusted-publishers) — short-lived OIDC tokens from GitHub Actions, not a long-lived npm token in the workflow.
 
-| Step | Action |
-| ---- | ------ |
-| 1 | GitHub → **CorpDK** org → **Settings** → **Secrets and variables** → **Actions** → **New organization secret** |
-| 2 | Name: **`NPM_TOKEN`** (must match the workflow reference `secrets.NPM_TOKEN`) |
-| 3 | Value: npm automation token (see [npm token](#npm-token-value) below) — never commit tokens or paste them into issues or docs |
-| 4 | **Repository access**: **Selected repositories** → add **`coding-templates`**. To reuse the secret elsewhere, add each repo that runs an npm publish workflow the same way |
+| Requirement | Detail |
+| ----------- | ------ |
+| GitHub workflow | [`publish-ds-automation.yml`](../../.github/workflows/publish-ds-automation.yml) with `permissions.id-token: write` |
+| npm CLI in CI | ≥ **11.15.0** (workflow runs `npm install -g npm@^11.15.0`) |
+| Registry | `https://registry.npmjs.org` via `actions/setup-node` `registry-url` |
+| Publish flags | `--provenance` on live CI publishes |
 
-Linked repositories see org secrets identically to repo secrets in Actions: `${{ secrets.NPM_TOKEN }}`. **No workflow YAML change** is required when moving from a repo secret to an org secret with the same name. Forks and repos without access do not receive the secret; tag/manual runs then **force dry-run** (see [Triggers](#triggers)).
+Each `@corpdk` package must exist on npmjs before you add a trusted publisher. Trusted publishing is **per package** (repeat for all five).
 
-### npm token value
+#### Configure trusted publishing on npmjs
 
-| Method | Setup | Notes |
-| ------ | ------ | ----- |
-| **Granular token** (recommended) | [npmjs.com](https://www.npmjs.com/) → Access Tokens → **Granular** → **Publish** scoped to the five `@corpdk` packages in this doc (or the narrowest `@corpdk` scope your org allows) | Prefer least privilege over a full org-wide publish token; rotate on a schedule |
-| **OIDC / provenance** (optional later) | `permissions: id-token: write` + npm trusted publishing on the org | Not required for the current workflow; add when CorpDK enables npm OIDC |
+For **each** of the five packages below, an npm org owner or package maintainer with publish access:
 
-Ensure the `@corpdk` npm org grants the token **publish** on the five packages above. `"access": "public"` is already set in each package `publishConfig`. The workflow wires auth via `actions/setup-node` (registry URL) and `~/.npmrc` when not in dry-run mode.
+1. Open [npmjs.com](https://www.npmjs.com/) → sign in → **Packages** → select the package (or go to `https://www.npmjs.com/package/@corpdk/<name>/settings`).
+2. Open **Settings** (or **Publishing access** / **Trusted publishers**, depending on npm UI).
+3. **Add trusted publisher** → provider **GitHub Actions**.
+4. Fill the form with these values (same for every package in the set):
+
+| npm UI field | Value |
+| ------------ | ----- |
+| **Organization or user** | `CorpDK` |
+| **Repository** | `coding-templates` |
+| **Workflow filename** | `publish-ds-automation.yml` |
+| **Environment** | *(leave empty)* — workflow does not use a GitHub `environment:` |
+| **Allowed actions** | **npm publish** (enable publish; staged publish optional) |
+
+5. Save. Repeat for:
+
+| Package |
+| ------- |
+| `@corpdk/dal-core` |
+| `@corpdk/pub-sub` |
+| `@corpdk/codegen-cli` |
+| `@corpdk/dal-codegen` |
+| `@corpdk/create-ds` |
+
+**CLI equivalent** (logged-in maintainer, package must already exist on the registry):
+
+```bash
+for pkg in @corpdk/dal-core @corpdk/pub-sub @corpdk/codegen-cli @corpdk/dal-codegen @corpdk/create-ds; do
+  npm trust github "$pkg" \
+    --file publish-ds-automation.yml \
+    --repository CorpDK/coding-templates \
+    --allow-publish \
+    -y
+done
+```
+
+**Verification:** After configuration, a tag push or manual `dry_run: false` run on `CorpDK/coding-templates` should publish without `secrets.NPM_TOKEN`. If publish fails with auth errors, confirm the workflow filename matches exactly (including `.yml`), the repo is `CorpDK/coding-templates`, and `id-token: write` is present on the workflow.
+
+### Legacy optional: `NPM_TOKEN` (local or emergency)
+
+The **workflow does not read** `NPM_TOKEN`. Long-lived tokens are optional for:
+
+- **Local** releases via `.github/scripts/publish-ds-automation.sh` (export `NPM_TOKEN` or use `npm login`).
+- **Emergency** manual publish from a maintainer machine if OIDC or npm registry issues block CI.
+
+If CI used an org **`NPM_TOKEN`** secret only for this workflow, you can remove repository access to that secret after trusted publishing is verified on all five packages. Revoke or disable unused **automation / granular publish tokens** and any **2FA bypass** tokens that existed solely for this pipeline — they are no longer required for GitHub Actions publishes.
+
+| Method | When to use |
+| ------ | ----------- |
+| **Trusted publishing (OIDC)** | All CI live publishes (default) |
+| **Granular npm token** | Local maintainer publish or break-glass only; scope to the five packages |
+
+Ensure the `@corpdk` npm org grants **publish** on the five packages above. `"access": "public"` is already set in each package `publishConfig`.
 
 ---
 

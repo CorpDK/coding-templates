@@ -73,11 +73,17 @@ if [[ "${DRY_RUN}" == true ]]; then
   publish_flags+=(--dry-run)
   echo "Dry run: npm publish will not upload tarballs."
 else
-  if [[ -z "${NPM_TOKEN:-}" ]]; then
-    echo "NPM_TOKEN is not set; refusing live publish." >&2
+  echo "Publishing to registry.npmjs.org…"
+  if [[ -n "${GITHUB_ACTIONS:-}" ]]; then
+    echo "Auth: npm trusted publishing (GitHub Actions OIDC)."
+    publish_flags+=(--provenance)
+  elif [[ -n "${NPM_TOKEN:-}" ]]; then
+    echo "Auth: NPM_TOKEN (local maintainer fallback)."
+  elif ! npm whoami --registry=https://registry.npmjs.org >/dev/null 2>&1; then
+    echo "Not logged in to npm and NPM_TOKEN unset; refusing live publish." >&2
+    echo "Use --dry-run, npm login, or export NPM_TOKEN for local releases." >&2
     exit 1
   fi
-  echo "Publishing to registry.npmjs.org…"
 fi
 
 for name in "${PUBLISH_ORDER[@]}"; do
