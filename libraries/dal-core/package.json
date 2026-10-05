@@ -1,13 +1,15 @@
 {
   "name": "@corpdk/dal-core",
-  "version": "2026.10.0-alpha.1",
+  "version": "2026.10.0-alpha.2",
+  "description": "DAL shared types, filters, GraphQL scalars, and mutation error taxonomy",
   "type": "module",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
     "access": "public"
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md"
   ],
   "exports": {
     ".": {

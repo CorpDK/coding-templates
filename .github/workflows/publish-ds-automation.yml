@@ -2,33 +2,44 @@ name: Publish DS automation (npm)
 
 # Lockstep CalVer release for @corpdk DAL tooling on npmjs (public).
 # Templates stay on Artifactory — see docs/admin/04-npm-publish-ds-automation.md
-# Live publish: npm Trusted Publishing (GitHub Actions OIDC) — configure each package on npmjs.
-# Live publish also creates a GitHub Release for tag ds-automation/v<CalVer> (tag push or
-# workflow_dispatch with dry_run false). Manual dispatch creates the tag from HEAD when missing.
+#
+# Live publish: push to main only (CalVer bump in dal-core), npm Trusted Publishing (OIDC).
+# CI creates git tag ds-automation/v<CalVer> and GitHub Release after npm publish.
+# PRs and workflow_dispatch (dry-run default) validate build/tests/packaging without upload.
 
 on:
   push:
-    tags:
-      - "ds-automation/v*"
-  workflow_dispatch:
-    inputs:
-      dry_run:
-        description: Use npm publish --dry-run (no upload)
-        type: boolean
-        default: true
-      version:
-        description: CalVer to verify (defaults to tag or package.json on main)
-        required: false
-        type: string
-  pull_request:
+    branches:
+      - main
     paths:
-      - ".github/workflows/publish-ds-automation.yml"
-      - ".github/scripts/publish-ds-automation.sh"
       - "libraries/dal-core/**"
       - "libraries/dal-codegen/**"
       - "libraries/codegen-cli/**"
       - "libraries/pub-sub/**"
       - "engines/create-ds/**"
+      - ".github/workflows/publish-ds-automation.yml"
+      - ".github/scripts/publish-ds-automation.sh"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Use npm publish --dry-run (no upload). Live publish only on main with dry_run false.
+        type: boolean
+        default: true
+      version:
+        description: CalVer to verify (defaults to libraries/dal-core/package.json on checked-out ref)
+        required: false
+        type: string
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "libraries/dal-core/**"
+      - "libraries/dal-codegen/**"
+      - "libraries/codegen-cli/**"
+      - "libraries/pub-sub/**"
+      - "engines/create-ds/**"
+      - ".github/workflows/publish-ds-automation.yml"
+      - ".github/scripts/publish-ds-automation.sh"
 
 concurrency:
   group: publish-ds-automation-${{ github.workflow }}-${{ github.ref }}
@@ -43,6 +54,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
 
       - uses: pnpm/action-setup@v4
 
@@ -53,58 +66,91 @@ jobs:
           registry-url: https://registry.npmjs.org
           package-manager-cache: false
 
-      - run: pnpm install --frozen-lockfile
+      - name: Gate workflow (CalVer bump / ref)
+        id: gate
+        run: |
+          run_job="true"
+          live="false"
+          event="${{ github.event_name }}"
+          ref="${{ github.ref }}"
+
+          if [[ "${event}" == "pull_request" ]]; then
+            echo "Pull request — dry-run only."
+          elif [[ "${event}" == "push" && "${ref}" == "refs/heads/main" ]]; then
+            curr="$(node -p "require('./libraries/dal-core/package.json').version")"
+            before="${{ github.event.before }}"
+            prev=""
+            if [[ -n "${before}" && "${before}" != "0000000000000000000000000000000000000000" ]]; then
+              prev="$(git show "${before}:libraries/dal-core/package.json" 2>/dev/null \
+                | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).version" \
+                || true)"
+            fi
+            if [[ -n "${prev}" && "${prev}" == "${curr}" ]]; then
+              echo "Main push with unchanged CalVer (${curr}); skipping (no live publish)."
+              run_job="false"
+            else
+              live="true"
+              echo "Main push with CalVer ${prev:-<none>} → ${curr} — live publish."
+            fi
+          elif [[ "${event}" == "workflow_dispatch" ]]; then
+            if [[ "${ref}" != "refs/heads/main" ]]; then
+              echo "workflow_dispatch is only supported on refs/heads/main; skipping."
+              run_job="false"
+            elif [[ "${{ inputs.dry_run }}" == "false" ]]; then
+              live="true"
+              echo "Manual dispatch on main — live publish."
+            else
+              echo "Manual dispatch on main — dry-run."
+            fi
+          else
+            echo "Unsupported event ${event}; skipping."
+            run_job="false"
+          fi
+
+          echo "run=${run_job}" >> "$GITHUB_OUTPUT"
+          echo "live=${live}" >> "$GITHUB_OUTPUT"
+
+      - name: Skip (no qualifying change)
+        if: steps.gate.outputs.run != 'true'
+        run: echo "Nothing to do."
 
       - name: Resolve release version
+        if: steps.gate.outputs.run == 'true'
         id: version
         run: |
-          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref_type }}" == "tag" ]]; then
-            tag="${GITHUB_REF#refs/tags/ds-automation/v}"
-            echo "value=${tag}" >> "$GITHUB_OUTPUT"
-          elif [[ -n "${{ inputs.version }}" ]]; then
+          if [[ -n "${{ inputs.version }}" ]]; then
             echo "value=${{ inputs.version }}" >> "$GITHUB_OUTPUT"
           else
             echo "value=$(node -p "require('./libraries/dal-core/package.json').version")" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Resolve dry-run mode
+        if: steps.gate.outputs.run == 'true'
         id: dry
         run: |
-          dry="true"
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            echo "Pull request — dry-run only (no npm upload, no release)."
-          elif [[ "${{ github.event_name }}" == "push" && "${{ github.ref_type }}" == "tag" ]]; then
-            dry="false"
-            echo "Tag push — live publish via npm trusted publishing (OIDC)."
-          elif [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            dry="${{ inputs.dry_run }}"
-            if [[ "${dry}" == "false" ]]; then
-              echo "Manual dispatch — live publish via npm trusted publishing (OIDC)."
-            else
-              echo "Manual dispatch — dry-run (dry_run input true)."
-            fi
+          if [[ "${{ steps.gate.outputs.live }}" == "true" ]]; then
+            echo "value=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=true" >> "$GITHUB_OUTPUT"
           fi
-          echo "value=${dry}" >> "$GITHUB_OUTPUT"
+
+      - run: pnpm install --frozen-lockfile
+        if: steps.gate.outputs.run == 'true'
 
       - name: Resolve release tag
+        if: steps.gate.outputs.run == 'true'
         id: tag
         run: echo "name=ds-automation/v${{ steps.version.outputs.value }}" >> "$GITHUB_OUTPUT"
 
       - name: Git tag and release preview (dry-run)
-        if: steps.dry.outputs.value == 'true'
+        if: steps.gate.outputs.run == 'true' && steps.dry.outputs.value == 'true'
         run: |
           tag="${{ steps.tag.outputs.name }}"
-          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref_type }}" == "tag" ]]; then
-            echo "[dry-run] Tag ${tag} already exists (tag push). Would create GitHub Release after publish if missing."
-          else
-            echo "[dry-run] Would create tag ${tag} on origin from $(git rev-parse --short HEAD) if absent."
-            echo "[dry-run] Would create GitHub Release for ${tag} after successful publish if absent."
-          fi
+          echo "[dry-run] Would create tag ${tag} on origin from $(git rev-parse --short HEAD) if absent."
+          echo "[dry-run] Would create GitHub Release for ${tag} after successful publish if absent."
 
       - name: Ensure git tag (live publish)
-        if: >-
-          steps.dry.outputs.value != 'true' &&
-          (github.event_name != 'push' || github.ref_type != 'tag')
+        if: steps.gate.outputs.run == 'true' && steps.dry.outputs.value != 'true'
         env:
           TAG: ${{ steps.tag.outputs.name }}
           VERSION: ${{ steps.version.outputs.value }}
@@ -119,9 +165,11 @@ jobs:
           git push origin "refs/tags/${TAG}"
 
       - name: Ensure npm supports trusted publishing
+        if: steps.gate.outputs.run == 'true'
         run: npm install -g npm@^11.15.0
 
       - name: Publish DS automation packages
+        if: steps.gate.outputs.run == 'true'
         run: |
           chmod +x .github/scripts/publish-ds-automation.sh
           args=("${{ steps.version.outputs.value }}")
@@ -131,7 +179,7 @@ jobs:
           .github/scripts/publish-ds-automation.sh "${args[@]}"
 
       - name: Create GitHub Release (live publish)
-        if: steps.dry.outputs.value != 'true'
+        if: steps.gate.outputs.run == 'true' && steps.dry.outputs.value != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ steps.tag.outputs.name }}

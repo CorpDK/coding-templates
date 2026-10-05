@@ -6,7 +6,7 @@ CI workflow and release process for the **lockstep CalVer** DS automation stack 
 
 ## Package set (npmjs)
 
-These five packages ship together at the same CalVer (e.g. `2026.10.0-alpha.1`):
+These five packages ship together at the same CalVer (e.g. `2026.10.0-alpha.2`):
 
 | Order | Package               | Path                    | Role                                      |
 | ----- | --------------------- | ----------------------- | ----------------------------------------- |
@@ -31,11 +31,15 @@ These five packages ship together at the same CalVer (e.g. `2026.10.0-alpha.1`):
 
 ### Triggers
 
+Path filters include all five package trees (source, `package.json`, README), plus the workflow and publish script. Unrelated commits on `main` do not run this workflow.
+
 | Trigger | Behavior |
 | ------- | -------- |
-| **Git tag** `ds-automation/v<CalVer>` | **Live publish** via npm trusted publishing (OIDC); creates a **GitHub Release** for that tag after npm publish |
-| **workflow_dispatch** | Manual run; **dry-run defaults to true**. With `dry_run: false`, creates the tag from **HEAD** if missing, publishes via OIDC, then creates the GitHub Release |
-| **pull_request** (paths under DS automation + workflow) | Always **dry-run** (validates build, tests, and publish packaging) |
+| **push** to **`main`** (paths above) | **Live publish** when `libraries/dal-core/package.json` **version changed** vs the previous commit on `main`. CI creates tag `ds-automation/v<CalVer>`, publishes via OIDC, then creates a **GitHub Release**. If CalVer is unchanged (e.g. README-only), the run exits without publish. |
+| **pull_request** → `main` (paths above) | Always **dry-run** (build, tests, `npm publish --dry-run`; no npm auth, no tag, no release) |
+| **workflow_dispatch** on **`main` only** | **Dry-run defaults to true**. `dry_run: false` on `main` is a break-glass live publish (same tag + release behavior). Dispatch from other branches is ignored. |
+
+**Never live-publish** from feature branches, pull requests, or manual dispatch off `main`.
 
 Dry-run never needs npm auth, never creates git tags or GitHub Releases, and logs what would happen on a live run.
 
@@ -43,9 +47,11 @@ Dry-run never needs npm auth, never creates git tags or GitHub Releases, and log
 
 | Trigger | Effective dry-run | Git tag | npm publish | GitHub Release |
 | ------- | ----------------- | ------- | ----------- | -------------- |
-| Tag push `ds-automation/v*` | `false` | Already on ref; not recreated | Live upload (OIDC + `--provenance`) | Created after publish if missing |
-| **workflow_dispatch** `dry_run: false` | `false` | `ds-automation/v<version>` pushed from HEAD if absent | Live upload (OIDC + `--provenance`) | Created after publish if missing |
-| **workflow_dispatch** `dry_run: true` | `true` | No; logs intent | `--dry-run` only | No; logs intent |
+| **push** `main` (CalVer bumped) | `false` | `ds-automation/v<version>` pushed from merge commit if absent | Live upload (OIDC + `--provenance`) | Created after publish if missing |
+| **push** `main` (CalVer unchanged) | — | — | Skipped (job gated) | — |
+| **workflow_dispatch** `main`, `dry_run: false` | `false` | Tag pushed from HEAD if absent | Live upload (OIDC + `--provenance`) | Created after publish if missing |
+| **workflow_dispatch** `main`, `dry_run: true` | `true` | No; logs intent | `--dry-run` only | No; logs intent |
+| **workflow_dispatch** not on `main` | — | — | Skipped | — |
 | **pull_request** | `true` | No | `--dry-run` only | No |
 
 Version for dispatch without `version` input comes from `libraries/dal-core/package.json` on the checked-out ref. Existing tags and releases are **not** duplicated: CI skips tag push and `gh release create` when the tag or release already exists.
@@ -58,7 +64,7 @@ Release notes list all five packages at the release CalVer and link back to this
 2. `pnpm turbo run build` for all five packages (respects dependency order via Turbo).
 3. `pnpm --filter @corpdk/dal-core test` and `@corpdk/dal-codegen test` (same coverage as [`.github/workflows/dal.yml`](../../.github/workflows/dal.yml) for libraries).
 4. `pnpm publish --no-git-checks` in dependency order; `--dry-run` when not releasing; live runs add `--provenance`.
-5. On live publish only: ensure git tag `ds-automation/v<CalVer>` (manual dispatch from HEAD if missing), then `gh release create` with generated notes (`permissions.contents: write`).
+5. On live publish only: ensure git tag `ds-automation/v<CalVer>` on the release commit, then `gh release create` with generated notes (`permissions.contents: write`).
 
 Workflow permissions for live publish: `id-token: write` (OIDC token for npm) and `contents: write` (releases and tag push). `actions/setup-node@v7` sets `registry-url: https://registry.npmjs.org` without a static `NODE_AUTH_TOKEN`; npm CLI ≥ 11.15 exchanges the GitHub OIDC token with the registry when trusted publishing is configured.
 
@@ -66,12 +72,14 @@ Workflow permissions for live publish: `id-token: write` (OIDC token for npm) an
 
 ## Release checklist (maintainers)
 
-1. Bump **all five** `package.json` `version` fields to the same CalVer (and update [Package Dependencies](../architecture/06-package-dependencies.md) upgrade log if you track releases there).
-2. Merge to `main` (or validate on a PR — workflow **dry-run** on pull requests checks build/tests/packaging without npm auth).
-3. **First release only:** if any of the five packages are missing on npmjs, complete [First-time bootstrap](#first-time-bootstrap-packages-not-on-npm-yet) (local `npm login` / `NPM_TOKEN`, not OIDC).
+1. On a branch: bump **all five** `package.json` `version` fields to the same CalVer, update package READMEs as needed, and update [Package Dependencies](../architecture/06-package-dependencies.md) upgrade log if you track releases there.
+2. Open a PR to `main` — the workflow runs **dry-run** (build, tests, packaging) on the PR.
+3. **First release only:** if any of the five packages are missing on npmjs, complete [First-time bootstrap](#first-time-bootstrap-packages-not-on-npm-yet) (local `npm login` / `NPM_TOKEN`, not OIDC) **before** merge or use break-glass dispatch after bootstrap.
 4. Confirm [trusted publishing](#configure-trusted-publishing-on-npmjs) is configured on npm for all five packages (one-time per package; only after each package exists on the registry).
-5. Either push a tag — `git tag ds-automation/v2026.10.0-alpha.1 && git push origin ds-automation/v2026.10.0-alpha.1` — or run **workflow_dispatch** on `main` with `dry_run: false` (CI creates the same tag from HEAD when absent).
-6. Confirm the **Publish DS automation (npm)** workflow succeeded on GitHub Actions and that the matching **GitHub Release** exists under Releases.
+5. **Merge to `main`.** CI detects the CalVer bump in `libraries/dal-core`, live-publishes all five packages, creates tag `ds-automation/v<CalVer>`, and opens the GitHub Release. Maintainers do **not** push release tags manually for normal releases.
+6. Confirm **Publish DS automation (npm)** succeeded on the merge commit and that the **GitHub Release** for `ds-automation/v<CalVer>` exists.
+
+**Break-glass:** On `main`, **workflow_dispatch** with `dry_run: false` repeats live publish + tag + release (skips if tag/release already exist). Use only if merge publish failed; do not use from feature branches.
 
 ### Local dry-run (no token)
 
@@ -82,7 +90,7 @@ pnpm install --frozen-lockfile
 
 ### Local publish (maintainer machine)
 
-Use `npm login` or `//registry.npmjs.org/:_authToken=${NPM_TOKEN}` in `~/.npmrc`, then run the script without `--dry-run`. Prefer CI tag releases for auditability and provenance after trusted publishing is configured (see [First-time bootstrap](#first-time-bootstrap-packages-not-on-npm-yet) if the packages are not on npm yet).
+Use `npm login` or `//registry.npmjs.org/:_authToken=${NPM_TOKEN}` in `~/.npmrc`, then run the script without `--dry-run`. Prefer merge-to-`main` CI releases for auditability and provenance after trusted publishing is configured (see [First-time bootstrap](#first-time-bootstrap-packages-not-on-npm-yet) if the packages are not on npm yet).
 
 ---
 
@@ -155,7 +163,7 @@ done
 
 1. Confirm all five packages appear on npm at the expected version (e.g. `https://www.npmjs.com/package/@corpdk/dal-core`).
 2. Configure [trusted publishing](#configure-trusted-publishing-on-npmjs) on **each** package (UI or `npm github` / `npm trust github` loop below).
-3. Merge the publish workflow to `main` if it is not already there, then use **tag push**, **workflow_dispatch** with `dry_run: false`, or future CalVer bumps via CI — live CI publishes use OIDC + `--provenance`, not `NPM_TOKEN`.
+3. Merge the publish workflow to `main` if it is not already there, then ship CalVer bumps via PR → merge — live CI publishes use OIDC + `--provenance`, not `NPM_TOKEN`.
 
 Subsequent version bumps still require the same lockstep CalVer edit across all five packages; only the **first** upload must be local/token auth.
 
@@ -220,7 +228,7 @@ npm trust list @corpdk/dal-core
 
 Expect a GitHub Actions trusted publisher for workflow `publish-ds-automation.yml` on `CorpDK/coding-templates`. Use `--json` for machine-readable output.
 
-**Verification (CI):** After configuration, a tag push or manual `dry_run: false` run on `CorpDK/coding-templates` should publish without `secrets.NPM_TOKEN`. If publish fails with auth errors, confirm the workflow filename matches exactly (including `.yml`), the repo is `CorpDK/coding-templates`, and `id-token: write` is present on the workflow.
+**Verification (CI):** After configuration, merging a CalVer bump to `main` (or a manual `dry_run: false` dispatch on `main`) should publish without `secrets.NPM_TOKEN`. If publish fails with auth errors, confirm the workflow filename matches exactly (including `.yml`), the repo is `CorpDK/coding-templates`, and `id-token: write` is present on the workflow.
 
 ### Legacy optional: `NPM_TOKEN` (local or emergency)
 
