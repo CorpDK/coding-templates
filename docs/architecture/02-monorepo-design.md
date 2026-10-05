@@ -10,7 +10,7 @@ The repo combines templates, shared UI packages, engines, and libraries that evo
 
 - Shared packages (`packages/ui-*`) are always consumed at the version that was developed alongside the templates
 - Turbo's task pipeline (codegen → build → dev) can orchestrate cross-package dependencies
-- `create-app` can reference template source directly without a publish/install cycle
+- `create-app` and `create-ds` can reference template source directly without a publish/install cycle
 
 ---
 
@@ -20,7 +20,7 @@ The repo combines templates, shared UI packages, engines, and libraries that evo
 | ------------ | -------------------------- | -------------------------------------------------------------------------- |
 | `templates/` | Scaffolded project sources | Isolates runnable applications from shared infrastructure                  |
 | `packages/`  | Shared UI libraries        | Publishable to npm; built to `dist/` with proper exports maps              |
-| `engines/`   | CLI tooling                | `create-app` is a dev-time tool, not a runtime dependency                  |
+| `engines/`   | CLI tooling                | `create-app` and `create-ds` are dev-time tools, not runtime dependencies  |
 | `libraries/` | Shared runtime libraries   | `pub-sub` is a runtime dep of every DS package — separate from UI concerns |
 
 ---
@@ -84,7 +84,7 @@ tsconfig.base.json     ← strict, esModuleInterop, skipLibCheck, sourceMap, dec
 
 | Base config           | Target | Module         | Used by                                                                                                      |
 | --------------------- | ------ | -------------- | ------------------------------------------------------------------------------------------------------------ |
-| `tsconfig.node.json`  | ES2024 | NodeNext       | `ds`, `ds-no-sql`, `ds-cdb`, `ds-ddb`, `ds-file`, `ds-mongo`, `ds-sdk`, `dal-core`, `dal-codegen`, `pub-sub`, `codegen-cli`, `create-app` |
+| `tsconfig.node.json`  | ES2024 | NodeNext       | `ds`, `ds-no-sql`, `ds-cdb`, `ds-ddb`, `ds-file`, `ds-mongo`, `ds-sdk`, `dal-core`, `dal-codegen`, `pub-sub`, `codegen-cli`, `create-app`, `create-ds` |
 | `tsconfig.react.json` | ES2024 | esnext/bundler | `ui-core`, `ui-auth`, `ui-charts`, `ui-forms`, `ui-datagrid`, `ui-feedback`                                  |
 | `tsconfig.next.json`  | ES2024 | esnext/bundler | `ui`, `ui-hprt`                                                                                              |
 
@@ -146,7 +146,7 @@ Packages are published to two registries depending on their audience.
 | `engines/*`         | npmjs             | CLI tooling consumed by external users                            |
 | `libraries/*`       | npmjs             | Runtime libraries depended on by published packages               |
 | `packages/*`        | npmjs             | Shared UI packages and linting config consumed by downstream apps |
-| `templates/*`       | Artifactory       | Internal project starters; scaffolded by `create-app`             |
+| `templates/*`       | Artifactory       | Internal project starters; scaffolded by `create-app` and `create-ds init` |
 | Root `package.json` | _(not published)_ | Workspace root; `"private": true`                                 |
 
 ### Configuration
