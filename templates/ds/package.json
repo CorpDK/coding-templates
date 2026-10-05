@@ -1,7 +1,7 @@
 {
   "name": "@corpdk/ds",
   "description": "Primary GraphQL Yoga data service with Drizzle ORM (PostgreSQL, MySQL, SQLite, CockroachDB)",
-  "version": "2026.3.0-alpha.1",
+  "version": "2026.10.0-alpha.1",
   "type": "module",
   "publishConfig": {
     "registry": "https://artifactory.corp.example.com/api/npm/npm-private/"

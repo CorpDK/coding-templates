@@ -96,7 +96,7 @@ Per-package tsconfigs declare only local overrides (paths, custom includes). UI 
 
 | Category                                                                     | Scheme                         | Example            | Reason                                                                                  |
 | ---------------------------------------------------------------------------- | ------------------------------ | ------------------ | --------------------------------------------------------------------------------------- |
-| Shared packages (`packages/ui-*`), engines, libraries                        | CalVer `YYYY.MM.MICRO[-pre.N]` | `2026.3.0-alpha.1` | Published to npm — calendar versioning communicates when a release was cut              |
+| Shared packages (`packages/ui-*`), engines, libraries                        | CalVer `YYYY.MM.MICRO[-pre.N]` | `2026.10.0-alpha.1` | Published to npm — calendar versioning communicates when a release was cut              |
 | Template apps (`templates/ui`, `templates/ui-hprt`, `templates/ui-showcase`) | Semver                         | `0.1.0`            | Not published to npm — scaffolded into user projects; semver communicates API stability |
 | DS packages scaffolded via `@corpdk/create-ds init`                          | CalVer `YYYY.MM.MICRO`         | `2026.10.0`        | Deployable services in application repos; initial `MICRO` is `0` for the UTC scaffold month |
 
@@ -104,15 +104,15 @@ Template apps are not versioned for consumers — they are scaffolded once and t
 
 ### CalVer Format Rules
 
-The CalVer scheme used is `YYYY.MM.MICRO` where months are **not** zero-padded (e.g. `2026.3.0`, not `2026.03.0`).
+The CalVer scheme used is `YYYY.MM.MICRO` where months are **not** zero-padded (e.g. `2026.10.0`, not `2026.10.00` or `2026.010.0`).
 
 | Release type | Format                            | Example             | When to use                                 |
 | ------------ | --------------------------------- | ------------------- | ------------------------------------------- |
-| Stable       | `YYYY.MM.MICRO`                   | `2026.3.0`          | First stable release in a calendar period   |
-| Alpha        | `YYYY.MM.MICRO-alpha.N`           | `2026.3.0-alpha.1`  | Early unstable builds; API may change       |
-| Beta         | `YYYY.MM.MICRO-beta.N`            | `2026.3.0-beta.2`   | Feature-complete; undergoing validation     |
-| Patch / hotfix | `YYYY.MM.MICRO` (increment MICRO) | `2026.3.1`          | Bug fixes and production hotfixes within the same UTC month |
-| Hotfix RC      | `YYYY.MM.MICRO-rc.N`              | `2026.3.3-rc.1`     | Pre-production candidate for the next stable hotfix version   |
+| Stable       | `YYYY.MM.MICRO`                   | `2026.10.0`          | First stable release in a calendar period   |
+| Alpha        | `YYYY.MM.MICRO-alpha.N`           | `2026.10.0-alpha.1`  | Early unstable builds; API may change       |
+| Beta         | `YYYY.MM.MICRO-beta.N`            | `2026.10.0-beta.2`   | Feature-complete; undergoing validation     |
+| Patch / hotfix | `YYYY.MM.MICRO` (increment MICRO) | `2026.10.1`          | Bug fixes and production hotfixes within the same UTC month |
+| Hotfix RC      | `YYYY.MM.MICRO-rc.N`              | `2026.10.3-rc.1`     | Pre-production candidate for the next stable hotfix version   |
 
 **When to bump MICRO vs roll to a new `YYYY.MM`:**
 
