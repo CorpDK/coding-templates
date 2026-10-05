@@ -54,37 +54,37 @@ Add `.github/workflows/ci.yml`: lint + typecheck + `pnpm build` on every PR. Tur
 
 ## DS Enhancements
 
-Items below apply to `ds`, `ds-no-sql`, `ds-cdb`, `ds-mongo`, `ds-ddb`, and `ds-file` unless noted.
+**Scope:** **`templates/ds` only** — the DAL-automated primary DS template (`@corpdk/ds`). Manual DS templates (`ds-no-sql`, `ds-cdb`, `ds-mongo`, `ds-ddb`, `ds-file`) are **out of scope** here until explicitly added back.
 
 ### 1. Shared Zod Schemas for GraphQL Input Types
 
-**Status:** Not started — manual DS variants hand-roll Zod in repository layers (e.g. `templates/ds-file/src/db/schemas.ts`); nothing generates validators from `.graphqls` SDL.
+**Status:** Not started — `templates/ds` validates via generated repositories and GraphQL types; no runtime Zod validators are emitted from DAL codegen or merged SDL.
 
-Generate Zod validators directly from the `.graphqls` SDL so resolvers can validate input at runtime without hand-rolling schemas. Candidate tools: `graphql-to-zod` or a custom codegen plugin. Benefits: single source of truth for input shapes, runtime safety at the resolver layer, and schema-parity with `ui-forms` validators.
+Generate Zod validators from the DAL-generated GraphQL input shapes (merged SDL in `src/generated/generated-schema.ts` or a dedicated codegen pass) so resolvers can validate input at runtime without hand-rolling schemas. Candidate tools: `graphql-to-zod` or a custom `@corpdk/dal-codegen` plugin. Benefits: single source of truth for input shapes, runtime safety at the resolver layer, and schema-parity with `ui-forms` validators.
 
 ### 2. OpenTelemetry Tracing
 
-**Status:** Not started — no `@opentelemetry/*` dependencies or instrumentation in DS templates.
+**Status:** Not started — no `@opentelemetry/*` dependencies or instrumentation in `templates/ds`.
 
-Add `@opentelemetry/sdk-node` instrumentation to DS packages for distributed request tracing. Each GraphQL operation should emit a span with operation name, variables (sanitized), and DB query timing. Integrates with Jaeger, Tempo, or any OTLP-compatible backend without vendor lock-in.
+Add `@opentelemetry/sdk-node` instrumentation to `templates/ds` for distributed request tracing. Each GraphQL operation should emit a span with operation name, variables (sanitized), and DB query timing. Integrates with Jaeger, Tempo, or any OTLP-compatible backend without vendor lock-in.
 
 ### 3. DataLoader Batching
 
-**Status:** Partial — **`templates/ds` (DAL):** Done — per-request DataLoaders for navigation fields are emitted by `@corpdk/dal-codegen` ([GraphQL DAL Requirements §6.6](graphql-dal-requirements.md#66-association-output-fields-and-dataloaders)). **Manual DS variants:** Not started — resolvers load related entities without `dataloader`.
+**Status:** Done — per-request DataLoaders for navigation fields are emitted by `@corpdk/dal-codegen` ([GraphQL DAL Requirements §6.6](graphql-dal-requirements.md#66-association-output-fields-and-dataloaders)).
 
-GraphQL resolvers that load related entities (e.g. fetching a user for each item in a list) currently issue one query per item. DataLoader coalesces these into a single batched query per tick.
+GraphQL resolvers that load related entities (e.g. fetching a user for each item in a list) issue one query per item without batching. DataLoader coalesces these into a single batched query per tick; DAL codegen covers this for association fields in `templates/ds`.
 
 ### 4. Cursor-Based Pagination
 
-**Status:** Partial — **`templates/ds` (DAL):** Done — Relay-style `<entity>Connection` fields with keyset cursors are generated ([GraphQL DAL Requirements §13](graphql-dal-requirements.md#13-cursor-pagination)). **Manual DS variants:** Not started — e.g. `items: [Item!]!` list queries, no `Connection` / `Edge` types in SDL.
+**Status:** Done — Relay-style `<entity>Connection` fields with keyset cursors are generated ([GraphQL DAL Requirements §13](graphql-dal-requirements.md#13-cursor-pagination)).
 
-Replace offset pagination with connection-spec cursor pagination where list paging exists. Cursor pagination is stable under concurrent writes — offset pagination skips or duplicates rows when the dataset changes between pages. The GraphQL SDL change is backward-compatible: add `Connection` / `Edge` types alongside existing list fields.
+Connection-spec cursor pagination replaces offset paging for generated list fields. Cursor pagination is stable under concurrent writes; DAL codegen emits `Connection` / `Edge` types for eligible entities in `templates/ds`.
 
 ### 5. Health Check Endpoint
 
-**Status:** Not started — DS templates expose GraphQL only; no `GET /health` route.
+**Status:** Not started — `templates/ds` exposes GraphQL only; no `GET /health` route.
 
-Add `GET /health` to each DS package returning:
+Add `GET /health` to `templates/ds` returning:
 
 - HTTP 200 on healthy, 503 on degraded
 - JSON body: `{ status, uptime, db: { connected, latencyMs }, version }`
@@ -93,31 +93,31 @@ Enables load balancer health checks, Kubernetes liveness/readiness probes, and o
 
 ### 6. Rate Limiting Middleware
 
-**Status:** Not started — no Yoga rate-limit plugin or equivalent in DS packages.
+**Status:** Not started — no Yoga rate-limit plugin or equivalent in `templates/ds`.
 
-Add per-operation rate limiting via a Yoga plugin or `graphql-rate-limit`. Protects against runaway queries and abuse without requiring an API gateway. Limits should be configurable via env vars and keyed by IP or authenticated user ID.
+Add per-operation rate limiting via a Yoga plugin or `graphql-rate-limit` in `templates/ds`. Protects against runaway queries and abuse without requiring an API gateway. Limits should be configurable via env vars and keyed by IP or authenticated user ID.
 
 ### 7. GitHub Actions CI (DS)
 
-**Status:** Partial — [`.github/workflows/dal.yml`](../../.github/workflows/dal.yml) builds/tests DAL libraries and runs `@corpdk/ds` build + `entity:lint`; [`.github/workflows/sonar.yml`](../../.github/workflows/sonar.yml) runs DAL unit tests with coverage + SonarCloud; [`.github/workflows/publish-ds-automation.yml`](../../.github/workflows/publish-ds-automation.yml) dry-runs packaging on PRs touching the npm set. **Still wanted:** unified `.github/workflows/ci.yml` for all DS template variants — lint + typecheck + `pnpm build` (`ds-file` as zero-dependency smoke test).
+**Status:** Partial — [`.github/workflows/dal.yml`](../../.github/workflows/dal.yml) builds/tests DAL libraries and runs `@corpdk/ds` (`templates/ds`) build + `entity:lint`; [`.github/workflows/sonar.yml`](../../.github/workflows/sonar.yml) runs DAL unit tests with coverage + SonarCloud; [`.github/workflows/publish-ds-automation.yml`](../../.github/workflows/publish-ds-automation.yml) dry-runs packaging on PRs touching the npm set. **Still wanted:** unified `.github/workflows/ci.yml` that includes `templates/ds` — lint + typecheck + full `pnpm --filter @corpdk/ds build` on every PR (alongside UI when item UI #5 lands).
 
 ### 8. Schema Identity Guard
 
-**Status:** Not started — schema-identical DS variants are documented ([02-monorepo-design.md](../architecture/02-monorepo-design.md)); no CI step compares SDL/codegen output across variants.
+**Status:** Not started — no CI step verifies that `pnpm dal:codegen` + GraphQL codegen output for `templates/ds` is deterministic and matches committed expectations (if any) or fails on unexpected SDL drift.
 
-Add a CI step that runs codegen against all DS variants and asserts their SDL output is identical. This enforces the schema-identical guarantee that allows `@corpdk/ds-sdk` to be a single shared package. A diverging variant should fail CI before it reaches main.
+Add a CI step that runs the full DAL codegen chain for `templates/ds` and asserts stable, reviewable SDL output (e.g. snapshot or hash of `src/generated/generated-schema.ts`). Catches accidental schema drift before merge. Cross-variant SDL parity with manual DS templates is **out of scope** until those variants re-enter this backlog.
 
 ### 9. Shared ESLint Config
 
-**Status:** Not started — DS templates declare `"lint": "eslint src/"` but have no `eslint.config.mjs` and no `@corpdk/eslint-config` devDependency (unlike `templates/ui`).
+**Status:** Not started — `templates/ds` declares `"lint": "eslint src/"` but has no `eslint.config.mjs` and no `@corpdk/eslint-config` devDependency (unlike `templates/ui`).
 
-Add `@corpdk/eslint-config` as a devDependency and a two-line config to each DS package. Note: DS packages use `module: NodeNext` (ESM) — the base library config from `@corpdk/eslint-config` is appropriate; the `./next` preset should not be used.
+Add `@corpdk/eslint-config` as a devDependency and a two-line config to `templates/ds`. Note: the package uses `module: NodeNext` (ESM) — the base library config from `@corpdk/eslint-config` is appropriate; the `./next` preset should not be used.
 
 ### 10. Subscription Durability (HPRT)
 
-**Status:** Not started — `@corpdk/ds` uses in-memory/Redis pub/sub via `@corpdk/pub-sub` with SSE transport; no checkpoint or event log for reconnect resume. `templates/ui-hprt` still uses graphql-ws until UI migrates to DS SSE ([11-ds-subscription-sse.md](11-ds-subscription-sse.md)).
+**Status:** Not started — `templates/ds` uses in-memory/Redis pub/sub via `@corpdk/pub-sub` with SSE transport; no checkpoint or event log for reconnect resume. `templates/ui-hprt` still uses graphql-ws until UI migrates to DS SSE ([11-ds-subscription-sse.md](11-ds-subscription-sse.md)).
 
-For `ds`, investigate durable subscriptions: if a client disconnects and reconnects, it should be able to resume from a checkpoint rather than missing events that arrived during the gap. Options: event sourcing with a Drizzle-backed event log, or a Redis Streams approach via `@corpdk/pub-sub`.
+For `templates/ds`, investigate durable subscriptions: if a client disconnects and reconnects, it should be able to resume from a checkpoint rather than missing events that arrived during the gap. Options: event sourcing with a Drizzle-backed event log, or a Redis Streams approach via `@corpdk/pub-sub`.
 
 ---
 
