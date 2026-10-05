@@ -20,6 +20,8 @@ These five packages ship together at the same CalVer (e.g. `2026.10.0-alpha.2`):
 
 **Rationale:** Minimal set required to run DAL automation outside the monorepo — libraries + CLIs that `create-ds init` / `upgrade` pin via CalVer. Lockstep versioning avoids incompatible `@corpdk/dal-core` / `@corpdk/dal-codegen` pairs in downstream apps.
 
+Each `package.json` must include a monorepo **`repository`** object (`url` → this GitHub repo, `directory` → package path). CI live publish passes `--provenance`; npm rejects uploads when `repository.url` is missing or does not match the GitHub Actions provenance source.
+
 ---
 
 ## Workflow

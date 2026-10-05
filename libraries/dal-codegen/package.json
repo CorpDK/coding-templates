@@ -1,11 +1,16 @@
 {
   "name": "@corpdk/dal-codegen",
-  "version": "2026.10.0-alpha.2",
+  "version": "2026.10.0-alpha.3",
   "description": "Codegen CLI: Drizzle schema to GraphQL SDL, repositories, and resolvers",
   "type": "module",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
     "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CorpDK/coding-templates.git",
+    "directory": "libraries/dal-codegen"
   },
   "bin": {
     "dal-codegen": "./dist/cli.js",

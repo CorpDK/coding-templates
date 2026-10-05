@@ -1,11 +1,16 @@
 {
   "name": "@corpdk/pub-sub",
-  "version": "2026.10.0-alpha.2",
+  "version": "2026.10.0-alpha.3",
   "description": "Plugin-style GraphQL pub/sub factory (in-memory or Redis)",
   "type": "module",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
     "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CorpDK/coding-templates.git",
+    "directory": "libraries/pub-sub"
   },
   "files": [
     "dist",
