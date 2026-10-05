@@ -45,6 +45,16 @@ export async function readCreateDsReleaseVersion(): Promise<string> {
   return pkg.version;
 }
 
+/**
+ * Initial CalVer for a newly scaffolded deployable DS package (`YYYY.MM.MICRO`, UTC).
+ * Uses MICRO `0` for the first version in the scaffold month (Limitless CalVer policy).
+ */
+export function initialScaffoldCalVer(asOf: Date = new Date()): string {
+  const year = asOf.getUTCFullYear();
+  const month = asOf.getUTCMonth() + 1;
+  return `${year}.${month}.0`;
+}
+
 /** Relative paths under templates/ds merged on upgrade (never touches src/db/schema/**). */
 export const UPGRADE_RELATIVE_FILES = [
   "package.json",

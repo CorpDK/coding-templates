@@ -98,8 +98,9 @@ Per-package tsconfigs declare only local overrides (paths, custom includes). UI 
 | ---------------------------------------------------------------------------- | ------------------------------ | ------------------ | --------------------------------------------------------------------------------------- |
 | Shared packages (`packages/ui-*`), engines, libraries                        | CalVer `YYYY.MM.MICRO[-pre.N]` | `2026.3.0-alpha.1` | Published to npm — calendar versioning communicates when a release was cut              |
 | Template apps (`templates/ui`, `templates/ui-hprt`, `templates/ui-showcase`) | Semver                         | `0.1.0`            | Not published to npm — scaffolded into user projects; semver communicates API stability |
+| DS packages scaffolded via `@corpdk/create-ds init`                          | CalVer `YYYY.MM.MICRO`         | `2026.10.0`        | Deployable services in application repos; initial `MICRO` is `0` for the UTC scaffold month |
 
-Template apps are not versioned for consumers — they are scaffolded once and then owned by the user. Semver `0.1.0` signals pre-stable without imposing CalVer semantics on code that will never be published.
+Template apps are not versioned for consumers — they are scaffolded once and then owned by the user. Semver `0.1.0` signals pre-stable without imposing CalVer semantics on code that will never be published. **`create-ds init`** sets the consumer package to CalVer instead, matching Limitless application-repo release units.
 
 ### CalVer Format Rules
 

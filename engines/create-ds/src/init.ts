@@ -4,6 +4,7 @@ import { spinner } from "@clack/prompts";
 import {
   engineStarterDir,
   isBundledCanonicalTemplate,
+  initialScaffoldCalVer,
   readCreateDsReleaseVersion,
   resolveCanonicalDsTemplateDir,
 } from "./template.js";
@@ -69,7 +70,7 @@ export async function runInit(options: InitOptions): Promise<void> {
     ? { publishedCorpdkVersions: await readCreateDsReleaseVersion() }
     : undefined;
   const merged = mergePackageJson(
-    { name: options.packageName, version: "0.1.0" },
+    { name: options.packageName, version: initialScaffoldCalVer() },
     templatePkg as Parameters<typeof mergePackageJson>[1],
     mergeOptions,
   );

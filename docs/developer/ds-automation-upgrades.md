@@ -32,7 +32,7 @@ pnpm dlx @corpdk/create-ds upgrade ./packages/my-ds
 
 - Drizzle schema directory (starter or demo)
 - `dal/dal.config.yaml`
-- `package.json` at version **`0.1.0`**, scripts/deps aligned with the canonical template (`workspace:*` when resolving `templates/ds`; **`^@corpdk/create-ds` release version** for `@corpdk/*` when using the bundled canonical snapshot, e.g. `pnpm dlx`)
+- `package.json` at an initial **CalVer** **`YYYY.MM.0`** (UTC year and month when `init` runs, `MICRO` starts at `0`), scripts/deps aligned with the canonical template (`workspace:*` when resolving `templates/ds`; **`^@corpdk/create-ds` release version** for `@corpdk/*` when using the bundled canonical snapshot, e.g. `pnpm dlx`). Deployable DS packages follow Limitless **CalVer** (`YYYY.MM.MICRO`), not semver `0.1.0`; see [Monorepo design — CalVer](../architecture/02-monorepo-design.md#calver-format-rules).
 - Does **not** copy template **`publishConfig`** (avoids inheriting monorepo Artifactory registry settings)
 - `.gitignore` entries for `src/generated/**`
 - Yoga bootstrap via **`dal-codegen --mode=bootstrap`** when the monorepo `dal-codegen` CLI is built; otherwise copies bootstrap files from the canonical template
