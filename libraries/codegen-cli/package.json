@@ -1,13 +1,15 @@
 {
   "name": "@corpdk/codegen-cli",
-  "version": "2026.10.0-alpha.1",
+  "version": "2026.10.0-alpha.2",
+  "description": "GraphQL Code Generator plugin for resolver types and TypedDocumentNode SDK output",
   "type": "module",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
     "access": "public"
   },
   "files": [
-    "dist"
+    "dist",
+    "README.md"
   ],
   "main": "./dist/index.js",
   "exports": {

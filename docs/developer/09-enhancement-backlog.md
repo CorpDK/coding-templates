@@ -1,84 +1,107 @@
 # Enhancement Backlog
 
-Items to address after the core implementation is complete.
+Open enhancements only — shipped work lives in git history and [admin](../admin/) / [architecture](../architecture/) docs. Each item has a **Status** verified against the repo (October 2026).
 
 ---
 
 ## UI Enhancements
 
-### 1. Testing Infrastructure
+### 1. Testing infrastructure (`ui-core`, `ui-forms`)
 
-Add Vitest to `ui-core` and `ui-forms` — these are the most testable packages (pure utility functions + form logic with no DOM dependencies). Install `vitest` and `@testing-library/react` as devDependencies. Full adoption timing is TBD per the architecture doc, but setting up the runner now unblocks incremental test authoring.
+**Status:** Not started — Vitest runs in `libraries/dal-core`, `libraries/dal-codegen`, and `templates/ui-showcase` only; `@corpdk/ui-core` and `@corpdk/ui-forms` have no Vitest devDependencies or test scripts.
 
-### 2. CalVer Graduation (alpha → stable)
+Add Vitest (and `@testing-library/react` where components need it) to the two most testable shared UI packages: pure utilities in `ui-core` and form helpers in `ui-forms`. Stack choice matches [05-ui-architecture.md](05-ui-architecture.md); timing for broad adoption remains TBD.
 
-Packages are versioned using **CalVer `YYYY.MM.MICRO`** (e.g. `2026.10.0`). Current packages are at `2026.10.0-alpha.1`. Once the package APIs stabilize, drop the pre-release tag to publish the first stable release (`2026.10.0` or the next calendar period). See [02-monorepo-design.md](../architecture/02-monorepo-design.md) for the full CalVer format rules.
+**Why it still matters:** Unblocks incremental unit tests without waiting on a monorepo-wide testing policy.
 
-### 3. i18n Scaffold Pattern
+### 2. CalVer graduation (alpha → stable)
 
-Add `packages/ui-i18n/scaffold/` following the same BFF pattern as `ui-auth`: `next-intl` request handler + middleware + locale message files, merged into the UI app by `create-app` when selected. Mirrors the `ui-auth` scaffold mechanism so the CLI pattern is consistent.
+**Status:** In progress — npm **DS automation set** (`dal-core`, `dal-codegen`, `codegen-cli`, `pub-sub`, `create-ds`) is on **`2026.10.0-alpha.2`** with automated publish on `main` when CalVer bumps ([04-npm-publish-ds-automation.md](../admin/04-npm-publish-ds-automation.md)). Other publishable `@corpdk/*` (e.g. `@corpdk/ui-core`) remain on **`2026.10.0-alpha.1`** until the next lockstep bump. Stable `2026.10.0` (or the next calendar period) not released yet.
 
-### 4. CSS Token Export from `ui-core`
+Graduate to stable CalVer (`YYYY.MM.MICRO`, Limitless rules in [02-monorepo-design.md](../architecture/02-monorepo-design.md)) when public APIs for the npm set and UI libraries stabilize.
 
-Instead of requiring each consuming app to copy CSS variable definitions into its own `globals.css`, investigate exporting a prebuilt CSS file from `ui-core` (e.g. `@corpdk/ui-core/styles`) that apps can import with a single line. **Blocker:** Turbopack does not resolve the `"style"` export condition used by CSS-exporting packages — the same limitation that blocked importing `shadcn/tailwind.css`. Needs a Turbopack fix or workaround before this is viable.
+**Why it still matters:** Downstream `create-ds` and npm consumers need a non-alpha signal before treating semver-like compatibility as frozen.
 
-### 5. GitHub Actions CI (UI)
+### 3. i18n scaffold pattern
 
-Add `.github/workflows/ci.yml`: lint + typecheck + `pnpm build` on every PR. Turbo's remote cache can be wired to Vercel for speed. Ensures the monorepo always builds cleanly before merge.
+**Status:** Not started — no `packages/ui-i18n` or `create-app` i18n option; [06-ui-status.md](06-ui-status.md) marks i18n as TBD.
+
+Add `packages/ui-i18n/scaffold/` using the same merge pattern as `ui-auth`: `next-intl` request handler, middleware, and locale message stubs, wired from `create-app` when selected.
+
+**Why it still matters:** Global apps need a consistent CLI path instead of one-off copies per scaffolded UI.
+
+### 4. CSS token export from `ui-core`
+
+**Status:** Blocked — `@corpdk/ui-core` exports only `./dist/index.js`; apps define theme tokens in local `globals.css`. Turbopack still does not resolve the `"style"` export condition (same limitation as importing `shadcn/tailwind.css`). See [04-ui-package-design.md](../architecture/04-ui-package-design.md).
+
+Investigate `@corpdk/ui-core/styles` (or equivalent) once Turbopack supports the export condition or a documented workaround exists.
+
+**Why it still matters:** Removes duplicated `@theme` / CSS variable blocks across every UI app.
+
+### 5. GitHub Actions CI (monorepo)
+
+**Status:** Partial — [dal.yml](../../.github/workflows/dal.yml) builds/tests DAL libraries and runs `@corpdk/ds` (`templates/ds`) Turbo build plus `entity:lint`; [sonar.yml](../../.github/workflows/sonar.yml) runs DAL coverage + SonarCloud; [publish-ds-automation.yml](../../.github/workflows/publish-ds-automation.yml) dry-runs the npm five-pack on relevant PRs. **Gap:** no repo-wide workflow for UI packages — lint, typecheck, and `pnpm build` (or targeted Turbo filters) on every PR.
+
+Add `.github/workflows/ci.yml` (or extend an existing workflow) for shared packages and UI templates. Optional: Turbo remote cache (e.g. Vercel) for speed.
+
+**Why it still matters:** UI and cross-cutting changes can merge without the same build gates already applied to DAL/`templates/ds`.
 
 ---
 
 ## DS Enhancements
 
-Items below apply to `ds`, `ds-no-sql`, `ds-cdb`, `ds-mongo`, `ds-ddb`, and `ds-file` unless noted.
+**Scope:** **`templates/ds` only** (`@corpdk/ds`, DAL automation). Manual DS templates (`ds-no-sql`, `ds-cdb`, `ds-mongo`, `ds-ddb`, `ds-file`) are out of scope here.
 
-### 1. Shared Zod Schemas for GraphQL Input Types
+### 1. Shared Zod schemas for GraphQL input types
 
-Generate Zod validators directly from the `.graphqls` SDL so resolvers can validate input at runtime without hand-rolling schemas. Candidate tools: `graphql-to-zod` or a custom codegen plugin. Benefits: single source of truth for input shapes, runtime safety at the resolver layer, and schema-parity with `ui-forms` validators.
+**Status:** Not started — validation is via generated repositories and GraphQL types; DAL codegen does not emit runtime Zod for inputs.
 
-### 2. OpenTelemetry Tracing
+Generate Zod from DAL-generated input shapes (merged SDL in `src/generated/generated-schema.ts` or a dedicated plugin in `@corpdk/dal-codegen`) for resolver-layer runtime checks and optional alignment with `ui-forms`.
 
-Add `@opentelemetry/sdk-node` instrumentation to DS packages for distributed request tracing. Each GraphQL operation should emit a span with operation name, variables (sanitized), and DB query timing. Integrates with Jaeger, Tempo, or any OTLP-compatible backend without vendor lock-in.
+**Why it still matters:** Closes the gap between compile-time GraphQL types and runtime validation without hand-written duplicate schemas.
 
-### 3. DataLoader Batching
+### 2. OpenTelemetry tracing
 
-**`templates/ds` (DAL):** per-request DataLoaders for all navigation fields are generated — see [GraphQL DAL Requirements §6.6](graphql-dal-requirements.md#66-association-output-fields-and-dataloaders). **Manual DS variants:** add `dataloader` to the resolver layer to batch and deduplicate N+1 DB calls. GraphQL resolvers that load related entities (e.g. fetching a user for each item in a list) currently issue one query per item. DataLoader coalesces these into a single batched query per tick.
+**Status:** Not started — no `@opentelemetry/*` in `templates/ds`.
 
-### 4. Cursor-Based Pagination
+Instrument Yoga + DB access: span per operation (name, sanitized variables), DB latency. Export OTLP to Jaeger, Tempo, or any compatible backend.
 
-**`templates/ds` (DAL):** Relay-style `<entity>Connection` fields with keyset cursors are generated — see [GraphQL DAL Requirements §13](graphql-dal-requirements.md#13-cursor-pagination). **Manual DS variants:** replace offset pagination with connection-spec cursor pagination. Cursor pagination is stable under concurrent writes — offset pagination skips or duplicates rows when the dataset changes between pages. The GraphQL SDL change is backward-compatible: add `Connection` / `Edge` types alongside existing list fields.
+**Why it still matters:** Production DS deployments need request-level traces without locking to a vendor.
 
-### 5. Health Check Endpoint
+### 3. Health check endpoint
 
-Add `GET /health` to each DS package returning:
+**Status:** Not started — GraphQL only; Docker Compose healthchecks target Postgres, not the Node process.
 
-- HTTP 200 on healthy, 503 on degraded
-- JSON body: `{ status, uptime, db: { connected, latencyMs }, version }`
+Add `GET /health`: 200 when healthy, 503 when degraded; JSON `{ status, uptime, db: { connected, latencyMs }, version }` for load balancers and Kubernetes probes.
 
-Enables load balancer health checks, Kubernetes liveness/readiness probes, and on-call dashboards without instrumenting GraphQL.
+**Why it still matters:** Orchestrators cannot use GraphQL POST for liveness/readiness.
 
-### 6. Rate Limiting Middleware
+### 4. Rate limiting middleware
 
-Add per-operation rate limiting via a Yoga plugin or `graphql-rate-limit`. Protects against runaway queries and abuse without requiring an API gateway. Limits should be configurable via env vars and keyed by IP or authenticated user ID.
+**Status:** Not started — no Yoga rate-limit plugin in `templates/ds`.
 
-### 7. GitHub Actions CI (DS)
+Per-operation limits via a Yoga plugin or `graphql-rate-limit`, keyed by IP or authenticated user, driven by env vars.
 
-Add `.github/workflows/ci.yml` covering all DS packages: lint + typecheck + `pnpm build`. DS packages have no external DB in CI — the `ds-file` variant can serve as the build smoke test since it has zero external dependencies.
+**Why it still matters:** Protects the DS when no API gateway enforces quotas.
 
-### 8. Schema Identity Guard
+### 5. Shared ESLint config (`templates/ds`)
 
-Add a CI step that runs codegen against all DS variants and asserts their SDL output is identical. This enforces the schema-identical guarantee that allows `@corpdk/ds-sdk` to be a single shared package. A diverging variant should fail CI before it reaches main.
+**Status:** Not started — `package.json` defines `"lint": "eslint src/"` but there is no `eslint.config.mjs` and no `@corpdk/eslint-config` devDependency (unlike `templates/ui`).
 
-### 9. Shared ESLint Config
+Add `@corpdk/eslint-config` (base preset only — NodeNext ESM, not `./next`) and a minimal flat config.
 
-DS packages currently have no `eslint.config.mjs`. Add `@corpdk/eslint-config` as a devDependency and a two-line config to each DS package. Note: DS packages use `module: NodeNext` (ESM) — the base library config from `@corpdk/eslint-config` is appropriate; the `./next` preset should not be used.
+**Why it still matters:** Local and CI lint for the primary DS template should match the rest of the monorepo.
 
-### 10. Subscription Durability (HPRT)
+### 6. Subscription resume (SSE)
 
-For `ds`, investigate durable subscriptions: if a client disconnects and reconnects, it should be able to resume from a checkpoint rather than missing events that arrived during the gap. Options: event sourcing with a Drizzle-backed event log, or a Redis Streams approach via `@corpdk/pub-sub`.
+**Status:** Not started — `templates/ds` publishes via `@corpdk/pub-sub` (memory or Redis) over **SSE** ([11-ds-subscription-sse.md](11-ds-subscription-sse.md)); reconnecting clients can miss events during gaps. Stock UI templates still use **graphql-ws** and are out of scope until they consume DS SSE.
+
+Explore durable delivery for the DS side: checkpoint/resume after disconnect (e.g. Drizzle-backed event log or Redis Streams via `@corpdk/pub-sub`).
+
+**Why it still matters:** SSE clients need a defined recovery story once UIs migrate off WebSocket transport.
 
 ---
 
-**Related**: [UI Status Dashboard](06-ui-status.md) | [UI Package Design](../architecture/04-ui-package-design.md) | [Monorepo Design](../architecture/02-monorepo-design.md)
+**Related:** [UI Status Dashboard](06-ui-status.md) | [UI Package Design](../architecture/04-ui-package-design.md) | [Monorepo Design](../architecture/02-monorepo-design.md)
 
-**Last updated**: March 31, 2026
+**Last updated:** October 5, 2026

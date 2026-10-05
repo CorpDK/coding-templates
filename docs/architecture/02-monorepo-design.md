@@ -202,7 +202,7 @@ pnpm --filter './templates/**' publish --no-git-checks
 
 ### CI — DS automation (npmjs)
 
-The **DS automation** subset (`dal-core`, `pub-sub`, `codegen-cli`, `dal-codegen`, `create-ds`) is published to npmjs in **lockstep CalVer** via GitHub Actions on tags `ds-automation/v*`. Templates are not included. See [npm publish — DS automation packages](../admin/04-npm-publish-ds-automation.md).
+The **DS automation** subset (`dal-core`, `pub-sub`, `codegen-cli`, `dal-codegen`, `create-ds`) is published to npmjs in **lockstep CalVer** via GitHub Actions when CalVer bumps merge to `main` (CI tags `ds-automation/v*` after npm publish). Templates are not included. See [npm publish — DS automation packages](../admin/04-npm-publish-ds-automation.md).
 
 ---
 
