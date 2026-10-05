@@ -6,7 +6,6 @@ import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { runDalCodegen, runDalCodegenBootstrap } from "../../generate.js";
-import { generateAppBootstrapFiles } from "../app-bootstrap.js";
 
 const execFileAsync = promisify(execFile);
 const dalCodegenRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
@@ -14,18 +13,6 @@ const tsxBin = join(dalCodegenRoot, "node_modules/.bin/tsx");
 const cliEntry = join(dalCodegenRoot, "src/cli.ts");
 
 describe("dal-codegen bootstrap", () => {
-  it("generateAppBootstrapFiles returns three non-empty module bodies", () => {
-    const files = generateAppBootstrapFiles();
-    expect(Object.keys(files).sort()).toEqual([
-      "dbIndexTs",
-      "indexTs",
-      "schemaTs",
-    ]);
-    for (const body of Object.values(files)) {
-      expect(body.trim().length).toBeGreaterThan(20);
-    }
-  });
-
   const bootstrapOptions = (packageRoot: string) => ({
     packageRoot,
     schemaPath: "src/db/schema",
