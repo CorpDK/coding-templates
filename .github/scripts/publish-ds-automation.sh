@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Publish the lockstep DS automation package set to npmjs (public @corpdk scope).
+# Git tag ds-automation/v<CalVer> and GitHub Release are created by the workflow, not here.
 # Usage: publish-ds-automation.sh <expected-version> [--dry-run]
 set -euo pipefail
 

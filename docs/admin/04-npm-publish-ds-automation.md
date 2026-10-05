@@ -33,11 +33,25 @@ These five packages ship together at the same CalVer (e.g. `2026.10.0-alpha.1`):
 
 | Trigger | Behavior |
 | ------- | -------- |
-| **Git tag** `ds-automation/v<CalVer>` | Live publish when `NPM_TOKEN` is configured (e.g. `ds-automation/v2026.10.0-alpha.1`) |
-| **workflow_dispatch** | Manual run; **dry-run defaults to true** |
+| **Git tag** `ds-automation/v<CalVer>` | Live publish when `NPM_TOKEN` is configured (e.g. `ds-automation/v2026.10.0-alpha.1`); creates a **GitHub Release** for that tag after npm publish |
+| **workflow_dispatch** | Manual run; **dry-run defaults to true**. With `dry_run: false` and `NPM_TOKEN`, creates the tag from **HEAD** if missing, publishes, then creates the GitHub Release |
 | **pull_request** (paths under DS automation + workflow) | Always **dry-run** (validates build, tests, and publish packaging) |
 
-If `NPM_TOKEN` is absent, tag and manual runs still execute but **force dry-run** so forks and PRs never upload.
+If `NPM_TOKEN` is absent, tag and manual runs still execute but **force dry-run** so forks and PRs never upload. Dry-run never creates git tags or GitHub Releases; it logs what would happen.
+
+### Outcomes (trigger × dry-run)
+
+| Trigger | Effective dry-run | Git tag | npm publish | GitHub Release |
+| ------- | ----------------- | ------- | ----------- | -------------- |
+| Tag push `ds-automation/v*` | `false` (if `NPM_TOKEN` set) | Already on ref; not recreated | Live upload | Created after publish if missing |
+| Tag push | forced `true` (no `NPM_TOKEN`) | Unchanged | `--dry-run` only | No |
+| **workflow_dispatch** `dry_run: false` | `false` (if `NPM_TOKEN` set) | `ds-automation/v<version>` pushed from HEAD if absent | Live upload | Created after publish if missing |
+| **workflow_dispatch** `dry_run: true` | `true` | No; logs intent | `--dry-run` only | No; logs intent |
+| **pull_request** | `true` | No | `--dry-run` only | No |
+
+Version for dispatch without `version` input comes from `libraries/dal-core/package.json` on the checked-out ref. Existing tags and releases are **not** duplicated: CI skips tag push and `gh release create` when the tag or release already exists.
+
+Release notes list all five packages at the release CalVer and link back to this document.
 
 ### What CI runs
 
@@ -45,6 +59,7 @@ If `NPM_TOKEN` is absent, tag and manual runs still execute but **force dry-run*
 2. `pnpm turbo run build` for all five packages (respects dependency order via Turbo).
 3. `pnpm --filter @corpdk/dal-core test` and `@corpdk/dal-codegen test` (same coverage as [`.github/workflows/dal.yml`](../../.github/workflows/dal.yml) for libraries).
 4. `pnpm publish --no-git-checks` in dependency order; `--dry-run` when not releasing.
+5. On live publish only: ensure git tag `ds-automation/v<CalVer>` (manual dispatch from HEAD if missing), then `gh release create` with generated notes (`permissions.contents: write`).
 
 ---
 
@@ -52,8 +67,8 @@ If `NPM_TOKEN` is absent, tag and manual runs still execute but **force dry-run*
 
 1. Bump **all five** `package.json` `version` fields to the same CalVer (and update [Package Dependencies](../architecture/06-package-dependencies.md) upgrade log if you track releases there).
 2. Merge to `main`.
-3. Tag: `git tag ds-automation/v2026.10.0-alpha.1 && git push origin ds-automation/v2026.10.0-alpha.1`
-4. Confirm the **Publish DS automation (npm)** workflow succeeded on GitHub Actions.
+3. Either push a tag — `git tag ds-automation/v2026.10.0-alpha.1 && git push origin ds-automation/v2026.10.0-alpha.1` — or run **workflow_dispatch** on `main` with `dry_run: false` (CI creates the same tag from HEAD when absent).
+4. Confirm the **Publish DS automation (npm)** workflow succeeded on GitHub Actions and that the matching **GitHub Release** exists under Releases.
 
 ### Local dry-run (no token)
 

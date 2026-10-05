@@ -3,6 +3,8 @@ name: Publish DS automation (npm)
 # Lockstep CalVer release for @corpdk DAL tooling on npmjs (public).
 # Templates stay on Artifactory — see docs/admin/04-npm-publish-ds-automation.md
 # Live publish: CorpDK org Actions secret NPM_TOKEN (repo access includes this repository).
+# Live publish also creates a GitHub Release for tag ds-automation/v<CalVer> (tag push or
+# workflow_dispatch with dry_run false). Manual dispatch creates the tag from HEAD when missing.
 
 on:
   push:
@@ -33,7 +35,7 @@ concurrency:
   cancel-in-progress: true
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   publish:
@@ -78,6 +80,38 @@ jobs:
           fi
           echo "value=${dry}" >> "$GITHUB_OUTPUT"
 
+      - name: Resolve release tag
+        id: tag
+        run: echo "name=ds-automation/v${{ steps.version.outputs.value }}" >> "$GITHUB_OUTPUT"
+
+      - name: Git tag and release preview (dry-run)
+        if: steps.dry.outputs.value == 'true'
+        run: |
+          tag="${{ steps.tag.outputs.name }}"
+          if [[ "${{ github.event_name }}" == "push" && "${{ github.ref_type }}" == "tag" ]]; then
+            echo "[dry-run] Tag ${tag} already exists (tag push). Would create GitHub Release after publish if missing."
+          else
+            echo "[dry-run] Would create tag ${tag} on origin from $(git rev-parse --short HEAD) if absent."
+            echo "[dry-run] Would create GitHub Release for ${tag} after successful publish if absent."
+          fi
+
+      - name: Ensure git tag (live publish)
+        if: >-
+          steps.dry.outputs.value != 'true' &&
+          (github.event_name != 'push' || github.ref_type != 'tag')
+        env:
+          TAG: ${{ steps.tag.outputs.name }}
+          VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/${TAG}" >/dev/null 2>&1; then
+            echo "Tag ${TAG} already exists on origin; skipping creation."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "${TAG}" -m "DS automation CalVer ${VERSION}"
+          git push origin "refs/tags/${TAG}"
+
       - name: Configure npm auth
         if: steps.dry.outputs.value != 'true'
         run: echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
@@ -92,3 +126,37 @@ jobs:
             args+=(--dry-run)
           fi
           .github/scripts/publish-ds-automation.sh "${args[@]}"
+
+      - name: Create GitHub Release (live publish)
+        if: steps.dry.outputs.value != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.tag.outputs.name }}
+          VERSION: ${{ steps.version.outputs.value }}
+          REPO: ${{ github.repository }}
+        run: |
+          if gh release view "${TAG}" --repo "${REPO}" >/dev/null 2>&1; then
+            echo "GitHub Release for ${TAG} already exists; skipping."
+            exit 0
+          fi
+          doc_url="https://github.com/${REPO}/blob/main/docs/admin/04-npm-publish-ds-automation.md"
+          notes_file="$(mktemp)"
+          {
+            echo "## DS automation CalVer ${VERSION}"
+            echo ""
+            echo "Lockstep \`@corpdk\` packages published to [npmjs](https://www.npmjs.org/) (public):"
+            echo ""
+            echo "| Package | Version |"
+            echo "| ------- | ------- |"
+            echo "| \`@corpdk/dal-core\` | ${VERSION} |"
+            echo "| \`@corpdk/pub-sub\` | ${VERSION} |"
+            echo "| \`@corpdk/codegen-cli\` | ${VERSION} |"
+            echo "| \`@corpdk/dal-codegen\` | ${VERSION} |"
+            echo "| \`@corpdk/create-ds\` | ${VERSION} |"
+            echo ""
+            echo "Release process and checklist: [npm publish — DS automation](${doc_url})"
+          } > "${notes_file}"
+          gh release create "${TAG}" \
+            --repo "${REPO}" \
+            --title "DS automation ${VERSION}" \
+            --notes-file "${notes_file}"
