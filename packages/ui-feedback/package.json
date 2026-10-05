@@ -38,5 +38,8 @@
     "sonner": "^2.0.7"
   },
   "sideEffects": false,
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": ">=24.0.0"
+  }
 }

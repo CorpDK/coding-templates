@@ -34,10 +34,13 @@
     "graphql": "^16.13.2"
   },
   "devDependencies": {
-    "@types/node": "^20.19.37",
+    "@types/node": "^24.0.0",
     "typescript": "^6.0.2",
     "@vitest/coverage-v8": "4.1.2",
     "vitest": "^4.1.2"
   },
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": ">=24.0.0"
+  }
 }

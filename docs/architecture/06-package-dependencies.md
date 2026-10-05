@@ -207,7 +207,7 @@ Common dev dependencies used across most workspace packages.
 | eslint                | ^9.39.4      | All UI packages + templates |
 | eslint-config-next    | 16.2.1       | All UI packages + templates |
 | @corpdk/eslint-config | workspace:\* | All UI packages + templates |
-| @types/node           | ^20.19.37    | All packages                |
+| @types/node           | ^24.0.0      | All packages (Node 24 LTS)  |
 | @types/react          | ^19.2.14     | All UI packages             |
 | @types/react-dom      | ^19.2.3      | All UI packages             |
 | tsx                   | ^4.21.0      | All DS templates            |
