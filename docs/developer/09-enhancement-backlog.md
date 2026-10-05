@@ -4,20 +4,6 @@ Items to address after the core implementation is complete. Each entry includes 
 
 ---
 
-## Platform (shipped)
-
-Work that landed on `main` outside the numbered UI/DS lists below:
-
-- **DAL automation (`templates/ds`)** — Drizzle schema as sole authoring surface; 3-phase `pnpm dal:codegen`; gitignored `src/generated/`; GraphQL subscriptions over SSE on HTTP `/graphql` ([11-ds-subscription-sse.md](11-ds-subscription-sse.md)).
-- **`@corpdk/create-ds`** — Merged ([PR #14](https://github.com/CorpDK/coding-templates/pull/14)): `init` / `upgrade`; scaffold CalVer `YYYY.M.0`; never overwrites team `src/db/schema/**`.
-- **MIT license** — Root `LICENSE` plus `license` fields on packages; scaffolds copy license via `create-app` / `create-ds`.
-- **DS automation on npmjs** — Five packages (`dal-core`, `pub-sub`, `codegen-cli`, `dal-codegen`, `create-ds`); **trusted publishing** (GitHub Actions OIDC) → [`.github/workflows/publish-ds-automation.yml`](../../.github/workflows/publish-ds-automation.yml). Live publish on push to `main` when `libraries/dal-core` CalVer changes ([PR #15](https://github.com/CorpDK/coding-templates/pull/15)); auto tag `ds-automation/v<CalVer>`, npm provenance, GitHub Release. See [04-npm-publish-ds-automation.md](../admin/04-npm-publish-ds-automation.md).
-- **`2026.10.0-alpha.2` + package READMEs** — [PR #16](https://github.com/CorpDK/coding-templates/pull/16) (branch `feature/ds-automation-readmes-alpha2`): CalVer bump and READMEs on all five npm packages; **`checks-passed`**. Merge to `main` triggers the first automated OIDC publish at `alpha.2`.
-
-Templates and other `@corpdk/*` packages remain **Artifactory**; only the DS automation npm set uses the publish workflow above.
-
----
-
 ## UI Enhancements
 
 ### 1. Testing Infrastructure
@@ -68,19 +54,7 @@ Generate Zod validators from the DAL-generated GraphQL input shapes (merged SDL 
 
 Add `@opentelemetry/sdk-node` instrumentation to `templates/ds` for distributed request tracing. Each GraphQL operation should emit a span with operation name, variables (sanitized), and DB query timing. Integrates with Jaeger, Tempo, or any OTLP-compatible backend without vendor lock-in.
 
-### 3. DataLoader Batching
-
-**Status:** Done — `@corpdk/dal-codegen` `generateLoaderSetup()` + `createDalContext()` in `libraries/dal-codegen/src/generators/resolvers.ts` instantiate per-request `DataLoader`s and navigation resolvers call `ctx.loaders.*` (see `libraries/dal-codegen/src/generators/__tests__/m2m-navigation.test.ts`). Spec: [GraphQL DAL Requirements §6.6](graphql-dal-requirements.md#66-association-output-fields-and-dataloaders).
-
-GraphQL resolvers that load related entities (e.g. fetching a user for each item in a list) issue one query per item without batching. DataLoader coalesces these into a single batched query per tick; DAL codegen covers this for association fields in `templates/ds`.
-
-### 4. Cursor-Based Pagination
-
-**Status:** Done — `@corpdk/dal-codegen` `entity-schema.ts` emits `<Entity>Connection` / `Edge` query fields (`first`/`after`/…); generated repos delegate to `@corpdk/dal-core` `QueryEngine.listConnection()` via `libraries/dal-codegen/src/generators/repository.ts` (tests: `phase1.test.ts`, `libraries/dal-core/src/__tests__/query-engine.test.ts`). Spec: [GraphQL DAL Requirements §13](graphql-dal-requirements.md#13-cursor-pagination).
-
-Connection-spec cursor pagination replaces offset paging for generated list fields. Cursor pagination is stable under concurrent writes; DAL codegen emits `Connection` / `Edge` types for eligible entities in `templates/ds`.
-
-### 5. Health Check Endpoint
+### 3. Health Check Endpoint
 
 **Status:** Not started — `templates/ds` exposes GraphQL only; no `GET /health` route.
 
@@ -91,29 +65,29 @@ Add `GET /health` to `templates/ds` returning:
 
 Enables load balancer health checks, Kubernetes liveness/readiness probes, and on-call dashboards without instrumenting GraphQL.
 
-### 6. Rate Limiting Middleware
+### 4. Rate Limiting Middleware
 
 **Status:** Not started — no Yoga rate-limit plugin or equivalent in `templates/ds`.
 
 Add per-operation rate limiting via a Yoga plugin or `graphql-rate-limit` in `templates/ds`. Protects against runaway queries and abuse without requiring an API gateway. Limits should be configurable via env vars and keyed by IP or authenticated user ID.
 
-### 7. GitHub Actions CI (DS)
+### 5. GitHub Actions CI (DS)
 
 **Status:** Partial — [`.github/workflows/dal.yml`](../../.github/workflows/dal.yml) builds/tests DAL libraries and runs `@corpdk/ds` (`templates/ds`) build + `entity:lint`; [`.github/workflows/sonar.yml`](../../.github/workflows/sonar.yml) runs DAL unit tests with coverage + SonarCloud; [`.github/workflows/publish-ds-automation.yml`](../../.github/workflows/publish-ds-automation.yml) dry-runs packaging on PRs touching the npm set. **Still wanted:** unified `.github/workflows/ci.yml` that includes `templates/ds` — lint + typecheck + full `pnpm --filter @corpdk/ds build` on every PR (alongside UI when item UI #5 lands).
 
-### 8. Schema Identity Guard
+### 6. Schema Identity Guard
 
 **Status:** Not started — no CI step verifies that `pnpm dal:codegen` + GraphQL codegen output for `templates/ds` is deterministic and matches committed expectations (if any) or fails on unexpected SDL drift.
 
 Add a CI step that runs the full DAL codegen chain for `templates/ds` and asserts stable, reviewable SDL output (e.g. snapshot or hash of `src/generated/generated-schema.ts`). Catches accidental schema drift before merge. Cross-variant SDL parity with manual DS templates is **out of scope** until those variants re-enter this backlog.
 
-### 9. Shared ESLint Config
+### 7. Shared ESLint Config
 
 **Status:** Not started — `templates/ds` declares `"lint": "eslint src/"` but has no `eslint.config.mjs` and no `@corpdk/eslint-config` devDependency (unlike `templates/ui`).
 
 Add `@corpdk/eslint-config` as a devDependency and a two-line config to `templates/ds`. Note: the package uses `module: NodeNext` (ESM) — the base library config from `@corpdk/eslint-config` is appropriate; the `./next` preset should not be used.
 
-### 10. Subscription Durability (HPRT)
+### 8. Subscription Durability (HPRT)
 
 **Status:** Not started — `templates/ds` uses in-memory/Redis pub/sub via `@corpdk/pub-sub` with SSE transport; no checkpoint or event log for reconnect resume. `templates/ui-hprt` still uses graphql-ws until UI migrates to DS SSE ([11-ds-subscription-sse.md](11-ds-subscription-sse.md)).
 
