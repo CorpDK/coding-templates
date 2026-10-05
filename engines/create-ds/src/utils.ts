@@ -119,9 +119,7 @@ async function copyDirRecursive(
     } else if (entry.isFile()) {
       if (options.skipIfExists && (await pathExists(destPath))) continue;
       const raw = await fs.readFile(srcPath, "utf8");
-      const content = options.transform
-        ? options.transform(raw, relPath)
-        : raw;
+      const content = options.transform ? options.transform(raw, relPath) : raw;
       await fs.mkdir(path.dirname(destPath), { recursive: true });
       await fs.writeFile(destPath, content, "utf8");
     }

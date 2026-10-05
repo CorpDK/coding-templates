@@ -8,12 +8,7 @@ import {
   isBundledCanonicalTemplate,
   readCreateDsReleaseVersion,
 } from "./template.js";
-import {
-  execAsync,
-  pathExists,
-  readJson,
-  writeJson,
-} from "./utils.js";
+import { execAsync, pathExists, readJson, writeJson } from "./utils.js";
 import {
   mergePackageJson,
   type MergePackageJsonOptions,
@@ -24,7 +19,10 @@ export interface UpgradeOptions {
   repoRoot: string;
 }
 
-function mergeDalConfig(templateRaw: string, consumerRaw: string | null): string {
+function mergeDalConfig(
+  templateRaw: string,
+  consumerRaw: string | null,
+): string {
   const template = (parseYaml(templateRaw) as Record<string, unknown>) ?? {};
   const consumer = consumerRaw
     ? ((parseYaml(consumerRaw) as Record<string, unknown>) ?? {})
@@ -37,12 +35,10 @@ async function mergeUpgradePackageJson(
   destPath: string,
   mergeOptions: MergePackageJsonOptions | undefined,
 ): Promise<void> {
-  const consumer = await readJson<Parameters<typeof mergePackageJson>[0]>(
-    destPath,
-  );
-  const template = await readJson<Parameters<typeof mergePackageJson>[1]>(
-    templatePath,
-  );
+  const consumer =
+    await readJson<Parameters<typeof mergePackageJson>[0]>(destPath);
+  const template =
+    await readJson<Parameters<typeof mergePackageJson>[1]>(templatePath);
   await writeJson(destPath, mergePackageJson(consumer, template, mergeOptions));
 }
 

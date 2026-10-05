@@ -4,9 +4,9 @@ Teams that adopt DAL automation own **`src/db/schema/`** (and optional **`src/db
 
 ## Tooling
 
-| Command | Purpose |
-| ------- | ------- |
-| `create-ds init [dir]` | Scaffold a new DS package (minimal tag schema by default) |
+| Command                   | Purpose                                                        |
+| ------------------------- | -------------------------------------------------------------- |
+| `create-ds init [dir]`    | Scaffold a new DS package (minimal tag schema by default)      |
 | `create-ds upgrade [dir]` | Merge template deltas; **never** overwrites `src/db/schema/**` |
 
 From the monorepo root (after `pnpm install` and building engines):
@@ -55,12 +55,12 @@ Scaffolded **`codegen.ts`** targets sibling **`../ds-sdk`** and **`../ds-cli`** 
 
 Published `@corpdk/*` libraries use [CalVer](../architecture/02-monorepo-design.md#calver-format-rules); rows below describe **compatibility impact**, not npm semver version fields.
 
-| Bump | When | Consumer action |
-| ---- | ---- | ----------------- |
-| **Patch** `@corpdk/dal-core` / `@corpdk/dal-codegen` | Bug fixes, lint rules, generated output tweaks | `create-ds upgrade` → `pnpm install` → `pnpm dal:codegen` |
-| **Minor** `@corpdk/dal-core` | New filter operators, relation behavior, optional env | Same; review `entity:lint` warnings |
-| **Major** `@corpdk/dal-core` or codegen breaking changes | GraphQL naming, payload shape, removed scalars | Upgrade tool + fix schema comments/indexes per release notes; run full test suite |
-| **Template-only** (scripts, Docker, bootstrap) | No `@corpdk` library release | `create-ds upgrade` sufficient; schema untouched |
+| Bump                                                     | When                                                  | Consumer action                                                                   |
+| -------------------------------------------------------- | ----------------------------------------------------- | --------------------------------------------------------------------------------- |
+| **Patch** `@corpdk/dal-core` / `@corpdk/dal-codegen`     | Bug fixes, lint rules, generated output tweaks        | `create-ds upgrade` → `pnpm install` → `pnpm dal:codegen`                         |
+| **Minor** `@corpdk/dal-core`                             | New filter operators, relation behavior, optional env | Same; review `entity:lint` warnings                                               |
+| **Major** `@corpdk/dal-core` or codegen breaking changes | GraphQL naming, payload shape, removed scalars        | Upgrade tool + fix schema comments/indexes per release notes; run full test suite |
+| **Template-only** (scripts, Docker, bootstrap)           | No `@corpdk` library release                          | `create-ds upgrade` sufficient; schema untouched                                  |
 
 Always run the three-step codegen chain after upgrading libraries:
 
@@ -71,13 +71,13 @@ pnpm dal:codegen
 
 ## What stays manual (today)
 
-| Area | Owner | Roadmap |
-| ---- | ----- | ------- |
-| `src/db/schema/**` | Team | Only hand-authored surface |
-| `src/db/seed.ts` | Team | Optional demo data |
-| `drizzle/migrations/**` | Team | `pnpm db:generate` / `db:migrate` |
-| Auth wiring in `src/index.ts` context | Team | Future: auth plugin hook in bootstrap generator |
-| Custom GraphQL extensions | Team | Future: `dal.config.yaml` extension points |
+| Area                                   | Owner    | Roadmap                                              |
+| -------------------------------------- | -------- | ---------------------------------------------------- |
+| `src/db/schema/**`                     | Team     | Only hand-authored surface                           |
+| `src/db/seed.ts`                       | Team     | Optional demo data                                   |
+| `drizzle/migrations/**`                | Team     | `pnpm db:generate` / `db:migrate`                    |
+| Auth wiring in `src/index.ts` context  | Team     | Future: auth plugin hook in bootstrap generator      |
+| Custom GraphQL extensions              | Team     | Future: `dal.config.yaml` extension points           |
 | Monorepo `turbo.json` / root workspace | Platform | Documented separately; not merged by `create-ds` yet |
 
 ## Maintainers

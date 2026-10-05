@@ -8,7 +8,13 @@ import {
   readCreateDsReleaseVersion,
   resolveCanonicalDsTemplateDir,
 } from "./template.js";
-import { copyDir, execAsync, pathExists, readJson, writeJson } from "./utils.js";
+import {
+  copyDir,
+  execAsync,
+  pathExists,
+  readJson,
+  writeJson,
+} from "./utils.js";
 import { mergePackageJson } from "./package-merge.js";
 
 export interface InitOptions {
@@ -60,7 +66,10 @@ export async function runInit(options: InitOptions): Promise<void> {
 
   const starterDal = path.join(engineStarterDir(), "dal", "dal.config.yaml");
   if (!options.withDemoSchema && (await pathExists(starterDal))) {
-    await fs.copyFile(starterDal, path.join(targetDir, "dal", "dal.config.yaml"));
+    await fs.copyFile(
+      starterDal,
+      path.join(targetDir, "dal", "dal.config.yaml"),
+    );
   }
 
   const templatePkg = await readJson<Record<string, unknown>>(
@@ -86,10 +95,7 @@ export async function runInit(options: InitOptions): Promise<void> {
     });
   } else {
     for (const rel of ["src/schema.ts", "src/index.ts", "src/db/index.ts"]) {
-      await fs.copyFile(
-        path.join(templateDir, rel),
-        path.join(targetDir, rel),
-      );
+      await fs.copyFile(path.join(templateDir, rel), path.join(targetDir, rel));
     }
   }
 

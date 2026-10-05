@@ -16,7 +16,8 @@ const options: CodegenOptions = {
   entityRecordsOutputPath:
     process.env.DAL_ENTITY_RECORDS_PATH ?? "src/generated/entity-records.ts",
   mappersOutputPath:
-    process.env.DAL_MAPPERS_OUTPUT_PATH ?? "src/generated/graphql-codegen.mappers.ts",
+    process.env.DAL_MAPPERS_OUTPUT_PATH ??
+    "src/generated/graphql-codegen.mappers.ts",
   configPath: process.env.DAL_CONFIG_PATH ?? "dal/dal.config.yaml",
   mode: parseDalCodegenMode(process.argv.slice(2)),
 };
@@ -25,6 +26,9 @@ try {
   await ensureSchemaTypeScriptLoader();
   await runDalCodegen(options);
 } catch (err) {
-  console.error("dal-codegen failed:", err instanceof Error ? err.message : err);
+  console.error(
+    "dal-codegen failed:",
+    err instanceof Error ? err.message : err,
+  );
   process.exit(1);
 }

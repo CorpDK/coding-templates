@@ -1,5 +1,13 @@
 import { sql } from "drizzle-orm";
-import { check, index, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
+import {
+  check,
+  index,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+  varchar,
+} from "drizzle-orm/pg-core";
 
 /** Starter tag entity — replace or extend as your domain grows. */
 export const tags = pgTable(
@@ -14,7 +22,9 @@ export const tags = pgTable(
     /** Actor ID who soft-deleted this row. */
     deletedBy: text("deleted_by"),
     /** Row creation time (UTC). */
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
     /** Actor ID from request context; never client-supplied. */
     createdBy: text("created_by").notNull(),
   },

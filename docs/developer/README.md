@@ -6,23 +6,23 @@ Implementation guides, coding patterns, and standards for contributors to the co
 
 ## Contents
 
-| Document                                               | Description                                                  |
-| ------------------------------------------------------ | ------------------------------------------------------------ |
-| [01-monorepo-overview.md](01-monorepo-overview.md)     | Repo layout, package reference, root scripts                 |
-| [02-graphql-schema.md](02-graphql-schema.md)           | SDL directory layout, docstring rules, entity file pattern   |
-| [03-repository-pattern.md](03-repository-pattern.md)   | IRepository interface, 4-step entity add guide               |
-| [04-pubsub-internals.md](04-pubsub-internals.md)       | `createAppPubSub` factory, topic definition, resolver wiring |
-| [11-ds-subscription-sse.md](11-ds-subscription-sse.md) | `@corpdk/ds` subscriptions over SSE (UI migration deferred)   |
-| [05-ui-architecture.md](05-ui-architecture.md)         | UI template state and app-level configuration                |
-| [06-ui-status.md](06-ui-status.md)                     | Living capability status matrix across all UI packages       |
-| [07-git-conventions.md](07-git-conventions.md)         | Conventional Commits format and examples                     |
-| [08-coding-guidelines.md](08-coding-guidelines.md)     | Code style, component patterns, review checklist             |
-| [09-enhancement-backlog.md](09-enhancement-backlog.md) | Future improvements for UI and DS packages                   |
-| [dal-entity-design.md](dal-entity-design.md)           | Drizzle entity table design — audit profiles, relations, indexes, schema scope |
-| [dal-pg-type-mapping.md](dal-pg-type-mapping.md)       | PostgreSQL → DAL type mapping — PG types, `ID` for uuid, custom scalars (`IntervalMs`, etc.), filters |
-| [graphql-dal-requirements.md](graphql-dal-requirements.md) | GraphQL DAL requirements — inference rules, queries, mutations, filters, pagination |
-| [ds-automation-upgrades.md](ds-automation-upgrades.md) | `@corpdk/create-ds` init / upgrade for DAL-automated DS packages |
-| [dal-phase2.md](dal-phase2.md) … [dal-phase5.md](dal-phase5.md) | Phase delivery notes — filters, cursors, index lint, driver errors |
+| Document                                                        | Description                                                                                           |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| [01-monorepo-overview.md](01-monorepo-overview.md)              | Repo layout, package reference, root scripts                                                          |
+| [02-graphql-schema.md](02-graphql-schema.md)                    | SDL directory layout, docstring rules, entity file pattern                                            |
+| [03-repository-pattern.md](03-repository-pattern.md)            | IRepository interface, 4-step entity add guide                                                        |
+| [04-pubsub-internals.md](04-pubsub-internals.md)                | `createAppPubSub` factory, topic definition, resolver wiring                                          |
+| [11-ds-subscription-sse.md](11-ds-subscription-sse.md)          | `@corpdk/ds` subscriptions over SSE (UI migration deferred)                                           |
+| [05-ui-architecture.md](05-ui-architecture.md)                  | UI template state and app-level configuration                                                         |
+| [06-ui-status.md](06-ui-status.md)                              | Living capability status matrix across all UI packages                                                |
+| [07-git-conventions.md](07-git-conventions.md)                  | Conventional Commits format and examples                                                              |
+| [08-coding-guidelines.md](08-coding-guidelines.md)              | Code style, component patterns, review checklist                                                      |
+| [09-enhancement-backlog.md](09-enhancement-backlog.md)          | Future improvements for UI and DS packages                                                            |
+| [dal-entity-design.md](dal-entity-design.md)                    | Drizzle entity table design — audit profiles, relations, indexes, schema scope                        |
+| [dal-pg-type-mapping.md](dal-pg-type-mapping.md)                | PostgreSQL → DAL type mapping — PG types, `ID` for uuid, custom scalars (`IntervalMs`, etc.), filters |
+| [graphql-dal-requirements.md](graphql-dal-requirements.md)      | GraphQL DAL requirements — inference rules, queries, mutations, filters, pagination                   |
+| [ds-automation-upgrades.md](ds-automation-upgrades.md)          | `@corpdk/create-ds` init / upgrade for DAL-automated DS packages                                      |
+| [dal-phase2.md](dal-phase2.md) … [dal-phase5.md](dal-phase5.md) | Phase delivery notes — filters, cursors, index lint, driver errors                                    |
 
 ---
 

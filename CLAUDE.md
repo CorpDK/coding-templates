@@ -55,7 +55,7 @@ coding-templates/
 | `ui`            | `@corpdk/ui`            | Standard Next.js UI using Apollo Client for GraphQL                                                            |
 | `ui-hprt`       | `@corpdk/ui-hprt`       | High-performance real-time UI using urql + Graphcache                                                          |
 | `ds`            | `@corpdk/ds`            | GraphQL Yoga server with Drizzle ORM (PostgreSQL/MySQL/SQLite/CockroachDB) — primary/default relational DS     |
-| `ds-no-sql`     | `@corpdk/ds-no-sql`     | GraphQL Yoga server with Prisma ORM for databases Drizzle does not support (MongoDB, DocumentDB, etc.)          |
+| `ds-no-sql`     | `@corpdk/ds-no-sql`     | GraphQL Yoga server with Prisma ORM for databases Drizzle does not support (MongoDB, DocumentDB, etc.)         |
 | `ds-cdb`        | `@corpdk/ds-cdb`        | GraphQL Yoga server with Couchbase SDK + Zod (cloud-agnostic NoSQL)                                            |
 | `ds-mongo`      | `@corpdk/ds-mongo`      | GraphQL Yoga server with MongoDB native driver + Zod (Atlas or self-hosted)                                    |
 | `ds-ddb`        | `@corpdk/ds-ddb`        | GraphQL Yoga server with DocumentDB (documentdb.io) + Zod (MongoDB-compatible wire protocol)                   |

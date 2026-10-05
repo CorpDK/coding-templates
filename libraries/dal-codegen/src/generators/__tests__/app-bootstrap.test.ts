@@ -8,7 +8,10 @@ import { describe, expect, it } from "vitest";
 import { runDalCodegen, runDalCodegenBootstrap } from "../../generate.js";
 
 const execFileAsync = promisify(execFile);
-const dalCodegenRoot = join(dirname(fileURLToPath(import.meta.url)), "../../..");
+const dalCodegenRoot = join(
+  dirname(fileURLToPath(import.meta.url)),
+  "../../..",
+);
 const tsxBin = join(dalCodegenRoot, "node_modules/.bin/tsx");
 const cliEntry = join(dalCodegenRoot, "src/cli.ts");
 
@@ -34,7 +37,10 @@ describe("dal-codegen bootstrap", () => {
   it("runDalCodegen with mode bootstrap writes entry files only", async () => {
     const packageRoot = mkdtempSync(join(tmpdir(), "dal-bootstrap-run-"));
 
-    await runDalCodegen({ ...bootstrapOptions(packageRoot), mode: "bootstrap" });
+    await runDalCodegen({
+      ...bootstrapOptions(packageRoot),
+      mode: "bootstrap",
+    });
 
     expect(existsSync(join(packageRoot, "src/schema.ts"))).toBe(true);
     expect(existsSync(join(packageRoot, "src/generated"))).toBe(false);

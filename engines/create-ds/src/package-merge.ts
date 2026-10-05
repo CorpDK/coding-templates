@@ -29,8 +29,7 @@ const CORP_DK_BUMP = new Set([
   "@corpdk/dal-codegen",
 ]);
 
-const DAL_CODEGEN_CLI =
-  "node ./node_modules/@corpdk/dal-codegen/dist/cli.js";
+const DAL_CODEGEN_CLI = "node ./node_modules/@corpdk/dal-codegen/dist/cli.js";
 const DAL_ENTITY_LINT_CLI =
   "node ./node_modules/@corpdk/dal-codegen/dist/lint-cli.js";
 
@@ -79,10 +78,7 @@ function mergeConsumerDeps(
   return merged;
 }
 
-function copyPreservedConsumerFields(
-  merged: PkgJson,
-  consumer: PkgJson,
-): void {
+function copyPreservedConsumerFields(merged: PkgJson, consumer: PkgJson): void {
   for (const key of CONSUMER_PRESERVED_TOP_LEVEL) {
     if (Object.prototype.hasOwnProperty.call(consumer, key)) {
       merged[key] = consumer[key];
@@ -102,7 +98,10 @@ export function mergePackageJson(
     description: consumer.description ?? template.description,
     publishConfig: consumer.publishConfig,
     scripts: normalizeDalScripts(template.scripts ?? {}),
-    dependencies: mergeConsumerDeps(template.dependencies, consumer.dependencies),
+    dependencies: mergeConsumerDeps(
+      template.dependencies,
+      consumer.dependencies,
+    ),
     devDependencies: mergeConsumerDeps(
       template.devDependencies,
       consumer.devDependencies,

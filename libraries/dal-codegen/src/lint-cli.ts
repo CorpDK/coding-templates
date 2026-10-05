@@ -23,6 +23,9 @@ try {
   console.log(`entity:lint — checked ${result.entityCount} entity table(s)`);
   process.exit(lintExitCode(result.violations));
 } catch (err) {
-  console.error("entity:lint failed:", err instanceof Error ? err.message : err);
+  console.error(
+    "entity:lint failed:",
+    err instanceof Error ? err.message : err,
+  );
   process.exit(1);
 }
