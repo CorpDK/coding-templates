@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { resolve } from "node:path";
+import { ensureSchemaTypeScriptLoader } from "./schema-loader.js";
 import {
   formatLintViolations,
   lintExitCode,
@@ -11,6 +12,7 @@ const schemaPath = process.env.DAL_SCHEMA_PATH ?? "src/db/schema";
 const configPath = process.env.DAL_CONFIG_PATH ?? "dal/dal.config.yaml";
 
 try {
+  await ensureSchemaTypeScriptLoader();
   const result = await runEntityLint({ packageRoot, schemaPath, configPath });
   const output = formatLintViolations(result.violations);
   if (result.violations.length > 0) {

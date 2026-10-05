@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { resolve } from "node:path";
+import { ensureSchemaTypeScriptLoader } from "./schema-loader.js";
 import { runDalCodegen } from "./generate.js";
 import type { CodegenOptions } from "./config.js";
 import { parseDalCodegenMode } from "./parse-mode.js";
@@ -21,6 +22,7 @@ const options: CodegenOptions = {
 };
 
 try {
+  await ensureSchemaTypeScriptLoader();
   await runDalCodegen(options);
 } catch (err) {
   console.error("dal-codegen failed:", err instanceof Error ? err.message : err);

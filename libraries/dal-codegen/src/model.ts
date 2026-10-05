@@ -16,6 +16,7 @@ import {
   inferLengthConstraint,
 } from "./constraint-infer.js";
 import { attachRelations } from "./relations.js";
+import { ensureSchemaTypeScriptLoader } from "./schema-loader.js";
 
 export type ColumnKind =
   | "uuid"
@@ -208,13 +209,8 @@ export function collectSchemaFiles(schemaPath: string): string[] {
 }
 
 export async function importSchemaModule(file: string): Promise<Record<string, unknown>> {
-  try {
-    return (await import(pathToFileURL(file).href)) as Record<string, unknown>;
-  } catch {
-    const { register } = await import("tsx/esm/api");
-    register();
-    return (await import(pathToFileURL(file).href)) as Record<string, unknown>;
-  }
+  await ensureSchemaTypeScriptLoader();
+  return (await import(pathToFileURL(file).href)) as Record<string, unknown>;
 }
 
 function inferEnumMetadata(
