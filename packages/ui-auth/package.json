@@ -37,5 +37,6 @@
     "eslint-config-next": "16.2.1",
     "typescript": "^6.0.2"
   },
-  "sideEffects": false
+  "sideEffects": false,
+  "license": "MIT"
 }

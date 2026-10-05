@@ -35,5 +35,6 @@
     "@types/ws": "^8.18.1",
     "tsx": "^4.21.0",
     "typescript": "^6.0.2"
-  }
+  },
+  "license": "MIT"
 }

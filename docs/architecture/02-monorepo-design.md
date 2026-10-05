@@ -111,14 +111,20 @@ The CalVer scheme used is `YYYY.MM.MICRO` where months are **not** zero-padded (
 | Stable       | `YYYY.MM.MICRO`                   | `2026.3.0`          | First stable release in a calendar period   |
 | Alpha        | `YYYY.MM.MICRO-alpha.N`           | `2026.3.0-alpha.1`  | Early unstable builds; API may change       |
 | Beta         | `YYYY.MM.MICRO-beta.N`            | `2026.3.0-beta.2`   | Feature-complete; undergoing validation     |
-| Patch        | `YYYY.MM.MICRO` (increment MICRO) | `2026.3.1`          | Bug fixes within the same calendar period   |
-| Hotfix       | `YYYY.MM.MICRO-hotfix.N`          | `2026.3.1-hotfix.1` | Critical production fix on a released patch |
+| Patch / hotfix | `YYYY.MM.MICRO` (increment MICRO) | `2026.3.1`          | Bug fixes and production hotfixes within the same UTC month |
+| Hotfix RC      | `YYYY.MM.MICRO-rc.N`              | `2026.3.3-rc.1`     | Pre-production candidate for the next stable hotfix version   |
 
 **When to bump MICRO vs roll to a new `YYYY.MM`:**
 
-- Increment `MICRO` for bug fixes and patches within the same calendar month.
-- Roll `YYYY.MM` (reset `MICRO` to `0`) when a new month has passed since the last release, or when shipping a significant feature batch that merits a new calendar stamp.
-- Never increment `MICRO` past `9` to avoid semantic confusion — a new calendar period should be used instead.
+- Increment `MICRO` for bug fixes, patches, and verified production hotfixes within the same UTC calendar month (feature batches and hotfixes all use the next stable `MICRO`; see [Limitless CalVer](https://github.com/Limitless-Enterprise/guidelines/blob/main/docs/05-technology/03-calver-versioning.md)).
+- Roll `YYYY.MM` (reset `MICRO` to `0`) when the UTC month changes since the last stable release.
+- `MICRO` is not capped at `9`; use numeric version ordering (`2026.7.10` > `2026.7.9`).
+
+---
+
+## Open-source license
+
+The monorepo and published `@corpdk/*` npm packages use the **MIT License** ([`LICENSE`](../../LICENSE) at the repo root). Downstream use requires retaining the copyright and permission notice; otherwise consumers may use, modify, and redistribute the code freely. **`create-app`** and **`create-ds init`** copy the same `LICENSE` and set `"license": "MIT"` on generated root or DS `package.json` files.
 
 ---
 

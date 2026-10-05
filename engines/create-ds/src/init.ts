@@ -70,7 +70,11 @@ export async function runInit(options: InitOptions): Promise<void> {
     ? { publishedCorpdkVersions: await readCreateDsReleaseVersion() }
     : undefined;
   const merged = mergePackageJson(
-    { name: options.packageName, version: initialScaffoldCalVer() },
+    {
+      name: options.packageName,
+      version: initialScaffoldCalVer(),
+      license: "MIT",
+    },
     templatePkg as Parameters<typeof mergePackageJson>[1],
     mergeOptions,
   );

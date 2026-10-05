@@ -7,7 +7,11 @@
     "registry": "https://registry.npmjs.org/",
     "access": "public"
   },
-  "files": ["dist", "starter", "canonical"],
+  "files": [
+    "dist",
+    "starter",
+    "canonical"
+  ],
   "bin": {
     "create-ds": "./dist/index.js"
   },
@@ -24,5 +28,6 @@
     "@types/node": "^20.19.37",
     "tsup": "^8.5.1",
     "typescript": "^6.0.2"
-  }
+  },
+  "license": "MIT"
 }

@@ -57,6 +57,7 @@ export function initialScaffoldCalVer(asOf: Date = new Date()): string {
 
 /** Relative paths under templates/ds merged on upgrade (never touches src/db/schema/**). */
 export const UPGRADE_RELATIVE_FILES = [
+  "LICENSE",
   "package.json",
   "dal/dal.config.yaml",
   "codegen.ts",

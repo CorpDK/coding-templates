@@ -6,7 +6,9 @@
     "registry": "https://registry.npmjs.org/",
     "access": "public"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -29,5 +31,6 @@
     "typescript": "^6.0.2",
     "@vitest/coverage-v8": "4.1.2",
     "vitest": "^4.1.2"
-  }
+  },
+  "license": "MIT"
 }

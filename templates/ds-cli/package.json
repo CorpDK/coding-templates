@@ -13,5 +13,6 @@
   ],
   "scripts": {
     "clean": "rm -rf src/generated node_modules .turbo"
-  }
+  },
+  "license": "MIT"
 }

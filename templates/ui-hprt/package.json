@@ -1,6 +1,6 @@
 {
   "name": "@corpdk/ui-hprt",
-  "version": "2026.3.0-alpha.1",
+  "version": "0.1.0",
   "publishConfig": {
     "registry": "https://artifactory.corp.example.com/api/npm/npm-private/"
   },
@@ -38,5 +38,6 @@
     "sass": "^1.99.0",
     "tailwindcss": "^4.2.1",
     "typescript": "^6.0.2"
-  }
+  },
+  "license": "MIT"
 }

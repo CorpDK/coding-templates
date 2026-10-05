@@ -84,5 +84,6 @@
     "zod": "^4.3.6",
     "zustand": "^5.0.12"
   },
-  "sideEffects": false
+  "sideEffects": false,
+  "license": "MIT"
 }
