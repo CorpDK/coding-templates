@@ -33,7 +33,7 @@ Welcome to the coding-templates documentation! This monorepo provides production
 - [UI Status Dashboard](developer/06-ui-status.md) — living capability matrix across all UI packages
 - [Git Conventions](developer/07-git-conventions.md) — Conventional Commits format and examples
 - [Coding Guidelines](developer/08-coding-guidelines.md) — code style, component patterns, review checklist
-- [Enhancement Backlog](developer/09-enhancement-backlog.md) — future improvements for UI and DS packages
+- [Enhancement Backlog](developer/09-enhancement-backlog.md) — open UI work and `templates/ds` enhancements
 - [DAL Entity Design](developer/dal-entity-design.md) — Drizzle entity tables, audit profiles, relations, indexes
 - [DAL PostgreSQL Type Mapping](developer/dal-pg-type-mapping.md) — PG types → GraphQL scalars and filters
 - [GraphQL DAL Requirements](developer/graphql-dal-requirements.md) — inference rules, queries, mutations, filters, pagination
