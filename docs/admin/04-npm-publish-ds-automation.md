@@ -8,13 +8,13 @@ CI workflow and release process for the **lockstep CalVer** DS automation stack 
 
 These five packages ship together at the same CalVer (e.g. `2026.10.0-alpha.2`):
 
-| Order | Package               | Path                    | Role                                      |
-| ----- | --------------------- | ----------------------- | ----------------------------------------- |
+| Order | Package               | Path                    | Role                                        |
+| ----- | --------------------- | ----------------------- | ------------------------------------------- |
 | 1     | `@corpdk/dal-core`    | `libraries/dal-core`    | DAL types, filters, scalars, error taxonomy |
-| 2     | `@corpdk/pub-sub`     | `libraries/pub-sub`     | GraphQL pub/sub factory (DAL DS runtime)  |
-| 3     | `@corpdk/codegen-cli` | `libraries/codegen-cli` | GraphQL codegen plugin for resolver/SDK   |
-| 4     | `@corpdk/dal-codegen` | `libraries/dal-codegen` | `dal-codegen` / `dal-entity-lint` CLIs    |
-| 5     | `@corpdk/create-ds`   | `engines/create-ds`     | Scaffold + upgrade CLI for DAL DS apps    |
+| 2     | `@corpdk/pub-sub`     | `libraries/pub-sub`     | GraphQL pub/sub factory (DAL DS runtime)    |
+| 3     | `@corpdk/codegen-cli` | `libraries/codegen-cli` | GraphQL codegen plugin for resolver/SDK     |
+| 4     | `@corpdk/dal-codegen` | `libraries/dal-codegen` | `dal-codegen` / `dal-entity-lint` CLIs      |
+| 5     | `@corpdk/create-ds`   | `engines/create-ds`     | Scaffold + upgrade CLI for DAL DS apps      |
 
 **Not in this pipeline:** `@corpdk/create-app`, UI packages, `eslint-config`, or any `templates/*` (Artifactory). `@corpdk/ds` in the monorepo is a template, not an npm consumer package for this release unit.
 
@@ -24,20 +24,20 @@ These five packages ship together at the same CalVer (e.g. `2026.10.0-alpha.2`):
 
 ## Workflow
 
-| Item | Value |
-| ---- | ----- |
-| File | [`.github/workflows/publish-ds-automation.yml`](../../.github/workflows/publish-ds-automation.yml) |
-| Script | [`.github/scripts/publish-ds-automation.sh`](../../.github/scripts/publish-ds-automation.sh) |
+| Item   | Value                                                                                              |
+| ------ | -------------------------------------------------------------------------------------------------- |
+| File   | [`.github/workflows/publish-ds-automation.yml`](../../.github/workflows/publish-ds-automation.yml) |
+| Script | [`.github/scripts/publish-ds-automation.sh`](../../.github/scripts/publish-ds-automation.sh)       |
 
 ### Triggers
 
 Path filters include all five package trees (source, `package.json`, README), plus the workflow and publish script. Unrelated commits on `main` do not run this workflow.
 
-| Trigger | Behavior |
-| ------- | -------- |
-| **push** to **`main`** (paths above) | **Live publish** when `libraries/dal-core/package.json` **version changed** vs the previous commit on `main`. CI creates tag `ds-automation/v<CalVer>`, publishes via OIDC, then creates a **GitHub Release**. If CalVer is unchanged (e.g. README-only), the run exits without publish. |
-| **pull_request** → `main` (paths above) | Always **dry-run** (build, tests, `npm publish --dry-run`; no npm auth, no tag, no release) |
-| **workflow_dispatch** on **`main` only** | **Dry-run defaults to true**. `dry_run: false` on `main` is a break-glass live publish (same tag + release behavior). Dispatch from other branches is ignored. |
+| Trigger                                  | Behavior                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **push** to **`main`** (paths above)     | **Live publish** when `libraries/dal-core/package.json` **version changed** vs the previous commit on `main` (`github.event.before`; workflow fetches that commit when shallow checkout omits it). CI creates tag `ds-automation/v<CalVer>`, publishes via OIDC, then creates a **GitHub Release**. If CalVer is unchanged (e.g. README-only), the run exits without publish. If the previous CalVer cannot be read, the run **fail-closes** to dry-run only (no live publish). |
+| **pull_request** → `main` (paths above)  | Always **dry-run** (build, tests, `npm publish --dry-run`; no npm auth, no tag, no release)                                                                                                                                                                                                                                                                                                                                                                                     |
+| **workflow_dispatch** on **`main` only** | **Dry-run defaults to true**. `dry_run: false` on `main` is a break-glass live publish (same tag + release behavior). Dispatch from other branches is ignored.                                                                                                                                                                                                                                                                                                                  |
 
 **Never live-publish** from feature branches, pull requests, or manual dispatch off `main`.
 
@@ -45,14 +45,15 @@ Dry-run never needs npm auth, never creates git tags or GitHub Releases, and log
 
 ### Outcomes (trigger × dry-run)
 
-| Trigger | Effective dry-run | Git tag | npm publish | GitHub Release |
-| ------- | ----------------- | ------- | ----------- | -------------- |
-| **push** `main` (CalVer bumped) | `false` | `ds-automation/v<version>` pushed from merge commit if absent | Live upload (OIDC + `--provenance`) | Created after publish if missing |
-| **push** `main` (CalVer unchanged) | — | — | Skipped (job gated) | — |
-| **workflow_dispatch** `main`, `dry_run: false` | `false` | Tag pushed from HEAD if absent | Live upload (OIDC + `--provenance`) | Created after publish if missing |
-| **workflow_dispatch** `main`, `dry_run: true` | `true` | No; logs intent | `--dry-run` only | No; logs intent |
-| **workflow_dispatch** not on `main` | — | — | Skipped | — |
-| **pull_request** | `true` | No | `--dry-run` only | No |
+| Trigger                                        | Effective dry-run | Git tag                                                       | npm publish                         | GitHub Release                   |
+| ---------------------------------------------- | ----------------- | ------------------------------------------------------------- | ----------------------------------- | -------------------------------- |
+| **push** `main` (CalVer bumped)                | `false`           | `ds-automation/v<version>` pushed from merge commit if absent | Live upload (OIDC + `--provenance`) | Created after publish if missing |
+| **push** `main` (CalVer unchanged)             | —                 | —                                                             | Skipped (job gated)                 | —                                |
+| **push** `main` (previous CalVer unreadable)   | `true`            | No                                                            | `--dry-run` only                    | No                               |
+| **workflow_dispatch** `main`, `dry_run: false` | `false`           | Tag pushed from HEAD if absent                                | Live upload (OIDC + `--provenance`) | Created after publish if missing |
+| **workflow_dispatch** `main`, `dry_run: true`  | `true`            | No; logs intent                                               | `--dry-run` only                    | No; logs intent                  |
+| **workflow_dispatch** not on `main`            | —                 | —                                                             | Skipped                             | —                                |
+| **pull_request**                               | `true`            | No                                                            | `--dry-run` only                    | No                               |
 
 Version for dispatch without `version` input comes from `libraries/dal-core/package.json` on the checked-out ref. Existing tags and releases are **not** duplicated: CI skips tag push and `gh release create` when the tag or release already exists.
 
@@ -102,11 +103,11 @@ Use `npm login` or `//registry.npmjs.org/:_authToken=${NPM_TOKEN}` in `~/.npmrc`
 
 #### Prerequisites
 
-| Requirement | Detail |
-| ----------- | ------ |
-| **npm org** | The `@corpdk` organization exists on [npmjs.com](https://www.npmjs.com/org/corpdk). |
-| **Your account** | You are an npm **org owner** or have **publish** rights on scoped packages under `@corpdk` (team member with read-write, or package owner). |
-| **Monorepo** | Checkout `main` (or the branch that contains [`.github/scripts/publish-ds-automation.sh`](../../.github/scripts/publish-ds-automation.sh)) with all five `package.json` files at the **same** CalVer you intend to ship. |
+| Requirement              | Detail                                                                                                                                                                                                                                            |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **npm org**              | The `@corpdk` organization exists on [npmjs.com](https://www.npmjs.com/org/corpdk).                                                                                                                                                               |
+| **Your account**         | You are an npm **org owner** or have **publish** rights on scoped packages under `@corpdk` (team member with read-write, or package owner).                                                                                                       |
+| **Monorepo**             | Checkout `main` (or the branch that contains [`.github/scripts/publish-ds-automation.sh`](../../.github/scripts/publish-ds-automation.sh)) with all five `package.json` files at the **same** CalVer you intend to ship.                          |
 | **Scoped public access** | Each package already has `"publishConfig": { "access": "public" }`. The **first** publish of a scoped package must still pass `--access public` (the publish script does this). Scoped modules default to restricted until you publish as public. |
 
 Do **not** use GitHub Actions OIDC for this step — trusted publishing is configured **after** the initial tarball upload. Pull requests that touch DS automation still run the workflow in **dry-run** mode (build, tests, `npm publish --dry-run`) with **no** registry auth, which validates packaging before bootstrap.
@@ -171,12 +172,12 @@ Subsequent version bumps still require the same lockstep CalVer edit across all 
 
 CI live publishes use [npm trusted publishers](https://docs.npmjs.com/trusted-publishers) — short-lived OIDC tokens from GitHub Actions, not a long-lived npm token in the workflow.
 
-| Requirement | Detail |
-| ----------- | ------ |
+| Requirement     | Detail                                                                                                              |
+| --------------- | ------------------------------------------------------------------------------------------------------------------- |
 | GitHub workflow | [`publish-ds-automation.yml`](../../.github/workflows/publish-ds-automation.yml) with `permissions.id-token: write` |
-| npm CLI in CI | ≥ **11.15.0** (workflow runs `npm install -g npm@^11.15.0`) |
-| Registry | `https://registry.npmjs.org` via `actions/setup-node` `registry-url` |
-| Publish flags | `--provenance` on live CI publishes |
+| npm CLI in CI   | ≥ **11.15.0** (workflow runs `npm install -g npm@^11.15.0`)                                                         |
+| Registry        | `https://registry.npmjs.org` via `actions/setup-node` `registry-url`                                                |
+| Publish flags   | `--provenance` on live CI publishes                                                                                 |
 
 Each `@corpdk` package must exist on npmjs before you add a trusted publisher. Trusted publishing is **per package** (repeat for all five).
 
@@ -189,23 +190,23 @@ For **each** of the five packages below, an npm org owner or package maintainer 
 3. **Add trusted publisher** → provider **GitHub Actions**.
 4. Fill the form with these values (same for every package in the set):
 
-| npm UI field | Value |
-| ------------ | ----- |
-| **Organization or user** | `CorpDK` |
-| **Repository** | `coding-templates` |
-| **Workflow filename** | `publish-ds-automation.yml` |
-| **Environment** | *(leave empty)* — workflow does not use a GitHub `environment:` |
-| **Allowed actions** | **npm publish** (enable publish; staged publish optional) |
+| npm UI field             | Value                                                           |
+| ------------------------ | --------------------------------------------------------------- |
+| **Organization or user** | `CorpDK`                                                        |
+| **Repository**           | `coding-templates`                                              |
+| **Workflow filename**    | `publish-ds-automation.yml`                                     |
+| **Environment**          | _(leave empty)_ — workflow does not use a GitHub `environment:` |
+| **Allowed actions**      | **npm publish** (enable publish; staged publish optional)       |
 
 5. Save. Repeat for:
 
-| Package |
-| ------- |
-| `@corpdk/dal-core` |
-| `@corpdk/pub-sub` |
+| Package               |
+| --------------------- |
+| `@corpdk/dal-core`    |
+| `@corpdk/pub-sub`     |
 | `@corpdk/codegen-cli` |
 | `@corpdk/dal-codegen` |
-| `@corpdk/create-ds` |
+| `@corpdk/create-ds`   |
 
 **CLI equivalent** (logged-in maintainer, package must already exist on the registry). Omit `--environment` when the workflow has no GitHub `environment:` (true for [`publish-ds-automation.yml`](../../.github/workflows/publish-ds-automation.yml)). Run `npm github --help` or `npm trust --help` on your machine — npm **11.12.x** exposes this as `npm trust github` (no `--allow-publish` flag); npm **≥11.15** adds optional `--allow-publish` / `--allow-stage-publish` for staged publish. **CI live publish** still requires npm CLI **≥11.15** in the workflow; older npm is fine for this one-time trust setup.
 
@@ -239,10 +240,10 @@ The **workflow does not read** `NPM_TOKEN`. Long-lived tokens are optional for:
 
 If CI used an org **`NPM_TOKEN`** secret only for this workflow, you can remove repository access to that secret after trusted publishing is verified on all five packages. Revoke or disable unused **automation / granular publish tokens** and any **2FA bypass** tokens that existed solely for this pipeline — they are no longer required for GitHub Actions publishes.
 
-| Method | When to use |
-| ------ | ----------- |
-| **Trusted publishing (OIDC)** | All CI live publishes (default) |
-| **Granular npm token** | Local maintainer publish or break-glass only; scope to the five packages |
+| Method                        | When to use                                                              |
+| ----------------------------- | ------------------------------------------------------------------------ |
+| **Trusted publishing (OIDC)** | All CI live publishes (default)                                          |
+| **Granular npm token**        | Local maintainer publish or break-glass only; scope to the five packages |
 
 Ensure the `@corpdk` npm org grants **publish** on the five packages above. `"access": "public"` is already set in each package `publishConfig`.
 
