@@ -1,3 +1,15 @@
+const CONSUMER_PRESERVED_TOP_LEVEL = [
+  "private",
+  "license",
+  "engines",
+  "packageManager",
+  "author",
+  "repository",
+  "bugs",
+  "homepage",
+  "keywords",
+] as const;
+
 type PkgJson = {
   name?: string;
   version?: string;
@@ -6,6 +18,8 @@ type PkgJson = {
   scripts?: Record<string, string>;
   dependencies?: Record<string, string>;
   devDependencies?: Record<string, string>;
+  type?: string;
+  [key: string]: unknown;
 };
 
 const CORP_DK_BUMP = new Set([
@@ -86,6 +100,12 @@ export function mergePackageJson(
       merged.devDependencies,
       options.publishedCorpdkVersions,
     );
+  }
+
+  for (const key of CONSUMER_PRESERVED_TOP_LEVEL) {
+    if (Object.prototype.hasOwnProperty.call(consumer, key)) {
+      merged[key] = consumer[key];
+    }
   }
 
   return merged;

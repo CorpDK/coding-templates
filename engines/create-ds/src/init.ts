@@ -69,7 +69,7 @@ export async function runInit(options: InitOptions): Promise<void> {
     ? { publishedCorpdkVersions: await readCreateDsReleaseVersion() }
     : undefined;
   const merged = mergePackageJson(
-    { name: options.packageName },
+    { name: options.packageName, version: "0.1.0" },
     templatePkg as Parameters<typeof mergePackageJson>[1],
     mergeOptions,
   );
