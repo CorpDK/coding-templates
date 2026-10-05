@@ -1,5 +1,7 @@
 # CLI Reference
 
+This page covers **`create-app`** only. For **`create-ds`** (`init` / `upgrade`), see [DS automation upgrades](../developer/ds-automation-upgrades.md).
+
 Pass `--name` (or `-n`) to enter non-interactive mode. All other prompts are driven by flags.
 
 ```bash

@@ -44,7 +44,7 @@ Scaffolded **`codegen.ts`** targets sibling **`../ds-sdk`** and **`../ds-cli`** 
 
 ### `upgrade` behavior
 
-1. Merges **`package.json`**: scripts normalized to `dal-codegen` / `dal-entity-lint` bins; **`@corpdk/dal-core`**, **`@corpdk/dal-codegen`**, **`@corpdk/pub-sub`**, **`@corpdk/codegen-cli`** versions taken from the canonical template (bundled canonical rewrites `workspace:*` `@corpdk/*` to **`^@corpdk/create-ds` release version**); consumer **`name`**, **`version`**, **`publishConfig`**, non-`@corpdk` deps, and top-level metadata such as **`private`**, **`license`**, **`engines`**, and **`packageManager`** preserved when already set.
+1. Merges **`package.json`**: scripts normalized to `dal-codegen` / `dal-entity-lint` bins; **`@corpdk/dal-core`**, **`@corpdk/dal-codegen`**, **`@corpdk/pub-sub`**, **`@corpdk/codegen-cli`** versions taken from the canonical template (bundled canonical rewrites `workspace:*` `@corpdk/*` to **`^@corpdk/create-ds` release version**); consumer **`name`**, **`version`**, **`publishConfig`**, non-`@corpdk` deps, and top-level metadata preserved when already set (**`private`**, **`license`**, **`engines`**, **`packageManager`**, **`author`**, **`repository`**, **`bugs`**, **`homepage`**, **`keywords`**).
 2. Merges **`dal/dal.config.yaml`**: template defaults + consumer overrides (consumer keys win).
 3. Overwrites automation files: `codegen.ts`, `drizzle.config.ts`, `tsconfig.json`, Docker assets, `.env.example`, `.gitignore`, bootstrap TypeScript entry files.
 4. **Skips** `src/db/schema/**` entirely.

@@ -4,7 +4,7 @@
 
 Use `pnpm create-app` to scaffold a new project from any combination of these templates.
 
-To **init** or **upgrade** DAL automation around an existing `@corpdk/ds` package (schema dir stays team-owned), use `pnpm create-ds init` or `pnpm create-ds upgrade` — see [DS automation upgrades](../developer/ds-automation-upgrades.md).
+To scaffold a new DAL-automated DS package or merge template upgrades into an existing one (team-owned **`src/db/schema/**`** only), use `pnpm create-ds init` or `pnpm create-ds upgrade` — see [DS automation upgrades](../developer/ds-automation-upgrades.md).
 
 ---
 
@@ -36,6 +36,8 @@ You can scaffold a **full-stack** project (UI + DS), a **DS only** backend, or a
 | **Full-stack** | A monorepo with `packages/ui` + `packages/ds` + `packages/ds-sdk` + `packages/ds-cli` |
 | **DS only**    | A monorepo with `packages/ds` + `packages/ds-sdk` + `packages/ds-cli`                 |
 | **UI only**    | A standalone Next.js app pointing at a published `@scope/ds-sdk`                      |
+
+`create-ds init` scaffolds a **single** DAL DS package (not the full three-package monorepo above); see [DS automation upgrades](../developer/ds-automation-upgrades.md) for layout and codegen expectations.
 
 ---
 
