@@ -10,6 +10,7 @@ import {
   text,
 } from "@clack/prompts";
 import path from "node:path";
+import { readCreateAppVersion } from "./version.js";
 import type {
   DbChoice,
   DocumentImpl,
@@ -252,7 +253,9 @@ async function promptStorageAndDb(
 }
 
 export async function runPrompts(): Promise<ScaffoldConfig> {
-  intro("create-app  —  scaffold from coding-templates  (v0.1.0-alpha.1)");
+  intro(
+    `create-app  —  scaffold from coding-templates  (v${readCreateAppVersion()})`,
+  );
 
   // 1. Project name
   const projectName = checkCancel(

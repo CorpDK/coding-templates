@@ -13,6 +13,7 @@ import type {
   StorageType,
   UiChoice,
 } from "./types.js";
+import { readCreateAppVersion } from "./version.js";
 import { resolvePackages, DRIZZLE_DB_OPTIONS } from "./packages.js";
 import { execAsync, pathExists } from "./utils.js";
 
@@ -306,7 +307,7 @@ export async function buildConfig(args: ParsedArgs): Promise<ScaffoldConfig> {
 
 export function printHelp(): void {
   console.log(`
-create-app — scaffold from coding-templates  (v0.1.0-alpha.1)
+create-app — scaffold from coding-templates  (v${readCreateAppVersion()})
 
 Usage:
   pnpm create-app                         Interactive mode (default)
