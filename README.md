@@ -6,32 +6,17 @@ Run `pnpm create-app` to scaffold a full-stack project, or `pnpm create-ds init`
 
 ## Published packages
 
+These five DS automation packages ship together on [npmjs](https://www.npmjs.org/) (public, lockstep CalVer). See [npm publish — DS automation](docs/admin/04-npm-publish-ds-automation.md).
+
 | Package | Path | Registry |
 | --- | --- | --- |
-| `@corpdk/codegen-cli` | `libraries/codegen-cli` | npm (public) |
-| `@corpdk/dal-codegen` | `libraries/dal-codegen` | npm (public) |
 | `@corpdk/dal-core` | `libraries/dal-core` | npm (public) |
 | `@corpdk/pub-sub` | `libraries/pub-sub` | npm (public) |
-| `@corpdk/create-app` | `engines/create-app` | npm (public) |
+| `@corpdk/codegen-cli` | `libraries/codegen-cli` | npm (public) |
+| `@corpdk/dal-codegen` | `libraries/dal-codegen` | npm (public) |
 | `@corpdk/create-ds` | `engines/create-ds` | npm (public) |
-| `@corpdk/eslint-config` | `packages/eslint-config` | npm (public) |
-| `@corpdk/ui-auth` | `packages/ui-auth` | npm (public) |
-| `@corpdk/ui-charts` | `packages/ui-charts` | npm (public) |
-| `@corpdk/ui-core` | `packages/ui-core` | npm (public) |
-| `@corpdk/ui-datagrid` | `packages/ui-datagrid` | npm (public) |
-| `@corpdk/ui-feedback` | `packages/ui-feedback` | npm (public) |
-| `@corpdk/ui-forms` | `packages/ui-forms` | npm (public) |
-| `@corpdk/ds` | `templates/ds` | Artifactory (private) |
-| `@corpdk/ds-cdb` | `templates/ds-cdb` | Artifactory (private) |
-| `@corpdk/ds-cli` | `templates/ds-cli` | Artifactory (private) |
-| `@corpdk/ds-ddb` | `templates/ds-ddb` | Artifactory (private) |
-| `@corpdk/ds-file` | `templates/ds-file` | Artifactory (private) |
-| `@corpdk/ds-mongo` | `templates/ds-mongo` | Artifactory (private) |
-| `@corpdk/ds-no-sql` | `templates/ds-no-sql` | Artifactory (private) |
-| `@corpdk/ds-sdk` | `templates/ds-sdk` | Artifactory (private) |
-| `@corpdk/ui` | `templates/ui` | Artifactory (private) |
-| `@corpdk/ui-hprt` | `templates/ui-hprt` | Artifactory (private) |
-| `@corpdk/ui-showcase` | `templates/ui-showcase` | Artifactory (private) |
+
+Other workspace packages (`engines/create-app`, `packages/ui-*`, `packages/eslint-config`, `templates/*`) are used from this monorepo or from a private Artifactory registry when your team publishes them — they are not part of the npm DS automation release.
 
 ## License
 
