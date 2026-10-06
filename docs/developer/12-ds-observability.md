@@ -35,13 +35,15 @@ Tracing is **off** unless you set either:
 - `OTEL_EXPORTER_OTLP_ENDPOINT` (standard OTLP HTTP endpoint, e.g. `http://localhost:4318/v1/traces`), or
 - `DS_OTEL_ENABLED=true` (uses the same OTLP exporter; endpoint must still be configured for export to succeed)
 
+Set `DS_OTEL_ENABLED=false` to force tracing off when an endpoint is present (e.g. shared `.env` in CI).
+
 Optional:
 
 | Variable | Default |
 | -------- | ------- |
 | `OTEL_SERVICE_NAME` | `@corpdk/ds` |
 
-When enabled, `dev` and `start` preload `src/observability/preload-otel.ts` so **pg** and **HTTP** instrumentation register before the pool is created. GraphQL operations get spans via a Yoga plugin with attributes `graphql.operation.name`, `graphql.operation.type`, `graphql.document` (operation source with sensitive **argument/object-field literals** redacted when the field name matches password/secret/token-style keys), and `graphql.variables` (JSON with the same key-based redaction, including nested objects). Other literals in `graphql.document` are unchanged. `GET /health` emits a `db.health_ping` span when tracing is on.
+When enabled, `pnpm dev` and `pnpm start` preload observability (`--import ./src/observability/preload-otel.ts` in dev; `--import ./dist/src/observability/preload-otel.js` after `tsc`) so **pg** and **HTTP** instrumentation register before the pool is created. GraphQL operations get spans via a Yoga plugin with attributes `graphql.operation.name`, `graphql.operation.type`, `graphql.document` (operation source with sensitive **argument/object-field literals** redacted when the field name matches password/secret/token-style keys), and `graphql.variables` (JSON with the same key-based redaction, including nested objects). Other literals in `graphql.document` are unchanged. `GET /health` emits a `db.health_ping` span when tracing is on.
 
 Local dev without these env vars behaves as before (no exporter, no extra spans).
 
