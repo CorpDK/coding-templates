@@ -2,6 +2,7 @@ import { trace, SpanStatusCode, type Span } from "@opentelemetry/api";
 import type { Plugin } from "graphql-yoga";
 import {
   Kind,
+  visit,
   type DocumentNode,
   type OperationDefinitionNode,
   type GraphQLError,
@@ -58,6 +59,41 @@ function sanitizedVariables(
   }
 }
 
+function redactSensitiveLiteralRanges(document: DocumentNode): { start: number; end: number }[] {
+  const ranges: { start: number; end: number }[] = [];
+  const pushValueLoc = (fieldName: string, loc: { start: number; end: number } | undefined) => {
+    if (SENSITIVE_VARIABLE_KEY.test(fieldName) && loc) {
+      ranges.push({ start: loc.start, end: loc.end });
+    }
+  };
+
+  visit(document, {
+    Argument(node) {
+      pushValueLoc(node.name.value, node.value.loc);
+    },
+    ObjectField(node) {
+      pushValueLoc(node.name.value, node.value.loc);
+    },
+  });
+
+  return ranges;
+}
+
+function sanitizedDocument(document: DocumentNode): string {
+  const source = document.loc?.source.body;
+  if (!source) return "";
+
+  const ranges = redactSensitiveLiteralRanges(document);
+  if (ranges.length === 0) return source;
+
+  ranges.sort((a, b) => b.start - a.start);
+  let out = source;
+  for (const { start, end } of ranges) {
+    out = `${out.slice(0, start)}[REDACTED]${out.slice(end)}`;
+  }
+  return out;
+}
+
 function endSpan(span: Span, errors?: readonly GraphQLError[]): void {
   if (errors?.length) {
     span.setStatus({
@@ -99,7 +135,7 @@ export function yogaTracingPlugin(): Plugin {
         attributes: {
           "graphql.operation.name": operationName,
           "graphql.operation.type": operationType,
-          "graphql.document": args.document.loc?.source.body ?? "",
+          "graphql.document": sanitizedDocument(args.document),
           "graphql.variables": sanitizedVariables(
             args.variableValues as Record<string, unknown> | null | undefined,
           ),
