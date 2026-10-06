@@ -54,27 +54,17 @@ Add `.github/workflows/ci.yml` (or extend an existing workflow) for shared packa
 
 ### 1. Shared Zod schemas for GraphQL input types
 
-**Status:** Not started — validation is via generated repositories and GraphQL types; DAL codegen does not emit runtime Zod for inputs.
+**Status:** Partial — `@corpdk/dal-codegen` emits `src/generated/dal/input-zod.ts` (`*CreateInput` / `*UpdateInput`, `inputZodSchemas` registry); `templates/ds` exposes `parseGraphqlInput()` in `src/validation/parse-input.ts`. Filter/sort/association inputs not generated yet.
 
-Generate Zod from DAL-generated input shapes (merged SDL in `src/generated/generated-schema.ts` or a dedicated plugin in `@corpdk/dal-codegen`) for resolver-layer runtime checks and optional alignment with `ui-forms`.
-
-**Why it still matters:** Closes the gap between compile-time GraphQL types and runtime validation without hand-written duplicate schemas.
+**Why it still matters:** Extending Zod to filter AST inputs would align runtime validation with `ui-forms` for complex list/mutation filters.
 
 ### 2. OpenTelemetry tracing
 
-**Status:** Not started — no `@opentelemetry/*` in `templates/ds`.
-
-Instrument Yoga + DB access: span per operation (name, sanitized variables), DB latency. Export OTLP to Jaeger, Tempo, or any compatible backend.
-
-**Why it still matters:** Production DS deployments need request-level traces without locking to a vendor.
+**Status:** Done — optional OTLP via `OTEL_EXPORTER_OTLP_ENDPOINT` or `DS_OTEL_ENABLED=true`; preload registers HTTP + pg instrumentation; Yoga execute spans. See [12-ds-observability.md](12-ds-observability.md).
 
 ### 3. Health check endpoint
 
-**Status:** Not started — GraphQL only; Docker Compose healthchecks target Postgres, not the Node process.
-
-Add `GET /health`: 200 when healthy, 503 when degraded; JSON `{ status, uptime, db: { connected, latencyMs }, version }` for load balancers and Kubernetes probes.
-
-**Why it still matters:** Orchestrators cannot use GraphQL POST for liveness/readiness.
+**Status:** Done — `GET /health` on the DS HTTP port; 200/503 with `{ status, uptime, db, version }`. See [12-ds-observability.md](12-ds-observability.md).
 
 ### 4. Rate limiting middleware
 
@@ -104,4 +94,4 @@ Explore durable delivery for the DS side: checkpoint/resume after disconnect (e.
 
 **Related:** [UI Status Dashboard](06-ui-status.md) | [UI Package Design](../architecture/04-ui-package-design.md) | [Monorepo Design](../architecture/02-monorepo-design.md)
 
-**Last updated:** October 5, 2026
+**Last updated:** October 6, 2026

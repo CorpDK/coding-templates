@@ -1,0 +1,99 @@
+import { trace, SpanStatusCode, type Span } from "@opentelemetry/api";
+import type { Plugin } from "graphql-yoga";
+import {
+  Kind,
+  type DocumentNode,
+  type OperationDefinitionNode,
+  type GraphQLError,
+} from "graphql";
+import { isOtelEnabled } from "./otel-config.js";
+
+const tracer = trace.getTracer("@corpdk/ds/graphql");
+
+function operationDefinition(
+  document: DocumentNode,
+): OperationDefinitionNode | undefined {
+  for (const def of document.definitions) {
+    if (def.kind === Kind.OPERATION_DEFINITION) return def;
+  }
+  return undefined;
+}
+
+function sanitizedVariables(
+  variables: Record<string, unknown> | null | undefined,
+): string {
+  if (!variables || Object.keys(variables).length === 0) return "{}";
+  try {
+    return JSON.stringify(variables);
+  } catch {
+    return "[unserializable]";
+  }
+}
+
+function endSpan(span: Span, errors?: readonly GraphQLError[]): void {
+  if (errors?.length) {
+    span.setStatus({
+      code: SpanStatusCode.ERROR,
+      message: errors.map((e) => e.message).join("; "),
+    });
+  } else {
+    span.setStatus({ code: SpanStatusCode.OK });
+  }
+  span.end();
+}
+
+function finishFromResult(
+  span: Span,
+  result: { errors?: readonly GraphQLError[] } | AsyncIterable<unknown>,
+): void {
+  if (typeof (result as AsyncIterable<unknown>)[Symbol.asyncIterator] === "function") {
+    span.setStatus({ code: SpanStatusCode.OK });
+    span.end();
+    return;
+  }
+  endSpan(span, (result as { errors?: readonly GraphQLError[] }).errors);
+}
+
+/** GraphQL execute spans (when OpenTelemetry is enabled). */
+export function yogaTracingPlugin(): Plugin {
+  if (!isOtelEnabled()) {
+    return {};
+  }
+
+  return {
+    onExecute({ args }) {
+      const op = operationDefinition(args.document);
+      const operationType = op?.operation ?? "unknown";
+      const operationName =
+        args.operationName ?? op?.name?.value ?? "anonymous";
+
+      const span = tracer.startSpan(`graphql ${operationType}`, {
+        attributes: {
+          "graphql.operation.name": operationName,
+          "graphql.operation.type": operationType,
+          "graphql.document": args.document.loc?.source.body ?? "",
+          "graphql.variables": sanitizedVariables(
+            args.variableValues as Record<string, unknown> | null | undefined,
+          ),
+        },
+      });
+
+      return {
+        onExecuteDone(payload) {
+          const { result } = payload;
+          if (result instanceof Promise) {
+            void result.then(
+              (resolved) => finishFromResult(span, resolved),
+              (err: unknown) => {
+                span.recordException(err instanceof Error ? err : new Error(String(err)));
+                endSpan(span);
+              },
+            );
+            return;
+          }
+          finishFromResult(span, result);
+        },
+      };
+    },
+  };
+}
