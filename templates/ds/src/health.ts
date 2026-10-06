@@ -5,13 +5,20 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import { trace, SpanStatusCode } from "@opentelemetry/api";
 import { pingDatabase } from "./db/index.js";
 
-const packageJsonPath = join(
-  dirname(fileURLToPath(import.meta.url)),
-  "../package.json",
-);
-const packageVersion = (
-  JSON.parse(readFileSync(packageJsonPath, "utf-8")) as { version: string }
-).version;
+function readPackageVersion(): string {
+  const here = dirname(fileURLToPath(import.meta.url));
+  for (const rel of ["../package.json", "../../package.json"]) {
+    try {
+      const path = join(here, rel);
+      return (JSON.parse(readFileSync(path, "utf-8")) as { version: string }).version;
+    } catch {
+      continue;
+    }
+  }
+  return "unknown";
+}
+
+const packageVersion = readPackageVersion();
 
 export interface HealthPayload {
   status: "ok" | "degraded";

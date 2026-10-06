@@ -108,6 +108,7 @@ export function generateInputZodModule(entities: EntityModel[]): string {
   const schemaBlocks = [...entityPart.blocks, ...graphqlPart.schemaBlocks];
 
   return `import { createUserError, type MutationUserError } from "@corpdk/dal-core";
+import { GraphQLError } from "graphql";
 import { z, type ZodError, type ZodType } from "zod";
 
 ${schemaBlocks.join("\n\n")}
@@ -158,6 +159,45 @@ export function safeParseGraphqlInputList<TName extends InputZodSchemaName>(
     };
   }
   return { ok: false, userErrors: zodErrorToUserErrors(result.error) };
+}
+
+export function safeParseOptionalGraphqlInput<TName extends InputZodSchemaName>(
+  schemaName: TName,
+  value: unknown,
+): GraphqlInputParseResult<
+  ReturnType<(typeof inputZodSchemas)[TName]["parse"]> | undefined
+> {
+  if (value === undefined || value === null) {
+    return { ok: true, data: undefined };
+  }
+  return safeParseGraphqlInput(schemaName, value);
+}
+
+export function safeParseOptionalGraphqlInputList<TName extends InputZodSchemaName>(
+  schemaName: TName,
+  value: unknown,
+): GraphqlInputParseResult<
+  ReturnType<(typeof inputZodSchemas)[TName]["parse"]>[] | undefined
+> {
+  if (value === undefined || value === null) {
+    return { ok: true, data: undefined };
+  }
+  return safeParseGraphqlInputList(schemaName, value);
+}
+
+export function unwrapGraphqlInputParseResult<T>(
+  result: GraphqlInputParseResult<T>,
+): T {
+  if (result.ok) return result.data;
+  throw new GraphQLError(
+    result.userErrors.map((err) => err.message).join("; "),
+    {
+      extensions: {
+        code: "BAD_USER_INPUT",
+        userErrors: result.userErrors,
+      },
+    },
+  );
 }
 
 export function parseGraphqlInput<TName extends InputZodSchemaName>(

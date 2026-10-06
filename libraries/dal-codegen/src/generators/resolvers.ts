@@ -127,8 +127,12 @@ export function generateResolvers(entities: EntityModel[]): string {
     queryFields.push(`    ${list}: async (_: unknown, args: Record<string, unknown>, ctx: DalContext, info: GraphQLResolveInfo) =>
       (await ctx.repositories.${e}.list(
         {
-          filter: parseOptionalGraphqlInput("${E}Filter", args.filter) as never,
-          sort: parseGraphqlInputList("${E}SortInput", args.sort) as never,
+          filter: unwrapGraphqlInputParseResult(
+            safeParseOptionalGraphqlInput("${E}Filter", args.filter),
+          ) as never,
+          sort: unwrapGraphqlInputParseResult(
+            safeParseOptionalGraphqlInputList("${E}SortInput", args.sort),
+          ) as never,
           limit: args.limit as number | null,
           includeDeleted: args.includeDeleted as boolean | null,
         },
@@ -141,8 +145,12 @@ export function generateResolvers(entities: EntityModel[]): string {
     ${e}Connection: async (_: unknown, args: Record<string, unknown>, ctx: DalContext, info: GraphQLResolveInfo) =>
       (await ctx.repositories.${e}.listConnection(
         {
-          filter: parseOptionalGraphqlInput("${E}Filter", args.filter) as never,
-          sort: parseGraphqlInputList("${E}SortInput", args.sort) as never,
+          filter: unwrapGraphqlInputParseResult(
+            safeParseOptionalGraphqlInput("${E}Filter", args.filter),
+          ) as never,
+          sort: unwrapGraphqlInputParseResult(
+            safeParseOptionalGraphqlInputList("${E}SortInput", args.sort),
+          ) as never,
           first: args.first as number | null,
           after: args.after as string | null,
           last: args.last as number | null,
@@ -154,14 +162,18 @@ export function generateResolvers(entities: EntityModel[]): string {
 
     ${list}Count: (_: unknown, args: Record<string, unknown>, ctx: DalContext) =>
       ctx.repositories.${e}.count({
-        filter: parseOptionalGraphqlInput("${E}Filter", args.filter) as never,
+        filter: unwrapGraphqlInputParseResult(
+          safeParseOptionalGraphqlInput("${E}Filter", args.filter),
+        ) as never,
         includeDeleted: args.includeDeleted as boolean | null,
       }),
 
     ${e}Aggregate: async (_: unknown, args: Record<string, unknown>, ctx: DalContext) =>
       ({
         count: await ctx.repositories.${e}.count({
-          filter: parseOptionalGraphqlInput("${E}Filter", args.filter) as never,
+          filter: unwrapGraphqlInputParseResult(
+            safeParseOptionalGraphqlInput("${E}Filter", args.filter),
+          ) as never,
           includeDeleted: args.includeDeleted as boolean | null,
         }),
       }) as ResolversTypes["${E}Aggregate"],`);
@@ -360,11 +372,11 @@ import { DataLoader } from "@corpdk/dal-core";
 import type { Resolvers, ResolversParentTypes, ResolversTypes } from "../../graphql/resolvers.generated.js";
 import type { PubSub } from "../generated-pubsub.js";
 import {
-  parseGraphqlInput,
-  parseGraphqlInputList,
-  parseOptionalGraphqlInput,
   safeParseGraphqlInput,
   safeParseGraphqlInputList,
+  safeParseOptionalGraphqlInput,
+  safeParseOptionalGraphqlInputList,
+  unwrapGraphqlInputParseResult,
 } from "../input-zod.js";
 ${repoImports}
 

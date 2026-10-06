@@ -19,12 +19,40 @@ function operationDefinition(
   return undefined;
 }
 
+const SENSITIVE_VARIABLE_KEY =
+  /password|secret|token|authorization|api[_-]?key|credential|cookie|session/i;
+
+function redactVariableValue(key: string, value: unknown): unknown {
+  if (SENSITIVE_VARIABLE_KEY.test(key)) return "[REDACTED]";
+  if (Array.isArray(value)) {
+    return value.map((entry) =>
+      entry !== null && typeof entry === "object"
+        ? redactVariables(entry as Record<string, unknown>)
+        : entry,
+    );
+  }
+  if (value !== null && typeof value === "object") {
+    return redactVariables(value as Record<string, unknown>);
+  }
+  return value;
+}
+
+function redactVariables(
+  variables: Record<string, unknown>,
+): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(variables)) {
+    out[key] = redactVariableValue(key, value);
+  }
+  return out;
+}
+
 function sanitizedVariables(
   variables: Record<string, unknown> | null | undefined,
 ): string {
   if (!variables || Object.keys(variables).length === 0) return "{}";
   try {
-    return JSON.stringify(variables);
+    return JSON.stringify(redactVariables(variables));
   } catch {
     return "[unserializable]";
   }
