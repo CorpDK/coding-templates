@@ -1,4 +1,8 @@
 import type { ColumnModel, EntityModel } from "../model.js";
+import {
+  emitGraphqlInputZodBlocks,
+  entityCreateUpdateSkipSet,
+} from "./input-zod-graphql.js";
 
 function zodBaseForColumn(col: ColumnModel): string {
   switch (col.kind) {
@@ -68,35 +72,120 @@ function entityUpdateSchema(entity: EntityModel): string {
   return `export const ${entity.graphqlType}UpdateInputSchema = z.object({\n${fields}\n});`;
 }
 
-/** Emits runtime Zod schemas for GraphQL create/update inputs (mutation layer). */
+function entityInputSchemas(entities: EntityModel[]): {
+  blocks: string[];
+  registryNames: string[];
+} {
+  const blocks: string[] = [];
+  const registryNames: string[] = [];
+
+  for (const entity of entities) {
+    blocks.push(entityCreateSchema(entity));
+    registryNames.push(`${entity.graphqlType}CreateInput`);
+    if (entity.auditProfile === "full") {
+      blocks.push(entityUpdateSchema(entity));
+      registryNames.push(`${entity.graphqlType}UpdateInput`);
+    }
+  }
+
+  return { blocks, registryNames };
+}
+
+/** Emits runtime Zod schemas for all DAL GraphQL input object types. */
 export function generateInputZodModule(entities: EntityModel[]): string {
-  const schemas = entities.flatMap((entity) => {
-    const lines = [entityCreateSchema(entity)];
-    if (entity.auditProfile === "full") {
-      lines.push(entityUpdateSchema(entity));
-    }
-    return lines;
-  });
+  const skip = entityCreateUpdateSkipSet(entities);
+  const entityPart = entityInputSchemas(entities);
+  const graphqlPart = emitGraphqlInputZodBlocks(entities, skip);
 
-  const registryEntries = entities.flatMap((entity) => {
-    const entries = [`  ${entity.graphqlType}CreateInput: ${entity.graphqlType}CreateInputSchema`];
-    if (entity.auditProfile === "full") {
-      entries.push(
-        `  ${entity.graphqlType}UpdateInput: ${entity.graphqlType}UpdateInputSchema`,
-      );
-    }
-    return entries;
-  });
+  const allRegistryNames = [...entityPart.registryNames, ...graphqlPart.registryNames].sort(
+    (a, b) => a.localeCompare(b),
+  );
 
-  return `import { z } from "zod";
+  const registryEntries = allRegistryNames.map(
+    (name) => `  ${name}: ${name}Schema`,
+  );
 
-${schemas.join("\n\n")}
+  const schemaBlocks = [...entityPart.blocks, ...graphqlPart.schemaBlocks];
 
-/** Lookup by GraphQL input type name (e.g. \`ItemCreateInput\`). */
+  return `import { createUserError, type MutationUserError } from "@corpdk/dal-core";
+import { z, type ZodError, type ZodType } from "zod";
+
+${schemaBlocks.join("\n\n")}
+
+/** Lookup by GraphQL input type name (e.g. \`ItemCreateInput\`, \`ItemFilter\`). */
 export const inputZodSchemas = {
 ${registryEntries.join(",\n")},
 } as const;
 
 export type InputZodSchemaName = keyof typeof inputZodSchemas;
+
+export type GraphqlInputParseResult<T> =
+  | { ok: true; data: T }
+  | { ok: false; userErrors: MutationUserError[] };
+
+function zodErrorToUserErrors(error: ZodError): MutationUserError[] {
+  return error.issues.map((issue) =>
+    createUserError("VALIDATION_FAILED", issue.message, {
+      field: issue.path.length > 0 ? issue.path.map(String) : undefined,
+    }),
+  );
+}
+
+export function safeParseGraphqlInput<TName extends InputZodSchemaName>(
+  schemaName: TName,
+  value: unknown,
+): GraphqlInputParseResult<
+  ReturnType<(typeof inputZodSchemas)[TName]["parse"]>
+> {
+  const result = inputZodSchemas[schemaName].safeParse(value);
+  if (result.success) {
+    return { ok: true, data: result.data as ReturnType<(typeof inputZodSchemas)[TName]["parse"]> };
+  }
+  return { ok: false, userErrors: zodErrorToUserErrors(result.error) };
+}
+
+export function safeParseGraphqlInputList<TName extends InputZodSchemaName>(
+  schemaName: TName,
+  value: unknown,
+): GraphqlInputParseResult<
+  ReturnType<(typeof inputZodSchemas)[TName]["parse"]>[]
+> {
+  const result = z.array(inputZodSchemas[schemaName]).safeParse(value);
+  if (result.success) {
+    return {
+      ok: true,
+      data: result.data as ReturnType<(typeof inputZodSchemas)[TName]["parse"]>[],
+    };
+  }
+  return { ok: false, userErrors: zodErrorToUserErrors(result.error) };
+}
+
+export function parseGraphqlInput<TName extends InputZodSchemaName>(
+  schemaName: TName,
+  value: unknown,
+): ReturnType<(typeof inputZodSchemas)[TName]["parse"]> {
+  const schema = inputZodSchemas[schemaName] as ZodType;
+  return schema.parse(value) as ReturnType<(typeof inputZodSchemas)[TName]["parse"]>;
+}
+
+/** Parse an optional GraphQL input; returns undefined when value is null or omitted. */
+export function parseOptionalGraphqlInput<TName extends InputZodSchemaName>(
+  schemaName: TName,
+  value: unknown,
+): ReturnType<(typeof inputZodSchemas)[TName]["parse"]> | undefined {
+  if (value === undefined || value === null) return undefined;
+  return parseGraphqlInput(schemaName, value);
+}
+
+/** Parse a list argument whose elements use a registered input schema. */
+export function parseGraphqlInputList<TName extends InputZodSchemaName>(
+  schemaName: TName,
+  value: unknown,
+): ReturnType<(typeof inputZodSchemas)[TName]["parse"]>[] | undefined {
+  if (value === undefined || value === null) return undefined;
+  return z.array(inputZodSchemas[schemaName]).parse(value) as ReturnType<
+    (typeof inputZodSchemas)[TName]["parse"]
+  >[];
+}
 `;
 }

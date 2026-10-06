@@ -127,8 +127,8 @@ export function generateResolvers(entities: EntityModel[]): string {
     queryFields.push(`    ${list}: async (_: unknown, args: Record<string, unknown>, ctx: DalContext, info: GraphQLResolveInfo) =>
       (await ctx.repositories.${e}.list(
         {
-          filter: args.filter as never,
-          sort: args.sort as never,
+          filter: parseOptionalGraphqlInput("${E}Filter", args.filter) as never,
+          sort: parseGraphqlInputList("${E}SortInput", args.sort) as never,
           limit: args.limit as number | null,
           includeDeleted: args.includeDeleted as boolean | null,
         },
@@ -141,8 +141,8 @@ export function generateResolvers(entities: EntityModel[]): string {
     ${e}Connection: async (_: unknown, args: Record<string, unknown>, ctx: DalContext, info: GraphQLResolveInfo) =>
       (await ctx.repositories.${e}.listConnection(
         {
-          filter: args.filter as never,
-          sort: args.sort as never,
+          filter: parseOptionalGraphqlInput("${E}Filter", args.filter) as never,
+          sort: parseGraphqlInputList("${E}SortInput", args.sort) as never,
           first: args.first as number | null,
           after: args.after as string | null,
           last: args.last as number | null,
@@ -154,20 +154,24 @@ export function generateResolvers(entities: EntityModel[]): string {
 
     ${list}Count: (_: unknown, args: Record<string, unknown>, ctx: DalContext) =>
       ctx.repositories.${e}.count({
-        filter: args.filter as never,
+        filter: parseOptionalGraphqlInput("${E}Filter", args.filter) as never,
         includeDeleted: args.includeDeleted as boolean | null,
       }),
 
     ${e}Aggregate: async (_: unknown, args: Record<string, unknown>, ctx: DalContext) =>
       ({
         count: await ctx.repositories.${e}.count({
-          filter: args.filter as never,
+          filter: parseOptionalGraphqlInput("${E}Filter", args.filter) as never,
           includeDeleted: args.includeDeleted as boolean | null,
         }),
       }) as ResolversTypes["${E}Aggregate"],`);
 
     mutationFields.push(`    create${E}: async (_: unknown, args: { input: Record<string, unknown> }, ctx: DalContext) => {
-      const result = await ctx.repositories.${e}.create(args.input as never, { actorId: ctx.actorId });
+      const parsed = safeParseGraphqlInput("${E}CreateInput", args.input);
+      if (!parsed.ok) {
+        return { ${e}: null, userErrors: parsed.userErrors } as ResolversTypes["Create${E}Payload"];
+      }
+      const result = await ctx.repositories.${e}.create(parsed.data as never, { actorId: ctx.actorId });
       if (result.${e} && result.userErrors.length === 0) {
         const event = ctx.repositories.${e}.toChangeEvent("CREATED", [result.${e}.id]);
         ctx.pubsub.publish("${topic}", { ${e}Changed: event });
@@ -176,7 +180,15 @@ export function generateResolvers(entities: EntityModel[]): string {
     },
 
     bulkCreate${E}: async (_: unknown, args: { inputs: Record<string, unknown>[]; atomic?: boolean | null }, ctx: DalContext) => {
-      const result = await ctx.repositories.${e}.bulkCreate(args.inputs as never, { actorId: ctx.actorId }, args.atomic);
+      const parsed = safeParseGraphqlInputList("${E}CreateInput", args.inputs);
+      if (!parsed.ok) {
+        return {
+          successCount: 0,
+          failureCount: args.inputs.length,
+          userErrors: parsed.userErrors,
+        } as ResolversTypes["BulkMutationResult"];
+      }
+      const result = await ctx.repositories.${e}.bulkCreate(parsed.data as never, { actorId: ctx.actorId }, args.atomic);
       if ("items" in result && result.items.length > 0) {
         const event = ctx.repositories.${e}.toChangeEvent("CREATED", result.items.map((row) => row.id));
         ctx.pubsub.publish("${topic}", { ${e}Changed: event });
@@ -206,7 +218,15 @@ export function generateResolvers(entities: EntityModel[]): string {
     },
 
     bulkDelete${E}ByFilter: async (_: unknown, args: { filter: Record<string, unknown>; confirmDeleteAll?: boolean | null }, ctx: DalContext) => {
-      const result = await ctx.repositories.${e}.bulkDeleteByFilter(args.filter as never, { actorId: ctx.actorId }, args.confirmDeleteAll);
+      const filterParsed = safeParseGraphqlInput("${E}Filter", args.filter);
+      if (!filterParsed.ok) {
+        return {
+          successCount: 0,
+          failureCount: 0,
+          userErrors: filterParsed.userErrors,
+        } as ResolversTypes["BulkMutationResult"];
+      }
+      const result = await ctx.repositories.${e}.bulkDeleteByFilter(filterParsed.data as never, { actorId: ctx.actorId }, args.confirmDeleteAll);
       const matchedIds = "matchedIds" in result ? result.matchedIds : undefined;
       if (result.successCount > 0 && matchedIds && matchedIds.length > 0) {
         const event = ctx.repositories.${e}.toChangeEvent("DELETED", matchedIds);
@@ -217,7 +237,11 @@ export function generateResolvers(entities: EntityModel[]): string {
 
     if (full) {
       mutationFields.push(`    update${E}: async (_: unknown, args: { id: string; input: Record<string, unknown> }, ctx: DalContext) => {
-      const result = await ctx.repositories.${e}.update(args.id, args.input as never, { actorId: ctx.actorId });
+      const parsed = safeParseGraphqlInput("${E}UpdateInput", args.input);
+      if (!parsed.ok) {
+        return { ${e}: null, userErrors: parsed.userErrors } as ResolversTypes["Update${E}Payload"];
+      }
+      const result = await ctx.repositories.${e}.update(args.id, parsed.data as never, { actorId: ctx.actorId });
       if (result.${e} && result.userErrors.length === 0) {
         const event = ctx.repositories.${e}.toChangeEvent("UPDATED", [result.${e}.id]);
         ctx.pubsub.publish("${topic}", { ${e}Changed: event });
@@ -226,7 +250,15 @@ export function generateResolvers(entities: EntityModel[]): string {
     },
 
     bulkUpdate${E}: async (_: unknown, args: { updates: Array<{ id: string; input: Record<string, unknown> }>; atomic?: boolean | null }, ctx: DalContext) => {
-      const result = await ctx.repositories.${e}.bulkUpdate(args.updates as never, { actorId: ctx.actorId }, args.atomic);
+      const parsed = safeParseGraphqlInputList("${E}UpdateEntry", args.updates);
+      if (!parsed.ok) {
+        return {
+          successCount: 0,
+          failureCount: args.updates.length,
+          userErrors: parsed.userErrors,
+        } as ResolversTypes["BulkMutationResult"];
+      }
+      const result = await ctx.repositories.${e}.bulkUpdate(parsed.data as never, { actorId: ctx.actorId }, args.atomic);
       if ("items" in result && result.items.length > 0) {
         const event = ctx.repositories.${e}.toChangeEvent("UPDATED", result.items.map((row) => row.id));
         ctx.pubsub.publish("${topic}", { ${e}Changed: event });
@@ -241,7 +273,23 @@ export function generateResolvers(entities: EntityModel[]): string {
     },
 
     bulkUpdate${E}ByFilter: async (_: unknown, args: { filter: Record<string, unknown>; input: Record<string, unknown>; confirmUpdateAll?: boolean | null }, ctx: DalContext) => {
-      const result = await ctx.repositories.${e}.bulkUpdateByFilter(args.filter as never, args.input as never, { actorId: ctx.actorId }, args.confirmUpdateAll);
+      const filterParsed = safeParseGraphqlInput("${E}Filter", args.filter);
+      if (!filterParsed.ok) {
+        return {
+          successCount: 0,
+          failureCount: 0,
+          userErrors: filterParsed.userErrors,
+        } as ResolversTypes["BulkMutationResult"];
+      }
+      const inputParsed = safeParseGraphqlInput("${E}UpdateInput", args.input);
+      if (!inputParsed.ok) {
+        return {
+          successCount: 0,
+          failureCount: 0,
+          userErrors: inputParsed.userErrors,
+        } as ResolversTypes["BulkMutationResult"];
+      }
+      const result = await ctx.repositories.${e}.bulkUpdateByFilter(filterParsed.data as never, inputParsed.data as never, { actorId: ctx.actorId }, args.confirmUpdateAll);
       const matchedIds = "matchedIds" in result ? result.matchedIds : undefined;
       if (result.successCount > 0 && matchedIds && matchedIds.length > 0) {
         const event = ctx.repositories.${e}.toChangeEvent("UPDATED", matchedIds);
@@ -311,6 +359,13 @@ import { GraphQLScalarType, Kind, type GraphQLResolveInfo, type ValueNode } from
 import { DataLoader } from "@corpdk/dal-core";
 import type { Resolvers, ResolversParentTypes, ResolversTypes } from "../../graphql/resolvers.generated.js";
 import type { PubSub } from "../generated-pubsub.js";
+import {
+  parseGraphqlInput,
+  parseGraphqlInputList,
+  parseOptionalGraphqlInput,
+  safeParseGraphqlInput,
+  safeParseGraphqlInputList,
+} from "../input-zod.js";
 ${repoImports}
 
 export interface DalContext {

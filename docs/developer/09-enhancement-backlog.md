@@ -52,12 +52,6 @@ Add `.github/workflows/ci.yml` (or extend an existing workflow) for shared packa
 
 **Scope:** **`templates/ds` only** (`@corpdk/ds`, DAL automation). Manual DS templates (`ds-no-sql`, `ds-cdb`, `ds-mongo`, `ds-ddb`, `ds-file`) are out of scope here.
 
-### 1. Shared Zod schemas for GraphQL input types
-
-**Status:** Partial — `@corpdk/dal-codegen` emits `src/generated/dal/input-zod.ts` (`*CreateInput` / `*UpdateInput`, `inputZodSchemas` registry); `templates/ds` exposes `parseGraphqlInput()` in `src/validation/parse-input.ts`. Filter/sort/association inputs not generated yet.
-
-**Why it still matters:** Extending Zod to filter AST inputs would align runtime validation with `ui-forms` for complex list/mutation filters.
-
 ### 2. OpenTelemetry tracing
 
 **Status:** Done — optional OTLP via `OTEL_EXPORTER_OTLP_ENDPOINT` or `DS_OTEL_ENABLED=true`; preload registers HTTP + pg instrumentation; Yoga execute spans. See [12-ds-observability.md](12-ds-observability.md).
