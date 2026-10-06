@@ -24,9 +24,13 @@ export function createRequestContext(options?: RequestContextOptions) {
 const INDEX_TS = `import { createServer } from "node:http";
 import { createYoga } from "graphql-yoga";
 import { schema, createRequestContext } from "./schema.js";
+import { handleHealthRequest } from "./health.js";
+import { yogaTracingPlugin } from "./observability/yoga-tracing-plugin.js";
 
 const PORT = Number(process.env.DS_PORT);
 if (!PORT) throw new Error("DS_PORT env var is required");
+
+const serverStartedAt = Date.now();
 
 const yoga = createYoga({
   schema,
@@ -37,13 +41,22 @@ const yoga = createYoga({
   },
   graphiql: process.env.NODE_ENV !== "production",
   logging: true,
+  plugins: [yogaTracingPlugin()],
 });
 
-const server = createServer(yoga);
+const server = createServer((req, res) => {
+  const url = req.url?.split("?")[0];
+  if (url === "/health") {
+    void handleHealthRequest(req, res, serverStartedAt);
+    return;
+  }
+  yoga(req, res);
+});
 
 server.listen(PORT, () => {
   const base = \`http://localhost:\${PORT}/graphql\`;
   console.log(\`@corpdk/ds  HTTP  \${base}\`);
+  console.log(\`@corpdk/ds  health  http://localhost:\${PORT}/health\`);
   console.log(
     \`@corpdk/ds  SSE   \${base}  (subscriptions: Accept: text/event-stream)\`,
   );
@@ -61,9 +74,25 @@ import * as schema from "./schema/index.js";
  * When create-app or create-ds scaffolds with a different SQL dialect (MySQL, SQLite,
  * CockroachDB), update drizzle.config.ts, src/db/schema/, and the driver here.
  */
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 export const db = drizzle(pool, { schema });
+
+export interface DbPingResult {
+  connected: boolean;
+  latencyMs: number | null;
+}
+
+/** Lightweight connectivity check for /health and orchestrator probes. */
+export async function pingDatabase(): Promise<DbPingResult> {
+  const start = performance.now();
+  try {
+    await pool.query("SELECT 1");
+    return { connected: true, latencyMs: Math.round(performance.now() - start) };
+  } catch {
+    return { connected: false, latencyMs: null };
+  }
+}
 `;
 
 /** Emits thin Yoga/schema bootstrap files (no entity SDL). */
