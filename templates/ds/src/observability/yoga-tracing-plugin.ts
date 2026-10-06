@@ -99,8 +99,17 @@ function sanitizedDocument(document: DocumentNode): string {
   return out;
 }
 
-function endSpan(span: Span, errors?: readonly GraphQLError[]): void {
-  if (errors?.length) {
+function endSpan(
+  span: Span,
+  errors?: readonly GraphQLError[],
+  unhandled?: Error,
+): void {
+  if (unhandled) {
+    span.setStatus({
+      code: SpanStatusCode.ERROR,
+      message: unhandled.message,
+    });
+  } else if (errors?.length) {
     span.setStatus({
       code: SpanStatusCode.ERROR,
       message: errors.map((e) => e.message).join("; "),
@@ -154,8 +163,10 @@ export function yogaTracingPlugin(): Plugin {
             void result.then(
               (resolved) => finishFromResult(span, resolved),
               (err: unknown) => {
-                span.recordException(err instanceof Error ? err : new Error(String(err)));
-                endSpan(span);
+                const error =
+                  err instanceof Error ? err : new Error(String(err));
+                span.recordException(error);
+                endSpan(span, undefined, error);
               },
             );
             return;
