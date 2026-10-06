@@ -90,6 +90,44 @@ Explore durable delivery for the DS side: checkpoint/resume after disconnect (e.
 
 **Why it still matters:** SSE clients need a defined recovery story once UIs migrate off WebSocket transport.
 
+### 7. Multiple mutation batching in a single transaction
+
+**Status:** Open — design needed — each generated mutation runs in its own Drizzle call today; no first-class “batch mutations, one transaction” API or Yoga extension.
+
+- **Atomicity:** Product flows (checkout, multi-entity updates) often require all-or-nothing commits; partial success from independent mutations is hard to roll back at the GraphQL layer.
+- **GraphQL batching vs explicit API:** HTTP/query batching does not imply a shared DB transaction; need a deliberate contract (e.g. `mutationBatch`, `@transaction` directive, or document-only pattern with shared `ctx.db.transaction()`).
+- **Drizzle boundaries:** Transaction scope must wrap repository calls codegen emits; connection pooling and nested transactions need clear rules.
+- **Resolver/codegen:** `dal-codegen` may need transaction-aware context, ordering guarantees, and error mapping so one failure aborts the whole batch.
+
+**Why it still matters:** Without a designed path, teams hand-roll transactions in custom resolvers and bypass generated repositories.
+
+### 8. Support for database views
+
+**Status:** Open — Drizzle schema in `templates/ds` models tables only; views are not introspected or mapped to GraphQL types.
+
+- Decide whether read-only views become DAL entities (queries, filters) or stay outside automation with manual SDL/resolvers.
+- Document limitations if views with joins, computed columns, or non-updatable shapes cannot be safely codegen’d.
+
+**Why it still matters:** Many Postgres schemas expose reporting or denormalized read models as views; teams need a supported or explicit unsupported story.
+
+### 9. Support for materialized views
+
+**Status:** Open — same scope as ordinary views, plus no refresh orchestration in the DS template.
+
+- GraphQL exposure likely read-only; clarify whether refresh is operator-driven (`REFRESH MATERIALIZED VIEW`), scheduled job, or out of scope.
+- Stale-read semantics and concurrent refresh affect API contracts and caching.
+
+**Why it still matters:** Analytics and aggregate snapshots often live in materialized views; DAL should not silently treat them as ordinary tables.
+
+### 10. Support for functions (stored procedures)
+
+**Status:** Open — no codegen path to declare or invoke Postgres functions/RPCs through repositories or dedicated mutations.
+
+- Map SQL functions to GraphQL fields or mutations with typed args/results, or document calling via raw Drizzle/`sql` in team-owned resolvers only.
+- Implications for permissions, side effects, and transaction participation when mixing function calls with generated CRUD.
+
+**Why it still matters:** Legacy and performance-critical logic often remains in the database; a consistent invoke story avoids ad hoc SQL in every app.
+
 ---
 
 **Related:** [UI Status Dashboard](06-ui-status.md) | [UI Package Design](../architecture/04-ui-package-design.md) | [Monorepo Design](../architecture/02-monorepo-design.md)
