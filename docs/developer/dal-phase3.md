@@ -1,6 +1,6 @@
 # DAL Phase 3 — Cursor Signing, ColumnProjection, Entity Lint
 
-Phase 3 extends `@corpdk/dal-core` and `@corpdk/dal-codegen` with optional HMAC cursor signing, GraphQL selection-set column projection, and a standalone entity design linter.
+Phase 3 extends `@corpdk/dal-core` and `@corpdk/dal-codegen` with optional HMAC cursor signing, GraphQL selection-set column projection, a standalone entity design linter, and generated **`input-zod.ts`** for resolver-boundary validation of GraphQL input objects (see [DS observability § Runtime Zod](12-ds-observability.md#runtime-zod-for-graphql-inputs)).
 
 ## HMAC cursor signing (§13)
 

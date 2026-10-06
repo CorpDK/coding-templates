@@ -29,6 +29,7 @@ Welcome to the coding-templates documentation! This monorepo provides production
 - [Repository Pattern](developer/03-repository-pattern.md) — IRepository interface, adding new entities
 - [PubSub Internals](developer/04-pubsub-internals.md) — factory pattern, topic wiring, resolver integration
 - [DS subscription transport (SSE)](developer/11-ds-subscription-sse.md) — `@corpdk/ds` SSE subscriptions; UI WS migration deferred
+- [DS observability](developer/12-ds-observability.md) — `@corpdk/ds` health probe, optional OTLP tracing, generated input Zod
 - [UI Architecture](developer/05-ui-architecture.md) — UI template state and app-level config
 - [UI Status Dashboard](developer/06-ui-status.md) — living capability matrix across all UI packages
 - [Git Conventions](developer/07-git-conventions.md) — Conventional Commits format and examples
@@ -61,6 +62,7 @@ Welcome to the coding-templates documentation! This monorepo provides production
 | **Release DS automation to npm** | [npm — DS automation publish](admin/04-npm-publish-ds-automation.md) |
 | **Configure environment**        | [Environment Variables](admin/01-environment-variables.md)           |
 | **Deploy with Docker**           | [Docker Deployment](admin/02-docker-deployment.md)                   |
+| **DS health / tracing / input Zod** | [DS observability](developer/12-ds-observability.md)              |
 | **Add a GraphQL entity**         | [Repository Pattern](developer/03-repository-pattern.md)             |
 | **Design a DAL entity**          | [DAL Entity Design](developer/dal-entity-design.md)                  |
 | **Add a subscription**           | [PubSub Internals](developer/04-pubsub-internals.md)                 |
@@ -140,4 +142,4 @@ Welcome to the coding-templates documentation! This monorepo provides production
 
 **Related**: [CLAUDE.md](../CLAUDE.md) | [Contributing](10-contributing.md)
 
-**Last updated**: October 5, 2026
+**Last updated**: October 6, 2026
