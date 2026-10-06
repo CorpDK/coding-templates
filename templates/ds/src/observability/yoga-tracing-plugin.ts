@@ -13,11 +13,16 @@ const tracer = trace.getTracer("@corpdk/ds/graphql");
 
 function operationDefinition(
   document: DocumentNode,
+  operationName?: string | null,
 ): OperationDefinitionNode | undefined {
+  const ops: OperationDefinitionNode[] = [];
   for (const def of document.definitions) {
-    if (def.kind === Kind.OPERATION_DEFINITION) return def;
+    if (def.kind === Kind.OPERATION_DEFINITION) ops.push(def);
   }
-  return undefined;
+  if (ops.length === 0) return undefined;
+  if (ops.length === 1) return ops[0];
+  if (!operationName) return undefined;
+  return ops.find((op) => op.name?.value === operationName);
 }
 
 const SENSITIVE_VARIABLE_KEY =
@@ -126,7 +131,7 @@ export function yogaTracingPlugin(): Plugin {
 
   return {
     onExecute({ args }) {
-      const op = operationDefinition(args.document);
+      const op = operationDefinition(args.document, args.operationName);
       const operationType = op?.operation ?? "unknown";
       const operationName =
         args.operationName ?? op?.name?.value ?? "anonymous";
