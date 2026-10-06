@@ -52,24 +52,7 @@ Add `.github/workflows/ci.yml` (or extend an existing workflow) for shared packa
 
 **Scope:** **`templates/ds` only** (`@corpdk/ds`, DAL automation). Manual DS templates (`ds-no-sql`, `ds-cdb`, `ds-mongo`, `ds-ddb`, `ds-file`) are out of scope here.
 
-### 1. Shared Zod schemas for GraphQL input types
-
-**Status:** Done — see [12-ds-observability.md § Runtime Zod](12-ds-observability.md#runtime-zod-for-graphql-inputs) (`input-zod.ts`, mutation `userErrors` vs query `BAD_USER_INPUT`, `parse-input.ts` re-exports).
-
-**Remaining / out of scope:**
-
-- Top-level pagination args (`first`, `after`, `limit`, etc.) are scalar GraphQL arguments — not input objects, so no generated Zod schemas.
-- Hand-written SDL input types outside DAL codegen are not covered; validate in team-owned resolvers or extend `@corpdk/dal-codegen`.
-
-### 2. OpenTelemetry tracing
-
-**Status:** Done — optional OTLP via `OTEL_EXPORTER_OTLP_ENDPOINT` or `DS_OTEL_ENABLED=true`; preload registers HTTP + pg instrumentation; Yoga execute spans. See [12-ds-observability.md](12-ds-observability.md).
-
-### 3. Health check endpoint
-
-**Status:** Done — `GET /health` on the DS HTTP port; 200/503 with `{ status, uptime, db, version }`. See [12-ds-observability.md](12-ds-observability.md).
-
-### 4. Rate limiting middleware
+### 1. Rate limiting middleware
 
 **Status:** Not started — no Yoga rate-limit plugin in `templates/ds`.
 
@@ -77,7 +60,7 @@ Per-operation limits via a Yoga plugin or `graphql-rate-limit`, keyed by IP or a
 
 **Why it still matters:** Protects the DS when no API gateway enforces quotas.
 
-### 5. Shared ESLint config (`templates/ds`)
+### 2. Shared ESLint config (`templates/ds`)
 
 **Status:** Not started — `package.json` defines `"lint": "eslint src/"` but there is no `eslint.config.mjs` and no `@corpdk/eslint-config` devDependency (unlike `templates/ui`).
 
@@ -85,7 +68,7 @@ Add `@corpdk/eslint-config` (base preset only — NodeNext ESM, not `./next`) an
 
 **Why it still matters:** Local and CI lint for the primary DS template should match the rest of the monorepo.
 
-### 6. Subscription resume (SSE)
+### 3. Subscription resume (SSE)
 
 **Status:** Not started — `templates/ds` publishes via `@corpdk/pub-sub` (memory or Redis) over **SSE** ([11-ds-subscription-sse.md](11-ds-subscription-sse.md)); reconnecting clients can miss events during gaps. Stock UI templates still use **graphql-ws** and are out of scope until they consume DS SSE.
 
@@ -93,7 +76,7 @@ Explore durable delivery for the DS side: checkpoint/resume after disconnect (e.
 
 **Why it still matters:** SSE clients need a defined recovery story once UIs migrate off WebSocket transport.
 
-### 7. Multiple mutation batching in a single transaction
+### 4. Multiple mutation batching in a single transaction
 
 **Status:** Open — design needed — each generated mutation runs in its own Drizzle call today; no first-class “batch mutations, one transaction” API or Yoga extension.
 
@@ -104,7 +87,7 @@ Explore durable delivery for the DS side: checkpoint/resume after disconnect (e.
 
 **Why it still matters:** Without a designed path, teams hand-roll transactions in custom resolvers and bypass generated repositories.
 
-### 8. Support for database views
+### 5. Support for database views
 
 **Status:** Open — Drizzle schema in `templates/ds` models tables only; views are not introspected or mapped to GraphQL types.
 
@@ -113,7 +96,7 @@ Explore durable delivery for the DS side: checkpoint/resume after disconnect (e.
 
 **Why it still matters:** Many Postgres schemas expose reporting or denormalized read models as views; teams need a supported or explicit unsupported story.
 
-### 9. Support for materialized views
+### 6. Support for materialized views
 
 **Status:** Open — same scope as ordinary views, plus no refresh orchestration in the DS template.
 
@@ -122,7 +105,7 @@ Explore durable delivery for the DS side: checkpoint/resume after disconnect (e.
 
 **Why it still matters:** Analytics and aggregate snapshots often live in materialized views; DAL should not silently treat them as ordinary tables.
 
-### 10. Support for functions (stored procedures)
+### 7. Support for functions (stored procedures)
 
 **Status:** Open — no codegen path to declare or invoke Postgres functions/RPCs through repositories or dedicated mutations.
 
