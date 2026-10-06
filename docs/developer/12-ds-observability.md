@@ -49,9 +49,7 @@ Local dev without these env vars behaves as before (no exporter, no extra spans)
 
 ## Runtime Zod for GraphQL inputs
 
-`pnpm dal:codegen` (impl phase) emits `src/generated/dal/input-zod.ts` with Zod schemas for **every generated GraphQL input object** (create/update, entity filters, column filter operators, association filters, sort inputs, bulk update entries) plus an `inputZodSchemas` registry. Generated resolvers validate list/mutation args at the boundary via `parseGraphqlInput`, `parseOptionalGraphqlInput`, and `parseGraphqlInputList`. Re-export those helpers from `src/validation/parse-input.ts` in custom resolvers. Top-level pagination args (`first`, `after`, `limit`, etc.) remain scalar GraphQL args — not input objects. Hand-written SDL inputs outside DAL codegen are not covered.
-
-**Follow-up:** Filter, sort, and association input types are not generated yet — only entity create/update inputs.
+`pnpm dal:codegen` (impl phase) emits `src/generated/dal/input-zod.ts` with Zod schemas for **every generated GraphQL input object** (column-aware create/update, entity filters, column filter operators, association filters, sort inputs, bulk update entries) plus an `inputZodSchemas` registry. Generated resolvers validate list/mutation args at the boundary via `parseGraphqlInput`, `parseOptionalGraphqlInput`, and `parseGraphqlInputList`. Re-export those helpers from `src/validation/parse-input.ts` in custom resolvers. Top-level pagination args (`first`, `after`, `limit`, etc.) remain scalar GraphQL args — not input objects. Hand-written SDL inputs outside DAL codegen are not covered.
 
 ---
 

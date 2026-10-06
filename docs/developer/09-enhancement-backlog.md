@@ -52,6 +52,15 @@ Add `.github/workflows/ci.yml` (or extend an existing workflow) for shared packa
 
 **Scope:** **`templates/ds` only** (`@corpdk/ds`, DAL automation). Manual DS templates (`ds-no-sql`, `ds-cdb`, `ds-mongo`, `ds-ddb`, `ds-file`) are out of scope here.
 
+### 1. Shared Zod schemas for GraphQL input types
+
+**Status:** Done — `pnpm dal:codegen` (impl) emits `src/generated/dal/input-zod.ts`: column-aware Zod for every `*CreateInput` / `*UpdateInput`, GraphQL-derived schemas for all other DAL-generated input objects (entity filters, column/association filter operators, sort inputs, bulk update entries), plus `inputZodSchemas` and `parseGraphqlInput` / `parseOptionalGraphqlInput` / `parseGraphqlInputList` (with `safeParse*` mapping to `userErrors`). Generated resolvers validate list/mutation args at the boundary; custom resolvers re-export helpers from `templates/ds/src/validation/parse-input.ts`. See [12-ds-observability.md](12-ds-observability.md#runtime-zod-for-graphql-inputs).
+
+**Remaining / out of scope:**
+
+- Top-level pagination args (`first`, `after`, `limit`, etc.) are scalar GraphQL arguments — not input objects, so no generated Zod schemas.
+- Hand-written SDL input types outside DAL codegen are not covered; validate in team-owned resolvers or extend `@corpdk/dal-codegen`.
+
 ### 2. OpenTelemetry tracing
 
 **Status:** Done — optional OTLP via `OTEL_EXPORTER_OTLP_ENDPOINT` or `DS_OTEL_ENABLED=true`; preload registers HTTP + pg instrumentation; Yoga execute spans. See [12-ds-observability.md](12-ds-observability.md).
