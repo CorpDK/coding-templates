@@ -6,7 +6,7 @@ All DS packages use a Repository Pattern to keep GraphQL resolvers decoupled fro
 
 ## DAL-automated `templates/ds` (Drizzle primary template)
 
-The primary `@corpdk/ds` template uses **DAL automation** — no hand-written entity repositories, Zod schemas, or domain SDL.
+The primary `@corpdk/ds` template uses **DAL automation** — no hand-written entity repositories, domain SDL, or team-owned input Zod; GraphQL input validation schemas are generated in `src/generated/dal/input-zod.ts` (see [12-ds-observability.md](12-ds-observability.md#runtime-zod-for-graphql-inputs)).
 
 | Concern | Location |
 | ------- | -------- |
@@ -14,6 +14,7 @@ The primary `@corpdk/ds` template uses **DAL automation** — no hand-written en
 | **Codegen command** | `pnpm dal:codegen` (schema → graphql-codegen → impl) or `dal:codegen:schema` / `codegen` / `dal:codegen:impl` individually |
 | **Record types** | `src/generated/entity-records.ts` (phase 1; shared by mappers and repositories) |
 | **Generated repos** | `src/generated/dal/repositories/generated-<entity>.repository.ts` |
+| **Input validation** | `src/generated/dal/input-zod.ts`; team resolvers re-export helpers from `src/validation/parse-input.ts` |
 | **Bootstrap wiring** | `src/schema.ts` imports `typeDefs` from `src/generated/generated-schema.ts` and `generatedResolvers`, `createDalContext`, `pubsub` from `src/generated/dal/index.ts`; bootstrap SDL/resolvers/pubsub topics are emitted by `@corpdk/dal-codegen` |
 
 Adding an entity: add a Drizzle table to `src/db/schema/`, then run **`pnpm dal:codegen`** (schema → graphql-codegen for SDK/CLI and `src/generated/graphql/resolvers.generated.ts` → DAL impl). See [GraphQL DAL Requirements](graphql-dal-requirements.md) and [DAL Entity Design Guidelines](dal-entity-design.md).

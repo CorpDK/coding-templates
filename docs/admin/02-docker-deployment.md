@@ -80,6 +80,7 @@ Build and run both services for end-to-end testing without a local Node process:
 ```bash
 cd templates/ds
 pnpm compose:up     # docker compose up --build -d
+curl -s http://localhost:4000/health
 curl http://localhost:4000/graphql \
   -X POST -H "Content-Type: application/json" \
   -d '{"query":"{ hello }"}'

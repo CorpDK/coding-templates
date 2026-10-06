@@ -54,7 +54,7 @@ Add `.github/workflows/ci.yml` (or extend an existing workflow) for shared packa
 
 ### 1. Shared Zod schemas for GraphQL input types
 
-**Status:** Done — `pnpm dal:codegen` (impl) emits `src/generated/dal/input-zod.ts`: column-aware Zod for every `*CreateInput` / `*UpdateInput`, GraphQL-derived schemas for all other DAL-generated input objects (entity filters, column/association filter operators, sort inputs, bulk update entries), plus `inputZodSchemas` and `parseGraphqlInput` / `parseOptionalGraphqlInput` / `parseGraphqlInputList` (with `safeParse*` mapping to `userErrors`). Generated resolvers validate list/mutation args at the boundary; custom resolvers re-export helpers from `templates/ds/src/validation/parse-input.ts`. See [12-ds-observability.md](12-ds-observability.md#runtime-zod-for-graphql-inputs).
+**Status:** Done — see [12-ds-observability.md § Runtime Zod](12-ds-observability.md#runtime-zod-for-graphql-inputs) (`input-zod.ts`, mutation `userErrors` vs query `BAD_USER_INPUT`, `parse-input.ts` re-exports).
 
 **Remaining / out of scope:**
 

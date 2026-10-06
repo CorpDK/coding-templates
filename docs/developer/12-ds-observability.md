@@ -41,9 +41,11 @@ Optional:
 | -------- | ------- |
 | `OTEL_SERVICE_NAME` | `@corpdk/ds` |
 
-When enabled, `dev` and `start` preload `src/observability/preload-otel.ts` so **pg** and **HTTP** instrumentation register before the pool is created. GraphQL operations get spans via a Yoga plugin (`graphql.operation.name`, sanitized variables).
+When enabled, `dev` and `start` preload `src/observability/preload-otel.ts` so **pg** and **HTTP** instrumentation register before the pool is created. GraphQL operations get spans via a Yoga plugin with attributes `graphql.operation.name`, `graphql.operation.type`, `graphql.document` (operation source with sensitive **argument/object-field literals** redacted when the field name matches password/secret/token-style keys), and `graphql.variables` (JSON with the same key-based redaction, including nested objects). Other literals in `graphql.document` are unchanged. `GET /health` emits a `db.health_ping` span when tracing is on.
 
 Local dev without these env vars behaves as before (no exporter, no extra spans).
+
+**Docker note:** the stock `docker-entrypoint.sh` runs `node dist/src/index.js` without the `--import` preload used by `pnpm start`, so container images built from the template do not enable OTLP until the entrypoint or CMD matches `package.json` `start`.
 
 ---
 

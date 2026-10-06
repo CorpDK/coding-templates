@@ -520,7 +520,7 @@ Per entity, codegen emits:
 | **Command** | `pnpm dal:codegen` (meta: **`dal:codegen:schema`** → **`pnpm codegen`** → **`dal:codegen:impl`**) |
 | **Phase 1 output** | **`src/generated/generated-schema.ts`**, **`src/generated/entity-records.ts`**, **`src/generated/graphql-codegen.mappers.ts`** (gitignored) |
 | **Phase 2 output** | **`src/generated/graphql/resolvers.generated.ts`** (graphql-codegen; gitignored) — plus `@corpdk/ds-sdk` / `@corpdk/ds-cli` SDK outputs |
-| **Phase 3 output** | **`src/generated/dal/`** repositories, resolvers, pubsub (wiped each impl run; gitignored) |
+| **Phase 3 output** | **`src/generated/dal/`** repositories, resolvers, pubsub, **`input-zod.ts`** (wiped each impl run; gitignored) |
 | **Output** | Full idempotent regen across all phases above — run locally or via Turbo before `@corpdk/ds#dev` / `#build` |
 | **Invalid schema** | **Fails codegen** (non-zero exit); CI treats this as a gate |
 | **Turbo pipeline** | Only **`@corpdk/ds`** defines `dal:codegen`; Turbo wires it into `@corpdk/ds#dev`, `@corpdk/ds#build`, and DS `codegen` |
