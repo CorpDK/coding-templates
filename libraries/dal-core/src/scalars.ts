@@ -214,8 +214,8 @@ export function serializeCidr(value: string | null | undefined): string | null {
 }
 
 /**
- * PostgreSQL cidr — graphql-scalars has no CIDR scalar (v1.26); minimal prefix check only.
- * Host portion is not fully validated like Guild `IP` (CIDR allows network bits in host).
+ * PostgreSQL cidr — graphql-scalars has no CIDR scalar (v1.26); prefix + IPv4 network check.
+ * IPv6 host uses Guild `IP`; host bits beyond the prefix are not validated for IPv6.
  */
 const CIDR_IPV4_HOST_RE = /^(?:\d{1,3}\.){3}\d{1,3}$/;
 
@@ -231,6 +231,26 @@ function assertIpv4CidrHost(host: string): void {
     if (n > 255) {
       throw new TypeError("CIDR must be valid CIDR notation");
     }
+  }
+}
+
+function assertIpv4CidrNetwork(host: string, prefix: number): void {
+  const parts = host.split(".").map(Number);
+  const addr =
+    ((parts[0]! << 24) | (parts[1]! << 16) | (parts[2]! << 8) | parts[3]!) >>> 0;
+  const hostBits = 32 - prefix;
+  if (hostBits <= 0) {
+    return;
+  }
+  if (hostBits >= 32) {
+    if (addr !== 0) {
+      throw new TypeError("CIDR must be valid CIDR notation");
+    }
+    return;
+  }
+  const hostMask = (1 << hostBits) - 1;
+  if ((addr & hostMask) !== 0) {
+    throw new TypeError("CIDR must be valid CIDR notation");
   }
 }
 
@@ -257,6 +277,7 @@ export function parseCidr(value: unknown): string {
     if (!Number.isInteger(prefix) || prefix < 0 || prefix > 32) {
       throw new TypeError("CIDR must be valid CIDR notation");
     }
+    assertIpv4CidrNetwork(host, prefix);
   } else {
     assertIpv6CidrHost(host);
     if (!Number.isInteger(prefix) || prefix < 0 || prefix > 128) {
