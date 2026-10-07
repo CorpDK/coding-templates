@@ -18,14 +18,14 @@ This design means:
 
 ## Variant Comparison
 
-| Package            | Storage                                   | ORM / Driver        | Real-time        | Best for                                                                              |
-| ------------------ | ----------------------------------------- | ------------------- | ---------------- | ------------------------------------------------------------------------------------- |
-| `@corpdk/ds`       | PostgreSQL / MySQL / SQLite / CockroachDB | Drizzle             | High-performance | Primary/default relational DS; real-time workloads; lower overhead than Prisma          |
-| `@corpdk/ds-no-sql`| Prisma-supported databases (incl. MongoDB, DocumentDB) | Prisma | Standard | Databases Drizzle does not support; Prisma type safety + migrations                   |
-| `@corpdk/ds-cdb`   | Couchbase Capella / self-hosted           | Native SDK + Zod    | Yes              | Couchbase-native projects; N1QL queries, full-text search                             |
-| `@corpdk/ds-mongo` | MongoDB Atlas / self-hosted               | Native driver + Zod | Yes              | MongoDB projects requiring native driver performance; no ORM overhead                 |
-| `@corpdk/ds-ddb`   | DocumentDB (documentdb.io)                | Native driver + Zod | Yes              | MongoDB wire-protocol compatible storage on DocumentDB                                |
-| `@corpdk/ds-file`  | JSON or YAML file on disk                 | fs/promises + Zod   | Yes              | Zero external dependencies; prototyping, offline-first, embedded                      |
+| Package             | Storage                                                | ORM / Driver        | Real-time        | Best for                                                                       |
+| ------------------- | ------------------------------------------------------ | ------------------- | ---------------- | ------------------------------------------------------------------------------ |
+| `@corpdk/ds`        | PostgreSQL / MySQL / SQLite / CockroachDB              | Drizzle             | High-performance | Primary/default relational DS; real-time workloads; lower overhead than Prisma |
+| `@corpdk/ds-no-sql` | Prisma-supported databases (incl. MongoDB, DocumentDB) | Prisma              | Standard         | Databases Drizzle does not support; Prisma type safety + migrations            |
+| `@corpdk/ds-cdb`    | Couchbase Capella / self-hosted                        | Native SDK + Zod    | Yes              | Couchbase-native projects; N1QL queries, full-text search                      |
+| `@corpdk/ds-mongo`  | MongoDB Atlas / self-hosted                            | Native driver + Zod | Yes              | MongoDB projects requiring native driver performance; no ORM overhead          |
+| `@corpdk/ds-ddb`    | DocumentDB (documentdb.io)                             | Native driver + Zod | Yes              | MongoDB wire-protocol compatible storage on DocumentDB                         |
+| `@corpdk/ds-file`   | JSON or YAML file on disk                              | fs/promises + Zod   | Yes              | Zero external dependencies; prototyping, offline-first, embedded               |
 
 ---
 
@@ -127,9 +127,9 @@ Variable merging order: `--input <file>` → piped stdin → explicit flags (fla
 
 ### Environment
 
-| Variable      | Default | Description                             |
-| ------------- | ------- | --------------------------------------- |
-| `DS_HTTP_URL` | —       | HTTP endpoint for queries and mutations |
+| Variable      | Default | Description                                                                                |
+| ------------- | ------- | ------------------------------------------------------------------------------------------ |
+| `DS_HTTP_URL` | —       | HTTP endpoint for queries and mutations                                                    |
 | `DS_WS_URL`   | —       | WebSocket endpoint for subscriptions (generated CLI; `@corpdk/ds` server uses SSE instead) |
 
 ### How it's wired
@@ -146,7 +146,7 @@ Variable merging order: `--input <file>` → piped stdin → explicit flags (fla
 },
 ```
 
-The preset lives in `libraries/codegen-cli/` and is compiled with `tsup`. On `@corpdk/ds`, Turbo `codegen` depends on `dal:codegen:schema` (and `@corpdk/codegen-cli#build`) so merged SDL and entity mappers exist before graphql-codegen runs; `dal:codegen:impl` runs after `codegen` so generated resolvers can satisfy graphql-codegen `Resolvers` types.
+The preset lives in `libraries/codegen-cli/` and is built with **tsup** (JS) plus **`tsc --emitDeclarationOnly`** (`.d.ts` for npm). On `@corpdk/ds`, Turbo `codegen` depends on `dal:codegen:schema` (and `@corpdk/codegen-cli#build`) so merged SDL and entity mappers exist before graphql-codegen runs; `dal:codegen:impl` runs after `codegen` so generated resolvers can satisfy graphql-codegen `Resolvers` types.
 
 ### Scaffolded binary name
 

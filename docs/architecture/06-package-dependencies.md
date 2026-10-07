@@ -249,42 +249,42 @@ Tracked here until applied. Remove entries as they are completed.
 
 ## Upgrade Log
 
-| Date       | Package(s)                            | From     | To       | Notes                                                                                                  |
-| ---------- | ------------------------------------- | -------- | -------- | ------------------------------------------------------------------------------------------------------ |
-| 2026-03-29 | turbo                                 | ^2.5.4   | ^2.8.21  | Minor bump                                                                                             |
-| 2026-03-29 | react, react-dom                      | 19.2.3   | 19.2.4   | Patch bump                                                                                             |
-| 2026-03-29 | next, eslint-config-next              | 16.1.6   | 16.2.1   | Minor bump                                                                                             |
-| 2026-03-29 | graphql                               | ^16.11.0 | ^16.13.2 | Minor bump                                                                                             |
-| 2026-03-29 | graphql-yoga                          | ^5.13.4  | ^5.18.1  | Minor bump                                                                                             |
-| 2026-03-29 | @prisma/client, prisma                | ^7.5.0   | ^7.6.0   | Minor bump                                                                                             |
-| 2026-03-29 | drizzle-orm                           | ^0.44.2  | ^0.45.2  | Minor bump                                                                                             |
-| 2026-03-29 | drizzle-kit                           | ^0.31.1  | ^0.31.10 | Patch bump                                                                                             |
-| 2026-03-29 | tsx                                   | ^4.19.4  | ^4.21.0  | Minor bump                                                                                             |
-| 2026-03-29 | ws                                    | ^8.18.2  | ^8.20.0  | Minor bump                                                                                             |
-| 2026-03-29 | pg                                    | ^8.16.3  | ^8.20.0  | Minor bump                                                                                             |
-| 2026-03-29 | couchbase                             | ^4.4.5   | ^4.6.1   | Minor bump                                                                                             |
-| 2026-03-29 | ioredis                               | ^5.0.0   | ^5.10.1  | Minor bump, tightened range                                                                            |
-| 2026-03-29 | lucide-react                          | ^1.6.0   | ^1.7.0   | Minor bump                                                                                             |
-| 2026-03-29 | react-hook-form                       | ^7.55.0  | ^7.72.0  | Minor bump                                                                                             |
-| 2026-03-29 | @hookform/resolvers                   | ^5.0.1   | ^5.2.2   | Minor bump                                                                                             |
-| 2026-03-29 | tsup                                  | ^8.0.0   | ^8.5.1   | Minor bump                                                                                             |
-| 2026-03-29 | @tanstack/react-virtual               | ^3.13.6  | ^3.13.23 | Patch bump                                                                                             |
-| 2026-03-29 | @tanstack/react-query                 | ^5.75.5  | ^5.95.2  | Aligned across ui, ui-hprt, ui-showcase                                                                |
-| 2026-03-29 | @graphql-codegen/cli                  | ^5.0.5   | ^6.2.1   | Major bump, coordinated                                                                                |
-| 2026-03-29 | @graphql-codegen/client-preset        | ^4.5.1   | ^5.2.4   | Major bump, coordinated                                                                                |
-| 2026-03-29 | @graphql-codegen/typescript           | ^4.1.5   | ^5.0.9   | Major bump, coordinated                                                                                |
-| 2026-03-29 | @graphql-codegen/typescript-resolvers | ^4.5.1   | ^5.1.7   | Major bump, coordinated                                                                                |
-| 2026-03-29 | @graphql-codegen/plugin-helpers       | ^5.0.0   | ^6.2.0   | Major bump, coordinated                                                                                |
-| 2026-03-29 | graphql-ws                            | ^5.16.0  | ^6.0.8   | Major bump; import path changed from graphql-ws/lib/use/ws to graphql-ws/use/ws                        |
-| 2026-03-29 | mongodb                               | ^6.16.0  | ^7.1.1   | Major bump; no source changes needed (async/await API unchanged)                                       |
-| 2026-03-29 | @clack/prompts                        | ^0.9.1   | ^1.1.0   | Major bump (0.x→1.x); no source changes needed                                                         |
-| 2026-03-29 | @apollo/client                        | ^3.13.8  | ^4.1.6   | Major bump; ApolloProvider moved to @apollo/client/react; split() replaced by ApolloLink.split()       |
-| 2026-03-29 | zod                                   | ^3.24.2  | ^4.3.6   | Major bump; root export maintains v3 compat, no source changes needed                                  |
-| 2026-03-29 | typescript                            | ^5.9.3   | ^6.0.2   | Major bump; added rootDir to ui-\* tsconfig.build.json                                                 |
+| Date       | Package(s)                             | From     | To       | Notes                                                                                                  |
+| ---------- | -------------------------------------- | -------- | -------- | ------------------------------------------------------------------------------------------------------ |
+| 2026-03-29 | turbo                                  | ^2.5.4   | ^2.8.21  | Minor bump                                                                                             |
+| 2026-03-29 | react, react-dom                       | 19.2.3   | 19.2.4   | Patch bump                                                                                             |
+| 2026-03-29 | next, eslint-config-next               | 16.1.6   | 16.2.1   | Minor bump                                                                                             |
+| 2026-03-29 | graphql                                | ^16.11.0 | ^16.13.2 | Minor bump                                                                                             |
+| 2026-03-29 | graphql-yoga                           | ^5.13.4  | ^5.18.1  | Minor bump                                                                                             |
+| 2026-03-29 | @prisma/client, prisma                 | ^7.5.0   | ^7.6.0   | Minor bump                                                                                             |
+| 2026-03-29 | drizzle-orm                            | ^0.44.2  | ^0.45.2  | Minor bump                                                                                             |
+| 2026-03-29 | drizzle-kit                            | ^0.31.1  | ^0.31.10 | Patch bump                                                                                             |
+| 2026-03-29 | tsx                                    | ^4.19.4  | ^4.21.0  | Minor bump                                                                                             |
+| 2026-03-29 | ws                                     | ^8.18.2  | ^8.20.0  | Minor bump                                                                                             |
+| 2026-03-29 | pg                                     | ^8.16.3  | ^8.20.0  | Minor bump                                                                                             |
+| 2026-03-29 | couchbase                              | ^4.4.5   | ^4.6.1   | Minor bump                                                                                             |
+| 2026-03-29 | ioredis                                | ^5.0.0   | ^5.10.1  | Minor bump, tightened range                                                                            |
+| 2026-03-29 | lucide-react                           | ^1.6.0   | ^1.7.0   | Minor bump                                                                                             |
+| 2026-03-29 | react-hook-form                        | ^7.55.0  | ^7.72.0  | Minor bump                                                                                             |
+| 2026-03-29 | @hookform/resolvers                    | ^5.0.1   | ^5.2.2   | Minor bump                                                                                             |
+| 2026-03-29 | tsup                                   | ^8.0.0   | ^8.5.1   | Minor bump                                                                                             |
+| 2026-03-29 | @tanstack/react-virtual                | ^3.13.6  | ^3.13.23 | Patch bump                                                                                             |
+| 2026-03-29 | @tanstack/react-query                  | ^5.75.5  | ^5.95.2  | Aligned across ui, ui-hprt, ui-showcase                                                                |
+| 2026-03-29 | @graphql-codegen/cli                   | ^5.0.5   | ^6.2.1   | Major bump, coordinated                                                                                |
+| 2026-03-29 | @graphql-codegen/client-preset         | ^4.5.1   | ^5.2.4   | Major bump, coordinated                                                                                |
+| 2026-03-29 | @graphql-codegen/typescript            | ^4.1.5   | ^5.0.9   | Major bump, coordinated                                                                                |
+| 2026-03-29 | @graphql-codegen/typescript-resolvers  | ^4.5.1   | ^5.1.7   | Major bump, coordinated                                                                                |
+| 2026-03-29 | @graphql-codegen/plugin-helpers        | ^5.0.0   | ^6.2.0   | Major bump, coordinated                                                                                |
+| 2026-03-29 | graphql-ws                             | ^5.16.0  | ^6.0.8   | Major bump; import path changed from graphql-ws/lib/use/ws to graphql-ws/use/ws                        |
+| 2026-03-29 | mongodb                                | ^6.16.0  | ^7.1.1   | Major bump; no source changes needed (async/await API unchanged)                                       |
+| 2026-03-29 | @clack/prompts                         | ^0.9.1   | ^1.1.0   | Major bump (0.x→1.x); no source changes needed                                                         |
+| 2026-03-29 | @apollo/client                         | ^3.13.8  | ^4.1.6   | Major bump; ApolloProvider moved to @apollo/client/react; split() replaced by ApolloLink.split()       |
+| 2026-03-29 | zod                                    | ^3.24.2  | ^4.3.6   | Major bump; root export maintains v3 compat, no source changes needed                                  |
+| 2026-03-29 | typescript                             | ^5.9.3   | ^6.0.2   | Major bump; added rootDir to ui-\* tsconfig.build.json                                                 |
 | 2026-10-07 | @corpdk/create-ds, @corpdk/codegen-cli | —        | —        | Split build: tsup (JS) + `tsc --emitDeclarationOnly` (`.d.ts`); no `ignoreDeprecations` for TS5101     |
-| 2026-10-05 | publishable `@corpdk/*` (lockstep)    | —        | —        | CalVer `2026.3.0-alpha.1` → `2026.10.0-alpha.1`; `@corpdk/create-ds`; root MIT `LICENSE`               |
-| 2026-10-05 | DS automation npm (lockstep)          | —        | —        | CalVer `2026.10.0-alpha.1` → `2026.10.0-alpha.2`; package READMEs for npmjs                            |
-| 2026-10-07 | DS automation npm (lockstep)          | —        | —        | CalVer `2026.10.0-alpha.4` → `2026.10.0-alpha.5`; npm `.d.ts` + `exports`/`types`; publish script gate |
+| 2026-10-05 | publishable `@corpdk/*` (lockstep)     | —        | —        | CalVer `2026.3.0-alpha.1` → `2026.10.0-alpha.1`; `@corpdk/create-ds`; root MIT `LICENSE`               |
+| 2026-10-05 | DS automation npm (lockstep)           | —        | —        | CalVer `2026.10.0-alpha.1` → `2026.10.0-alpha.2`; package READMEs for npmjs                            |
+| 2026-10-07 | DS automation npm (lockstep)           | —        | —        | CalVer `2026.10.0-alpha.4` → `2026.10.0-alpha.5`; npm `.d.ts` + `exports`/`types`; publish script gate |
 
 ---
 
