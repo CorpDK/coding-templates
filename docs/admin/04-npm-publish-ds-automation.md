@@ -70,7 +70,7 @@ The workflow evaluates the CalVer gate right after checkout, **before** `pnpm` /
 1. Verify every package in the set has the **same** `version` as the release (from input or `libraries/dal-core/package.json`).
 2. `pnpm turbo run build` for all five packages (respects dependency order via Turbo).
 3. `pnpm --filter @corpdk/dal-core test` and `@corpdk/dal-codegen test` (same coverage as [`.github/workflows/dal.yml`](../../.github/workflows/dal.yml) for libraries).
-4. Confirm each package has **`dist/index.d.ts`** after build (publish script enforces this). Spot-check packaging: `pnpm --filter @corpdk/dal-core exec npm pack --dry-run` and ensure the tarball lists `.d.ts` files. Library `package.json` must expose types via top-level `"types"` and `exports["."].types` (string-only `exports` breaks TypeScript resolution even when `.d.ts` is in the tarball).
+4. Confirm each package has declaration output after build (publish script enforces **`dist/index.d.ts`** for the four libraries; **`@corpdk/create-ds`** uses **`dist/types-entry.d.ts`** because the CLI entry is separate from the types surface). Spot-check packaging: `pnpm --filter @corpdk/dal-core exec npm pack --dry-run` and ensure the tarball lists `.d.ts` files. Library `package.json` must expose types via top-level `"types"` and `exports["."].types` (string-only `exports` breaks TypeScript resolution even when `.d.ts` is in the tarball).
 5. `pnpm publish --no-git-checks --tag latest` in dependency order; `--dry-run` when not releasing; live runs add `--provenance`.
 6. On live publish only: ensure git tag `ds-automation/v<CalVer>` on the release commit, then `gh release create` with generated notes (`permissions.contents: write`).
 

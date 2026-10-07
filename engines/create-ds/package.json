@@ -22,7 +22,7 @@
   "exports": {
     ".": {
       "types": "./dist/types-entry.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/types-entry.js"
     }
   },
   "bin": {
