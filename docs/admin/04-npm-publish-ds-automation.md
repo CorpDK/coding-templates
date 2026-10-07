@@ -65,6 +65,8 @@ Release notes list all five packages at the release CalVer and link back to this
 
 ### What CI runs
 
+The workflow evaluates the CalVer gate right after checkout, **before** `pnpm` / `actions/setup-node` (pnpm cache). Main pushes with an unchanged CalVer therefore skip without install or publish and still exit successfully.
+
 1. Verify every package in the set has the **same** `version` as the release (from input or `libraries/dal-core/package.json`).
 2. `pnpm turbo run build` for all five packages (respects dependency order via Turbo).
 3. `pnpm --filter @corpdk/dal-core test` and `@corpdk/dal-codegen test` (same coverage as [`.github/workflows/dal.yml`](../../.github/workflows/dal.yml) for libraries).
