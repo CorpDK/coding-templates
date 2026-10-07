@@ -11,7 +11,6 @@ import {
 const NUMERIC_DAL_SCALAR_KINDS = new Set<ColumnModel["kind"]>([
   "smallint",
   "double",
-  "bigint",
   "decimal",
 ]);
 

@@ -123,7 +123,12 @@ function assertInt64WireDecimal(decimal: string): string {
 /** Parse PG interval or milliseconds wire value to total milliseconds string. */
 export function parseIntervalMs(value: unknown): string {
   if (typeof value === "number" && Number.isFinite(value)) {
-    return assertInt64WireDecimal(Math.trunc(value).toString());
+    if (!Number.isSafeInteger(value)) {
+      throw new TypeError(
+        "IntervalMs number input must be a safe integer; use a decimal string for larger values",
+      );
+    }
+    return assertInt64WireDecimal(value.toString());
   }
   if (typeof value !== "string" || !INTERVAL_MS_RE.test(value)) {
     throw new TypeError("IntervalMs must be a signed integer string of milliseconds");
