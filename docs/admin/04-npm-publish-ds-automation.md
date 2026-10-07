@@ -80,7 +80,7 @@ Workflow permissions for live publish: `id-token: write` (OIDC token for npm) an
 
 npm assigns a **dist-tag** on every publish. `npm install @corpdk/create-ds` (no `@version`) resolves the version behind the **`latest`** tag.
 
-For semver **prereleases** (CalVer with `-alpha.N`, `-beta.N`, etc.), npm’s default is **not** `latest`: it tags the tarball with the prerelease identifier (e.g. `alpha`). A successful CI publish can therefore upload `2026.10.0-alpha.4` while **`latest` still points at an older build** (e.g. `2026.10.0-alpha.1`) until something moves the tag.
+For semver **prereleases** (CalVer with `-alpha.N`, `-beta.N`, etc.), npm’s default is **not** `latest`: it tags the tarball with the prerelease identifier (e.g. `alpha`). A successful CI publish can therefore upload `2026.10.0-alpha.5` while **`latest` still points at an older build** (e.g. `2026.10.0-alpha.4`) until something moves the tag.
 
 Until the stack ships a stable (non-prerelease) CalVer line, maintainers want **`latest` on every lockstep alpha** so downstream `create-ds` / semver ranges behave predictably. [`.github/scripts/publish-ds-automation.sh`](../../.github/scripts/publish-ds-automation.sh) passes **`--tag latest`** on every live and dry-run publish (local and CI).
 
@@ -93,7 +93,7 @@ npm view @corpdk/create-ds dist-tags
 **One-time repair** (no republish): point `latest` at the version that already exists on the registry:
 
 ```bash
-VERSION=2026.10.0-alpha.4   # replace with the CalVer you shipped
+VERSION=2026.10.0-alpha.5   # replace with the CalVer you shipped
 for pkg in @corpdk/dal-core @corpdk/pub-sub @corpdk/codegen-cli @corpdk/dal-codegen @corpdk/create-ds; do
   npm dist-tag add "${pkg}@${VERSION}" latest
 done
