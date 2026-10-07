@@ -87,7 +87,7 @@ Rare — codegen emits domain-specific scalars when these PG types appear in the
 | PG type | Drizzle builder | DAL support | DAL scalar | Filter | Sort | Aggregate | Notes |
 | ------- | --------------- | ----------- | ---------- | ------ | ---- | --------- | ----- |
 | `inet` | custom | Supported (custom scalar) | `IP` | `IPFilter` | Yes | min/max | String — host IPv4/IPv6; SDL scalar **`IP`** from graphql-scalars **`GraphQLIP`** |
-| `cidr` | custom | Supported (custom scalar) | `CIDR` | `CIDRFilter` | Yes | min/max | String — CIDR notation; **no** `graphql-scalars` CIDR export (v1.26) — minimal dal-core prefix check |
+| `cidr` | custom | Supported (custom scalar) | `CIDR` | `CIDRFilter` | Yes | min/max | String — CIDR notation; **no** `graphql-scalars` CIDR export (v1.26) — dal-core prefix + network-bit checks |
 | `macaddr` | custom | Supported (custom scalar) | `MAC` | `MACFilter` | Yes | min/max | String — IEEE 802 MAC; SDL scalar **`MAC`** from graphql-scalars **`GraphQLMAC`** |
 | `macaddr8` | custom | **Not supported v1** | — | — | — | — | Codegen and `entity:lint` fail — use `macaddr` or text |
 
@@ -185,7 +185,8 @@ Formal mapping for **supported** PostgreSQL types only:
 | **`interval`** | Custom **`IntervalMs`** scalar — **milliseconds on wire** | Signed 64-bit integer as decimal string; PG `interval` ↔ total ms conversion in repository layer; JS/API convention, sub-second precision, avoids float |
 | **`uuid`** | GraphQL built-in **`ID`** — not a custom scalar | Relay/node identification convention; RFC 4122 validation at repository/DB — see [UUID → ID tradeoffs](#uuid--id-tradeoffs) |
 | **`citext`** | Custom **`InsensitiveString`** scalar | Case-insensitive storage in PG (`citext` extension); wire as string; **`InsensitiveStringFilter.isCaseInsensitive`** for matching |
-| **Network, geometric, PostGIS** | **Supported (custom scalar, opt-in)** | Rare domain types — codegen emits when present in Drizzle schema; not in default templates; filters v1 limited to `eq` / `neq` |
+| **Network (`inet`, `cidr`, `macaddr`)** | **Supported (custom scalar, opt-in)** | Emitted when present in Drizzle schema; not in default templates; filters v1 **`eq` / `neq` / `isNull`** |
+| **Geometric, PostGIS, `macaddr8`** | **Not supported v1** | Codegen and `entity:lint` fail — normalize schema or defer |
 | **Range types** | **Not supported v1 (deliberation)** | v1 codegen fails — see [§ Range deliberation](#range-deliberation); recommended: two-column normalization |
 | **Arrays, JSON, binary, full-text** | **Hard ban v1** | No typed GraphQL surface without arbitrary JSON — normalize schema instead |
 

@@ -320,13 +320,13 @@ Document open-bound semantics in column comments (e.g. `NULL` upper bound = unbo
 
 ### Specialized types (rare)
 
-Network, geometric, and PostGIS column types are **supported but rare** — use only when the domain requires them. They are not in default entity templates:
+**Network** column types are **supported but rare** — use only when the domain requires them. They are not in default entity templates:
 
 | Category | PostgreSQL types | Drizzle builder | Notes |
 | -------- | ---------------- | --------------- | ----- |
-| **Network** | `inet`, `cidr`, `macaddr`, `macaddr8` | custom / extension | IP and MAC address storage |
-| **Geometric** | `point`, `line`, `lseg`, `box`, `path`, `polygon`, `circle` | custom | Native PostgreSQL geometry types |
-| **PostGIS** | `geometry`, `geography` | PostGIS extension | Requires PostGIS extension |
+| **Network** | `inet`, `cidr`, `macaddr` | custom / extension | GraphQL scalars **`IP`**, **`CIDR`**, **`MAC`** — see [dal-pg-type-mapping.md](dal-pg-type-mapping.md) |
+
+**Not supported v1:** **`macaddr8`**, all native **geometric** types, and **PostGIS** (`geometry`, `geography`) — entity validation and codegen fail.
 
 ### UUID keys
 

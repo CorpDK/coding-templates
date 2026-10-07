@@ -198,7 +198,7 @@ Inferred from Drizzle column constraints:
 
 * **Nullability** — `notNull()` columns reject absent/null on create; update follows absent-vs-null semantics (§9.3)
 * **Enum membership** — values must match Drizzle enum members exactly (case-sensitive; **UPPERCASE** / **SCREAMING_SNAKE_CASE** — §2.6)
-* **Custom scalar parse** — `DateTime`, `Date`, `TimeTz`, `BigInt`, `Decimal`, `IntervalMs` (§3.1); **`ID`** parse for `uuid` columns (RFC 4122 at repository layer)
+* **Custom scalar parse** — core and opt-in scalars per [custom DAL scalars registry](dal-pg-type-mapping.md#custom-dal-scalars-registry) (§3.1); **`ID`** parse for `uuid` columns (RFC 4122 at repository layer). Generated **`input-zod.ts`** uses **`dalScalarZod`** from `@corpdk/dal-core` so mutation/filter inputs match GraphQL parse rules.
 
 **No length, range, or regex constraints in v1.** Drizzle column length limits are not mirrored into GraphQL validation in v1.
 
@@ -311,7 +311,7 @@ id, createdAt, updatedAt, createdBy, updatedBy, deletedAt, deletedBy, …busines
 
 ### 3.1 Custom scalars
 
-Codegen emits **six core custom scalars** in the generated base SDL ([custom DAL scalars registry](dal-pg-type-mapping.md#custom-dal-scalars-registry)): **`DateTime`**, **`Date`**, **`TimeTz`**, **`BigInt`**, **`Decimal`**, **`IntervalMs`**. Opt-in custom scalars (`IP`, `MAC`, `GeoPoint`, `Geometry`, etc.) are emitted only when rare PG types appear in the Drizzle schema ([opt-in custom scalars](dal-pg-type-mapping.md#opt-in-custom-scalars-rare)).
+Codegen emits **six core custom scalars** in the generated base SDL ([custom DAL scalars registry](dal-pg-type-mapping.md#custom-dal-scalars-registry)): **`DateTime`**, **`Date`**, **`TimeTz`**, **`BigInt`**, **`Decimal`**, **`IntervalMs`**. Additional PG-accurate scalars (**`SmallInt`**, **`Double`**, **`InsensitiveString`**) and network scalars (**`IP`**, **`CIDR`**, **`MAC`**) are emitted only when matching columns exist ([opt-in custom scalars](dal-pg-type-mapping.md#opt-in-custom-scalars-rare)). Geometric, PostGIS, and **`macaddr8`** columns are **not supported v1** — codegen and `entity:lint` fail.
 
 Built-in GraphQL scalars (`Int`, `Float`, `String`, `Boolean`, **`ID`**) are used for supported PG types that do not require custom wire encoding ([PG → DAL mapping](dal-pg-type-mapping.md#pg-dal-type-mapping)).
 
@@ -1194,17 +1194,20 @@ Strongly typed inputs (no JSON). Codegen emits one filter input type per support
 
 | Filter input | Scalar columns | Operators |
 | ------------ | -------------- | --------- |
-| **`IntFilter`** | `smallint`, `integer` | `eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `in`, `notIn`, `isNull` (nullable columns only — §10.4.1) |
+| **`SmallIntFilter`** | `smallint` | Same as `IntFilter`; values are **`SmallInt`** |
+| **`IntFilter`** | `integer` | `eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `in`, `notIn`, `isNull` (nullable columns only — §10.4.1) |
 | **`BigIntFilter`** | `bigint` | Same as `IntFilter`; values are **`BigInt`** (string on wire) |
 | **`DecimalFilter`** | `numeric`, `decimal` | Same as `IntFilter`; values are **`Decimal`** (string on wire) |
-| **`FloatFilter`** | `real`, `double precision` | Same as `IntFilter`; values are **`Float`** |
+| **`FloatFilter`** | `real` | Same as `IntFilter`; values are **`Float`** |
+| **`DoubleFilter`** | `double precision` | Same as `IntFilter`; values are **`Double`** |
+| **`InsensitiveStringFilter`** | `citext` | Same operators as **`StringFilter`** (§10.3); values are **`InsensitiveString`** |
 | **`BooleanFilter`** | `boolean` | `eq` — **no `isNull`** (non-nullable boolean semantics) |
 | **`DateFilter`** | `date` | Same comparators as `IntFilter`; values are **`Date`** (`YYYY-MM-DD`) |
 | **`DateTimeFilter`** | `timestamptz` | Same comparators as `IntFilter`; values are **`DateTime`** (ISO-8601 UTC) |
 | **`TimeTzFilter`** | `timetz` | Same comparators as `IntFilter`; values are **`TimeTz`** (ISO-8601 time with offset) |
 | **`IntervalMsFilter`** | `interval` | Same comparators as `IntFilter`; values are **`IntervalMs`** (ms string on wire) |
 | **`IDFilter`** | `uuid` | `eq`, `neq`, `in`, `notIn` — values are GraphQL **`ID`**; RFC 4122 validated at repository layer |
-| **Opt-in `*Filter`** | network, geometric, PostGIS scalars | v1: **`eq`, `neq` only** ([opt-in custom scalars](dal-pg-type-mapping.md#opt-in-custom-scalars-rare)) |
+| **`IPFilter`**, **`CIDRFilter`**, **`MACFilter`** | `inet`, `cidr`, `macaddr` | v1: **`eq`, `neq`, `isNull`** (nullable columns only — §10.4.1) ([opt-in custom scalars](dal-pg-type-mapping.md#opt-in-custom-scalars-rare)) |
 
 ```graphql
 input BigIntFilter {
@@ -2064,10 +2067,12 @@ Codegen emits `<Entity>NumericFields` from Drizzle numeric scalars suitable for 
 
 | Included PG types | GraphQL scalar | Aggregate result type in `NumericResult` |
 | ----------------- | -------------- | ------------------------------------------ |
-| `smallint`, `integer` | `Int` | `Float` (SQL aggregate returns float/double) |
+| `smallint` | `SmallInt` | `Double` (SQL aggregate returns float/double) |
+| `integer` | `Int` | `Double` (SQL aggregate returns float/double) |
 | `bigint` | `BigInt` | `Decimal` (string on wire — preserves large sums) |
 | `numeric`, `decimal` | `Decimal` | `Decimal` |
-| `real`, `double precision` | `Float` | `Float` |
+| `real` | `Float` | `Float` |
+| `double precision` | `Double` | `Double` |
 
 ```graphql
 input <Entity>NumericFields {
@@ -2388,7 +2393,7 @@ This system provides:
 * Strongly typed aggregation
 * Unified `<entity>Changed` subscription with safe ID payloads and post-commit, best-effort delivery
 * GraphQL **`ID`** for all `uuid` columns (PKs, FKs, filters, cursors, subscription payloads) — RFC 4122 validated at repository layer ([UUID → ID tradeoffs](dal-pg-type-mapping.md#uuid--id-tradeoffs))
-* Custom **`DateTime`**, **`Date`**, **`TimeTz`**, **`BigInt`**, **`Decimal`**, and **`IntervalMs`** scalars with strict parse/serialize rules ([custom DAL scalars registry](dal-pg-type-mapping.md#custom-dal-scalars-registry), §3.1); opt-in scalars for rare network/geometric/PostGIS types
+* Custom **`DateTime`**, **`Date`**, **`TimeTz`**, **`BigInt`**, **`Decimal`**, and **`IntervalMs`** scalars with strict parse/serialize rules ([custom DAL scalars registry](dal-pg-type-mapping.md#custom-dal-scalars-registry), §3.1); PG-accurate and network opt-in scalars when matching columns exist (geometric / PostGIS / **`macaddr8`** banned v1)
 * Mandatory per-request **DataLoader** for **all** association navigation fields
 * **ColumnProjection** field-level selection on list/get queries
 * Configurable bulk atomicity with filter-based safety guards
@@ -2399,7 +2404,7 @@ This system provides:
 * Tamper-evident cursor signing (HMAC-SHA256) when `DAL_CURSOR_SECRET` is configured
 * **All scalar columns** filterable and sortable by default
 * **All Drizzle relations** exposed on GraphQL with navigation fields and DataLoaders
-* v1 field validation: nullability, enum membership, custom scalar parse (`DateTime`, `Date`, `TimeTz`, `BigInt`, `Decimal`, `IntervalMs`), `ID` validation for uuid columns — no length/range/regex constraints (§2.9)
+* v1 field validation: nullability, enum membership, custom scalar parse per [registry](dal-pg-type-mapping.md#custom-dal-scalars-registry), `ID` validation for uuid columns — no length/range/regex constraints at GraphQL layer (§2.9); Phase 5+ Drizzle check hints via generated Zod where inferred
 * **Repository subclass override** contract with sealed pipeline internals (§19.1)
 * **`READ COMMITTED`** transactions for atomic bulk and filter-based ops with row-level locks (§9.9)
 * **`MutationUserError` code taxonomy** with deterministic driver mapping and two-tier delivery (Appendix B, §9.0)
