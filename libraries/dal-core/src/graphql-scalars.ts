@@ -1,6 +1,6 @@
 import { GraphQLScalarType, Kind, type ValueNode } from "graphql";
 import { GraphQLBigInt, GraphQLDate, GraphQLDateTimeISO } from "graphql-scalars";
-import { GraphQLIP, GraphQLMAC, guildScalarForDalName } from "./guild-scalars.js";
+import { GraphQLIP, GraphQLMAC } from "./guild-scalars.js";
 import {
   parseBigInt,
   parseCidr,
@@ -35,9 +35,9 @@ export const DAL_CUSTOM_SCALAR_NAMES = [
   "SmallInt",
   "Double",
   "Citext",
-  "Inet",
+  "IP",
   "Cidr",
-  "MacAddr",
+  "MAC",
 ] as const;
 
 export type DalCustomScalarName = (typeof DAL_CUSTOM_SCALAR_NAMES)[number];
@@ -52,9 +52,9 @@ const SCALAR_DESCRIPTIONS: Record<DalCustomScalarName, string> = {
   SmallInt: "PostgreSQL smallint (16-bit signed integer).",
   Double: "IEEE 754 binary64 floating-point (PostgreSQL double precision).",
   Citext: "Case-insensitive text (PostgreSQL citext) on wire as string.",
-  Inet: "IPv4 or IPv6 host address (PostgreSQL inet).",
+  IP: "IPv4 or IPv6 host address (PostgreSQL inet).",
   Cidr: "IPv4 or IPv6 network in CIDR notation (PostgreSQL cidr).",
-  MacAddr: "MAC address in colon-separated hex (PostgreSQL macaddr).",
+  MAC: "MAC address in colon-separated hex (PostgreSQL macaddr).",
 };
 
 function parseStringLiteral(ast: ValueNode, scalarName: string): string {
@@ -228,23 +228,11 @@ const GraphQLDalCitext = wireScalar(
   (value) => serializeCitext(value as string | null | undefined),
 );
 
-const GraphQLDalInet = guildScalarForDalName(
-  GraphQLIP,
-  "Inet",
-  SCALAR_DESCRIPTIONS.Inet,
-);
-
 const GraphQLDalCidr = wireScalar(
   "Cidr",
   SCALAR_DESCRIPTIONS.Cidr,
   parseCidr,
   (value) => serializeCidr(value as string | null | undefined),
-);
-
-const GraphQLDalMacAddr = guildScalarForDalName(
-  GraphQLMAC,
-  "MacAddr",
-  SCALAR_DESCRIPTIONS.MacAddr,
 );
 
 const DAL_GRAPHQL_SCALAR_TYPES: Record<DalCustomScalarName, GraphQLScalarType> = {
@@ -257,9 +245,9 @@ const DAL_GRAPHQL_SCALAR_TYPES: Record<DalCustomScalarName, GraphQLScalarType> =
   SmallInt: GraphQLDalSmallInt,
   Double: GraphQLDalDouble,
   Citext: GraphQLDalCitext,
-  Inet: GraphQLDalInet,
+  IP: GraphQLIP,
   Cidr: GraphQLDalCidr,
-  MacAddr: GraphQLDalMacAddr,
+  MAC: GraphQLMAC,
 };
 
 /** GraphQL scalar type for SDL registry / Yoga (strict parseLiteral + dal-core wire). */

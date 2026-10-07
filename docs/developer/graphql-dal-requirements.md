@@ -311,7 +311,7 @@ id, createdAt, updatedAt, createdBy, updatedBy, deletedAt, deletedBy, …busines
 
 ### 3.1 Custom scalars
 
-Codegen emits **six core custom scalars** in the generated base SDL ([custom DAL scalars registry](dal-pg-type-mapping.md#custom-dal-scalars-registry)): **`DateTime`**, **`Date`**, **`TimeTz`**, **`BigInt`**, **`Decimal`**, **`IntervalMs`**. Opt-in custom scalars (`Inet`, `GeoPoint`, `Geometry`, etc.) are emitted only when rare PG types appear in the Drizzle schema ([opt-in custom scalars](dal-pg-type-mapping.md#opt-in-custom-scalars-rare)).
+Codegen emits **six core custom scalars** in the generated base SDL ([custom DAL scalars registry](dal-pg-type-mapping.md#custom-dal-scalars-registry)): **`DateTime`**, **`Date`**, **`TimeTz`**, **`BigInt`**, **`Decimal`**, **`IntervalMs`**. Opt-in custom scalars (`IP`, `MAC`, `GeoPoint`, `Geometry`, etc.) are emitted only when rare PG types appear in the Drizzle schema ([opt-in custom scalars](dal-pg-type-mapping.md#opt-in-custom-scalars-rare)).
 
 Built-in GraphQL scalars (`Int`, `Float`, `String`, `Boolean`, **`ID`**) are used for supported PG types that do not require custom wire encoding ([PG → DAL mapping](dal-pg-type-mapping.md#pg-dal-type-mapping)).
 

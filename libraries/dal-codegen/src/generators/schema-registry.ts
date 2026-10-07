@@ -37,9 +37,9 @@ type FilterInputName =
   | "TimeTzFilter"
   | "IntervalMsFilter"
   | "CitextFilter"
-  | "InetFilter"
+  | "IPFilter"
   | "CidrFilter"
-  | "MacAddrFilter";
+  | "MACFilter";
 
 export interface GraphqlEnumDef {
   name: string;
@@ -72,11 +72,11 @@ function customScalarForColumn(col: ColumnModel): CustomScalar | null {
     case "citext":
       return "Citext";
     case "inet":
-      return "Inet";
+      return "IP";
     case "cidr":
       return "Cidr";
     case "macaddr":
-      return "MacAddr";
+      return "MAC";
     default:
       return null;
   }
@@ -104,11 +104,11 @@ function filterForColumnKind(col: ColumnModel): FilterInputName | null {
     case "citext":
       return "CitextFilter";
     case "inet":
-      return "InetFilter";
+      return "IPFilter";
     case "cidr":
       return "CidrFilter";
     case "macaddr":
-      return "MacAddrFilter";
+      return "MACFilter";
     case "bigint":
       return "BigIntFilter";
     case "decimal":
@@ -173,9 +173,9 @@ function collectUsedTypes(entities: EntityModel[]): {
     "SmallInt",
     "Double",
     "Citext",
-    "Inet",
+    "IP",
     "Cidr",
-    "MacAddr",
+    "MAC",
   ];
   const filterOrder: FilterInputName[] = [
     "StringFilter",
@@ -192,9 +192,9 @@ function collectUsedTypes(entities: EntityModel[]): {
     "TimeTzFilter",
     "IntervalMsFilter",
     "CitextFilter",
-    "InetFilter",
+    "IPFilter",
     "CidrFilter",
-    "MacAddrFilter",
+    "MACFilter",
   ];
 
   return {
@@ -639,9 +639,9 @@ export function buildSchemaRegistry(entities: EntityModel[]): SchemaRegistry {
   const smallInt = customScalars.get("SmallInt");
   const doubleScalar = customScalars.get("Double");
   const citext = customScalars.get("Citext");
-  const inet = customScalars.get("Inet");
+  const ip = customScalars.get("IP");
   const cidr = customScalars.get("Cidr");
-  const macAddr = customScalars.get("MacAddr");
+  const mac = customScalars.get("MAC");
 
   const filterBuilders: Partial<Record<FilterInputName, () => GraphQLInputObjectType>> = {
     StringFilter: buildStringFilter,
@@ -685,20 +685,20 @@ export function buildSchemaRegistry(entities: EntityModel[]): SchemaRegistry {
       if (!citext) throw new Error("CitextFilter requires Citext scalar");
       return buildCitextFilter(citext);
     },
-    InetFilter: () => {
-      if (!inet) throw new Error("InetFilter requires Inet scalar");
-      return buildEqNeqNetworkFilter("InetFilter", "Filter operators for inet columns.", inet);
+    IPFilter: () => {
+      if (!ip) throw new Error("IPFilter requires IP scalar");
+      return buildEqNeqNetworkFilter("IPFilter", "Filter operators for inet columns.", ip);
     },
     CidrFilter: () => {
       if (!cidr) throw new Error("CidrFilter requires Cidr scalar");
       return buildEqNeqNetworkFilter("CidrFilter", "Filter operators for cidr columns.", cidr);
     },
-    MacAddrFilter: () => {
-      if (!macAddr) throw new Error("MacAddrFilter requires MacAddr scalar");
+    MACFilter: () => {
+      if (!mac) throw new Error("MACFilter requires MAC scalar");
       return buildEqNeqNetworkFilter(
-        "MacAddrFilter",
+        "MACFilter",
         "Filter operators for macaddr columns.",
-        macAddr,
+        mac,
       );
     },
   };

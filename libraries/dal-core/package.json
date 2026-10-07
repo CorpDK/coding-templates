@@ -1,6 +1,6 @@
 {
   "name": "@corpdk/dal-core",
-  "version": "2026.10.0-alpha.7",
+  "version": "2026.10.0-alpha.8",
   "description": "DAL shared types, filters, GraphQL scalars, and mutation error taxonomy",
   "type": "module",
   "publishConfig": {

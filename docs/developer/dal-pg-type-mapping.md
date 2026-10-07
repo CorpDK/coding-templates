@@ -86,9 +86,9 @@ Rare — codegen emits domain-specific scalars when these PG types appear in the
 
 | PG type | Drizzle builder | DAL support | DAL scalar | Filter | Sort | Aggregate | Notes |
 | ------- | --------------- | ----------- | ---------- | ------ | ---- | --------- | ----- |
-| `inet` | custom | Supported (custom scalar) | `Inet` | `InetFilter` | Yes | min/max | String — host IPv4/IPv6; Yoga resolver uses graphql-scalars **`GraphQLIP`** (`IP`) under SDL name `Inet` |
+| `inet` | custom | Supported (custom scalar) | `IP` | `IPFilter` | Yes | min/max | String — host IPv4/IPv6; SDL scalar **`IP`** from graphql-scalars **`GraphQLIP`** |
 | `cidr` | custom | Supported (custom scalar) | `Cidr` | `CidrFilter` | Yes | min/max | String — CIDR notation; **no** `graphql-scalars` CIDR export (v1.26) — minimal dal-core prefix check |
-| `macaddr` | custom | Supported (custom scalar) | `MacAddr` | `MacAddrFilter` | Yes | min/max | String — IEEE 802 MAC; Yoga resolver uses graphql-scalars **`GraphQLMAC`** (`MAC`) under SDL name `MacAddr` |
+| `macaddr` | custom | Supported (custom scalar) | `MAC` | `MACFilter` | Yes | min/max | String — IEEE 802 MAC; SDL scalar **`MAC`** from graphql-scalars **`GraphQLMAC`** |
 | `macaddr8` | custom | **Not supported v1** | — | — | — | — | Codegen and `entity:lint` fail — use `macaddr` or text |
 
 ### Geometric
@@ -193,9 +193,9 @@ Formal mapping for **supported** PostgreSQL types only:
 
 ## Custom DAL scalars registry
 
-Codegen emits **six core custom scalars** in the generated base SDL when those PG types appear ([§3.1](graphql-dal-requirements.md#31-custom-scalars)): **`DateTime`**, **`Date`**, **`TimeTz`**, **`BigInt`**, **`Decimal`**, **`IntervalMs`**. Additional PG-accurate scalars (**`SmallInt`**, **`Double`**, **`Citext`**) and network scalars (**`Inet`**, **`Cidr`**, **`MacAddr`**) are emitted only when matching columns exist. Built-in GraphQL scalars (`Int`, `Float`, `String`, `Boolean`, **`ID`**) remain for **`integer`**, **`real`**, `char`/`varchar`/`text`, `boolean`, and **`uuid`** respectively.
+Codegen emits **six core custom scalars** in the generated base SDL when those PG types appear ([§3.1](graphql-dal-requirements.md#31-custom-scalars)): **`DateTime`**, **`Date`**, **`TimeTz`**, **`BigInt`**, **`Decimal`**, **`IntervalMs`**. Additional PG-accurate scalars (**`SmallInt`**, **`Double`**, **`Citext`**) and network scalars (**`IP`**, **`Cidr`**, **`MAC`**) are emitted only when matching columns exist. Built-in GraphQL scalars (`Int`, `Float`, `String`, `Boolean`, **`ID`**) remain for **`integer`**, **`real`**, `char`/`varchar`/`text`, `boolean`, and **`uuid`** respectively.
 
-**GraphQL wire validation:** `@corpdk/dal-core` registers strict `GraphQLScalarType` instances for codegen SDL and Yoga (`parseValue` / `parseLiteral`). **`DateTime`**, **`Date`**, **`BigInt`**, **`Inet`**, and **`MacAddr`** delegate input validation to [graphql-scalars](https://the-guild.dev/graphql/scalars/docs) then normalize to dal-core wire; **`Cidr`** uses dal-core CIDR notation rules (Guild has no `CIDR` export in v1.26). Generated mutation/filter Zod imports **`dalScalarZod`**, **`zPgInt32`**, and **`zPgReal`** from `@corpdk/dal-core` so inputs match parse rules (including PG **`integer`** / **`real`** range guards on built-in `Int` / `Float`).
+**GraphQL wire validation:** `@corpdk/dal-core` registers strict `GraphQLScalarType` instances for codegen SDL and Yoga (`parseValue` / `parseLiteral`). **`DateTime`**, **`Date`**, **`BigInt`**, **`IP`**, and **`MAC`** delegate input validation to [graphql-scalars](https://the-guild.dev/graphql/scalars/docs) then normalize to dal-core wire; **`Cidr`** uses dal-core CIDR notation rules (Guild has no `CIDR` export in v1.26). Generated mutation/filter Zod imports **`dalScalarZod`**, **`zPgInt32`**, and **`zPgReal`** from `@corpdk/dal-core` so inputs match parse rules (including PG **`integer`** / **`real`** range guards on built-in `Int` / `Float`).
 
 | Scalar | Wire format | PG source types | Validation | Parse error |
 | ------ | ----------- | --------------- | ---------- | ----------- |
@@ -213,7 +213,7 @@ Codegen emits these **only when** the corresponding PG type appears in the Drizz
 | Group | Scalars | Wire format |
 | ----- | ------- | ------------- |
 | **PG-accurate** | `SmallInt`, `Double`, `Citext` | PG range / citext string wire |
-| **Network** | `Inet`, `Cidr`, `MacAddr` | Validated string in PG-native notation; filters v1 **`eq`/`neq`/`isNull`** |
+| **Network** | `IP`, `Cidr`, `MAC` | Validated string in PG-native notation; filters v1 **`eq`/`neq`/`isNull`** |
 
 Geometric and PostGIS PG types (`point`, `geometry`, etc.) and **`macaddr8`** are **not supported v1** — codegen and `entity:lint` fail with `PG_TYPE_BANNED` / schema load errors.
 

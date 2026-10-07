@@ -20,11 +20,11 @@ export function scalarForColumn(col: ColumnModel): string {
     case "citext":
       return "Citext";
     case "inet":
-      return "Inet";
+      return "IP";
     case "cidr":
       return "Cidr";
     case "macaddr":
-      return "MacAddr";
+      return "MAC";
     case "bigint":
       return "BigInt";
     case "decimal":
@@ -65,11 +65,11 @@ export function filterForColumn(col: ColumnModel): string {
     case "citext":
       return "CitextFilter";
     case "inet":
-      return "InetFilter";
+      return "IPFilter";
     case "cidr":
       return "CidrFilter";
     case "macaddr":
-      return "MacAddrFilter";
+      return "MACFilter";
     case "bigint":
       return "BigIntFilter";
     case "decimal":

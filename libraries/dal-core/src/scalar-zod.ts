@@ -114,11 +114,11 @@ const zDouble = z.number().finite().superRefine((val, ctx) => {
 
 const zCitext = wireStringSchema((v) => parseCitext(v));
 
-const zInet = wireStringSchema((v) => parseInet(v));
+const zIP = wireStringSchema((v) => parseInet(v));
 
 const zCidr = wireStringSchema((v) => parseCidr(v));
 
-const zMacAddr = wireStringSchema((v) => parseMacAddr(v));
+const zMAC = wireStringSchema((v) => parseMacAddr(v));
 
 /** Zod for GraphQL built-in Int mapped from PG `integer` (32-bit). */
 export const zPgInt32 = z
@@ -145,9 +145,9 @@ export const dalScalarZod = {
   SmallInt: zSmallInt,
   Double: zDouble,
   Citext: zCitext,
-  Inet: zInet,
+  IP: zIP,
   Cidr: zCidr,
-  MacAddr: zMacAddr,
+  MAC: zMAC,
 } as const;
 
 export type DalScalarZodName = keyof typeof dalScalarZod;

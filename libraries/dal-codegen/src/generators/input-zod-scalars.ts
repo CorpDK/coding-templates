@@ -11,9 +11,9 @@ export const DAL_SCALAR_ZOD_BY_NAME: Record<string, string> = {
   SmallInt: "dalScalarZod.SmallInt",
   Double: "dalScalarZod.Double",
   Citext: "dalScalarZod.Citext",
-  Inet: "dalScalarZod.Inet",
+  IP: "dalScalarZod.IP",
   Cidr: "dalScalarZod.Cidr",
-  MacAddr: "dalScalarZod.MacAddr",
+  MAC: "dalScalarZod.MAC",
 };
 
 export function dalScalarZodExprForColumnKind(kind: ColumnModel["kind"]): string | null {
@@ -37,11 +37,11 @@ export function dalScalarZodExprForColumnKind(kind: ColumnModel["kind"]): string
     case "citext":
       return DAL_SCALAR_ZOD_BY_NAME.Citext;
     case "inet":
-      return DAL_SCALAR_ZOD_BY_NAME.Inet;
+      return DAL_SCALAR_ZOD_BY_NAME.IP;
     case "cidr":
       return DAL_SCALAR_ZOD_BY_NAME.Cidr;
     case "macaddr":
-      return DAL_SCALAR_ZOD_BY_NAME.MacAddr;
+      return DAL_SCALAR_ZOD_BY_NAME.MAC;
     default:
       return null;
   }

@@ -43,12 +43,12 @@ describe("dal GraphQL scalars", () => {
     expect(() => si.parseValue(40_000)).toThrow(/out of range/i);
   });
 
-  it("Inet and MacAddr are graphql-scalars IP/MAC under DAL SDL names", () => {
-    expect(dalGraphQLScalar("Inet").name).toBe("Inet");
-    expect(dalGraphQLScalar("Inet").parseValue("192.0.2.1")).toBe("192.0.2.1");
-    expect(() => dalGraphQLScalar("Inet").parseValue("not-an-ip")).toThrow();
-    expect(dalGraphQLScalar("MacAddr").name).toBe("MacAddr");
-    expect(dalGraphQLScalar("MacAddr").parseValue("08:00:2B:01:02:03")).toBe(
+  it("IP and MAC use graphql-scalars GraphQLIP / GraphQLMAC", () => {
+    expect(dalGraphQLScalar("IP").name).toBe("IP");
+    expect(dalGraphQLScalar("IP").parseValue("192.0.2.1")).toBe("192.0.2.1");
+    expect(() => dalGraphQLScalar("IP").parseValue("not-an-ip")).toThrow();
+    expect(dalGraphQLScalar("MAC").name).toBe("MAC");
+    expect(dalGraphQLScalar("MAC").parseValue("08:00:2B:01:02:03")).toBe(
       "08:00:2B:01:02:03",
     );
   });
