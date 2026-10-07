@@ -1,6 +1,6 @@
 {
   "name": "@corpdk/create-ds",
-  "version": "2026.10.0-alpha.4",
+  "version": "2026.10.0-alpha.5",
   "description": "Scaffold and upgrade DAL-automated GraphQL data services",
   "type": "module",
   "publishConfig": {
@@ -18,11 +18,18 @@
     "canonical",
     "README.md"
   ],
+  "types": "./dist/types-entry.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types-entry.d.ts",
+      "import": "./dist/types-entry.js"
+    }
+  },
   "bin": {
     "create-ds": "./dist/index.js"
   },
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && pnpm exec tsc -p tsconfig.json --emitDeclarationOnly",
     "dev": "tsup --watch",
     "clean": "rm -rf dist node_modules .turbo"
   },

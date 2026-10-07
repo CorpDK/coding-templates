@@ -75,6 +75,35 @@ echo "Running DAL unit tests…"
 pnpm --filter @corpdk/dal-core test
 pnpm --filter @corpdk/dal-codegen test
 
+echo "Verifying TypeScript declarations in dist/…"
+verify_dist_types() {
+  local filter="$1"
+  local rel
+  case "${filter}" in
+    @corpdk/dal-core) rel="libraries/dal-core" ;;
+    @corpdk/pub-sub) rel="libraries/pub-sub" ;;
+    @corpdk/codegen-cli) rel="libraries/codegen-cli" ;;
+    @corpdk/dal-codegen) rel="libraries/dal-codegen" ;;
+    @corpdk/create-ds) rel="engines/create-ds" ;;
+    *)
+      echo "Unknown package: ${filter}" >&2
+      exit 1
+      ;;
+  esac
+  local types_file="dist/index.d.ts"
+  if [[ "${filter}" == "@corpdk/create-ds" ]]; then
+    types_file="dist/types-entry.d.ts"
+  fi
+  if [[ ! -f "${ROOT}/${rel}/${types_file}" ]]; then
+    echo "Missing ${rel}/${types_file} — build must emit declarations before publish." >&2
+    exit 1
+  fi
+}
+
+for name in "${PUBLISH_ORDER[@]}"; do
+  verify_dist_types "${name}"
+done
+
 # Prerelease CalVer (e.g. 2026.10.0-alpha.N) would otherwise get dist-tag "alpha", not "latest".
 publish_flags=(--no-git-checks --access public --tag latest)
 if [[ "${DRY_RUN}" == true ]]; then
