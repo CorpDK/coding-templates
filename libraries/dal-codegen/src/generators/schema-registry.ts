@@ -13,10 +13,14 @@ import {
   type GraphQLNamedType,
   type GraphQLType,
 } from "graphql";
+import {
+  dalGraphQLScalar,
+  type DalCustomScalarName,
+} from "@corpdk/dal-core";
 import type { ColumnModel, EntityModel } from "../model.js";
 import { filterableColumns, visibleOutputColumns } from "./schema-utils.js";
 
-type CustomScalar = "DateTime" | "Date" | "TimeTz" | "BigInt" | "Decimal" | "IntervalMs";
+type CustomScalar = DalCustomScalarName;
 
 type FilterInputName =
   | "StringFilter"
@@ -31,28 +35,14 @@ type FilterInputName =
   | "TimeTzFilter"
   | "IntervalMsFilter";
 
-const SCALAR_DOCS: Record<CustomScalar, string> = {
-  DateTime: "ISO-8601 UTC timestamp with milliseconds.",
-  Date: "ISO-8601 calendar date (YYYY-MM-DD).",
-  TimeTz: "ISO-8601 time with timezone offset.",
-  BigInt: "Signed 64-bit integer serialized as a decimal string.",
-  Decimal: "Arbitrary-precision decimal serialized as a string.",
-  IntervalMs: "Duration as signed milliseconds.",
-};
-
 export interface GraphqlEnumDef {
   name: string;
   values: string[];
 }
 
-function passthroughScalar(name: string, description: string): GraphQLScalarType {
-  return new GraphQLScalarType({
-    name,
-    description,
-    serialize: (value) => value,
-    parseValue: (value) => value,
-    parseLiteral: (ast) => ast,
-  });
+/** Custom scalars referenced by entity columns (stable order for SDL emission). */
+export function collectUsedDalScalars(entities: EntityModel[]): CustomScalar[] {
+  return collectUsedTypes(entities).scalars;
 }
 
 function customScalarForColumn(col: ColumnModel): CustomScalar | null {
@@ -439,7 +429,7 @@ export function buildSchemaRegistry(entities: EntityModel[]): SchemaRegistry {
 
   const customScalars = new Map<CustomScalar, GraphQLScalarType>();
   for (const scalar of scalars) {
-    const type = passthroughScalar(scalar, SCALAR_DOCS[scalar]);
+    const type = dalGraphQLScalar(scalar);
     customScalars.set(scalar, type);
     types.set(scalar, type);
   }

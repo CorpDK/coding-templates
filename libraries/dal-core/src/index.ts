@@ -1,6 +1,7 @@
 export * from "./types.js";
 export * from "./errors.js";
 export * from "./scalars.js";
+export * from "./graphql-scalars.js";
 export * from "./filters.js";
 export * from "./filter-ast.js";
 export * from "./query-translator.js";
