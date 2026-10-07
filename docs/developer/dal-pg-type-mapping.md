@@ -193,7 +193,7 @@ Formal mapping for **supported** PostgreSQL types only:
 
 Codegen emits **six core custom scalars** in the generated base SDL ([§3.1](graphql-dal-requirements.md#31-custom-scalars)). Built-in GraphQL scalars (`Int`, `Float`, `String`, `Boolean`, **`ID`**) are used where no precision or wire-format concerns exist.
 
-**GraphQL wire validation:** `@corpdk/dal-core` registers strict `GraphQLScalarType` instances for codegen SDL and Yoga (`parseValue` / `parseLiteral`). **`DateTime`** and **`Date`** delegate format checks to [graphql-scalars](https://the-guild.dev/graphql/scalars/docs) (`DateTimeISO`, `Date`) then normalize to the wire formats below; **`BigInt`**, **`Decimal`**, **`TimeTz`**, and **`IntervalMs`** use dal-core parse/serialize only (PG-specific semantics). Repository and Zod layers still apply the same rules on coerced inputs.
+**GraphQL wire validation:** `@corpdk/dal-core` registers strict `GraphQLScalarType` instances for codegen SDL and Yoga (`parseValue` / `parseLiteral`). **`DateTime`**, **`Date`**, and **`BigInt`** delegate input validation to [graphql-scalars](https://the-guild.dev/graphql/scalars/docs) (`DateTimeISO`, `Date`, `BigInt`) then normalize to the wire formats below ( **`BigInt`** always serializes as a decimal string and enforces signed 64-bit PG range via dal-core); **`Decimal`**, **`TimeTz`**, and **`IntervalMs`** use dal-core parse/serialize only (PG-specific semantics). Repository and Zod layers still apply the same rules on coerced inputs.
 
 | Scalar | Wire format | PG source types | Validation | Parse error |
 | ------ | ----------- | --------------- | ---------- | ----------- |

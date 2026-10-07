@@ -1,5 +1,5 @@
 import { GraphQLScalarType, Kind, type ValueNode } from "graphql";
-import { GraphQLDate, GraphQLDateTimeISO } from "graphql-scalars";
+import { GraphQLBigInt, GraphQLDate, GraphQLDateTimeISO } from "graphql-scalars";
 import {
   parseBigInt,
   parseDate,
@@ -41,6 +41,29 @@ function parseStringLiteral(ast: ValueNode, scalarName: string): string {
     throw new TypeError(`${scalarName} must be a string literal`);
   }
   return ast.value;
+}
+
+/** graphql-scalars BigInt accepts string/number; dal-core enforces signed int64 decimal string wire. */
+function parseBigIntWire(value: unknown): string {
+  const validated = GraphQLBigInt.parseValue(value);
+  const decimal =
+    typeof validated === "bigint"
+      ? validated.toString()
+      : typeof validated === "number"
+        ? Math.trunc(validated).toString()
+        : String(validated);
+  return parseBigInt(decimal);
+}
+
+function parseBigIntLiteral(ast: ValueNode): string {
+  const validated = GraphQLBigInt.parseLiteral(ast);
+  const decimal =
+    typeof validated === "bigint"
+      ? validated.toString()
+      : typeof validated === "number"
+        ? Math.trunc(validated).toString()
+        : String(validated);
+  return parseBigInt(decimal);
 }
 
 function wireScalar(
@@ -105,12 +128,14 @@ const GraphQLDalTimeTz = wireScalar(
   (value) => serializeTimeTz(value as string | null | undefined),
 );
 
-const GraphQLDalBigInt = wireScalar(
-  "BigInt",
-  SCALAR_DESCRIPTIONS.BigInt,
-  parseBigInt,
-  (value) => serializeBigInt(value as bigint | number | string | null | undefined),
-);
+const GraphQLDalBigInt = new GraphQLScalarType({
+  name: "BigInt",
+  description: SCALAR_DESCRIPTIONS.BigInt,
+  serialize: (value) =>
+    serializeBigInt(value as bigint | number | string | null | undefined),
+  parseValue: (value) => parseBigIntWire(value),
+  parseLiteral: (ast) => parseBigIntLiteral(ast),
+});
 
 const GraphQLDalDecimal = wireScalar(
   "Decimal",
