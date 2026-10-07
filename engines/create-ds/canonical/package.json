@@ -7,7 +7,7 @@
     "registry": "https://artifactory.corp.example.com/api/npm/npm-private/"
   },
   "scripts": {
-    "dev": "node --env-file .env --import tsx/esm --watch src/index.ts",
+    "dev": "node --env-file .env --import tsx/esm --import ./src/observability/preload-otel.ts --watch src/index.ts",
     "build": "tsc",
     "codegen": "graphql-codegen",
     "dal:codegen:schema": "node ./node_modules/@corpdk/dal-codegen/dist/cli.js --mode=schema",
@@ -15,7 +15,7 @@
     "dal:codegen:bootstrap": "node ./node_modules/@corpdk/dal-codegen/dist/cli.js --mode=bootstrap",
     "dal:codegen": "pnpm run dal:codegen:schema && pnpm run codegen && pnpm run dal:codegen:impl",
     "entity:lint": "node ./node_modules/@corpdk/dal-codegen/dist/lint-cli.js",
-    "start": "node dist/src/index.js",
+    "start": "node --import ./dist/src/observability/preload-otel.js dist/src/index.js",
     "lint": "eslint src/",
     "typecheck": "tsc --noEmit",
     "db:up": "docker compose up postgres -d",
@@ -36,7 +36,15 @@
     "graphql": "^16.13.2",
     "graphql-yoga": "^5.18.1",
     "ioredis": "^5.10.1",
-    "pg": "^8.20.0"
+    "pg": "^8.20.0",
+    "zod": "^4.3.6",
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.211.0",
+    "@opentelemetry/instrumentation-http": "^0.211.0",
+    "@opentelemetry/instrumentation-pg": "^0.61.0",
+    "@opentelemetry/resources": "^2.5.0",
+    "@opentelemetry/sdk-node": "^0.211.0",
+    "@opentelemetry/semantic-conventions": "^1.39.0"
   },
   "devDependencies": {
     "@corpdk/codegen-cli": "workspace:*",

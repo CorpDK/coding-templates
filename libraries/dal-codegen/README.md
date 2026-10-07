@@ -6,7 +6,7 @@ Typical pipeline in a DAL DS package:
 
 1. `dal-codegen --mode=schema` — emit GraphQL schema and DAL stubs
 2. `graphql-codegen` — SDK + resolver types (`@corpdk/codegen-cli`)
-3. `dal-codegen --mode=impl` — emit repository and resolver implementations
+3. `dal-codegen --mode=impl` — emit repository and resolver implementations, pub/sub wiring, and `input-zod.ts` (GraphQL input Zod + parse helpers)
 
 Depends on `@corpdk/dal-core`.
 

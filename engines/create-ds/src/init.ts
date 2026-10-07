@@ -6,6 +6,7 @@ import {
   isBundledCanonicalTemplate,
   initialScaffoldCalVer,
   readCreateDsReleaseVersion,
+  copyBootstrapStaticSrc,
   resolveCanonicalDsTemplateDir,
 } from "./template.js";
 import {
@@ -98,6 +99,8 @@ export async function runInit(options: InitOptions): Promise<void> {
       await fs.copyFile(path.join(templateDir, rel), path.join(targetDir, rel));
     }
   }
+
+  await copyBootstrapStaticSrc(templateDir, targetDir);
 
   s.stop("DS package scaffolded");
 }

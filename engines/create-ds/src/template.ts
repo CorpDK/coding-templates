@@ -1,3 +1,4 @@
+import fs from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -55,6 +56,30 @@ export function initialScaffoldCalVer(asOf: Date = new Date()): string {
   return `${year}.${month}.0`;
 }
 
+/** Health, observability, and validation modules referenced by bootstrap entry files. */
+export const BOOTSTRAP_STATIC_SRC_RELATIVE = [
+  "src/health.ts",
+  "src/validation/parse-input.ts",
+  "src/observability/otel-config.ts",
+  "src/observability/otel-smoke-extensions.ts",
+  "src/observability/preload-otel.ts",
+  "src/observability/yoga-tracing-plugin.ts",
+] as const;
+
+export async function copyBootstrapStaticSrc(
+  templateDir: string,
+  packageDir: string,
+): Promise<void> {
+  const { pathExists } = await import("./utils.js");
+  for (const rel of BOOTSTRAP_STATIC_SRC_RELATIVE) {
+    const templatePath = path.join(templateDir, rel);
+    if (!(await pathExists(templatePath))) continue;
+    const destPath = path.join(packageDir, rel);
+    await fs.mkdir(path.dirname(destPath), { recursive: true });
+    await fs.copyFile(templatePath, destPath);
+  }
+}
+
 /** Relative paths under templates/ds merged on upgrade (never touches src/db/schema/**). */
 export const UPGRADE_RELATIVE_FILES = [
   "LICENSE",
@@ -65,10 +90,12 @@ export const UPGRADE_RELATIVE_FILES = [
   "tsconfig.json",
   "Dockerfile",
   "docker-compose.yml",
+  "docker/otel-collector-config.yaml",
   "docker-entrypoint.sh",
   ".gitignore",
   ".env.example",
   "src/schema.ts",
   "src/index.ts",
   "src/db/index.ts",
+  ...BOOTSTRAP_STATIC_SRC_RELATIVE,
 ] as const;

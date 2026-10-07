@@ -14,6 +14,14 @@ Each package reads from its own `.env` file. Copy `.env.example` to `.env` in ea
 | `DATABASE_URL` | Drizzle connection string (PostgreSQL, MySQL, SQLite, CockroachDB)      |
 | `REDIS_URL`    | _(optional)_ Redis/Valkey URL — enables Redis pub/sub for subscriptions |
 
+Optional OpenTelemetry (see [DS observability](../developer/12-ds-observability.md)):
+
+| Variable                       | Description                                                                 |
+| ------------------------------ | --------------------------------------------------------------------------- |
+| `OTEL_EXPORTER_OTLP_ENDPOINT`  | OTLP HTTP base URL (e.g. `http://localhost:4318`; exporter appends `/v1/traces`); enables export when set |
+| `DS_OTEL_ENABLED`              | `true` enables tracing without relying on endpoint presence; `false` disables tracing even when `OTEL_EXPORTER_OTLP_ENDPOINT` is set; unset → on when endpoint is set |
+| `OTEL_SERVICE_NAME`            | Trace service name (default `@corpdk/ds`)                                   |
+
 Optional DAL runtime overrides (see [GraphQL DAL Requirements](../developer/graphql-dal-requirements.md)):
 
 | Variable               | Description                                                                 |

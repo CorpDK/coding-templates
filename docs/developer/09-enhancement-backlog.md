@@ -52,31 +52,7 @@ Add `.github/workflows/ci.yml` (or extend an existing workflow) for shared packa
 
 **Scope:** **`templates/ds` only** (`@corpdk/ds`, DAL automation). Manual DS templates (`ds-no-sql`, `ds-cdb`, `ds-mongo`, `ds-ddb`, `ds-file`) are out of scope here.
 
-### 1. Shared Zod schemas for GraphQL input types
-
-**Status:** Not started — validation is via generated repositories and GraphQL types; DAL codegen does not emit runtime Zod for inputs.
-
-Generate Zod from DAL-generated input shapes (merged SDL in `src/generated/generated-schema.ts` or a dedicated plugin in `@corpdk/dal-codegen`) for resolver-layer runtime checks and optional alignment with `ui-forms`.
-
-**Why it still matters:** Closes the gap between compile-time GraphQL types and runtime validation without hand-written duplicate schemas.
-
-### 2. OpenTelemetry tracing
-
-**Status:** Not started — no `@opentelemetry/*` in `templates/ds`.
-
-Instrument Yoga + DB access: span per operation (name, sanitized variables), DB latency. Export OTLP to Jaeger, Tempo, or any compatible backend.
-
-**Why it still matters:** Production DS deployments need request-level traces without locking to a vendor.
-
-### 3. Health check endpoint
-
-**Status:** Not started — GraphQL only; Docker Compose healthchecks target Postgres, not the Node process.
-
-Add `GET /health`: 200 when healthy, 503 when degraded; JSON `{ status, uptime, db: { connected, latencyMs }, version }` for load balancers and Kubernetes probes.
-
-**Why it still matters:** Orchestrators cannot use GraphQL POST for liveness/readiness.
-
-### 4. Rate limiting middleware
+### 1. Rate limiting middleware
 
 **Status:** Not started — no Yoga rate-limit plugin in `templates/ds`.
 
@@ -84,7 +60,7 @@ Per-operation limits via a Yoga plugin or `graphql-rate-limit`, keyed by IP or a
 
 **Why it still matters:** Protects the DS when no API gateway enforces quotas.
 
-### 5. Shared ESLint config (`templates/ds`)
+### 2. Shared ESLint config (`templates/ds`)
 
 **Status:** Not started — `package.json` defines `"lint": "eslint src/"` but there is no `eslint.config.mjs` and no `@corpdk/eslint-config` devDependency (unlike `templates/ui`).
 
@@ -92,7 +68,7 @@ Add `@corpdk/eslint-config` (base preset only — NodeNext ESM, not `./next`) an
 
 **Why it still matters:** Local and CI lint for the primary DS template should match the rest of the monorepo.
 
-### 6. Subscription resume (SSE)
+### 3. Subscription resume (SSE)
 
 **Status:** Not started — `templates/ds` publishes via `@corpdk/pub-sub` (memory or Redis) over **SSE** ([11-ds-subscription-sse.md](11-ds-subscription-sse.md)); reconnecting clients can miss events during gaps. Stock UI templates still use **graphql-ws** and are out of scope until they consume DS SSE.
 
@@ -100,8 +76,46 @@ Explore durable delivery for the DS side: checkpoint/resume after disconnect (e.
 
 **Why it still matters:** SSE clients need a defined recovery story once UIs migrate off WebSocket transport.
 
+### 4. Multiple mutation batching in a single transaction
+
+**Status:** Open — design needed — each generated mutation runs in its own Drizzle call today; no first-class “batch mutations, one transaction” API or Yoga extension.
+
+- **Atomicity:** Product flows (checkout, multi-entity updates) often require all-or-nothing commits; partial success from independent mutations is hard to roll back at the GraphQL layer.
+- **GraphQL batching vs explicit API:** HTTP/query batching does not imply a shared DB transaction; need a deliberate contract (e.g. `mutationBatch`, `@transaction` directive, or document-only pattern with shared `ctx.db.transaction()`).
+- **Drizzle boundaries:** Transaction scope must wrap repository calls codegen emits; connection pooling and nested transactions need clear rules.
+- **Resolver/codegen:** `dal-codegen` may need transaction-aware context, ordering guarantees, and error mapping so one failure aborts the whole batch.
+
+**Why it still matters:** Without a designed path, teams hand-roll transactions in custom resolvers and bypass generated repositories.
+
+### 5. Support for database views
+
+**Status:** Open — Drizzle schema in `templates/ds` models tables only; views are not introspected or mapped to GraphQL types.
+
+- Decide whether read-only views become DAL entities (queries, filters) or stay outside automation with manual SDL/resolvers.
+- Document limitations if views with joins, computed columns, or non-updatable shapes cannot be safely codegen’d.
+
+**Why it still matters:** Many Postgres schemas expose reporting or denormalized read models as views; teams need a supported or explicit unsupported story.
+
+### 6. Support for materialized views
+
+**Status:** Open — same scope as ordinary views, plus no refresh orchestration in the DS template.
+
+- GraphQL exposure likely read-only; clarify whether refresh is operator-driven (`REFRESH MATERIALIZED VIEW`), scheduled job, or out of scope.
+- Stale-read semantics and concurrent refresh affect API contracts and caching.
+
+**Why it still matters:** Analytics and aggregate snapshots often live in materialized views; DAL should not silently treat them as ordinary tables.
+
+### 7. Support for functions (stored procedures)
+
+**Status:** Open — no codegen path to declare or invoke Postgres functions/RPCs through repositories or dedicated mutations.
+
+- Map SQL functions to GraphQL fields or mutations with typed args/results, or document calling via raw Drizzle/`sql` in team-owned resolvers only.
+- Implications for permissions, side effects, and transaction participation when mixing function calls with generated CRUD.
+
+**Why it still matters:** Legacy and performance-critical logic often remains in the database; a consistent invoke story avoids ad hoc SQL in every app.
+
 ---
 
 **Related:** [UI Status Dashboard](06-ui-status.md) | [UI Package Design](../architecture/04-ui-package-design.md) | [Monorepo Design](../architecture/02-monorepo-design.md)
 
-**Last updated:** October 5, 2026
+**Last updated:** October 6, 2026

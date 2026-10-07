@@ -85,7 +85,7 @@ Other DS variants use the manual Repository Pattern (`IItemRepository` interface
 
 1. **Storage-agnostic resolvers** — resolvers in `schema.ts` call `itemRepository.findAll()` regardless of whether the backend is Prisma, Drizzle, MongoDB, or a file. This makes the GraphQL layer identical across all DS variants.
 2. **Testability** — the interface can be stubbed in tests without hitting a database.
-3. **Validation boundary** — Zod parsing happens in resolvers, before data enters the repository. Repository methods return validated application types, not raw ORM/driver types.
+3. **Validation boundary** — Zod parsing happens in resolvers, before data enters the repository. Repository methods return validated application types, not raw ORM/driver types. **`templates/ds`:** generated resolvers validate GraphQL inputs via `src/generated/dal/input-zod.ts` — see [DS observability § Runtime Zod](../developer/12-ds-observability.md#runtime-zod-for-graphql-inputs).
 
 See [Repository Pattern](../developer/03-repository-pattern.md) for the full implementation guide.
 

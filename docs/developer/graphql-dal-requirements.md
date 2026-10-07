@@ -520,7 +520,7 @@ Per entity, codegen emits:
 | **Command** | `pnpm dal:codegen` (meta: **`dal:codegen:schema`** → **`pnpm codegen`** → **`dal:codegen:impl`**) |
 | **Phase 1 output** | **`src/generated/generated-schema.ts`**, **`src/generated/entity-records.ts`**, **`src/generated/graphql-codegen.mappers.ts`** (gitignored) |
 | **Phase 2 output** | **`src/generated/graphql/resolvers.generated.ts`** (graphql-codegen; gitignored) — plus `@corpdk/ds-sdk` / `@corpdk/ds-cli` SDK outputs |
-| **Phase 3 output** | **`src/generated/dal/`** repositories, resolvers, pubsub (wiped each impl run; gitignored) |
+| **Phase 3 output** | **`src/generated/dal/`** repositories, resolvers, pubsub, **`input-zod.ts`** (wiped each impl run; gitignored) |
 | **Output** | Full idempotent regen across all phases above — run locally or via Turbo before `@corpdk/ds#dev` / `#build` |
 | **Invalid schema** | **Fails codegen** (non-zero exit); CI treats this as a gate |
 | **Turbo pipeline** | Only **`@corpdk/ds`** defines `dal:codegen`; Turbo wires it into `@corpdk/ds#dev`, `@corpdk/ds#build`, and DS `codegen` |
@@ -532,7 +532,7 @@ Codegen parses Drizzle tables, enums, indexes, and relations, validates entity s
 
 **Phase 2 runtime:** `@corpdk/dal-core` **FilterAST**, **QueryTranslator**, and per-entity **QueryEngine** power list/count/connection/aggregate and filter-based bulk mutations. Drizzle `relations()` inference emits **navigation fields** on output types (FK scalars omitted from output; retained on create/update inputs and internal records for DataLoaders). **AssociationFilter** (`some` / `every` / `none`) and nested M:1 filters compile through QueryTranslator. **Per-request DataLoaders** resolve all navigation fields. **Bulk mutations** (`bulkCreate`, `bulkUpdate`, `bulkDelete`, `*ByFilter`) with atomic/partial semantics and filter-based safety guards (`confirmDeleteAll` / `confirmUpdateAll`, row cap via `DAL_BULK_FILTER_MAX`, default 1000).
 
-**Phase 3 runtime:** optional **HMAC-SHA256** cursor signing when `DAL_CURSOR_SECRET` is set (§13); **ColumnProjection** on list/get/connection reads from GraphQL selection sets (§17.2); **`entity:lint`** CLI for Drizzle entity design validation. See [dal-phase3.md](dal-phase3.md).
+**Phase 3 runtime:** optional **HMAC-SHA256** cursor signing when `DAL_CURSOR_SECRET` is set (§13); **ColumnProjection** on list/get/connection reads from GraphQL selection sets (§17.2); **`entity:lint`** CLI for Drizzle entity design validation; generated **`input-zod.ts`** with resolver-boundary Zod for GraphQL input objects (mutations → payload `userErrors`, queries → `BAD_USER_INPUT`). See [dal-phase3.md](dal-phase3.md) and [DS observability § Runtime Zod](12-ds-observability.md#runtime-zod-for-graphql-inputs).
 
 **Phase 4 runtime:** filter-field **index coverage** enforcement via `entity:lint` and optional `strict: true` in `dal/dal.config.yaml` (§17.1). See [dal-phase4.md](dal-phase4.md).
 
