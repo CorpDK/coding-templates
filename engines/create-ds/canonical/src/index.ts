@@ -1,9 +1,13 @@
 import { createServer } from "node:http";
 import { createYoga } from "graphql-yoga";
 import { schema, createRequestContext } from "./schema.js";
+import { handleHealthRequest } from "./health.js";
+import { yogaTracingPlugin } from "./observability/yoga-tracing-plugin.js";
 
 const PORT = Number(process.env.DS_PORT);
 if (!PORT) throw new Error("DS_PORT env var is required");
+
+const serverStartedAt = Date.now();
 
 const yoga = createYoga({
   schema,
@@ -14,13 +18,22 @@ const yoga = createYoga({
   },
   graphiql: process.env.NODE_ENV !== "production",
   logging: true,
+  plugins: [yogaTracingPlugin()],
 });
 
-const server = createServer(yoga);
+const server = createServer((req, res) => {
+  const url = req.url?.split("?")[0];
+  if (url === "/health") {
+    void handleHealthRequest(req, res, serverStartedAt);
+    return;
+  }
+  yoga(req, res);
+});
 
 server.listen(PORT, () => {
   const base = `http://localhost:${PORT}/graphql`;
   console.log(`@corpdk/ds  HTTP  ${base}`);
+  console.log(`@corpdk/ds  health  http://localhost:${PORT}/health`);
   console.log(
     `@corpdk/ds  SSE   ${base}  (subscriptions: Accept: text/event-stream)`,
   );

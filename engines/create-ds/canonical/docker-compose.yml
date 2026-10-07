@@ -32,6 +32,18 @@ services:
     environment:
       DS_PORT: "4000"
       DATABASE_URL: postgresql://user:pass@postgres:5432/corpdk_ds
+      DS_OTEL_ENABLED: ${DS_OTEL_ENABLED:-}
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-}
+      DS_OTEL_SMOKE_TEST: ${DS_OTEL_SMOKE_TEST:-}
+      OTEL_SERVICE_NAME: ${OTEL_SERVICE_NAME:-corpdk-ds-docker}
+
+  otel-collector:
+    profiles: ["otel"]
+    image: otel/opentelemetry-collector-contrib:0.120.0
+    container_name: corpdk-ds-otel-collector
+    command: ["--config=/etc/otelcol/config.yaml"]
+    volumes:
+      - ./docker/otel-collector-config.yaml:/etc/otelcol/config.yaml:ro
 
 volumes:
   corpdk_ds_pgdata:
