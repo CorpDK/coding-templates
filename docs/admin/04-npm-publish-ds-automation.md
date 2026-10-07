@@ -6,7 +6,7 @@ CI workflow and release process for the **lockstep CalVer** DS automation stack 
 
 ## Package set (npmjs)
 
-These five packages ship together at the same CalVer (e.g. `2026.10.0-alpha.2`):
+These five packages ship together at the same CalVer (e.g. `2026.10.0-alpha.5`):
 
 | Order | Package               | Path                    | Role                                        |
 | ----- | --------------------- | ----------------------- | ------------------------------------------- |
