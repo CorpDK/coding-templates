@@ -283,9 +283,10 @@ Tracked here until applied. Remove entries as they are completed.
 | 2026-03-29 | typescript                            | ^5.9.3   | ^6.0.2   | Major bump; added rootDir to ui-\* tsconfig.build.json; ignoreDeprecations for tsup baseUrl      |
 | 2026-10-05 | publishable `@corpdk/*` (lockstep)    | —        | —        | CalVer `2026.3.0-alpha.1` → `2026.10.0-alpha.1`; `@corpdk/create-ds`; root MIT `LICENSE`         |
 | 2026-10-05 | DS automation npm (lockstep)          | —        | —        | CalVer `2026.10.0-alpha.1` → `2026.10.0-alpha.2`; package READMEs for npmjs                      |
+| 2026-10-07 | DS automation npm (lockstep)          | —        | —        | CalVer `2026.10.0-alpha.4` → `2026.10.0-alpha.5`; npm `.d.ts` + `exports`/`types`; publish script gate |
 
 ---
 
 **Related**: [Monorepo Design](02-monorepo-design.md) | [Monorepo Overview](../developer/01-monorepo-overview.md)
 
-**Last updated**: October 5, 2026
+**Last updated**: October 7, 2026

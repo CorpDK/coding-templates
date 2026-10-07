@@ -160,7 +160,7 @@ npm login --registry=https://registry.npmjs.org
 .github/scripts/publish-ds-automation.sh "${VERSION}"
 ```
 
-The script verifies lockstep versions, runs `pnpm turbo run build` and the same DAL tests as CI, then `pnpm publish --no-git-checks --access public --tag latest` in dependency order:
+The script verifies lockstep versions, runs `pnpm turbo run build`, the same DAL tests as CI, and **declaration output in `dist/`** (see [What CI runs](#what-ci-runs) step 4), then `pnpm publish --no-git-checks --access public --tag latest` in dependency order:
 
 1. `@corpdk/dal-core`
 2. `@corpdk/pub-sub`
@@ -186,6 +186,13 @@ pnpm turbo run build \
 
 pnpm --filter @corpdk/dal-core test
 pnpm --filter @corpdk/dal-codegen test
+
+# Same declaration paths as publish-ds-automation.sh verify_dist_types
+test -f libraries/dal-core/dist/index.d.ts
+test -f libraries/pub-sub/dist/index.d.ts
+test -f libraries/codegen-cli/dist/index.d.ts
+test -f libraries/dal-codegen/dist/index.d.ts
+test -f engines/create-ds/dist/types-entry.d.ts
 
 for pkg in @corpdk/dal-core @corpdk/pub-sub @corpdk/codegen-cli @corpdk/dal-codegen @corpdk/create-ds; do
   pnpm --filter "${pkg}" publish --no-git-checks --access public --tag latest
