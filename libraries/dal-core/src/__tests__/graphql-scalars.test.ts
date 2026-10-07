@@ -53,8 +53,9 @@ describe("dal GraphQL scalars", () => {
     );
   });
 
-  it("Cidr uses dal-core parse (no graphql-scalars CIDR export)", () => {
-    expect(dalGraphQLScalar("Cidr").parseValue("192.0.2.0/24")).toBe("192.0.2.0/24");
-    expect(() => dalGraphQLScalar("Cidr").parseValue("192.0.2.1")).toThrow();
+  it("CIDR uses dal-core parse (no graphql-scalars CIDR export)", () => {
+    expect(dalGraphQLScalar("CIDR").name).toBe("CIDR");
+    expect(dalGraphQLScalar("CIDR").parseValue("192.0.2.0/24")).toBe("192.0.2.0/24");
+    expect(() => dalGraphQLScalar("CIDR").parseValue("192.0.2.1")).toThrow();
   });
 });

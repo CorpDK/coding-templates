@@ -12,7 +12,7 @@ export const DAL_SCALAR_ZOD_BY_NAME: Record<string, string> = {
   Double: "dalScalarZod.Double",
   Citext: "dalScalarZod.Citext",
   IP: "dalScalarZod.IP",
-  Cidr: "dalScalarZod.Cidr",
+  CIDR: "dalScalarZod.CIDR",
   MAC: "dalScalarZod.MAC",
 };
 
@@ -39,7 +39,7 @@ export function dalScalarZodExprForColumnKind(kind: ColumnModel["kind"]): string
     case "inet":
       return DAL_SCALAR_ZOD_BY_NAME.IP;
     case "cidr":
-      return DAL_SCALAR_ZOD_BY_NAME.Cidr;
+      return DAL_SCALAR_ZOD_BY_NAME.CIDR;
     case "macaddr":
       return DAL_SCALAR_ZOD_BY_NAME.MAC;
     default:

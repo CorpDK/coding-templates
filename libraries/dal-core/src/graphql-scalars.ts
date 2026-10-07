@@ -36,7 +36,7 @@ export const DAL_CUSTOM_SCALAR_NAMES = [
   "Double",
   "Citext",
   "IP",
-  "Cidr",
+  "CIDR",
   "MAC",
 ] as const;
 
@@ -53,7 +53,7 @@ const SCALAR_DESCRIPTIONS: Record<DalCustomScalarName, string> = {
   Double: "IEEE 754 binary64 floating-point (PostgreSQL double precision).",
   Citext: "Case-insensitive text (PostgreSQL citext) on wire as string.",
   IP: "IPv4 or IPv6 host address (PostgreSQL inet).",
-  Cidr: "IPv4 or IPv6 network in CIDR notation (PostgreSQL cidr).",
+  CIDR: "IPv4 or IPv6 network in CIDR notation (PostgreSQL cidr).",
   MAC: "MAC address in colon-separated hex (PostgreSQL macaddr).",
 };
 
@@ -228,9 +228,9 @@ const GraphQLDalCitext = wireScalar(
   (value) => serializeCitext(value as string | null | undefined),
 );
 
-const GraphQLDalCidr = wireScalar(
-  "Cidr",
-  SCALAR_DESCRIPTIONS.Cidr,
+const GraphQLDalCIDR = wireScalar(
+  "CIDR",
+  SCALAR_DESCRIPTIONS.CIDR,
   parseCidr,
   (value) => serializeCidr(value as string | null | undefined),
 );
@@ -246,7 +246,7 @@ const DAL_GRAPHQL_SCALAR_TYPES: Record<DalCustomScalarName, GraphQLScalarType> =
   Double: GraphQLDalDouble,
   Citext: GraphQLDalCitext,
   IP: GraphQLIP,
-  Cidr: GraphQLDalCidr,
+  CIDR: GraphQLDalCIDR,
   MAC: GraphQLMAC,
 };
 

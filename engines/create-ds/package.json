@@ -1,6 +1,6 @@
 {
   "name": "@corpdk/create-ds",
-  "version": "2026.10.0-alpha.8",
+  "version": "2026.10.0-alpha.9",
   "description": "Scaffold and upgrade DAL-automated GraphQL data services",
   "type": "module",
   "publishConfig": {

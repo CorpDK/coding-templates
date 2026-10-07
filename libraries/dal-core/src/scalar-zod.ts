@@ -146,7 +146,7 @@ export const dalScalarZod = {
   Double: zDouble,
   Citext: zCitext,
   IP: zIP,
-  Cidr: zCidr,
+  CIDR: zCidr,
   MAC: zMAC,
 } as const;
 

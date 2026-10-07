@@ -217,7 +217,7 @@ const CIDR_RE =
 
 export function parseCidr(value: unknown): string {
   if (typeof value !== "string" || !CIDR_RE.test(value)) {
-    throw new TypeError("Cidr must be valid CIDR notation");
+    throw new TypeError("CIDR must be valid CIDR notation");
   }
   return value;
 }

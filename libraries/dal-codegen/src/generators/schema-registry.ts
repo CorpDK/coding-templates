@@ -38,7 +38,7 @@ type FilterInputName =
   | "IntervalMsFilter"
   | "CitextFilter"
   | "IPFilter"
-  | "CidrFilter"
+  | "CIDRFilter"
   | "MACFilter";
 
 export interface GraphqlEnumDef {
@@ -74,7 +74,7 @@ function customScalarForColumn(col: ColumnModel): CustomScalar | null {
     case "inet":
       return "IP";
     case "cidr":
-      return "Cidr";
+      return "CIDR";
     case "macaddr":
       return "MAC";
     default:
@@ -106,7 +106,7 @@ function filterForColumnKind(col: ColumnModel): FilterInputName | null {
     case "inet":
       return "IPFilter";
     case "cidr":
-      return "CidrFilter";
+      return "CIDRFilter";
     case "macaddr":
       return "MACFilter";
     case "bigint":
@@ -174,7 +174,7 @@ function collectUsedTypes(entities: EntityModel[]): {
     "Double",
     "Citext",
     "IP",
-    "Cidr",
+    "CIDR",
     "MAC",
   ];
   const filterOrder: FilterInputName[] = [
@@ -193,7 +193,7 @@ function collectUsedTypes(entities: EntityModel[]): {
     "IntervalMsFilter",
     "CitextFilter",
     "IPFilter",
-    "CidrFilter",
+    "CIDRFilter",
     "MACFilter",
   ];
 
@@ -640,7 +640,7 @@ export function buildSchemaRegistry(entities: EntityModel[]): SchemaRegistry {
   const doubleScalar = customScalars.get("Double");
   const citext = customScalars.get("Citext");
   const ip = customScalars.get("IP");
-  const cidr = customScalars.get("Cidr");
+  const cidr = customScalars.get("CIDR");
   const mac = customScalars.get("MAC");
 
   const filterBuilders: Partial<Record<FilterInputName, () => GraphQLInputObjectType>> = {
@@ -689,9 +689,9 @@ export function buildSchemaRegistry(entities: EntityModel[]): SchemaRegistry {
       if (!ip) throw new Error("IPFilter requires IP scalar");
       return buildEqNeqNetworkFilter("IPFilter", "Filter operators for inet columns.", ip);
     },
-    CidrFilter: () => {
-      if (!cidr) throw new Error("CidrFilter requires Cidr scalar");
-      return buildEqNeqNetworkFilter("CidrFilter", "Filter operators for cidr columns.", cidr);
+    CIDRFilter: () => {
+      if (!cidr) throw new Error("CIDRFilter requires CIDR scalar");
+      return buildEqNeqNetworkFilter("CIDRFilter", "Filter operators for cidr columns.", cidr);
     },
     MACFilter: () => {
       if (!mac) throw new Error("MACFilter requires MAC scalar");

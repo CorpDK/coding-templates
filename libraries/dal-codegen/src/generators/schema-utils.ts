@@ -22,7 +22,7 @@ export function scalarForColumn(col: ColumnModel): string {
     case "inet":
       return "IP";
     case "cidr":
-      return "Cidr";
+      return "CIDR";
     case "macaddr":
       return "MAC";
     case "bigint":
@@ -67,7 +67,7 @@ export function filterForColumn(col: ColumnModel): string {
     case "inet":
       return "IPFilter";
     case "cidr":
-      return "CidrFilter";
+      return "CIDRFilter";
     case "macaddr":
       return "MACFilter";
     case "bigint":
