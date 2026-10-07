@@ -212,7 +212,12 @@ const GraphQLDalIntervalMs = new GraphQLScalarType({
   serialize: (value) =>
     serializeIntervalMs(value as string | number | bigint | null | undefined),
   parseValue: (value) => parseIntervalMs(value),
-  parseLiteral: (ast) => parseIntervalMs(parseIntLiteral(ast, "IntervalMs")),
+  parseLiteral: (ast) => {
+    if (ast.kind === Kind.STRING) {
+      return parseIntervalMs(ast.value);
+    }
+    return parseIntervalMs(parseIntLiteral(ast, "IntervalMs"));
+  },
 });
 
 const GraphQLDalSmallInt = numericScalar(

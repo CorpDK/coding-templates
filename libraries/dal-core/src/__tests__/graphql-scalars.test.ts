@@ -80,6 +80,9 @@ describe("dal GraphQL scalars", () => {
     const iv = dalGraphQLScalar("IntervalMs");
     expect(iv.parseLiteral({ kind: Kind.INT, value: "1500" }, {})).toBe("1500");
     expect(iv.parseLiteral({ kind: Kind.STRING, value: "1500" }, {})).toBe("1500");
+    const largeMs = "9007199254740993";
+    expect(iv.parseValue(largeMs)).toBe(largeMs);
+    expect(iv.parseLiteral({ kind: Kind.STRING, value: largeMs }, {})).toBe(largeMs);
     expect(() => iv.parseLiteral({ kind: Kind.FLOAT, value: "1.5" }, {})).toThrow();
   });
 });
