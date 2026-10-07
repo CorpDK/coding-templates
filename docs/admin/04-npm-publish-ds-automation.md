@@ -106,7 +106,7 @@ Requires npm login with publish access on each package.
 ## Release checklist (maintainers)
 
 1. On a branch: bump **all five** `package.json` `version` fields to the same CalVer, update package READMEs as needed, and update [Package Dependencies](../architecture/06-package-dependencies.md) upgrade log if you track releases there.
-2. Open a PR to `main` — the workflow runs **dry-run** (build, tests, packaging) on the PR.
+2. Open a PR to `main` — the workflow runs **dry-run** (build, tests, **`dist/` declaration check**, packaging) on the PR.
 3. **First release only:** if any of the five packages are missing on npmjs, complete [First-time bootstrap](#first-time-bootstrap-packages-not-on-npm-yet) (local `npm login` / `NPM_TOKEN`, not OIDC) **before** merge or use break-glass dispatch after bootstrap.
 4. Confirm [trusted publishing](#configure-trusted-publishing-on-npmjs) is configured on npm for all five packages (one-time per package; only after each package exists on the registry).
 5. **Merge to `main`.** CI detects the CalVer bump in `libraries/dal-core`, live-publishes all five packages, creates tag `ds-automation/v<CalVer>`, and opens the GitHub Release. Maintainers do **not** push release tags manually for normal releases.
@@ -142,7 +142,7 @@ Use `npm login` or `//registry.npmjs.org/:_authToken=${NPM_TOKEN}` in `~/.npmrc`
 | **Monorepo**             | Checkout `main` (or the branch that contains [`.github/scripts/publish-ds-automation.sh`](../../.github/scripts/publish-ds-automation.sh)) with all five `package.json` files at the **same** CalVer you intend to ship.                          |
 | **Scoped public access** | Each package already has `"publishConfig": { "access": "public" }`. The **first** publish of a scoped package must still pass `--access public` (the publish script does this). Scoped modules default to restricted until you publish as public. |
 
-Do **not** use GitHub Actions OIDC for this step — trusted publishing is configured **after** the initial tarball upload. Pull requests that touch DS automation still run the workflow in **dry-run** mode (build, tests, `npm publish --dry-run`) with **no** registry auth, which validates packaging before bootstrap.
+Do **not** use GitHub Actions OIDC for this step — trusted publishing is configured **after** the initial tarball upload. Pull requests that touch DS automation still run the workflow in **dry-run** mode (build, tests, **`dist/` declaration check**, `npm publish --dry-run`) with **no** registry auth, which validates packaging before bootstrap.
 
 #### One-time publish (recommended: existing script)
 
