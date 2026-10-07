@@ -53,6 +53,13 @@ describe("dal GraphQL scalars", () => {
     );
   });
 
+  it("InsensitiveString accepts string wire (PostgreSQL citext)", () => {
+    const ins = dalGraphQLScalar("InsensitiveString");
+    expect(ins.name).toBe("InsensitiveString");
+    expect(ins.parseValue("Hello")).toBe("Hello");
+    expect(() => ins.parseValue(42)).toThrow(/InsensitiveString must be a string/);
+  });
+
   it("CIDR uses dal-core parse (no graphql-scalars CIDR export)", () => {
     expect(dalGraphQLScalar("CIDR").name).toBe("CIDR");
     expect(dalGraphQLScalar("CIDR").parseValue("192.0.2.0/24")).toBe("192.0.2.0/24");

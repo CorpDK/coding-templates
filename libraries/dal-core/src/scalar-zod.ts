@@ -112,7 +112,7 @@ const zDouble = z.number().finite().superRefine((val, ctx) => {
   }
 });
 
-const zCitext = wireStringSchema((v) => parseCitext(v));
+const zInsensitiveString = wireStringSchema((v) => parseCitext(v));
 
 const zIP = wireStringSchema((v) => parseInet(v));
 
@@ -144,7 +144,7 @@ export const dalScalarZod = {
   IntervalMs: zIntervalMs,
   SmallInt: zSmallInt,
   Double: zDouble,
-  Citext: zCitext,
+  InsensitiveString: zInsensitiveString,
   IP: zIP,
   CIDR: zCidr,
   MAC: zMAC,

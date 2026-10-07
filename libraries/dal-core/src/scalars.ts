@@ -181,14 +181,14 @@ export function parseReal(value: unknown): number {
 export function serializeCitext(value: string | null | undefined): string | null {
   if (value == null) return null;
   if (typeof value !== "string") {
-    throw new TypeError("Citext must be a string");
+    throw new TypeError("InsensitiveString must be a string");
   }
   return value;
 }
 
 export function parseCitext(value: unknown): string {
   if (typeof value !== "string") {
-    throw new TypeError("Citext must be a string");
+    throw new TypeError("InsensitiveString must be a string");
   }
   return value;
 }

@@ -34,7 +34,7 @@ export const DAL_CUSTOM_SCALAR_NAMES = [
   "IntervalMs",
   "SmallInt",
   "Double",
-  "Citext",
+  "InsensitiveString",
   "IP",
   "CIDR",
   "MAC",
@@ -51,7 +51,7 @@ const SCALAR_DESCRIPTIONS: Record<DalCustomScalarName, string> = {
   IntervalMs: "Duration as signed milliseconds.",
   SmallInt: "PostgreSQL smallint (16-bit signed integer).",
   Double: "IEEE 754 binary64 floating-point (PostgreSQL double precision).",
-  Citext: "Case-insensitive text (PostgreSQL citext) on wire as string.",
+  InsensitiveString: "Case-insensitive text (PostgreSQL citext) on wire as string.",
   IP: "IPv4 or IPv6 host address (PostgreSQL inet).",
   CIDR: "IPv4 or IPv6 network in CIDR notation (PostgreSQL cidr).",
   MAC: "MAC address in colon-separated hex (PostgreSQL macaddr).",
@@ -221,9 +221,9 @@ const GraphQLDalDouble = numericScalar(
   (ast) => parseFloatLiteral(ast, "Double"),
 );
 
-const GraphQLDalCitext = wireScalar(
-  "Citext",
-  SCALAR_DESCRIPTIONS.Citext,
+const GraphQLDalInsensitiveString = wireScalar(
+  "InsensitiveString",
+  SCALAR_DESCRIPTIONS.InsensitiveString,
   parseCitext,
   (value) => serializeCitext(value as string | null | undefined),
 );
@@ -244,7 +244,7 @@ const DAL_GRAPHQL_SCALAR_TYPES: Record<DalCustomScalarName, GraphQLScalarType> =
   IntervalMs: GraphQLDalIntervalMs,
   SmallInt: GraphQLDalSmallInt,
   Double: GraphQLDalDouble,
-  Citext: GraphQLDalCitext,
+  InsensitiveString: GraphQLDalInsensitiveString,
   IP: GraphQLIP,
   CIDR: GraphQLDalCIDR,
   MAC: GraphQLMAC,

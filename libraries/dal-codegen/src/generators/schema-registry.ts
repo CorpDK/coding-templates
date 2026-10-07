@@ -36,7 +36,7 @@ type FilterInputName =
   | "DateFilter"
   | "TimeTzFilter"
   | "IntervalMsFilter"
-  | "CitextFilter"
+  | "InsensitiveStringFilter"
   | "IPFilter"
   | "CIDRFilter"
   | "MACFilter";
@@ -70,7 +70,7 @@ function customScalarForColumn(col: ColumnModel): CustomScalar | null {
     case "double":
       return "Double";
     case "citext":
-      return "Citext";
+      return "InsensitiveString";
     case "inet":
       return "IP";
     case "cidr":
@@ -102,7 +102,7 @@ function filterForColumnKind(col: ColumnModel): FilterInputName | null {
     case "double":
       return "DoubleFilter";
     case "citext":
-      return "CitextFilter";
+      return "InsensitiveStringFilter";
     case "inet":
       return "IPFilter";
     case "cidr":
@@ -172,7 +172,7 @@ function collectUsedTypes(entities: EntityModel[]): {
     "IntervalMs",
     "SmallInt",
     "Double",
-    "Citext",
+    "InsensitiveString",
     "IP",
     "CIDR",
     "MAC",
@@ -191,7 +191,7 @@ function collectUsedTypes(entities: EntityModel[]): {
     "DateFilter",
     "TimeTzFilter",
     "IntervalMsFilter",
-    "CitextFilter",
+    "InsensitiveStringFilter",
     "IPFilter",
     "CIDRFilter",
     "MACFilter",
@@ -354,16 +354,18 @@ function buildDoubleFilter(doubleScalar: GraphQLScalarType): GraphQLInputObjectT
   });
 }
 
-function buildCitextFilter(citext: GraphQLScalarType): GraphQLInputObjectType {
+function buildInsensitiveStringFilter(
+  insensitiveString: GraphQLScalarType,
+): GraphQLInputObjectType {
   return new GraphQLInputObjectType({
-    name: "CitextFilter",
+    name: "InsensitiveStringFilter",
     description: "Filter operators for citext columns.",
     fields: {
-      eq: { type: citext },
-      neq: { type: citext },
-      like: { type: citext },
-      in: { type: new GraphQLList(new GraphQLNonNull(citext)) },
-      notIn: { type: new GraphQLList(new GraphQLNonNull(citext)) },
+      eq: { type: insensitiveString },
+      neq: { type: insensitiveString },
+      like: { type: insensitiveString },
+      in: { type: new GraphQLList(new GraphQLNonNull(insensitiveString)) },
+      notIn: { type: new GraphQLList(new GraphQLNonNull(insensitiveString)) },
       isNull: {
         type: GraphQLBoolean,
         description: "True = IS NULL; false = IS NOT NULL; nullable columns only.",
@@ -638,7 +640,7 @@ export function buildSchemaRegistry(entities: EntityModel[]): SchemaRegistry {
   const intervalMs = customScalars.get("IntervalMs");
   const smallInt = customScalars.get("SmallInt");
   const doubleScalar = customScalars.get("Double");
-  const citext = customScalars.get("Citext");
+  const insensitiveString = customScalars.get("InsensitiveString");
   const ip = customScalars.get("IP");
   const cidr = customScalars.get("CIDR");
   const mac = customScalars.get("MAC");
@@ -681,9 +683,11 @@ export function buildSchemaRegistry(entities: EntityModel[]): SchemaRegistry {
       if (!intervalMs) throw new Error("IntervalMsFilter requires IntervalMs scalar");
       return buildIntervalMsFilter(intervalMs);
     },
-    CitextFilter: () => {
-      if (!citext) throw new Error("CitextFilter requires Citext scalar");
-      return buildCitextFilter(citext);
+    InsensitiveStringFilter: () => {
+      if (!insensitiveString) {
+        throw new Error("InsensitiveStringFilter requires InsensitiveString scalar");
+      }
+      return buildInsensitiveStringFilter(insensitiveString);
     },
     IPFilter: () => {
       if (!ip) throw new Error("IPFilter requires IP scalar");

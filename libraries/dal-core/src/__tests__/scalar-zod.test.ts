@@ -41,6 +41,8 @@ describe("dalScalarZod", () => {
     expect(dalScalarZod.SmallInt.safeParse(32_767).success).toBe(true);
     expect(dalScalarZod.SmallInt.safeParse(50_000).success).toBe(false);
     expect(dalScalarZod.Double.safeParse(1.5).success).toBe(true);
+    expect(dalScalarZod.InsensitiveString.safeParse("abc").success).toBe(true);
+    expect(dalScalarZod.InsensitiveString.safeParse(1).success).toBe(false);
     expect(zPgInt32.safeParse(2_147_483_647).success).toBe(true);
     expect(zPgInt32.safeParse(2_147_483_648).success).toBe(false);
     expect(zPgReal.safeParse(1.0).success).toBe(true);

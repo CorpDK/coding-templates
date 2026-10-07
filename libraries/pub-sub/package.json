@@ -1,6 +1,6 @@
 {
   "name": "@corpdk/pub-sub",
-  "version": "2026.10.0-alpha.9",
+  "version": "2026.10.0-alpha.10",
   "description": "Plugin-style GraphQL pub/sub factory (in-memory or Redis)",
   "type": "module",
   "publishConfig": {

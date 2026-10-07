@@ -10,7 +10,7 @@ export const DAL_SCALAR_ZOD_BY_NAME: Record<string, string> = {
   IntervalMs: "dalScalarZod.IntervalMs",
   SmallInt: "dalScalarZod.SmallInt",
   Double: "dalScalarZod.Double",
-  Citext: "dalScalarZod.Citext",
+  InsensitiveString: "dalScalarZod.InsensitiveString",
   IP: "dalScalarZod.IP",
   CIDR: "dalScalarZod.CIDR",
   MAC: "dalScalarZod.MAC",
@@ -35,7 +35,7 @@ export function dalScalarZodExprForColumnKind(kind: ColumnModel["kind"]): string
     case "double":
       return DAL_SCALAR_ZOD_BY_NAME.Double;
     case "citext":
-      return DAL_SCALAR_ZOD_BY_NAME.Citext;
+      return DAL_SCALAR_ZOD_BY_NAME.InsensitiveString;
     case "inet":
       return DAL_SCALAR_ZOD_BY_NAME.IP;
     case "cidr":

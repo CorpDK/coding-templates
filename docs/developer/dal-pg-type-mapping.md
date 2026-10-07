@@ -33,7 +33,7 @@ Comprehensive coverage for **PostgreSQL** (primary Drizzle dialect). Other SQL d
 | `char(n)` | `char()` | Supported | `String` | `StringFilter` | Yes | min/max | Fixed-length; trailing spaces trimmed on read |
 | `varchar(n)` | `varchar()` | Supported | `String` | `StringFilter` | Yes | min/max | |
 | `text` | `text()` | Supported | `String` | `StringFilter` | Yes | min/max | Actor columns (`createdBy`, etc.) use `text` |
-| `citext` | custom / extension | Supported | `Citext` | `CitextFilter` | Yes | min/max | Custom scalar; filter uses `caseInsensitive: true` |
+| `citext` | custom / extension | Supported | `InsensitiveString` | `InsensitiveStringFilter` | Yes | min/max | Custom scalar; filter uses `isCaseInsensitive` |
 | `name` | `name()` (internal) | Not supported | — | — | — | — | PostgreSQL catalog type — not for entity columns |
 
 ### Boolean
@@ -161,7 +161,7 @@ Formal mapping for **supported** PostgreSQL types only:
 | `real` | `Float` | `Float` | `FloatFilter` | `<Entity>Field` | NumericFields / ComparableFields | `Float` in cursor `values` |
 | `double precision` | `Double` | `Double` | `DoubleFilter` | `<Entity>Field` | NumericFields / ComparableFields | `Double` in cursor `values` |
 | `char`, `varchar`, `text` | `String` | `String` | `StringFilter` | `<Entity>Field` | ComparableFields (min/max) | `String` in cursor `values` |
-| `citext` | `Citext` | `Citext` | `CitextFilter` | `<Entity>Field` | ComparableFields (min/max) | `Citext` in cursor `values` |
+| `citext` | `InsensitiveString` | `InsensitiveString` | `InsensitiveStringFilter` | `<Entity>Field` | ComparableFields (min/max) | `InsensitiveString` in cursor `values` |
 | `boolean` | `Boolean` | `Boolean` | `BooleanFilter` | `<Entity>Field` | — | `Boolean` in cursor `values` |
 | `date` | `Date` | `Date` | `DateFilter` | `<Entity>Field` | ComparableFields (min/max) | `Date` in cursor `values` |
 | `timestamptz` | `DateTime` | `DateTime` | `DateTimeFilter` | `<Entity>Field` | ComparableFields (min/max) | `DateTime` in cursor `values` |
@@ -184,7 +184,7 @@ Formal mapping for **supported** PostgreSQL types only:
 | **`timestamp` (no TZ)** | **Not supported** | Ambiguous local time — **`timestamptz` only** ([§3.1](graphql-dal-requirements.md#31-custom-scalars), entity design) |
 | **`interval`** | Custom **`IntervalMs`** scalar — **milliseconds on wire** | Signed 64-bit integer as decimal string; PG `interval` ↔ total ms conversion in repository layer; JS/API convention, sub-second precision, avoids float |
 | **`uuid`** | GraphQL built-in **`ID`** — not a custom scalar | Relay/node identification convention; RFC 4122 validation at repository/DB — see [UUID → ID tradeoffs](#uuid--id-tradeoffs) |
-| **`citext`** | **Supported** as `String` | Case-insensitive storage in PG; DAL filter uses existing `StringFilter.caseInsensitive` |
+| **`citext`** | Custom **`InsensitiveString`** scalar | Case-insensitive storage in PG (`citext` extension); wire as string; **`InsensitiveStringFilter.isCaseInsensitive`** for matching |
 | **Network, geometric, PostGIS** | **Supported (custom scalar, opt-in)** | Rare domain types — codegen emits when present in Drizzle schema; not in default templates; filters v1 limited to `eq` / `neq` |
 | **Range types** | **Not supported v1 (deliberation)** | v1 codegen fails — see [§ Range deliberation](#range-deliberation); recommended: two-column normalization |
 | **Arrays, JSON, binary, full-text** | **Hard ban v1** | No typed GraphQL surface without arbitrary JSON — normalize schema instead |
@@ -193,7 +193,7 @@ Formal mapping for **supported** PostgreSQL types only:
 
 ## Custom DAL scalars registry
 
-Codegen emits **six core custom scalars** in the generated base SDL when those PG types appear ([§3.1](graphql-dal-requirements.md#31-custom-scalars)): **`DateTime`**, **`Date`**, **`TimeTz`**, **`BigInt`**, **`Decimal`**, **`IntervalMs`**. Additional PG-accurate scalars (**`SmallInt`**, **`Double`**, **`Citext`**) and network scalars (**`IP`**, **`CIDR`**, **`MAC`**) are emitted only when matching columns exist. Built-in GraphQL scalars (`Int`, `Float`, `String`, `Boolean`, **`ID`**) remain for **`integer`**, **`real`**, `char`/`varchar`/`text`, `boolean`, and **`uuid`** respectively.
+Codegen emits **six core custom scalars** in the generated base SDL when those PG types appear ([§3.1](graphql-dal-requirements.md#31-custom-scalars)): **`DateTime`**, **`Date`**, **`TimeTz`**, **`BigInt`**, **`Decimal`**, **`IntervalMs`**. Additional PG-accurate scalars (**`SmallInt`**, **`Double`**, **`InsensitiveString`**) and network scalars (**`IP`**, **`CIDR`**, **`MAC`**) are emitted only when matching columns exist. Built-in GraphQL scalars (`Int`, `Float`, `String`, `Boolean`, **`ID`**) remain for **`integer`**, **`real`**, `char`/`varchar`/`text`, `boolean`, and **`uuid`** respectively.
 
 **GraphQL wire validation:** `@corpdk/dal-core` registers strict `GraphQLScalarType` instances for codegen SDL and Yoga (`parseValue` / `parseLiteral`). **`DateTime`**, **`Date`**, **`BigInt`**, **`IP`**, and **`MAC`** delegate input validation to [graphql-scalars](https://the-guild.dev/graphql/scalars/docs) then normalize to dal-core wire; **`CIDR`** uses dal-core CIDR notation rules (Guild has no `CIDR` export in v1.26). Generated mutation/filter Zod imports **`dalScalarZod`**, **`zPgInt32`**, and **`zPgReal`** from `@corpdk/dal-core` so inputs match parse rules (including PG **`integer`** / **`real`** range guards on built-in `Int` / `Float`).
 
@@ -212,7 +212,7 @@ Codegen emits these **only when** the corresponding PG type appears in the Drizz
 
 | Group | Scalars | Wire format |
 | ----- | ------- | ------------- |
-| **PG-accurate** | `SmallInt`, `Double`, `Citext` | PG range / citext string wire |
+| **PG-accurate** | `SmallInt`, `Double`, `InsensitiveString` | PG range / citext string wire |
 | **Network** | `IP`, `CIDR`, `MAC` | Validated string in PG-native notation; filters v1 **`eq`/`neq`/`isNull`** |
 
 Geometric and PostGIS PG types (`point`, `geometry`, etc.) and **`macaddr8`** are **not supported v1** — codegen and `entity:lint` fail with `PG_TYPE_BANNED` / schema load errors.

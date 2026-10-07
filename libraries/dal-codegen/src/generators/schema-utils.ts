@@ -18,7 +18,7 @@ export function scalarForColumn(col: ColumnModel): string {
     case "double":
       return "Double";
     case "citext":
-      return "Citext";
+      return "InsensitiveString";
     case "inet":
       return "IP";
     case "cidr":
@@ -63,7 +63,7 @@ export function filterForColumn(col: ColumnModel): string {
     case "double":
       return "DoubleFilter";
     case "citext":
-      return "CitextFilter";
+      return "InsensitiveStringFilter";
     case "inet":
       return "IPFilter";
     case "cidr":
