@@ -30,6 +30,13 @@ describe("dalScalarZod", () => {
     expect(dalScalarZod.IntervalMs.safeParse("9223372036854775808").success).toBe(false);
   });
 
+  it("Inet and MacAddr use graphql-scalars via parseInet / parseMacAddr", () => {
+    expect(dalScalarZod.Inet.safeParse("192.0.2.1").success).toBe(true);
+    expect(dalScalarZod.Inet.safeParse("bad").success).toBe(false);
+    expect(dalScalarZod.MacAddr.safeParse("08:00:2B:01:02:03").success).toBe(true);
+    expect(dalScalarZod.MacAddr.safeParse("not-mac").success).toBe(false);
+  });
+
   it("SmallInt, Double, and zPgInt32 / zPgReal enforce PG ranges", () => {
     expect(dalScalarZod.SmallInt.safeParse(32_767).success).toBe(true);
     expect(dalScalarZod.SmallInt.safeParse(50_000).success).toBe(false);

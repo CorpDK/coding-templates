@@ -1,11 +1,6 @@
 import { GraphQLScalarType, Kind, type ValueNode } from "graphql";
-import {
-  GraphQLBigInt,
-  GraphQLDate,
-  GraphQLDateTimeISO,
-  GraphQLIP,
-  GraphQLMAC,
-} from "graphql-scalars";
+import { GraphQLBigInt, GraphQLDate, GraphQLDateTimeISO } from "graphql-scalars";
+import { GraphQLIP, GraphQLMAC, guildScalarForDalName } from "./guild-scalars.js";
 import {
   parseBigInt,
   parseCidr,
@@ -14,9 +9,7 @@ import {
   parseDateTime,
   parseDecimal,
   parseDouble,
-  parseInet,
   parseIntervalMs,
-  parseMacAddr,
   parseSmallInt,
   parseTimeTz,
   serializeBigInt,
@@ -26,9 +19,7 @@ import {
   serializeDateTime,
   serializeDecimal,
   serializeDouble,
-  serializeInet,
   serializeIntervalMs,
-  serializeMacAddr,
   serializeSmallInt,
   serializeTimeTz,
 } from "./scalars.js";
@@ -111,26 +102,6 @@ function parseBigIntLiteral(ast: ValueNode): string {
         ? Math.trunc(validated).toString()
         : String(validated);
   return parseBigInt(decimal);
-}
-
-function parseInetWire(value: unknown): string {
-  const validated = GraphQLIP.parseValue(value);
-  return parseInet(String(validated));
-}
-
-function parseInetLiteral(ast: ValueNode): string {
-  const validated = GraphQLIP.parseLiteral(ast);
-  return parseInet(String(validated));
-}
-
-function parseMacAddrWire(value: unknown): string {
-  const validated = GraphQLMAC.parseValue(value);
-  return parseMacAddr(String(validated));
-}
-
-function parseMacAddrLiteral(ast: ValueNode): string {
-  const validated = GraphQLMAC.parseLiteral(ast);
-  return parseMacAddr(String(validated));
 }
 
 function wireScalar(
@@ -257,13 +228,11 @@ const GraphQLDalCitext = wireScalar(
   (value) => serializeCitext(value as string | null | undefined),
 );
 
-const GraphQLDalInet = new GraphQLScalarType({
-  name: "Inet",
-  description: SCALAR_DESCRIPTIONS.Inet,
-  serialize: (value) => serializeInet(value as string | null | undefined),
-  parseValue: (value) => parseInetWire(value),
-  parseLiteral: (ast) => parseInetLiteral(ast),
-});
+const GraphQLDalInet = guildScalarForDalName(
+  GraphQLIP,
+  "Inet",
+  SCALAR_DESCRIPTIONS.Inet,
+);
 
 const GraphQLDalCidr = wireScalar(
   "Cidr",
@@ -272,13 +241,11 @@ const GraphQLDalCidr = wireScalar(
   (value) => serializeCidr(value as string | null | undefined),
 );
 
-const GraphQLDalMacAddr = new GraphQLScalarType({
-  name: "MacAddr",
-  description: SCALAR_DESCRIPTIONS.MacAddr,
-  serialize: (value) => serializeMacAddr(value as string | null | undefined),
-  parseValue: (value) => parseMacAddrWire(value),
-  parseLiteral: (ast) => parseMacAddrLiteral(ast),
-});
+const GraphQLDalMacAddr = guildScalarForDalName(
+  GraphQLMAC,
+  "MacAddr",
+  SCALAR_DESCRIPTIONS.MacAddr,
+);
 
 const DAL_GRAPHQL_SCALAR_TYPES: Record<DalCustomScalarName, GraphQLScalarType> = {
   DateTime: GraphQLDalDateTime,

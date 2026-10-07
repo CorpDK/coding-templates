@@ -86,9 +86,9 @@ Rare — codegen emits domain-specific scalars when these PG types appear in the
 
 | PG type | Drizzle builder | DAL support | DAL scalar | Filter | Sort | Aggregate | Notes |
 | ------- | --------------- | ----------- | ---------- | ------ | ---- | --------- | ----- |
-| `inet` | custom | Supported (custom scalar) | `Inet` | `InetFilter` | Yes | min/max | String — CIDR/IP notation; validated on parse |
-| `cidr` | custom | Supported (custom scalar) | `Cidr` | `CidrFilter` | Yes | min/max | String — CIDR notation |
-| `macaddr` | custom | Supported (custom scalar) | `MacAddr` | `MacAddrFilter` | Yes | min/max | String — colon-separated hex (e.g. `08:00:2b:01:02:03`) |
+| `inet` | custom | Supported (custom scalar) | `Inet` | `InetFilter` | Yes | min/max | String — host IPv4/IPv6; Yoga resolver uses graphql-scalars **`GraphQLIP`** (`IP`) under SDL name `Inet` |
+| `cidr` | custom | Supported (custom scalar) | `Cidr` | `CidrFilter` | Yes | min/max | String — CIDR notation; **no** `graphql-scalars` CIDR export (v1.26) — minimal dal-core prefix check |
+| `macaddr` | custom | Supported (custom scalar) | `MacAddr` | `MacAddrFilter` | Yes | min/max | String — IEEE 802 MAC; Yoga resolver uses graphql-scalars **`GraphQLMAC`** (`MAC`) under SDL name `MacAddr` |
 | `macaddr8` | custom | **Not supported v1** | — | — | — | — | Codegen and `entity:lint` fail — use `macaddr` or text |
 
 ### Geometric

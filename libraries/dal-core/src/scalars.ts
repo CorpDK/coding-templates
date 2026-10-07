@@ -1,3 +1,4 @@
+import { guildParseIP, guildParseMAC, guildSerializeIP, guildSerializeMAC } from "./guild-scalars.js";
 import {
   PG_INT64_MAX,
   PG_INT64_MIN,
@@ -194,14 +195,12 @@ export function parseCitext(value: unknown): string {
 
 export function serializeInet(value: string | null | undefined): string | null {
   if (value == null) return null;
-  return parseInet(value);
+  return guildSerializeIP(value);
 }
 
+/** PostgreSQL inet — validation via graphql-scalars `GraphQLIP`. */
 export function parseInet(value: unknown): string {
-  if (typeof value !== "string") {
-    throw new TypeError("Inet must be a string");
-  }
-  return value;
+  return guildParseIP(value);
 }
 
 export function serializeCidr(value: string | null | undefined): string | null {
@@ -209,7 +208,10 @@ export function serializeCidr(value: string | null | undefined): string | null {
   return parseCidr(value);
 }
 
-/** PostgreSQL CIDR notation (IPv4 or IPv6 with prefix). */
+/**
+ * PostgreSQL cidr — graphql-scalars has no CIDR scalar (v1.26); minimal prefix check only.
+ * Host portion is not fully validated like Guild `IP` (CIDR allows network bits in host).
+ */
 const CIDR_RE =
   /^(?:(?:25[0-5]|2[0-4]\d|[01]?\d?\d)(?:\.(?:25[0-5]|2[0-4]\d|[01]?\d?\d)){3}|(?:[0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4})\/\d{1,3}$/;
 
@@ -222,16 +224,12 @@ export function parseCidr(value: unknown): string {
 
 export function serializeMacAddr(value: string | null | undefined): string | null {
   if (value == null) return null;
-  return parseMacAddr(value);
+  return guildSerializeMAC(value);
 }
 
-const MAC_ADDR_RE = /^([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}$/;
-
+/** PostgreSQL macaddr — validation via graphql-scalars `GraphQLMAC` (colon, dash, or dot separators). */
 export function parseMacAddr(value: unknown): string {
-  if (typeof value !== "string" || !MAC_ADDR_RE.test(value)) {
-    throw new TypeError("MacAddr must be colon-separated hex (aa:bb:cc:dd:ee:ff)");
-  }
-  return value.toLowerCase();
+  return guildParseMAC(value);
 }
 
 export function parsePgInt32(value: unknown): number {

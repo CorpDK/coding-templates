@@ -43,10 +43,18 @@ describe("dal GraphQL scalars", () => {
     expect(() => si.parseValue(40_000)).toThrow(/out of range/i);
   });
 
-  it("Inet and MacAddr delegate to graphql-scalars then normalize wire", () => {
+  it("Inet and MacAddr are graphql-scalars IP/MAC under DAL SDL names", () => {
+    expect(dalGraphQLScalar("Inet").name).toBe("Inet");
     expect(dalGraphQLScalar("Inet").parseValue("192.0.2.1")).toBe("192.0.2.1");
+    expect(() => dalGraphQLScalar("Inet").parseValue("not-an-ip")).toThrow();
+    expect(dalGraphQLScalar("MacAddr").name).toBe("MacAddr");
     expect(dalGraphQLScalar("MacAddr").parseValue("08:00:2B:01:02:03")).toBe(
-      "08:00:2b:01:02:03",
+      "08:00:2B:01:02:03",
     );
+  });
+
+  it("Cidr uses dal-core parse (no graphql-scalars CIDR export)", () => {
+    expect(dalGraphQLScalar("Cidr").parseValue("192.0.2.0/24")).toBe("192.0.2.0/24");
+    expect(() => dalGraphQLScalar("Cidr").parseValue("192.0.2.1")).toThrow();
   });
 });

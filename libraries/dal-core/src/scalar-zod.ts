@@ -1,10 +1,4 @@
-import {
-  GraphQLBigInt,
-  GraphQLDate,
-  GraphQLDateTimeISO,
-  GraphQLIP,
-  GraphQLMAC,
-} from "graphql-scalars";
+import { GraphQLBigInt, GraphQLDate, GraphQLDateTimeISO } from "graphql-scalars";
 import { z, type ZodType } from "zod";
 import {
   PG_INT32_MAX,
@@ -120,25 +114,11 @@ const zDouble = z.number().finite().superRefine((val, ctx) => {
 
 const zCitext = wireStringSchema((v) => parseCitext(v));
 
-const zInet = z.string().superRefine((val, ctx) => {
-  try {
-    GraphQLIP.parseValue(val);
-    parseInet(val);
-  } catch (error) {
-    issueFromError(ctx, error);
-  }
-});
+const zInet = wireStringSchema((v) => parseInet(v));
 
 const zCidr = wireStringSchema((v) => parseCidr(v));
 
-const zMacAddr = z.string().superRefine((val, ctx) => {
-  try {
-    GraphQLMAC.parseValue(val);
-    parseMacAddr(val);
-  } catch (error) {
-    issueFromError(ctx, error);
-  }
-});
+const zMacAddr = wireStringSchema((v) => parseMacAddr(v));
 
 /** Zod for GraphQL built-in Int mapped from PG `integer` (32-bit). */
 export const zPgInt32 = z
