@@ -218,7 +218,6 @@ export function serializeCidr(value: string | null | undefined): string | null {
  * Host portion is not fully validated like Guild `IP` (CIDR allows network bits in host).
  */
 const CIDR_IPV4_HOST_RE = /^(?:\d{1,3}\.){3}\d{1,3}$/;
-const CIDR_IPV6_HOST_RE = /^(?:[0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$/i;
 
 function assertIpv4CidrHost(host: string): void {
   if (!CIDR_IPV4_HOST_RE.test(host)) {
@@ -232,6 +231,14 @@ function assertIpv4CidrHost(host: string): void {
     if (n > 255) {
       throw new TypeError("CIDR must be valid CIDR notation");
     }
+  }
+}
+
+function assertIpv6CidrHost(host: string): void {
+  try {
+    guildParseIP(host);
+  } catch {
+    throw new TypeError("CIDR must be valid CIDR notation");
   }
 }
 
@@ -250,12 +257,11 @@ export function parseCidr(value: unknown): string {
     if (!Number.isInteger(prefix) || prefix < 0 || prefix > 32) {
       throw new TypeError("CIDR must be valid CIDR notation");
     }
-  } else if (CIDR_IPV6_HOST_RE.test(host)) {
+  } else {
+    assertIpv6CidrHost(host);
     if (!Number.isInteger(prefix) || prefix < 0 || prefix > 128) {
       throw new TypeError("CIDR must be valid CIDR notation");
     }
-  } else {
-    throw new TypeError("CIDR must be valid CIDR notation");
   }
   return value;
 }
