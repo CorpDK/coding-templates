@@ -105,7 +105,7 @@ function sortInputTypesTopologically(
 function scalarZodExpr(type: GraphQLScalarType): string {
   if (type === GraphQLString) return "z.string()";
   if (type === GraphQLBoolean) return "z.boolean()";
-  if (type === GraphQLID) return "z.string()";
+  if (type === GraphQLID) return "z.string().uuid()";
   if (type === GraphQLInt) return "z.number().int()";
   if (type === GraphQLFloat) return "z.number()";
   const custom = CUSTOM_SCALAR_ZOD[type.name];
