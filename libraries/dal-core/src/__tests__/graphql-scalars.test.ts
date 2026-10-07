@@ -72,6 +72,14 @@ describe("dal GraphQL scalars", () => {
     expect(() => dalGraphQLScalar("CIDR").parseValue("999.0.0.0/8")).toThrow();
     expect(() => dalGraphQLScalar("CIDR").parseValue("192.256.0.0/24")).toThrow();
     expect(dalGraphQLScalar("CIDR").parseValue("2001:db8::/32")).toBe("2001:db8::/32");
+    expect(() => dalGraphQLScalar("CIDR").parseValue("2001:db8::1/64")).toThrow();
     expect(() => dalGraphQLScalar("CIDR").parseValue("1:2:3/64")).toThrow();
+  });
+
+  it("IntervalMs accepts INT literals and enforces dal-core wire rules", () => {
+    const iv = dalGraphQLScalar("IntervalMs");
+    expect(iv.parseLiteral({ kind: Kind.INT, value: "1500" }, {})).toBe("1500");
+    expect(iv.parseLiteral({ kind: Kind.STRING, value: "1500" }, {})).toBe("1500");
+    expect(() => iv.parseLiteral({ kind: Kind.FLOAT, value: "1.5" }, {})).toThrow();
   });
 });

@@ -206,12 +206,14 @@ const GraphQLDalDecimal = wireScalar(
   (value) => serializeDecimal(value as string | number | null | undefined),
 );
 
-const GraphQLDalIntervalMs = wireScalar(
-  "IntervalMs",
-  SCALAR_DESCRIPTIONS.IntervalMs,
-  parseIntervalMs,
-  (value) => serializeIntervalMs(value as string | number | bigint | null | undefined),
-);
+const GraphQLDalIntervalMs = new GraphQLScalarType({
+  name: "IntervalMs",
+  description: SCALAR_DESCRIPTIONS.IntervalMs,
+  serialize: (value) =>
+    serializeIntervalMs(value as string | number | bigint | null | undefined),
+  parseValue: (value) => parseIntervalMs(value),
+  parseLiteral: (ast) => parseIntervalMs(parseIntLiteral(ast, "IntervalMs")),
+});
 
 const GraphQLDalSmallInt = numericScalar(
   "SmallInt",
