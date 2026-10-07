@@ -15,15 +15,7 @@ import {
 } from "graphql";
 import type { EntityModel } from "../model.js";
 import { buildDalGraphQLSchema } from "./schema-builder.js";
-
-const CUSTOM_SCALAR_ZOD: Record<string, string> = {
-  DateTime: "z.string()",
-  BigInt: "z.string()",
-  Decimal: "z.string()",
-  Date: "z.string()",
-  TimeTz: "z.string()",
-  IntervalMs: "z.string()",
-};
+import { DAL_SCALAR_ZOD_BY_NAME } from "./input-zod-scalars.js";
 
 function collectInputObjectTypes(schema: GraphQLSchema): GraphQLInputObjectType[] {
   const inputs: GraphQLInputObjectType[] = [];
@@ -108,7 +100,7 @@ function scalarZodExpr(type: GraphQLScalarType): string {
   if (type === GraphQLID) return "z.string().uuid()";
   if (type === GraphQLInt) return "z.number().int()";
   if (type === GraphQLFloat) return "z.number()";
-  const custom = CUSTOM_SCALAR_ZOD[type.name];
+  const custom = DAL_SCALAR_ZOD_BY_NAME[type.name];
   if (custom) return custom;
   return "z.unknown()";
 }

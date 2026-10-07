@@ -193,7 +193,7 @@ Formal mapping for **supported** PostgreSQL types only:
 
 Codegen emits **six core custom scalars** in the generated base SDL ([§3.1](graphql-dal-requirements.md#31-custom-scalars)). Built-in GraphQL scalars (`Int`, `Float`, `String`, `Boolean`, **`ID`**) are used where no precision or wire-format concerns exist.
 
-**GraphQL wire validation:** `@corpdk/dal-core` registers strict `GraphQLScalarType` instances for codegen SDL and Yoga (`parseValue` / `parseLiteral`). **`DateTime`**, **`Date`**, and **`BigInt`** delegate input validation to [graphql-scalars](https://the-guild.dev/graphql/scalars/docs) (`DateTimeISO`, `Date`, `BigInt`) then normalize to the wire formats below ( **`BigInt`** always serializes as a decimal string and enforces signed 64-bit PG range via dal-core); **`Decimal`**, **`TimeTz`**, and **`IntervalMs`** use dal-core parse/serialize only (PG-specific semantics). Repository and Zod layers still apply the same rules on coerced inputs.
+**GraphQL wire validation:** `@corpdk/dal-core` registers strict `GraphQLScalarType` instances for codegen SDL and Yoga (`parseValue` / `parseLiteral`). **`DateTime`**, **`Date`**, and **`BigInt`** delegate input validation to [graphql-scalars](https://the-guild.dev/graphql/scalars/docs) (`DateTimeISO`, `Date`, `BigInt`) then normalize to the wire formats below ( **`BigInt`** always serializes as a decimal string and enforces signed 64-bit PG range via dal-core); **`Decimal`**, **`TimeTz`**, and **`IntervalMs`** use dal-core parse/serialize only (PG-specific semantics). Generated mutation/filter Zod (`input-zod.ts`) imports **`dalScalarZod`** from `@corpdk/dal-core` so input validation matches the same parse rules.
 
 | Scalar | Wire format | PG source types | Validation | Parse error |
 | ------ | ----------- | --------------- | ---------- | ----------- |
@@ -229,7 +229,7 @@ PostgreSQL `uuid` columns map to GraphQL **`ID`** (built-in), not a custom `UUID
 | **Pros** | Relay/node identification convention; no custom scalar to register or document; familiar to GraphQL clients and tooling |
 | **Cons** | `ID` does not enforce RFC 4122 at the GraphQL parse layer — it accepts any opaque string until repository/DB validation rejects malformed values |
 
-RFC 4122 validation runs at repository write and on filter/mutation args before SQL bind. Serialize lowercases canonical UUID strings on output.
+RFC 4122 validation runs at repository write and on filter/mutation args before SQL bind. Generated Zod maps `uuid` columns and GraphQL **`ID`** filter fields to **`z.string().uuid()`** (not The Guild `UUID` scalar). Serialize lowercases canonical UUID strings on output.
 
 ### Range deliberation
 

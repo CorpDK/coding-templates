@@ -1,6 +1,6 @@
 {
   "name": "@corpdk/dal-core",
-  "version": "2026.10.0-alpha.5",
+  "version": "2026.10.0-alpha.6",
   "description": "DAL shared types, filters, GraphQL scalars, and mutation error taxonomy",
   "type": "module",
   "publishConfig": {
@@ -33,7 +33,8 @@
   "dependencies": {
     "drizzle-orm": "^0.45.2",
     "graphql": "^16.13.2",
-    "graphql-scalars": "^1.26.0"
+    "graphql-scalars": "^1.26.0",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

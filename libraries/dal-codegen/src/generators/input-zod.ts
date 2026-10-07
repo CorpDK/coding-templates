@@ -3,8 +3,14 @@ import {
   emitGraphqlInputZodBlocks,
   entityCreateUpdateSkipSet,
 } from "./input-zod-graphql.js";
+import {
+  dalScalarZodExprForColumnKind,
+  INPUT_ZOD_DAL_SCALAR_IMPORT,
+} from "./input-zod-scalars.js";
 
 function zodBaseForColumn(col: ColumnModel): string {
+  const scalarExpr = dalScalarZodExprForColumnKind(col.kind);
+  if (scalarExpr) return scalarExpr;
   switch (col.kind) {
     case "boolean":
       return "z.boolean()";
@@ -107,7 +113,7 @@ export function generateInputZodModule(entities: EntityModel[]): string {
 
   const schemaBlocks = [...entityPart.blocks, ...graphqlPart.schemaBlocks];
 
-  return `import { createUserError, type MutationUserError } from "@corpdk/dal-core";
+  return `${INPUT_ZOD_DAL_SCALAR_IMPORT}
 import { GraphQLError } from "graphql";
 import { z, type ZodError, type ZodType } from "zod";
 

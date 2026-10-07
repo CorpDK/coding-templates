@@ -58,7 +58,7 @@ Published `@corpdk/*` libraries use [CalVer](../architecture/02-monorepo-design.
 | Bump                                                     | When                                                  | Consumer action                                                                   |
 | -------------------------------------------------------- | ----------------------------------------------------- | --------------------------------------------------------------------------------- |
 | **Patch** `@corpdk/dal-core` / `@corpdk/dal-codegen`     | Bug fixes, lint rules, generated output tweaks        | `create-ds upgrade` → `pnpm install` → `pnpm dal:codegen`                         |
-| **Minor** `@corpdk/dal-core`                             | New filter operators, relation behavior, optional env | Same; review `entity:lint` warnings                                               |
+| **Minor** `@corpdk/dal-core`                             | New filter operators, relation behavior, optional env, **`dalScalarZod`** / graphql-scalars wire validation | Same; review `entity:lint` warnings; re-run **`pnpm dal:codegen`** after bump |
 | **Major** `@corpdk/dal-core` or codegen breaking changes | GraphQL naming, payload shape, removed scalars        | Upgrade tool + fix schema comments/indexes per release notes; run full test suite |
 | **Template-only** (scripts, Docker, bootstrap)           | No `@corpdk` library release                          | `create-ds upgrade` sufficient; schema untouched                                  |
 
