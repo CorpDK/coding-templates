@@ -217,16 +217,44 @@ export function serializeCidr(value: string | null | undefined): string | null {
  * PostgreSQL cidr — graphql-scalars has no CIDR scalar (v1.26); minimal prefix check only.
  * Host portion is not fully validated like Guild `IP` (CIDR allows network bits in host).
  */
-const CIDR_RE =
-  /^(?:(?:25[0-5]|2[0-4]\d|[01]?\d?\d)(?:\.(?:25[0-5]|2[0-4]\d|[01]?\d?\d)){3}|(?:[0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4})\/\d{1,3}$/;
+const CIDR_IPV4_HOST_RE = /^(?:\d{1,3}\.){3}\d{1,3}$/;
+const CIDR_IPV6_HOST_RE = /^(?:[0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4}$/i;
 
-export function parseCidr(value: unknown): string {
-  if (typeof value !== "string" || !CIDR_RE.test(value)) {
+function assertIpv4CidrHost(host: string): void {
+  if (!CIDR_IPV4_HOST_RE.test(host)) {
     throw new TypeError("CIDR must be valid CIDR notation");
   }
-  const prefix = Number(value.slice(value.lastIndexOf("/") + 1));
-  const maxPrefix = value.includes(".") ? 32 : 128;
-  if (!Number.isInteger(prefix) || prefix < 0 || prefix > maxPrefix) {
+  for (const octet of host.split(".")) {
+    if (octet.length === 0 || !/^\d{1,3}$/.test(octet)) {
+      throw new TypeError("CIDR must be valid CIDR notation");
+    }
+    const n = Number(octet);
+    if (n > 255) {
+      throw new TypeError("CIDR must be valid CIDR notation");
+    }
+  }
+}
+
+export function parseCidr(value: unknown): string {
+  if (typeof value !== "string") {
+    throw new TypeError("CIDR must be valid CIDR notation");
+  }
+  const slash = value.lastIndexOf("/");
+  if (slash <= 0 || slash === value.length - 1) {
+    throw new TypeError("CIDR must be valid CIDR notation");
+  }
+  const host = value.slice(0, slash);
+  const prefix = Number(value.slice(slash + 1));
+  if (host.includes(".")) {
+    assertIpv4CidrHost(host);
+    if (!Number.isInteger(prefix) || prefix < 0 || prefix > 32) {
+      throw new TypeError("CIDR must be valid CIDR notation");
+    }
+  } else if (CIDR_IPV6_HOST_RE.test(host)) {
+    if (!Number.isInteger(prefix) || prefix < 0 || prefix > 128) {
+      throw new TypeError("CIDR must be valid CIDR notation");
+    }
+  } else {
     throw new TypeError("CIDR must be valid CIDR notation");
   }
   return value;

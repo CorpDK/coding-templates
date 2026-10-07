@@ -67,5 +67,8 @@ describe("dal GraphQL scalars", () => {
     expect(() => dalGraphQLScalar("CIDR").parseValue("192.0.2.1")).toThrow();
     expect(() => dalGraphQLScalar("CIDR").parseValue("192.0.0.0/33")).toThrow();
     expect(() => dalGraphQLScalar("CIDR").parseValue("2001:db8::/999")).toThrow();
+    expect(() => dalGraphQLScalar("CIDR").parseValue("256.0.0.0/24")).toThrow();
+    expect(() => dalGraphQLScalar("CIDR").parseValue("999.0.0.0/8")).toThrow();
+    expect(() => dalGraphQLScalar("CIDR").parseValue("192.256.0.0/24")).toThrow();
   });
 });
