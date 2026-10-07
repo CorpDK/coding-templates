@@ -1,6 +1,6 @@
 {
   "name": "@corpdk/create-ds",
-  "version": "2026.10.0-alpha.4",
+  "version": "2026.10.0-alpha.5",
   "description": "Scaffold and upgrade DAL-automated GraphQL data services",
   "type": "module",
   "publishConfig": {
@@ -18,6 +18,13 @@
     "canonical",
     "README.md"
   ],
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
   "bin": {
     "create-ds": "./dist/index.js"
   },

@@ -1,6 +1,6 @@
 {
   "name": "@corpdk/dal-codegen",
-  "version": "2026.10.0-alpha.4",
+  "version": "2026.10.0-alpha.5",
   "description": "Codegen CLI: Drizzle schema to GraphQL SDL, repositories, and resolvers",
   "type": "module",
   "publishConfig": {
@@ -20,6 +20,7 @@
     "dist",
     "README.md"
   ],
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",

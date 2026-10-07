@@ -70,8 +70,9 @@ The workflow evaluates the CalVer gate right after checkout, **before** `pnpm` /
 1. Verify every package in the set has the **same** `version` as the release (from input or `libraries/dal-core/package.json`).
 2. `pnpm turbo run build` for all five packages (respects dependency order via Turbo).
 3. `pnpm --filter @corpdk/dal-core test` and `@corpdk/dal-codegen test` (same coverage as [`.github/workflows/dal.yml`](../../.github/workflows/dal.yml) for libraries).
-4. `pnpm publish --no-git-checks --tag latest` in dependency order; `--dry-run` when not releasing; live runs add `--provenance`.
-5. On live publish only: ensure git tag `ds-automation/v<CalVer>` on the release commit, then `gh release create` with generated notes (`permissions.contents: write`).
+4. Confirm each package has **`dist/index.d.ts`** after build (publish script enforces this). Spot-check packaging: `pnpm --filter @corpdk/dal-core exec npm pack --dry-run` and ensure the tarball lists `.d.ts` files. Library `package.json` must expose types via top-level `"types"` and `exports["."].types` (string-only `exports` breaks TypeScript resolution even when `.d.ts` is in the tarball).
+5. `pnpm publish --no-git-checks --tag latest` in dependency order; `--dry-run` when not releasing; live runs add `--provenance`.
+6. On live publish only: ensure git tag `ds-automation/v<CalVer>` on the release commit, then `gh release create` with generated notes (`permissions.contents: write`).
 
 Workflow permissions for live publish: `id-token: write` (OIDC token for npm) and `contents: write` (releases and tag push). `actions/setup-node@v7` sets `registry-url: https://registry.npmjs.org` without a static `NODE_AUTH_TOKEN`; npm CLI ≥ 11.15 exchanges the GitHub OIDC token with the registry when trusted publishing is configured.
 
@@ -109,7 +110,7 @@ Requires npm login with publish access on each package.
 3. **First release only:** if any of the five packages are missing on npmjs, complete [First-time bootstrap](#first-time-bootstrap-packages-not-on-npm-yet) (local `npm login` / `NPM_TOKEN`, not OIDC) **before** merge or use break-glass dispatch after bootstrap.
 4. Confirm [trusted publishing](#configure-trusted-publishing-on-npmjs) is configured on npm for all five packages (one-time per package; only after each package exists on the registry).
 5. **Merge to `main`.** CI detects the CalVer bump in `libraries/dal-core`, live-publishes all five packages, creates tag `ds-automation/v<CalVer>`, and opens the GitHub Release. Maintainers do **not** push release tags manually for normal releases.
-6. Confirm **Publish DS automation (npm)** succeeded on the merge commit, that the **GitHub Release** for `ds-automation/v<CalVer>` exists, and that `npm view @corpdk/create-ds dist-tags` shows **`latest`** at that CalVer (see [Dist-tags](#dist-tags-latest-vs-prerelease) if not).
+6. Confirm **Publish DS automation (npm)** succeeded on the merge commit, that the **GitHub Release** for `ds-automation/v<CalVer>` exists, and that `npm view @corpdk/create-ds dist-tags` shows **`latest`** at that CalVer (see [Dist-tags](#dist-tags-latest-vs-prerelease) if not). Optionally `npm pack @corpdk/dal-core@<CalVer> -q && tar -tzf corpdk-dal-core-*.tgz | grep index.d.ts` on a maintainer machine.
 
 **Break-glass:** On `main`, **workflow_dispatch** with `dry_run: false` repeats live publish + tag + release (skips if tag/release already exist). Use only if merge publish failed; do not use from feature branches.
 
@@ -285,4 +286,4 @@ Ensure the `@corpdk` npm org grants **publish** on the five packages above. `"ac
 - [Monorepo Design — Versioning & publishing](../architecture/02-monorepo-design.md#publishing-strategy)
 - [DS automation upgrades (`create-ds`)](../developer/ds-automation-upgrades.md)
 
-**Last updated**: October 5, 2026
+**Last updated**: October 7, 2026
