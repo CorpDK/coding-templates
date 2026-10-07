@@ -57,15 +57,8 @@ jobs:
         with:
           fetch-depth: 2
 
-      - uses: pnpm/action-setup@v4
-
-      - uses: actions/setup-node@v7
-        with:
-          node-version: "24"
-          cache: pnpm
-          registry-url: https://registry.npmjs.org
-          package-manager-cache: false
-
+      # Gate before pnpm/setup-node so early skip does not run setup-node post-cache
+      # (pnpm install never runs → cache paths missing → job failure on skip).
       - name: Gate workflow (CalVer bump / ref)
         id: gate
         run: |
@@ -116,6 +109,17 @@ jobs:
       - name: Skip (no qualifying change)
         if: steps.gate.outputs.run != 'true'
         run: echo "Nothing to do."
+
+      - uses: pnpm/action-setup@v4
+        if: steps.gate.outputs.run == 'true'
+
+      - uses: actions/setup-node@v7
+        if: steps.gate.outputs.run == 'true'
+        with:
+          node-version: "24"
+          cache: pnpm
+          registry-url: https://registry.npmjs.org
+          package-manager-cache: false
 
       - name: Resolve release version
         if: steps.gate.outputs.run == 'true'
