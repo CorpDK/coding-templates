@@ -98,6 +98,8 @@ curl http://localhost:4000/graphql \
 
 Override host ports with `POSTGRES_HOST_PORT` and `DS_HOST_PORT` if needed. Local non-Docker dev keeps `DATABASE_URL=...@localhost:5433/...` in `.env` unchanged.
 
+Optional OpenTelemetry: `docker compose --profile otel up` adds a debug OTLP collector; set `DS_OTEL_ENABLED` and `OTEL_EXPORTER_OTLP_ENDPOINT` on the DS service. See [DS observability](../developer/12-ds-observability.md).
+
 ---
 
 ## Template Dockerfiles (this repo)
@@ -113,4 +115,4 @@ The template Dockerfiles are stored in `templates/docker/` and are copied into s
 
 **Related**: [Environment Variables](01-environment-variables.md) | [Post-Scaffold Setup](../user/05-post-scaffold-setup.md)
 
-**Last updated**: March 31, 2026
+**Last updated**: October 7, 2026

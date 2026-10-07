@@ -84,7 +84,7 @@ pnpm dal:codegen
 
 When changing `templates/ds` automation files, refresh the bundled snapshot under **`engines/create-ds/canonical/`** (paths merged on upgrade):
 
-`package.json`, `LICENSE`, `dal/dal.config.yaml`, `codegen.ts`, `drizzle.config.ts`, `tsconfig.json`, `Dockerfile`, `docker-compose.yml`, `docker-entrypoint.sh`, `.gitignore`, `.env.example`, `src/schema.ts`, `src/index.ts`, `src/db/index.ts`, `src/health.ts`, `src/validation/parse-input.ts`, `src/observability/**`
+`package.json`, `LICENSE`, `dal/dal.config.yaml`, `codegen.ts`, `drizzle.config.ts`, `tsconfig.json`, `Dockerfile`, `docker-compose.yml`, `docker/otel-collector-config.yaml`, `docker-entrypoint.sh`, `.gitignore`, `.env.example`, `src/schema.ts`, `src/index.ts`, `src/db/index.ts`, `src/health.ts`, `src/validation/parse-input.ts`, `src/observability/**`
 
 Copy from `templates/ds` (omit `src/db/schema/**`, `drizzle/**`, and generated output). Keep **`engines/create-ds/starter/`** in sync when changing the minimal default schema.
 
@@ -94,4 +94,4 @@ Release **`@corpdk/create-ds`** on the same train as **`@corpdk/dal-codegen`** w
 
 **Related**: [Monorepo Overview](01-monorepo-overview.md) | [GraphQL DAL Requirements](graphql-dal-requirements.md) | [Monorepo Design — CalVer](../architecture/02-monorepo-design.md#calver-format-rules)
 
-**Last updated**: October 5, 2026
+**Last updated**: October 7, 2026
