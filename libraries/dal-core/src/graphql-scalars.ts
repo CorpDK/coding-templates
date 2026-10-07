@@ -1,21 +1,39 @@
 import { GraphQLScalarType, Kind, type ValueNode } from "graphql";
-import { GraphQLBigInt, GraphQLDate, GraphQLDateTimeISO } from "graphql-scalars";
+import {
+  GraphQLBigInt,
+  GraphQLDate,
+  GraphQLDateTimeISO,
+  GraphQLIP,
+  GraphQLMAC,
+} from "graphql-scalars";
 import {
   parseBigInt,
+  parseCidr,
+  parseCitext,
   parseDate,
   parseDateTime,
   parseDecimal,
+  parseDouble,
+  parseInet,
   parseIntervalMs,
+  parseMacAddr,
+  parseSmallInt,
   parseTimeTz,
   serializeBigInt,
+  serializeCidr,
+  serializeCitext,
   serializeDate,
   serializeDateTime,
   serializeDecimal,
+  serializeDouble,
+  serializeInet,
   serializeIntervalMs,
+  serializeMacAddr,
+  serializeSmallInt,
   serializeTimeTz,
 } from "./scalars.js";
 
-/** Six core DAL custom GraphQL scalars (§3.1). */
+/** Core + PG-accurate custom GraphQL scalars registered by DAL codegen. */
 export const DAL_CUSTOM_SCALAR_NAMES = [
   "DateTime",
   "Date",
@@ -23,6 +41,12 @@ export const DAL_CUSTOM_SCALAR_NAMES = [
   "BigInt",
   "Decimal",
   "IntervalMs",
+  "SmallInt",
+  "Double",
+  "Citext",
+  "Inet",
+  "Cidr",
+  "MacAddr",
 ] as const;
 
 export type DalCustomScalarName = (typeof DAL_CUSTOM_SCALAR_NAMES)[number];
@@ -34,6 +58,12 @@ const SCALAR_DESCRIPTIONS: Record<DalCustomScalarName, string> = {
   BigInt: "Signed 64-bit integer serialized as a decimal string.",
   Decimal: "Arbitrary-precision decimal serialized as a string.",
   IntervalMs: "Duration as signed milliseconds.",
+  SmallInt: "PostgreSQL smallint (16-bit signed integer).",
+  Double: "IEEE 754 binary64 floating-point (PostgreSQL double precision).",
+  Citext: "Case-insensitive text (PostgreSQL citext) on wire as string.",
+  Inet: "IPv4 or IPv6 host address (PostgreSQL inet).",
+  Cidr: "IPv4 or IPv6 network in CIDR notation (PostgreSQL cidr).",
+  MacAddr: "MAC address in colon-separated hex (PostgreSQL macaddr).",
 };
 
 function parseStringLiteral(ast: ValueNode, scalarName: string): string {
@@ -41,6 +71,23 @@ function parseStringLiteral(ast: ValueNode, scalarName: string): string {
     throw new TypeError(`${scalarName} must be a string literal`);
   }
   return ast.value;
+}
+
+function parseIntLiteral(ast: ValueNode, scalarName: string): number {
+  if (ast.kind === Kind.INT) {
+    return Number(ast.value);
+  }
+  if (ast.kind === Kind.STRING) {
+    return Number(ast.value);
+  }
+  throw new TypeError(`${scalarName} must be an integer literal`);
+}
+
+function parseFloatLiteral(ast: ValueNode, scalarName: string): number {
+  if (ast.kind === Kind.FLOAT || ast.kind === Kind.INT) {
+    return Number(ast.value);
+  }
+  throw new TypeError(`${scalarName} must be a float literal`);
 }
 
 /** graphql-scalars BigInt accepts string/number; dal-core enforces signed int64 decimal string wire. */
@@ -66,6 +113,26 @@ function parseBigIntLiteral(ast: ValueNode): string {
   return parseBigInt(decimal);
 }
 
+function parseInetWire(value: unknown): string {
+  const validated = GraphQLIP.parseValue(value);
+  return parseInet(String(validated));
+}
+
+function parseInetLiteral(ast: ValueNode): string {
+  const validated = GraphQLIP.parseLiteral(ast);
+  return parseInet(String(validated));
+}
+
+function parseMacAddrWire(value: unknown): string {
+  const validated = GraphQLMAC.parseValue(value);
+  return parseMacAddr(String(validated));
+}
+
+function parseMacAddrLiteral(ast: ValueNode): string {
+  const validated = GraphQLMAC.parseLiteral(ast);
+  return parseMacAddr(String(validated));
+}
+
 function wireScalar(
   name: DalCustomScalarName,
   description: string,
@@ -79,6 +146,22 @@ function wireScalar(
     serialize,
     parseValue: (value) => parseWire(value),
     parseLiteral: (ast) => parseWire(parseStringLiteral(ast, name)),
+  });
+}
+
+function numericScalar(
+  name: DalCustomScalarName,
+  description: string,
+  parseWire: (value: unknown) => number,
+  serializeWire: (value: unknown) => number | null,
+  parseLiteral: (ast: ValueNode) => number,
+): GraphQLScalarType {
+  return new GraphQLScalarType({
+    name,
+    description,
+    serialize: (value) => serializeWire(value),
+    parseValue: (value) => parseWire(value),
+    parseLiteral: (ast) => parseWire(parseLiteral(ast)),
   });
 }
 
@@ -151,6 +234,52 @@ const GraphQLDalIntervalMs = wireScalar(
   (value) => serializeIntervalMs(value as string | number | bigint | null | undefined),
 );
 
+const GraphQLDalSmallInt = numericScalar(
+  "SmallInt",
+  SCALAR_DESCRIPTIONS.SmallInt,
+  parseSmallInt,
+  (value) => serializeSmallInt(value as number | null | undefined),
+  (ast) => parseIntLiteral(ast, "SmallInt"),
+);
+
+const GraphQLDalDouble = numericScalar(
+  "Double",
+  SCALAR_DESCRIPTIONS.Double,
+  parseDouble,
+  (value) => serializeDouble(value as number | null | undefined),
+  (ast) => parseFloatLiteral(ast, "Double"),
+);
+
+const GraphQLDalCitext = wireScalar(
+  "Citext",
+  SCALAR_DESCRIPTIONS.Citext,
+  parseCitext,
+  (value) => serializeCitext(value as string | null | undefined),
+);
+
+const GraphQLDalInet = new GraphQLScalarType({
+  name: "Inet",
+  description: SCALAR_DESCRIPTIONS.Inet,
+  serialize: (value) => serializeInet(value as string | null | undefined),
+  parseValue: (value) => parseInetWire(value),
+  parseLiteral: (ast) => parseInetLiteral(ast),
+});
+
+const GraphQLDalCidr = wireScalar(
+  "Cidr",
+  SCALAR_DESCRIPTIONS.Cidr,
+  parseCidr,
+  (value) => serializeCidr(value as string | null | undefined),
+);
+
+const GraphQLDalMacAddr = new GraphQLScalarType({
+  name: "MacAddr",
+  description: SCALAR_DESCRIPTIONS.MacAddr,
+  serialize: (value) => serializeMacAddr(value as string | null | undefined),
+  parseValue: (value) => parseMacAddrWire(value),
+  parseLiteral: (ast) => parseMacAddrLiteral(ast),
+});
+
 const DAL_GRAPHQL_SCALAR_TYPES: Record<DalCustomScalarName, GraphQLScalarType> = {
   DateTime: GraphQLDalDateTime,
   Date: GraphQLDalDate,
@@ -158,6 +287,12 @@ const DAL_GRAPHQL_SCALAR_TYPES: Record<DalCustomScalarName, GraphQLScalarType> =
   BigInt: GraphQLDalBigInt,
   Decimal: GraphQLDalDecimal,
   IntervalMs: GraphQLDalIntervalMs,
+  SmallInt: GraphQLDalSmallInt,
+  Double: GraphQLDalDouble,
+  Citext: GraphQLDalCitext,
+  Inet: GraphQLDalInet,
+  Cidr: GraphQLDalCidr,
+  MacAddr: GraphQLDalMacAddr,
 };
 
 /** GraphQL scalar type for SDL registry / Yoga (strict parseLiteral + dal-core wire). */

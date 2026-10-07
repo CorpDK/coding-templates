@@ -1,6 +1,7 @@
 export * from "./types.js";
 export * from "./errors.js";
 export * from "./scalars.js";
+export * from "./pg-bounds.js";
 export * from "./graphql-scalars.js";
 export * from "./scalar-zod.js";
 export * from "./filters.js";

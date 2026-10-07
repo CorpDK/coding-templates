@@ -17,6 +17,10 @@ import {
 } from "./constraint-infer.js";
 import { attachRelations } from "./relations.js";
 import { ensureSchemaTypeScriptLoader } from "./schema-loader.js";
+import {
+  bannedPgTypeMessage,
+  columnKindFromPgSqlType,
+} from "./pg-sql-types.js";
 
 export type ColumnKind =
   | "uuid"
@@ -29,7 +33,12 @@ export type ColumnKind =
   | "integer"
   | "bigint"
   | "decimal"
-  | "float"
+  | "real"
+  | "double"
+  | "citext"
+  | "inet"
+  | "cidr"
+  | "macaddr"
   | "date"
   | "timetz"
   | "interval"
@@ -117,8 +126,8 @@ const SIMPLE_PG_COLUMN_KINDS: Record<string, ColumnKind> = {
   PgBigInt53: "bigint",
   PgBigInt64: "bigint",
   PgNumeric: "decimal",
-  PgReal: "float",
-  PgDoublePrecision: "float",
+  PgReal: "real",
+  PgDoublePrecision: "double",
   PgDateString: "date",
   PgDate: "date",
   PgInterval: "interval",
@@ -138,14 +147,26 @@ function requireWithTimezone(
   }
 }
 
+interface DrizzleColumnWithSqlType {
+  getSQLType?: () => string;
+}
+
 function inferColumnKind(
   exportName: string,
   drizzleKey: string,
-  col: { columnType: string } & DrizzleColumnWithTz,
+  col: { columnType: string } & DrizzleColumnWithTz & DrizzleColumnWithSqlType,
 ): ColumnKind {
   const columnType = col.columnType;
   const simple = SIMPLE_PG_COLUMN_KINDS[columnType];
   if (simple) return simple;
+  if (columnType === "PgCustomColumn") {
+    const pgSql = col.getSQLType?.() ?? "";
+    const mapped = columnKindFromPgSqlType(pgSql);
+    if (mapped === "banned") {
+      throw new Error(bannedPgTypeMessage(exportName, drizzleKey, pgSql));
+    }
+    if (mapped) return mapped;
+  }
   if (columnType === "PgMoney") {
     throw new Error(
       `Column '${exportName}.${drizzleKey}' uses banned PostgreSQL type 'money'. Use integer cents or numeric/decimal.`,

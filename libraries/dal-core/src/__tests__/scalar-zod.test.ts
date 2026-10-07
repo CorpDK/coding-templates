@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { dalScalarZod } from "../scalar-zod.js";
+import { dalScalarZod, zPgInt32, zPgReal } from "../scalar-zod.js";
 
 describe("dalScalarZod", () => {
   it("DateTime rejects invalid ISO and accepts valid wire", () => {
@@ -27,5 +27,15 @@ describe("dalScalarZod", () => {
     expect(dalScalarZod.IntervalMs.safeParse("3600000").success).toBe(true);
     expect(dalScalarZod.IntervalMs.safeParse(1500).success).toBe(true);
     expect(dalScalarZod.IntervalMs.safeParse("1.5").success).toBe(false);
+    expect(dalScalarZod.IntervalMs.safeParse("9223372036854775808").success).toBe(false);
+  });
+
+  it("SmallInt, Double, and zPgInt32 / zPgReal enforce PG ranges", () => {
+    expect(dalScalarZod.SmallInt.safeParse(32_767).success).toBe(true);
+    expect(dalScalarZod.SmallInt.safeParse(50_000).success).toBe(false);
+    expect(dalScalarZod.Double.safeParse(1.5).success).toBe(true);
+    expect(zPgInt32.safeParse(2_147_483_647).success).toBe(true);
+    expect(zPgInt32.safeParse(2_147_483_648).success).toBe(false);
+    expect(zPgReal.safeParse(1.0).success).toBe(true);
   });
 });

@@ -1,3 +1,14 @@
+import {
+  PG_INT64_MAX,
+  PG_INT64_MIN,
+  PG_INT32_MAX,
+  PG_INT32_MIN,
+  PG_REAL_MAX,
+  PG_REAL_MIN,
+  PG_SMALLINT_MAX,
+  PG_SMALLINT_MIN,
+} from "./pg-bounds.js";
+
 /** Serialize timestamptz Date to ISO-8601 UTC with milliseconds and Z suffix. */
 export function serializeDateTime(value: Date | string | null | undefined): string | null {
   if (value == null) return null;
@@ -100,15 +111,131 @@ export function serializeIntervalMs(value: string | number | bigint | null | und
   return serializeIntegralString(value);
 }
 
+function assertInt64WireDecimal(decimal: string): string {
+  const bi = BigInt(decimal);
+  if (bi < PG_INT64_MIN || bi > PG_INT64_MAX) {
+    throw new TypeError("Value out of signed 64-bit range");
+  }
+  return decimal;
+}
+
 /** Parse PG interval or milliseconds wire value to total milliseconds string. */
 export function parseIntervalMs(value: unknown): string {
   if (typeof value === "number" && Number.isFinite(value)) {
-    return Math.trunc(value).toString();
+    return assertInt64WireDecimal(Math.trunc(value).toString());
   }
   if (typeof value !== "string" || !INTERVAL_MS_RE.test(value)) {
     throw new TypeError("IntervalMs must be a signed integer string of milliseconds");
   }
+  return assertInt64WireDecimal(value);
+}
+
+function parseBoundedInt(
+  value: unknown,
+  min: number,
+  max: number,
+  label: string,
+): number {
+  if (typeof value !== "number" || !Number.isFinite(value) || !Number.isInteger(value)) {
+    throw new TypeError(`${label} must be a finite integer`);
+  }
+  if (value < min || value > max) {
+    throw new TypeError(`${label} out of range`);
+  }
   return value;
+}
+
+export function serializeSmallInt(value: number | null | undefined): number | null {
+  if (value == null) return null;
+  return parseBoundedInt(value, PG_SMALLINT_MIN, PG_SMALLINT_MAX, "SmallInt");
+}
+
+export function parseSmallInt(value: unknown): number {
+  return parseBoundedInt(value, PG_SMALLINT_MIN, PG_SMALLINT_MAX, "SmallInt");
+}
+
+export function serializeDouble(value: number | null | undefined): number | null {
+  if (value == null) return null;
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new TypeError("Double must be a finite number");
+  }
+  return value;
+}
+
+export function parseDouble(value: unknown): number {
+  if (typeof value !== "number" || !Number.isFinite(value)) {
+    throw new TypeError("Double must be a finite number");
+  }
+  return value;
+}
+
+export function parseReal(value: unknown): number {
+  const n = parseDouble(value);
+  if (n < PG_REAL_MIN || n > PG_REAL_MAX) {
+    throw new TypeError("Real out of IEEE binary32 range");
+  }
+  return n;
+}
+
+export function serializeCitext(value: string | null | undefined): string | null {
+  if (value == null) return null;
+  if (typeof value !== "string") {
+    throw new TypeError("Citext must be a string");
+  }
+  return value;
+}
+
+export function parseCitext(value: unknown): string {
+  if (typeof value !== "string") {
+    throw new TypeError("Citext must be a string");
+  }
+  return value;
+}
+
+export function serializeInet(value: string | null | undefined): string | null {
+  if (value == null) return null;
+  return parseInet(value);
+}
+
+export function parseInet(value: unknown): string {
+  if (typeof value !== "string") {
+    throw new TypeError("Inet must be a string");
+  }
+  return value;
+}
+
+export function serializeCidr(value: string | null | undefined): string | null {
+  if (value == null) return null;
+  return parseCidr(value);
+}
+
+/** PostgreSQL CIDR notation (IPv4 or IPv6 with prefix). */
+const CIDR_RE =
+  /^(?:(?:25[0-5]|2[0-4]\d|[01]?\d?\d)(?:\.(?:25[0-5]|2[0-4]\d|[01]?\d?\d)){3}|(?:[0-9a-fA-F]{0,4}:){2,7}[0-9a-fA-F]{0,4})\/\d{1,3}$/;
+
+export function parseCidr(value: unknown): string {
+  if (typeof value !== "string" || !CIDR_RE.test(value)) {
+    throw new TypeError("Cidr must be valid CIDR notation");
+  }
+  return value;
+}
+
+export function serializeMacAddr(value: string | null | undefined): string | null {
+  if (value == null) return null;
+  return parseMacAddr(value);
+}
+
+const MAC_ADDR_RE = /^([0-9a-fA-F]{2}:){5}[0-9a-fA-F]{2}$/;
+
+export function parseMacAddr(value: unknown): string {
+  if (typeof value !== "string" || !MAC_ADDR_RE.test(value)) {
+    throw new TypeError("MacAddr must be colon-separated hex (aa:bb:cc:dd:ee:ff)");
+  }
+  return value.toLowerCase();
+}
+
+export function parsePgInt32(value: unknown): number {
+  return parseBoundedInt(value, PG_INT32_MIN, PG_INT32_MAX, "Int");
 }
 
 /** Resolve actor id from context; never returns null — uses "system" fallback. */

@@ -36,4 +36,17 @@ describe("dal GraphQL scalars", () => {
     expect(dalGraphQLScalar("Decimal").parseValue("12.5")).toBe("12.5");
     expect(() => dalGraphQLScalar("Decimal").parseValue("1.2.3")).toThrow();
   });
+
+  it("SmallInt enforces PG 16-bit range", () => {
+    const si = dalGraphQLScalar("SmallInt");
+    expect(si.parseValue(100)).toBe(100);
+    expect(() => si.parseValue(40_000)).toThrow(/out of range/i);
+  });
+
+  it("Inet and MacAddr delegate to graphql-scalars then normalize wire", () => {
+    expect(dalGraphQLScalar("Inet").parseValue("192.0.2.1")).toBe("192.0.2.1");
+    expect(dalGraphQLScalar("MacAddr").parseValue("08:00:2B:01:02:03")).toBe(
+      "08:00:2b:01:02:03",
+    );
+  });
 });

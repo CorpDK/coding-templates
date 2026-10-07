@@ -10,10 +10,21 @@ export function scalarForColumn(col: ColumnModel): string {
     case "timestamptz":
       return "DateTime";
     case "smallint":
+      return "SmallInt";
     case "integer":
       return "Int";
-    case "float":
+    case "real":
       return "Float";
+    case "double":
+      return "Double";
+    case "citext":
+      return "Citext";
+    case "inet":
+      return "Inet";
+    case "cidr":
+      return "Cidr";
+    case "macaddr":
+      return "MacAddr";
     case "bigint":
       return "BigInt";
     case "decimal":
@@ -44,10 +55,21 @@ export function filterForColumn(col: ColumnModel): string {
     case "timestamptz":
       return "DateTimeFilter";
     case "smallint":
+      return "SmallIntFilter";
     case "integer":
       return "IntFilter";
-    case "float":
+    case "real":
       return "FloatFilter";
+    case "double":
+      return "DoubleFilter";
+    case "citext":
+      return "CitextFilter";
+    case "inet":
+      return "InetFilter";
+    case "cidr":
+      return "CidrFilter";
+    case "macaddr":
+      return "MacAddrFilter";
     case "bigint":
       return "BigIntFilter";
     case "decimal":

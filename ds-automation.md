@@ -22,3 +22,12 @@ This spec has been split into:
 - [DAL PostgreSQL Type Reference](docs/developer/dal-pg-type-mapping.md)
 - [GraphQL DAL Requirements](docs/developer/graphql-dal-requirements.md)
 - [DS automation upgrades (`create-ds`)](docs/developer/ds-automation-upgrades.md) — scaffold, upgrade playbook
+
+## Open work
+
+Tracked DS automation gaps and backlog:
+
+- [Enhancement backlog — DS section](docs/developer/09-enhancement-backlog.md) — rate limiting, ESLint, SSE resume, views, transactions, etc.
+- [GraphQL DAL Requirements](docs/developer/graphql-dal-requirements.md) — normative spec; sections not yet implemented in `dal-codegen` / `templates/ds`
+- [DAL PostgreSQL type mapping](docs/developer/dal-pg-type-mapping.md) — PG types and codegen coverage gaps
+- [DS observability](docs/developer/12-ds-observability.md) — shipped health / OTel / Zod; optional OTLP and SSE subscription behavior on the DS template

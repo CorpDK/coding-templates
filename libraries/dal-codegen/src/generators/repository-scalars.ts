@@ -8,6 +8,13 @@ const PARSE_BY_KIND: Partial<Record<ColumnModel["kind"], string>> = {
   bigint: "parseBigInt",
   decimal: "parseDecimal",
   interval: "parseIntervalMs",
+  smallint: "parseSmallInt",
+  double: "parseDouble",
+  real: "parseReal",
+  citext: "parseCitext",
+  inet: "parseInet",
+  cidr: "parseCidr",
+  macaddr: "parseMacAddr",
 };
 
 const SERIALIZE_BY_KIND: Partial<Record<ColumnModel["kind"], string>> = {
@@ -17,6 +24,12 @@ const SERIALIZE_BY_KIND: Partial<Record<ColumnModel["kind"], string>> = {
   bigint: "serializeBigInt",
   decimal: "serializeDecimal",
   interval: "serializeIntervalMs",
+  smallint: "serializeSmallInt",
+  double: "serializeDouble",
+  citext: "serializeCitext",
+  inet: "serializeInet",
+  cidr: "serializeCidr",
+  macaddr: "serializeMacAddr",
 };
 
 const WIRE_SCALAR_KINDS = new Set<ColumnModel["kind"]>([
@@ -26,11 +39,24 @@ const WIRE_SCALAR_KINDS = new Set<ColumnModel["kind"]>([
   "bigint",
   "decimal",
   "interval",
+  "smallint",
+  "double",
+  "citext",
+  "inet",
+  "cidr",
+  "macaddr",
 ]);
 
 export function tsTypeForColumn(col: ColumnModel): string {
   if (col.kind === "boolean") return "boolean";
-  if (col.kind === "smallint" || col.kind === "integer" || col.kind === "float") return "number";
+  if (
+    col.kind === "smallint" ||
+    col.kind === "integer" ||
+    col.kind === "real" ||
+    col.kind === "double"
+  ) {
+    return "number";
+  }
   if (col.kind === "enum" && col.enumValues?.length) {
     return col.enumValues.map((value) => JSON.stringify(value)).join(" | ");
   }

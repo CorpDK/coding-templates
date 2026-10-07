@@ -8,6 +8,12 @@ export const DAL_SCALAR_ZOD_BY_NAME: Record<string, string> = {
   BigInt: "dalScalarZod.BigInt",
   Decimal: "dalScalarZod.Decimal",
   IntervalMs: "dalScalarZod.IntervalMs",
+  SmallInt: "dalScalarZod.SmallInt",
+  Double: "dalScalarZod.Double",
+  Citext: "dalScalarZod.Citext",
+  Inet: "dalScalarZod.Inet",
+  Cidr: "dalScalarZod.Cidr",
+  MacAddr: "dalScalarZod.MacAddr",
 };
 
 export function dalScalarZodExprForColumnKind(kind: ColumnModel["kind"]): string | null {
@@ -24,10 +30,22 @@ export function dalScalarZodExprForColumnKind(kind: ColumnModel["kind"]): string
       return DAL_SCALAR_ZOD_BY_NAME.Decimal;
     case "interval":
       return DAL_SCALAR_ZOD_BY_NAME.IntervalMs;
+    case "smallint":
+      return DAL_SCALAR_ZOD_BY_NAME.SmallInt;
+    case "double":
+      return DAL_SCALAR_ZOD_BY_NAME.Double;
+    case "citext":
+      return DAL_SCALAR_ZOD_BY_NAME.Citext;
+    case "inet":
+      return DAL_SCALAR_ZOD_BY_NAME.Inet;
+    case "cidr":
+      return DAL_SCALAR_ZOD_BY_NAME.Cidr;
+    case "macaddr":
+      return DAL_SCALAR_ZOD_BY_NAME.MacAddr;
     default:
       return null;
   }
 }
 
 export const INPUT_ZOD_DAL_SCALAR_IMPORT =
-  'import { createUserError, dalScalarZod, type MutationUserError } from "@corpdk/dal-core";';
+  'import { createUserError, dalScalarZod, zPgInt32, zPgReal, type MutationUserError } from "@corpdk/dal-core";';

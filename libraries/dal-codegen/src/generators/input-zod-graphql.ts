@@ -98,8 +98,8 @@ function scalarZodExpr(type: GraphQLScalarType): string {
   if (type === GraphQLString) return "z.string()";
   if (type === GraphQLBoolean) return "z.boolean()";
   if (type === GraphQLID) return "z.string().uuid()";
-  if (type === GraphQLInt) return "z.number().int()";
-  if (type === GraphQLFloat) return "z.number()";
+  if (type === GraphQLInt) return "zPgInt32";
+  if (type === GraphQLFloat) return "zPgReal";
   const custom = DAL_SCALAR_ZOD_BY_NAME[type.name];
   if (custom) return custom;
   return "z.unknown()";

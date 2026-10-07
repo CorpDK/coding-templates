@@ -285,7 +285,7 @@ Do **not** use negated boolean names (`is_not_archived`, `has_no_lines`) — exp
 
 **Case-insensitive text:** `citext` (requires PostgreSQL `citext` extension) is supported — same semantics as `text` for storage; case-insensitive matching is a query concern.
 
-**Specialized types:** network (`inet`, `cidr`, `macaddr`, `macaddr8`), geometric (`point`, `line`, `lseg`, `box`, `path`, `polygon`, `circle`), and PostGIS (`geometry`, `geography`) columns are supported but rare — see [Specialized types (rare)](#specialized-types-rare).
+**Specialized types:** network (`inet`, `cidr`, `macaddr`) use opt-in custom scalars when declared via Drizzle `customType`. **`macaddr8`**, all native **geometric** types, and **PostGIS** (`geometry`, `geography`) are **not supported v1** — codegen and `entity:lint` fail. See [Specialized types (rare)](#specialized-types-rare) and [dal-pg-type-mapping.md](dal-pg-type-mapping.md).
 
 ### Unsupported column types
 

@@ -16,12 +16,12 @@ Comprehensive coverage for **PostgreSQL** (primary Drizzle dialect). Other SQL d
 
 | PG type | Drizzle builder | DAL support | DAL scalar | Filter | Sort | Aggregate | Notes |
 | ------- | --------------- | ----------- | ---------- | ------ | ---- | --------- | ----- |
-| `smallint` | `smallint()` | Supported | `Int` | `IntFilter` | Yes | sum/avg/min/max | 16-bit; wire-safe within GraphQL `Int` |
+| `smallint` | `smallint()` | Supported | `SmallInt` | `SmallIntFilter` | Yes | sum/avg/min/max | Custom scalar — PG 16-bit range on wire |
 | `integer` | `integer()` | Supported | `Int` | `IntFilter` | Yes | sum/avg/min/max | 32-bit max `2_147_483_647` |
 | `bigint` | `bigint()` | Supported (custom scalar) | `BigInt` | `BigIntFilter` | Yes | sum/avg/min/max | String on wire — avoids `Int` overflow |
 | `decimal` / `numeric` | `numeric()` / `decimal()` | Supported (custom scalar) | `Decimal` | `DecimalFilter` | Yes | sum/avg/min/max | String on wire — no Float precision loss |
 | `real` | `real()` | Supported | `Float` | `FloatFilter` | Yes | sum/avg/min/max | IEEE single precision |
-| `double precision` | `doublePrecision()` | Supported | `Float` | `FloatFilter` | Yes | sum/avg/min/max | IEEE double precision |
+| `double precision` | `doublePrecision()` | Supported | `Double` | `DoubleFilter` | Yes | sum/avg/min/max | Custom scalar — IEEE binary64 |
 | `serial` | `serial()` | Not supported | — | — | — | — | Discouraged — use `uuid` PK; `serial` as business column fails codegen |
 | `bigserial` | `bigserial()` | Not supported | — | — | — | — | Same as `serial` |
 | `money` | `money()` | Not supported | — | — | — | — | **Hard ban** — entity validation and codegen **fail**; use `integer` cents or `numeric`/`decimal`; never PG `money` |
@@ -33,7 +33,7 @@ Comprehensive coverage for **PostgreSQL** (primary Drizzle dialect). Other SQL d
 | `char(n)` | `char()` | Supported | `String` | `StringFilter` | Yes | min/max | Fixed-length; trailing spaces trimmed on read |
 | `varchar(n)` | `varchar()` | Supported | `String` | `StringFilter` | Yes | min/max | |
 | `text` | `text()` | Supported | `String` | `StringFilter` | Yes | min/max | Actor columns (`createdBy`, etc.) use `text` |
-| `citext` | custom / extension | Supported | `String` | `StringFilter` | Yes | min/max | Case-insensitive storage; filter uses `caseInsensitive: true` |
+| `citext` | custom / extension | Supported | `Citext` | `CitextFilter` | Yes | min/max | Custom scalar; filter uses `caseInsensitive: true` |
 | `name` | `name()` (internal) | Not supported | — | — | — | — | PostgreSQL catalog type — not for entity columns |
 
 ### Boolean
@@ -89,7 +89,7 @@ Rare — codegen emits domain-specific scalars when these PG types appear in the
 | `inet` | custom | Supported (custom scalar) | `Inet` | `InetFilter` | Yes | min/max | String — CIDR/IP notation; validated on parse |
 | `cidr` | custom | Supported (custom scalar) | `Cidr` | `CidrFilter` | Yes | min/max | String — CIDR notation |
 | `macaddr` | custom | Supported (custom scalar) | `MacAddr` | `MacAddrFilter` | Yes | min/max | String — colon-separated hex (e.g. `08:00:2b:01:02:03`) |
-| `macaddr8` | custom | Supported (custom scalar) | `MacAddr8` | `MacAddr8Filter` | Yes | min/max | String — EUI-64 colon-separated hex |
+| `macaddr8` | custom | **Not supported v1** | — | — | — | — | Codegen and `entity:lint` fail — use `macaddr` or text |
 
 ### Geometric
 
@@ -97,13 +97,13 @@ Rare — codegen emits domain-specific scalars when present; not in default temp
 
 | PG type | Drizzle builder | DAL support | DAL scalar | Filter | Sort | Aggregate | Notes |
 | ------- | --------------- | ----------- | ---------- | ------ | ---- | --------- | ----- |
-| `point` | custom | Supported (custom scalar) | `GeoPoint` | `GeoPointFilter` | Yes | — | JSON object `{ "x": number, "y": number }` on wire |
-| `line` | custom | Supported (custom scalar) | `Line` | `LineFilter` | Yes | — | WKT string (e.g. `{1 2,3 4}`) |
-| `lseg` | custom | Supported (custom scalar) | `LSeg` | `LSegFilter` | Yes | — | WKT string |
-| `box` | custom | Supported (custom scalar) | `Box` | `BoxFilter` | Yes | — | WKT string |
-| `path` | custom | Supported (custom scalar) | `Path` | `PathFilter` | Yes | — | WKT string |
-| `polygon` | custom | Supported (custom scalar) | `Polygon` | `PolygonFilter` | Yes | — | WKT string |
-| `circle` | custom | Supported (custom scalar) | `Circle` | `CircleFilter` | Yes | — | WKT string |
+| `point` | custom | **Not supported v1** | — | — | — | — | Codegen and `entity:lint` fail — normalize to numeric columns or defer |
+| `line` | custom | **Not supported v1** | — | — | — | — | Same |
+| `lseg` | custom | **Not supported v1** | — | — | — | — | Same |
+| `box` | custom | **Not supported v1** | — | — | — | — | Same |
+| `path` | custom | **Not supported v1** | — | — | — | — | Same |
+| `polygon` | custom | **Not supported v1** | — | — | — | — | Same |
+| `circle` | custom | **Not supported v1** | — | — | — | — | Same |
 
 ### PostGIS / spatial
 
@@ -111,8 +111,8 @@ Rare — requires PostGIS extension. Codegen emits scalars when present; not in 
 
 | PG type | Drizzle builder | DAL support | DAL scalar | Filter | Sort | Aggregate | Notes |
 | ------- | --------------- | ----------- | ---------- | ------ | ---- | --------- | ----- |
-| `geometry` | PostGIS extension | Supported (custom scalar) | `Geometry` | `GeometryFilter` | Yes | — | GeoJSON string on wire |
-| `geography` | PostGIS extension | Supported (custom scalar) | `Geography` | `GeographyFilter` | Yes | — | GeoJSON string on wire |
+| `geometry` | PostGIS extension | **Not supported v1** | — | — | — | — | Codegen and `entity:lint` fail — use external spatial service or defer |
+| `geography` | PostGIS extension | **Not supported v1** | — | — | — | — | Same |
 
 ### Full-text
 
@@ -154,11 +154,14 @@ Formal mapping for **supported** PostgreSQL types only:
 
 | PostgreSQL | GraphQL output scalar | Create / Update input | Filter input | Sort | Aggregate (sum / avg / min / max) | Cursor keyset |
 | ---------- | --------------------- | ------------------- | ------------ | ---- | --------------------------------- | ------------- |
-| `smallint`, `integer` | `Int` | `Int` | `IntFilter` | `<Entity>Field` | NumericFields / ComparableFields | `Int` in cursor `values` |
+| `smallint` | `SmallInt` | `SmallInt` | `SmallIntFilter` | `<Entity>Field` | NumericFields / ComparableFields | `SmallInt` in cursor `values` |
+| `integer` | `Int` | `Int` | `IntFilter` | `<Entity>Field` | NumericFields / ComparableFields | `Int` in cursor `values` |
 | `bigint` | `BigInt` | `BigInt` | `BigIntFilter` | `<Entity>Field` | NumericFields / ComparableFields | `BigInt` (string) in cursor `values` |
 | `numeric` / `decimal` | `Decimal` | `Decimal` | `DecimalFilter` | `<Entity>Field` | NumericFields / ComparableFields | `Decimal` (string) in cursor `values` |
-| `real`, `double precision` | `Float` | `Float` | `FloatFilter` | `<Entity>Field` | NumericFields / ComparableFields | `Float` in cursor `values` |
-| `char`, `varchar`, `text`, `citext` | `String` | `String` | `StringFilter` | `<Entity>Field` | ComparableFields (min/max) | `String` in cursor `values` |
+| `real` | `Float` | `Float` | `FloatFilter` | `<Entity>Field` | NumericFields / ComparableFields | `Float` in cursor `values` |
+| `double precision` | `Double` | `Double` | `DoubleFilter` | `<Entity>Field` | NumericFields / ComparableFields | `Double` in cursor `values` |
+| `char`, `varchar`, `text` | `String` | `String` | `StringFilter` | `<Entity>Field` | ComparableFields (min/max) | `String` in cursor `values` |
+| `citext` | `Citext` | `Citext` | `CitextFilter` | `<Entity>Field` | ComparableFields (min/max) | `Citext` in cursor `values` |
 | `boolean` | `Boolean` | `Boolean` | `BooleanFilter` | `<Entity>Field` | — | `Boolean` in cursor `values` |
 | `date` | `Date` | `Date` | `DateFilter` | `<Entity>Field` | ComparableFields (min/max) | `Date` in cursor `values` |
 | `timestamptz` | `DateTime` | `DateTime` | `DateTimeFilter` | `<Entity>Field` | ComparableFields (min/max) | `DateTime` in cursor `values` |
@@ -166,8 +169,7 @@ Formal mapping for **supported** PostgreSQL types only:
 | `interval` | `IntervalMs` | `IntervalMs` | `IntervalMsFilter` | `<Entity>Field` | ComparableFields (min/max) | `IntervalMs` (string) in cursor `values` |
 | `uuid` | `ID` | `ID` | `IDFilter` | `<Entity>Field` | ComparableFields (min/max) | `ID` in cursor `values` |
 | `pgEnum` | GraphQL enum | Same enum | `<Enum>Filter` | `<Entity>Field` | — | Enum string in cursor `values` |
-| `inet`, `cidr`, `macaddr`, `macaddr8` | respective custom scalar | same | respective `*Filter` | `<Entity>Field` | ComparableFields (min/max) where applicable | scalar string in cursor `values` |
-| `point` … `circle`, `geometry`, `geography` | respective custom scalar | same | respective `*Filter` | `<Entity>Field` | — | scalar string in cursor `values` |
+| `inet`, `cidr`, `macaddr` | respective custom scalar | same | respective `*Filter` (v1 `eq`/`neq`) | `<Entity>Field` | ComparableFields (min/max) where applicable | scalar string in cursor `values` |
 
 ### v1 scalar decisions (rationale)
 
@@ -191,9 +193,9 @@ Formal mapping for **supported** PostgreSQL types only:
 
 ## Custom DAL scalars registry
 
-Codegen emits **six core custom scalars** in the generated base SDL ([§3.1](graphql-dal-requirements.md#31-custom-scalars)). Built-in GraphQL scalars (`Int`, `Float`, `String`, `Boolean`, **`ID`**) are used where no precision or wire-format concerns exist.
+Codegen emits **six core custom scalars** in the generated base SDL when those PG types appear ([§3.1](graphql-dal-requirements.md#31-custom-scalars)): **`DateTime`**, **`Date`**, **`TimeTz`**, **`BigInt`**, **`Decimal`**, **`IntervalMs`**. Additional PG-accurate scalars (**`SmallInt`**, **`Double`**, **`Citext`**) and network scalars (**`Inet`**, **`Cidr`**, **`MacAddr`**) are emitted only when matching columns exist. Built-in GraphQL scalars (`Int`, `Float`, `String`, `Boolean`, **`ID`**) remain for **`integer`**, **`real`**, `char`/`varchar`/`text`, `boolean`, and **`uuid`** respectively.
 
-**GraphQL wire validation:** `@corpdk/dal-core` registers strict `GraphQLScalarType` instances for codegen SDL and Yoga (`parseValue` / `parseLiteral`). **`DateTime`**, **`Date`**, and **`BigInt`** delegate input validation to [graphql-scalars](https://the-guild.dev/graphql/scalars/docs) (`DateTimeISO`, `Date`, `BigInt`) then normalize to the wire formats below ( **`BigInt`** always serializes as a decimal string and enforces signed 64-bit PG range via dal-core); **`Decimal`**, **`TimeTz`**, and **`IntervalMs`** use dal-core parse/serialize only (PG-specific semantics). Generated mutation/filter Zod (`input-zod.ts`) imports **`dalScalarZod`** from `@corpdk/dal-core` so input validation matches the same parse rules.
+**GraphQL wire validation:** `@corpdk/dal-core` registers strict `GraphQLScalarType` instances for codegen SDL and Yoga (`parseValue` / `parseLiteral`). **`DateTime`**, **`Date`**, **`BigInt`**, **`Inet`**, and **`MacAddr`** delegate input validation to [graphql-scalars](https://the-guild.dev/graphql/scalars/docs) then normalize to dal-core wire; **`Cidr`** uses dal-core CIDR notation rules (Guild has no `CIDR` export in v1.26). Generated mutation/filter Zod imports **`dalScalarZod`**, **`zPgInt32`**, and **`zPgReal`** from `@corpdk/dal-core` so inputs match parse rules (including PG **`integer`** / **`real`** range guards on built-in `Int` / `Float`).
 
 | Scalar | Wire format | PG source types | Validation | Parse error |
 | ------ | ----------- | --------------- | ---------- | ----------- |
@@ -210,13 +212,14 @@ Codegen emits these **only when** the corresponding PG type appears in the Drizz
 
 | Group | Scalars | Wire format |
 | ----- | ------- | ------------- |
-| **Network** | `Inet`, `Cidr`, `MacAddr`, `MacAddr8` | Validated string in PG-native notation |
-| **Geometric** | `GeoPoint`, `Line`, `LSeg`, `Box`, `Path`, `Polygon`, `Circle` | `GeoPoint`: JSON `{x,y}`; others: WKT string |
-| **PostGIS** | `Geometry`, `Geography` | GeoJSON string |
+| **PG-accurate** | `SmallInt`, `Double`, `Citext` | PG range / citext string wire |
+| **Network** | `Inet`, `Cidr`, `MacAddr` | Validated string in PG-native notation; filters v1 **`eq`/`neq`/`isNull`** |
+
+Geometric and PostGIS PG types (`point`, `geometry`, etc.) and **`macaddr8`** are **not supported v1** — codegen and `entity:lint` fail with `PG_TYPE_BANNED` / schema load errors.
 
 ### Built-in scalars
 
-Built-in scalars (no custom registry entry): **`Int`** ← `smallint`, `integer`; **`Float`** ← `real`, `double precision`; **`String`** ← `char`, `varchar`, `text`, `citext`; **`Boolean`** ← `boolean`; **`ID`** ← `uuid` **only** — never map non-uuid columns to `ID`.
+Built-in scalars (no custom registry entry): **`Int`** ← `integer` only; **`Float`** ← `real` only; **`String`** ← `char`, `varchar`, `text`; **`Boolean`** ← `boolean`; **`ID`** ← `uuid` **only** — never map non-uuid columns to `ID`.
 
 GraphQL enums map from Drizzle `pgEnum` — not custom scalars ([§2.6](graphql-dal-requirements.md#26-enum-inference)).
 

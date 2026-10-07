@@ -14,10 +14,10 @@ function zodBaseForColumn(col: ColumnModel): string {
   switch (col.kind) {
     case "boolean":
       return "z.boolean()";
-    case "smallint":
     case "integer":
-    case "float":
-      return applyNumericConstraints("z.number()", col);
+      return applyNumericConstraints("zPgInt32", col);
+    case "real":
+      return applyNumericConstraints("zPgReal", col);
     case "enum":
       if (col.enumValues?.length) {
         return `z.enum([${col.enumValues.map((v) => JSON.stringify(v)).join(", ")}])`;
