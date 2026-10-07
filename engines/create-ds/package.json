@@ -18,10 +18,10 @@
     "canonical",
     "README.md"
   ],
-  "types": "./dist/index.d.ts",
+  "types": "./dist/types-entry.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
+      "types": "./dist/types-entry.d.ts",
       "import": "./dist/index.js"
     }
   },

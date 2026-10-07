@@ -90,8 +90,12 @@ verify_dist_types() {
       exit 1
       ;;
   esac
-  if [[ ! -f "${ROOT}/${rel}/dist/index.d.ts" ]]; then
-    echo "Missing ${rel}/dist/index.d.ts — build must emit declarations before publish." >&2
+  local types_file="dist/index.d.ts"
+  if [[ "${filter}" == "@corpdk/create-ds" ]]; then
+    types_file="dist/types-entry.d.ts"
+  fi
+  if [[ ! -f "${ROOT}/${rel}/${types_file}" ]]; then
+    echo "Missing ${rel}/${types_file} — build must emit declarations before publish." >&2
     exit 1
   fi
 }
