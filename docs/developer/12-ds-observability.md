@@ -59,4 +59,4 @@ Local dev without these env vars behaves as before (no exporter, no extra spans)
 
 **Related:** [09-enhancement-backlog.md](09-enhancement-backlog.md) | [11-ds-subscription-sse.md](11-ds-subscription-sse.md)
 
-**Last updated:** October 6, 2026
+**Last updated:** October 7, 2026
