@@ -8,9 +8,24 @@ import {
   INPUT_ZOD_DAL_SCALAR_IMPORT,
 } from "./input-zod-scalars.js";
 
+const NUMERIC_DAL_SCALAR_KINDS = new Set<ColumnModel["kind"]>([
+  "smallint",
+  "double",
+  "bigint",
+  "decimal",
+]);
+
 function zodBaseForColumn(col: ColumnModel): string {
   const scalarExpr = dalScalarZodExprForColumnKind(col.kind);
-  if (scalarExpr) return scalarExpr;
+  if (scalarExpr) {
+    if (NUMERIC_DAL_SCALAR_KINDS.has(col.kind)) {
+      return applyNumericConstraints(scalarExpr, col);
+    }
+    if (col.kind === "citext") {
+      return applyStringConstraints(scalarExpr, col);
+    }
+    return scalarExpr;
+  }
   switch (col.kind) {
     case "boolean":
       return "z.boolean()";

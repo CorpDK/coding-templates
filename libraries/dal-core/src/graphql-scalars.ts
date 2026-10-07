@@ -81,27 +81,35 @@ function parseFloatLiteral(ast: ValueNode, scalarName: string): number {
   throw new TypeError(`${scalarName} must be a float literal`);
 }
 
+function decimalStringFromGraphQLBigInt(validated: unknown): string {
+  if (typeof validated === "bigint") {
+    return validated.toString();
+  }
+  if (typeof validated === "number") {
+    if (!Number.isSafeInteger(validated)) {
+      throw new TypeError(
+        "BigInt number input must be a safe integer; use a decimal string for larger values",
+      );
+    }
+    return Math.trunc(validated).toString();
+  }
+  return String(validated);
+}
+
 /** graphql-scalars BigInt accepts string/number; dal-core enforces signed int64 decimal string wire. */
 function parseBigIntWire(value: unknown): string {
+  if (typeof value === "number" && !Number.isSafeInteger(value)) {
+    throw new TypeError(
+      "BigInt number input must be a safe integer; use a decimal string for larger values",
+    );
+  }
   const validated = GraphQLBigInt.parseValue(value);
-  const decimal =
-    typeof validated === "bigint"
-      ? validated.toString()
-      : typeof validated === "number"
-        ? Math.trunc(validated).toString()
-        : String(validated);
-  return parseBigInt(decimal);
+  return parseBigInt(decimalStringFromGraphQLBigInt(validated));
 }
 
 function parseBigIntLiteral(ast: ValueNode): string {
   const validated = GraphQLBigInt.parseLiteral(ast);
-  const decimal =
-    typeof validated === "bigint"
-      ? validated.toString()
-      : typeof validated === "number"
-        ? Math.trunc(validated).toString()
-        : String(validated);
-  return parseBigInt(decimal);
+  return parseBigInt(decimalStringFromGraphQLBigInt(validated));
 }
 
 function wireScalar(

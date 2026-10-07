@@ -42,13 +42,25 @@ function wireStringSchema(parse: (value: string) => unknown): ZodType<string> {
 }
 
 function parseBigIntCoerced(value: unknown): string {
+  if (typeof value === "number" && !Number.isSafeInteger(value)) {
+    throw new TypeError(
+      "BigInt number input must be a safe integer; use a decimal string for larger values",
+    );
+  }
   const validated = GraphQLBigInt.parseValue(value);
-  const decimal =
-    typeof validated === "bigint"
-      ? validated.toString()
-      : typeof validated === "number"
-        ? Math.trunc(validated).toString()
-        : String(validated);
+  let decimal: string;
+  if (typeof validated === "bigint") {
+    decimal = validated.toString();
+  } else if (typeof validated === "number") {
+    if (!Number.isSafeInteger(validated)) {
+      throw new TypeError(
+        "BigInt number input must be a safe integer; use a decimal string for larger values",
+      );
+    }
+    decimal = Math.trunc(validated).toString();
+  } else {
+    decimal = String(validated);
+  }
   return parseBigInt(decimal);
 }
 

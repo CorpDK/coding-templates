@@ -219,6 +219,11 @@ export function parseCidr(value: unknown): string {
   if (typeof value !== "string" || !CIDR_RE.test(value)) {
     throw new TypeError("CIDR must be valid CIDR notation");
   }
+  const prefix = Number(value.slice(value.lastIndexOf("/") + 1));
+  const maxPrefix = value.includes(".") ? 32 : 128;
+  if (!Number.isInteger(prefix) || prefix < 0 || prefix > maxPrefix) {
+    throw new TypeError("CIDR must be valid CIDR notation");
+  }
   return value;
 }
 
