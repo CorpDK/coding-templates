@@ -1,6 +1,6 @@
 {
   "name": "@corpdk/codegen-cli",
-  "version": "2026.10.0-alpha.5",
+  "version": "2026.10.0-alpha.6",
   "description": "GraphQL Code Generator plugin for resolver types and TypedDocumentNode SDK output",
   "type": "module",
   "publishConfig": {
