@@ -156,4 +156,4 @@ After scaffolding, the binary name is renamed from `ds-cli` to the project name.
 
 **Related**: [Repository Pattern](../developer/03-repository-pattern.md) | [System Overview](01-system-overview.md) | [Storage / UI Matrix](../user/04-storage-ui-matrix.md)
 
-**Last updated**: March 31, 2026
+**Last updated**: October 7, 2026
