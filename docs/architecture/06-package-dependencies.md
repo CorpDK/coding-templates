@@ -280,7 +280,8 @@ Tracked here until applied. Remove entries as they are completed.
 | 2026-03-29 | @clack/prompts                        | ^0.9.1   | ^1.1.0   | Major bump (0.x→1.x); no source changes needed                                                         |
 | 2026-03-29 | @apollo/client                        | ^3.13.8  | ^4.1.6   | Major bump; ApolloProvider moved to @apollo/client/react; split() replaced by ApolloLink.split()       |
 | 2026-03-29 | zod                                   | ^3.24.2  | ^4.3.6   | Major bump; root export maintains v3 compat, no source changes needed                                  |
-| 2026-03-29 | typescript                            | ^5.9.3   | ^6.0.2   | Major bump; added rootDir to ui-\* tsconfig.build.json; ignoreDeprecations for tsup baseUrl            |
+| 2026-03-29 | typescript                            | ^5.9.3   | ^6.0.2   | Major bump; added rootDir to ui-\* tsconfig.build.json                                                 |
+| 2026-10-07 | @corpdk/create-ds, @corpdk/codegen-cli | —        | —        | Split build: tsup (JS) + `tsc --emitDeclarationOnly` (`.d.ts`); no `ignoreDeprecations` for TS5101     |
 | 2026-10-05 | publishable `@corpdk/*` (lockstep)    | —        | —        | CalVer `2026.3.0-alpha.1` → `2026.10.0-alpha.1`; `@corpdk/create-ds`; root MIT `LICENSE`               |
 | 2026-10-05 | DS automation npm (lockstep)          | —        | —        | CalVer `2026.10.0-alpha.1` → `2026.10.0-alpha.2`; package READMEs for npmjs                            |
 | 2026-10-07 | DS automation npm (lockstep)          | —        | —        | CalVer `2026.10.0-alpha.4` → `2026.10.0-alpha.5`; npm `.d.ts` + `exports`/`types`; publish script gate |

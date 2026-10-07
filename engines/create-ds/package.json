@@ -29,7 +29,7 @@
     "create-ds": "./dist/index.js"
   },
   "scripts": {
-    "build": "tsup",
+    "build": "tsup && pnpm exec tsc -p tsconfig.json --emitDeclarationOnly",
     "dev": "tsup --watch",
     "clean": "rm -rf dist node_modules .turbo"
   },
