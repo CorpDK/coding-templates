@@ -18,7 +18,7 @@ Optional OpenTelemetry (see [DS observability](../developer/12-ds-observability.
 
 | Variable                       | Description                                                                 |
 | ------------------------------ | --------------------------------------------------------------------------- |
-| `OTEL_EXPORTER_OTLP_ENDPOINT`  | OTLP HTTP traces endpoint (e.g. `http://localhost:4318/v1/traces`); enables export when set |
+| `OTEL_EXPORTER_OTLP_ENDPOINT`  | OTLP HTTP base URL (e.g. `http://localhost:4318`; exporter appends `/v1/traces`); enables export when set |
 | `DS_OTEL_ENABLED`              | `true` enables tracing without relying on endpoint presence; `false` disables tracing even when `OTEL_EXPORTER_OTLP_ENDPOINT` is set; unset → on when endpoint is set |
 | `OTEL_SERVICE_NAME`            | Trace service name (default `@corpdk/ds`)                                   |
 

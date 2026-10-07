@@ -90,6 +90,7 @@ export const UPGRADE_RELATIVE_FILES = [
   "tsconfig.json",
   "Dockerfile",
   "docker-compose.yml",
+  "docker/otel-collector-config.yaml",
   "docker-entrypoint.sh",
   ".gitignore",
   ".env.example",

@@ -47,7 +47,7 @@ When enabled, `pnpm dev` and `pnpm start` preload observability (`--import ./src
 
 Local dev without these env vars behaves as before (no exporter, no extra spans).
 
-**Docker note:** `docker-entrypoint.sh` matches `pnpm start` (`node --import ./dist/src/observability/preload-otel.js dist/src/index.js`). Set `DS_OTEL_ENABLED=true` and `OTEL_EXPORTER_OTLP_ENDPOINT` (e.g. `http://otel-collector:4318/v1/traces`) on the DS service. Optional Compose profile `otel` starts a debug OTLP collector (`docker compose --profile otel up`). For integration smoke tests only, `DS_OTEL_SMOKE_TEST=true` adds `otelSmoke` / `otelSmokeFault` queries (literal redaction and execute rejection checks).
+**Docker note:** `docker-entrypoint.sh` matches `pnpm start` (`node --import ./dist/src/observability/preload-otel.js dist/src/index.js`). Set `DS_OTEL_ENABLED=true` and `OTEL_EXPORTER_OTLP_ENDPOINT` (e.g. `http://otel-collector:4318` — the exporter appends `/v1/traces`) on the DS service. Optional Compose profile `otel` starts a debug OTLP collector (`docker compose --profile otel up`). For integration smoke tests only, `DS_OTEL_SMOKE_TEST=true` adds `otelSmoke` / `otelSmokeFault` queries (literal redaction and execute rejection checks).
 
 ---
 
