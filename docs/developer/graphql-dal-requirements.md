@@ -375,7 +375,7 @@ Large integers that exceed GraphQL `Int` (32-bit signed) range.
 | **Usage** | Outputs, inputs, filters, cursors, aggregate sum/avg/min/max on `bigint` columns |
 | **Storage** | Drizzle `bigint()` — PostgreSQL `bigint` |
 | **Serialize** | Decimal string; no scientific notation |
-| **Parse** | Must match `/^-?\d+$/` and fit signed 64-bit range → **`BAD_USER_INPUT`** on violation |
+| **Parse** | Decimal string matching `/^-?\d+$/` within signed 64-bit range; **`parseValue`** also accepts JSON **safe integers** (coerced to wire string); **`parseLiteral`** accepts integer/string literals via graphql-scalars **`GraphQLBigInt`** then normalizes → **`BAD_USER_INPUT`** on violation |
 | **Rationale** | Safer than mapping to `Int` (overflow) or `Float` (precision loss) |
 
 #### `scalar Decimal`
@@ -402,7 +402,7 @@ PostgreSQL `interval` durations — normalized to **total milliseconds** on the 
 | **Usage** | Outputs, inputs, filters, cursors, aggregate min/max on `interval` columns |
 | **Storage** | Drizzle `interval()` — PostgreSQL `interval`; repository converts PG interval ↔ total ms |
 | **Serialize** | Total milliseconds as decimal string (signed 64-bit range) |
-| **Parse** | Must match `/^-?\d+$/` and fit signed 64-bit range → **`BAD_USER_INPUT`** on violation |
+| **Parse** | Decimal string matching `/^-?\d+$/` within signed 64-bit range; **`parseValue`** also accepts JSON **safe integers**; **`parseLiteral`** accepts string literals (decimal string) or integer literals (safe integers only — unsafe magnitudes must use a string literal) → **`BAD_USER_INPUT`** on violation |
 | **Rationale** | JS/API convention, sub-second precision, avoids float; single fixed unit across all docs |
 
 Alternative storage for durations in new schemas: `bigint` column holding milliseconds directly (maps to `BigInt` scalar) — see [DAL Entity Design Guidelines § Column Types](dal-entity-design.md#column-types).
@@ -2439,9 +2439,9 @@ ds-cli does not attempt to flatten recursive filter inputs into flat CLI flags. 
 | **DateTime** | ISO-8601 UTC with milliseconds | Unix timestamps (numeric or string), timezone-less local strings without offset |
 | **TimeTz** | ISO-8601 time with offset — `"13:45:00.000+05:30"` or `"13:45:00Z"` | Date components, timezone-less local time without offset |
 | **Date** | ISO-8601 date — `"2026-09-10"` | Datetime strings with time component, numeric epoch |
-| **BigInt** | Decimal integer string — `"9223372036854775807"` | JSON numbers (must be string), scientific notation |
+| **BigInt** | Decimal integer string — `"9223372036854775807"` (JSON **safe integers** also accepted in variables) | Out-of-range values, unsafe JSON integers, scientific notation |
 | **Decimal** | Decimal string — `"1234.56"` | JSON numbers (must be string), scientific notation |
-| **IntervalMs** | Signed ms string — `"3600000"` | JSON numbers (must be string), fractional values |
+| **IntervalMs** | Signed ms string — `"3600000"` (JSON **safe integers** also accepted in variables) | Fractional values, unsafe JSON integers, non-integer strings |
 
 **Examples:**
 

@@ -15,7 +15,7 @@ The primary `@corpdk/ds` template uses **DAL automation** — no hand-written en
 | **Record types** | `src/generated/entity-records.ts` (phase 1; shared by mappers and repositories) |
 | **Generated repos** | `src/generated/dal/repositories/generated-<entity>.repository.ts` |
 | **Input validation** | `src/generated/dal/input-zod.ts`; team resolvers re-export helpers from `src/validation/parse-input.ts` |
-| **Bootstrap wiring** | `src/schema.ts` imports `typeDefs` from `src/generated/generated-schema.ts` and `generatedResolvers`, `createDalContext`, `pubsub` from `src/generated/dal/index.ts`; bootstrap SDL/resolvers/pubsub topics are emitted by `@corpdk/dal-codegen` |
+| **Bootstrap wiring** | `src/schema.ts` imports `typeDefs` from `src/generated/generated-schema.ts` and `dalScalarResolvers`, `generatedResolvers`, `createDalContext`, `pubsub` from `src/generated/dal/index.ts` (Yoga merges `dalScalarResolvers` for strict custom scalar parse/serialize — [custom DAL scalars registry](dal-pg-type-mapping.md#custom-dal-scalars-registry)); bootstrap SDL/resolvers/pubsub topics are emitted by `@corpdk/dal-codegen` |
 
 Adding an entity: add a Drizzle table to `src/db/schema/`, then run **`pnpm dal:codegen`** (schema → graphql-codegen for SDK/CLI and `src/generated/graphql/resolvers.generated.ts` → DAL impl). See [GraphQL DAL Requirements](graphql-dal-requirements.md) and [DAL Entity Design Guidelines](dal-entity-design.md).
 
