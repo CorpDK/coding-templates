@@ -82,7 +82,7 @@ Comprehensive coverage for **PostgreSQL** (primary Drizzle dialect). Other SQL d
 
 ### Network
 
-Rare — codegen emits domain-specific scalars when these PG types appear in the Drizzle schema; not in default templates. Filters v1: **`eq` / `neq` only**.
+Rare — opt-in when declared via Drizzle `customType`; not in default templates. Network filters v1: **`eq` / `neq` / `isNull`** (nullable columns only — [§10.4.1](graphql-dal-requirements.md#1041-null-filter-operator-isnull)).
 
 | PG type | Drizzle builder | DAL support | DAL scalar | Filter | Sort | Aggregate | Notes |
 | ------- | --------------- | ----------- | ---------- | ------ | ---- | --------- | ----- |
@@ -93,7 +93,7 @@ Rare — codegen emits domain-specific scalars when these PG types appear in the
 
 ### Geometric
 
-Rare — codegen emits domain-specific scalars when present; not in default templates. Filters v1: **`eq` / `neq` only**.
+**Not supported v1** — codegen and `entity:lint` fail. Do not use native PostgreSQL geometry types in DAL entity schemas.
 
 | PG type | Drizzle builder | DAL support | DAL scalar | Filter | Sort | Aggregate | Notes |
 | ------- | --------------- | ----------- | ---------- | ------ | ---- | --------- | ----- |
@@ -107,7 +107,7 @@ Rare — codegen emits domain-specific scalars when present; not in default temp
 
 ### PostGIS / spatial
 
-Rare — requires PostGIS extension. Codegen emits scalars when present; not in default templates. Filters v1: **`eq` / `neq` only**.
+**Not supported v1** — codegen and `entity:lint` fail even when the PostGIS extension is installed. Use an external spatial service or defer.
 
 | PG type | Drizzle builder | DAL support | DAL scalar | Filter | Sort | Aggregate | Notes |
 | ------- | --------------- | ----------- | ---------- | ------ | ---- | --------- | ----- |
@@ -169,7 +169,7 @@ Formal mapping for **supported** PostgreSQL types only:
 | `interval` | `IntervalMs` | `IntervalMs` | `IntervalMsFilter` | `<Entity>Field` | ComparableFields (min/max) | `IntervalMs` (string) in cursor `values` |
 | `uuid` | `ID` | `ID` | `IDFilter` | `<Entity>Field` | ComparableFields (min/max) | `ID` in cursor `values` |
 | `pgEnum` | GraphQL enum | Same enum | `<Enum>Filter` | `<Entity>Field` | — | Enum string in cursor `values` |
-| `inet`, `cidr`, `macaddr` | respective custom scalar | same | respective `*Filter` (v1 `eq`/`neq`) | `<Entity>Field` | ComparableFields (min/max) where applicable | scalar string in cursor `values` |
+| `inet`, `cidr`, `macaddr` | respective custom scalar | same | respective `*Filter` (v1 `eq`/`neq`/`isNull`) | `<Entity>Field` | ComparableFields (min/max) where applicable | scalar string in cursor `values` |
 
 ### v1 scalar decisions (rationale)
 
@@ -209,12 +209,12 @@ Codegen emits **six core custom scalars** in the generated base SDL when those P
 
 ### Opt-in custom scalars (rare)
 
-Codegen emits these **only when** the corresponding PG type appears in the Drizzle schema — not in default templates. Filters v1: **`eq` / `neq` only**.
+Codegen emits these **only when** the corresponding PG type appears in the Drizzle schema — not in default templates.
 
-| Group | Scalars | Wire format |
-| ----- | ------- | ------------- |
-| **PG-accurate** | `SmallInt`, `Double`, `InsensitiveString` | PG range / citext string wire |
-| **Network** | `IP`, `CIDR`, `MAC` | Validated string in PG-native notation; filters v1 **`eq`/`neq`/`isNull`** |
+| Group | Scalars | Wire format | Filters v1 |
+| ----- | ------- | ------------- | ------------ |
+| **PG-accurate** | `SmallInt`, `Double`, `InsensitiveString` | PG range / citext string wire | Same comparators as `IntFilter` / `StringFilter` ([§10.4](graphql-dal-requirements.md#104-other-scalar-filters)) |
+| **Network** | `IP`, `CIDR`, `MAC` | Validated string in PG-native notation | **`eq` / `neq` / `isNull`** (nullable columns only) |
 
 Geometric and PostGIS PG types (`point`, `geometry`, etc.) and **`macaddr8`** are **not supported v1** — codegen and `entity:lint` fail with `PG_TYPE_BANNED` / schema load errors.
 
