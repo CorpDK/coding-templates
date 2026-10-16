@@ -1,6 +1,6 @@
 import { Kind } from "graphql";
 import { describe, expect, it } from "vitest";
-import { dalGraphQLScalar } from "../graphql-scalars.js";
+import { dalGraphQLScalar, dalScalarResolversFor } from "../graphql-scalars.js";
 
 describe("dal GraphQL scalars", () => {
   it("DateTime rejects invalid literals via graphql-scalars + dal-core", () => {
@@ -89,5 +89,53 @@ describe("dal GraphQL scalars", () => {
     expect(iv.parseValue(largeMs)).toBe(largeMs);
     expect(iv.parseLiteral({ kind: Kind.STRING, value: largeMs }, {})).toBe(largeMs);
     expect(() => iv.parseLiteral({ kind: Kind.FLOAT, value: "1.5" }, {})).toThrow();
+    expect(iv.serialize(1500)).toBe("1500");
+    expect(iv.serialize(null)).toBeNull();
+  });
+
+  it("Date and DateTime coerce Date inputs and string literals", () => {
+    const date = dalGraphQLScalar("Date");
+    expect(date.parseValue("2026-09-21")).toBe("2026-09-21");
+    expect(date.serialize(new Date("2026-09-21T00:00:00.000Z"))).toBe("2026-09-21");
+    expect(date.parseLiteral({ kind: Kind.STRING, value: "2026-09-21" }, {})).toBe(
+      "2026-09-21",
+    );
+    expect(() => date.parseLiteral({ kind: Kind.INT, value: "1" }, {})).toThrow();
+    expect(date.serialize(null)).toBeNull();
+
+    const dt = dalGraphQLScalar("DateTime");
+    expect(dt.parseValue(new Date("2026-09-21T12:00:00.000Z"))).toBe(
+      "2026-09-21T12:00:00.000Z",
+    );
+    expect(dt.serialize(null)).toBeNull();
+  });
+
+  it("Double, Decimal, and SmallInt accept numeric literals", () => {
+    const dbl = dalGraphQLScalar("Double");
+    expect(dbl.parseLiteral({ kind: Kind.FLOAT, value: "1.5" }, {})).toBe(1.5);
+    expect(dbl.serialize(2.5)).toBe(2.5);
+
+    const dec = dalGraphQLScalar("Decimal");
+    expect(dec.parseLiteral({ kind: Kind.STRING, value: "12.5" }, {})).toBe("12.5");
+
+    const si = dalGraphQLScalar("SmallInt");
+    expect(si.parseLiteral({ kind: Kind.INT, value: "100" }, {})).toBe(100);
+    expect(() => si.parseLiteral({ kind: Kind.STRING, value: "x" }, {})).toThrow();
+  });
+
+  it("CIDR serialize re-validates wire and InsensitiveString uses string literals", () => {
+    expect(dalGraphQLScalar("CIDR").serialize("192.0.2.0/24")).toBe("192.0.2.0/24");
+    expect(() => dalGraphQLScalar("CIDR").serialize("192.0.2.1/24")).toThrow();
+
+    const ins = dalGraphQLScalar("InsensitiveString");
+    expect(ins.parseLiteral({ kind: Kind.STRING, value: "abc" }, {})).toBe("abc");
+    expect(() => ins.parseLiteral({ kind: Kind.INT, value: "1" }, {})).toThrow();
+  });
+
+  it("dalScalarResolversFor registers Yoga resolver entries", () => {
+    const resolvers = dalScalarResolversFor(["IP", "MAC", "CIDR"]);
+    expect(resolvers.IP.parseValue("192.0.2.1")).toBe("192.0.2.1");
+    expect(resolvers.MAC.parseValue("08:00:2B:01:02:03")).toBe("08:00:2B:01:02:03");
+    expect(resolvers.CIDR.parseValue("10.0.0.0/8")).toBe("10.0.0.0/8");
   });
 });

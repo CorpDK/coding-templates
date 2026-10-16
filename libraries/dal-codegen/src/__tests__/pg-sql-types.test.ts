@@ -1,12 +1,20 @@
 import { describe, expect, it } from "vitest";
 import { customType, pgTable } from "drizzle-orm/pg-core";
 import { getTableColumns } from "drizzle-orm";
-import { columnKindFromPgSqlType } from "../pg-sql-types.js";
+import { bannedPgTypeMessage, columnKindFromPgSqlType } from "../pg-sql-types.js";
 
 describe("pg-sql-types", () => {
   it("maps supported custom SQL types", () => {
     expect(columnKindFromPgSqlType("citext")).toBe("citext");
     expect(columnKindFromPgSqlType("inet")).toBe("inet");
+    expect(columnKindFromPgSqlType("cidr")).toBe("cidr");
+    expect(columnKindFromPgSqlType("macaddr")).toBe("macaddr");
+    expect(columnKindFromPgSqlType(" CIDR ")).toBe("cidr");
+  });
+
+  it("formats banned PG type lint messages", () => {
+    expect(bannedPgTypeMessage("geo", "p", "point")).toMatch(/geo\.p/);
+    expect(bannedPgTypeMessage("geo", "p", "point")).toMatch(/not supported/i);
   });
 
   it("marks deferred geometric and PostGIS types as banned", () => {
