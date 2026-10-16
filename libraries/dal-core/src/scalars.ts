@@ -314,14 +314,17 @@ function ipv6HostToBigInt(host: string): bigint {
 }
 
 function assertIpv6CidrNetwork(host: string, prefix: number): void {
-  if (prefix <= 0) {
-    return;
-  }
   const hostBits = 128 - prefix;
+  const addr = ipv6HostToBigInt(host);
   if (hostBits <= 0) {
     return;
   }
-  const addr = ipv6HostToBigInt(host);
+  if (hostBits >= 128) {
+    if (addr !== 0n) {
+      throw new TypeError("CIDR must be valid CIDR notation");
+    }
+    return;
+  }
   const hostMask = (1n << BigInt(hostBits)) - 1n;
   if ((addr & hostMask) !== 0n) {
     throw new TypeError("CIDR must be valid CIDR notation");

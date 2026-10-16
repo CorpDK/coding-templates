@@ -43,6 +43,8 @@ describe("dalScalarZod", () => {
     expect(dalScalarZod.CIDR.safeParse("192.0.2.1/24").success).toBe(false);
     expect(dalScalarZod.CIDR.safeParse("192.0.0.0/33").success).toBe(false);
     expect(dalScalarZod.CIDR.safeParse("2001:db8::1/64").success).toBe(false);
+    expect(dalScalarZod.CIDR.safeParse("::/0").success).toBe(true);
+    expect(dalScalarZod.CIDR.safeParse("2001:db8::/0").success).toBe(false);
   });
 
   it("SmallInt, Double, and zPgInt32 / zPgReal enforce PG ranges", () => {
