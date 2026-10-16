@@ -37,6 +37,14 @@ describe("dalScalarZod", () => {
     expect(dalScalarZod.MAC.safeParse("not-mac").success).toBe(false);
   });
 
+  it("CIDR rejects invalid wire values consistent with parseCidr", () => {
+    expect(dalScalarZod.CIDR.safeParse("192.0.2.0/24").success).toBe(true);
+    expect(dalScalarZod.CIDR.safeParse("::ffff:192.0.2.0/120").success).toBe(true);
+    expect(dalScalarZod.CIDR.safeParse("192.0.2.1/24").success).toBe(false);
+    expect(dalScalarZod.CIDR.safeParse("192.0.0.0/33").success).toBe(false);
+    expect(dalScalarZod.CIDR.safeParse("2001:db8::1/64").success).toBe(false);
+  });
+
   it("SmallInt, Double, and zPgInt32 / zPgReal enforce PG ranges", () => {
     expect(dalScalarZod.SmallInt.safeParse(32_767).success).toBe(true);
     expect(dalScalarZod.SmallInt.safeParse(50_000).success).toBe(false);

@@ -23,6 +23,11 @@ function codegenDbStubPlugin(): Plugin {
 
 export default defineConfig({
   plugins: [codegenDbStubPlugin()],
+  resolve: {
+    alias: {
+      "@corpdk/dal-core": join(packageRoot, "../dal-core/src/index.ts"),
+    },
+  },
   test: {
     include: ["src/**/*.test.ts"],
     coverage: {
