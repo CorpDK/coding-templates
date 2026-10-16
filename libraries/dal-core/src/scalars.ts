@@ -216,11 +216,11 @@ export function serializeCidr(value: string | null | undefined): string | null {
 /** PostgreSQL cidr — graphql-scalars has no CIDR scalar (v1.26); prefix + network-bit checks. */
 const CIDR_IPV4_HOST_RE = /^(?:\d{1,3}\.){3}\d{1,3}$/;
 
-function assertIpv4CidrHost(host: string): void {
-  if (!CIDR_IPV4_HOST_RE.test(host)) {
+function assertIpv4Octets(dotted: string): void {
+  if (!CIDR_IPV4_HOST_RE.test(dotted)) {
     throw new TypeError("CIDR must be valid CIDR notation");
   }
-  for (const octet of host.split(".")) {
+  for (const octet of dotted.split(".")) {
     if (octet.length === 0 || !/^\d{1,3}$/.test(octet)) {
       throw new TypeError("CIDR must be valid CIDR notation");
     }
@@ -229,6 +229,26 @@ function assertIpv4CidrHost(host: string): void {
       throw new TypeError("CIDR must be valid CIDR notation");
     }
   }
+}
+
+function assertIpv4CidrHost(host: string): void {
+  assertIpv4Octets(host);
+}
+
+function expandEmbeddedIpv4Groups(parts: string[]): string[] {
+  const expanded: string[] = [];
+  for (const part of parts) {
+    if (part.includes(".")) {
+      assertIpv4Octets(part);
+      const octets = part.split(".").map(Number);
+      const hi = (octets[0]! << 8) | octets[1]!;
+      const lo = (octets[2]! << 8) | octets[3]!;
+      expanded.push(hi.toString(16), lo.toString(16));
+    } else {
+      expanded.push(part);
+    }
+  }
+  return expanded;
 }
 
 function assertIpv4CidrNetwork(host: string, prefix: number): void {
@@ -266,15 +286,15 @@ function ipv6HostToBigInt(host: string): bigint {
   if (doubleColon >= 0) {
     const before = lowered.slice(0, doubleColon);
     const after = lowered.slice(doubleColon + 2);
-    const head = before ? before.split(":") : [];
-    const tail = after ? after.split(":") : [];
+    const head = expandEmbeddedIpv4Groups(before ? before.split(":") : []);
+    const tail = expandEmbeddedIpv4Groups(after ? after.split(":") : []);
     const missing = 8 - head.length - tail.length;
     if (missing < 0) {
       throw new TypeError("CIDR must be valid CIDR notation");
     }
     parts = [...head, ...Array<string>(missing).fill("0"), ...tail];
   } else {
-    parts = lowered.split(":");
+    parts = expandEmbeddedIpv4Groups(lowered.split(":"));
     if (parts.length !== 8) {
       throw new TypeError("CIDR must be valid CIDR notation");
     }
@@ -318,7 +338,7 @@ export function parseCidr(value: unknown): string {
   }
   const host = value.slice(0, slash);
   const prefix = Number(value.slice(slash + 1));
-  if (host.includes(".")) {
+  if (CIDR_IPV4_HOST_RE.test(host)) {
     assertIpv4CidrHost(host);
     if (!Number.isInteger(prefix) || prefix < 0 || prefix > 32) {
       throw new TypeError("CIDR must be valid CIDR notation");

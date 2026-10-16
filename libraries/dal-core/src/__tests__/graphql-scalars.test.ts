@@ -74,6 +74,9 @@ describe("dal GraphQL scalars", () => {
     expect(dalGraphQLScalar("CIDR").parseValue("2001:db8::/32")).toBe("2001:db8::/32");
     expect(() => dalGraphQLScalar("CIDR").parseValue("2001:db8::1/64")).toThrow();
     expect(() => dalGraphQLScalar("CIDR").parseValue("1:2:3/64")).toThrow();
+    expect(dalGraphQLScalar("CIDR").parseValue("::ffff:192.0.2.0/120")).toBe(
+      "::ffff:192.0.2.0/120",
+    );
   });
 
   it("IntervalMs accepts INT literals and enforces dal-core wire rules", () => {
