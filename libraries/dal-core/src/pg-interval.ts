@@ -5,7 +5,9 @@ const MS_PER_MILLISECOND = 1n;
 const MS_PER_MINUTE = 60n * MS_PER_SECOND;
 const MS_PER_HOUR = 60n * MS_PER_MINUTE;
 const MS_PER_DAY = 24n * MS_PER_HOUR;
+// Fixed 30-day month; PG calendar `mon` fields are not equal to this ms literal in filters.
 const MS_PER_MONTH = 30n * MS_PER_DAY;
+// Fixed 365.25-day year; PG calendar `year` fields are not equal to this ms literal in filters.
 const MS_PER_YEAR = 31557600000n;
 
 const BACKEND_INTERVAL = new RegExp(

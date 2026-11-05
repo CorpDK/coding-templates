@@ -207,6 +207,8 @@ Codegen emits **six core custom scalars** in the generated base SDL when those P
 | **`Decimal`** | Decimal string — e.g. `"1234.56"` or `"99"` | `numeric`, `decimal` | Valid decimal notation; no scientific notation in v1 | `BAD_USER_INPUT` |
 | **`IntervalMs`** | Signed decimal integer string of **total milliseconds** — e.g. `"3600000"`, `"-1500"` | `interval` | Matches `/^-?\d+$/`; must fit signed 64-bit range | `BAD_USER_INPUT` |
 
+**IntervalMs and calendar units:** GraphQL writes and filters use millisecond wire only; repositories persist filters as `"N milliseconds"` PG literals. On read, PG backend `mon` / `year` components in stored intervals are converted to fixed ms constants (30-day month, 365.25-day year). PostgreSQL does not treat a stored `1 mon` as equal to that millisecond literal, so filtering by the serialized ms value after read may not match rows whose intervals were stored with calendar month/year fields (e.g. from raw SQL or migrations). Prefer day/time/hour/minute/second components for round-trip filter equality.
+
 ### Opt-in custom scalars (rare)
 
 Codegen emits these **only when** the corresponding PG type appears in the Drizzle schema — not in default templates.
