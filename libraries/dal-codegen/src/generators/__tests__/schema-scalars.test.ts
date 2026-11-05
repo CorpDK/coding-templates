@@ -1,7 +1,18 @@
+import { GraphQLInputObjectType } from "graphql";
 import { describe, expect, it } from "vitest";
 import type { ColumnModel, EntityModel } from "../../model.js";
 import { buildSchemaRegistry, collectUsedDalScalars } from "../schema-registry.js";
 import { itemFixture } from "./sdl.fixture.js";
+
+function expectFilterHasIsNull(
+  registry: ReturnType<typeof buildSchemaRegistry>,
+  filterName: string,
+): void {
+  const filter = registry.types.get(filterName);
+  expect(filter).toBeDefined();
+  expect(filter).toBeInstanceOf(GraphQLInputObjectType);
+  expect((filter as GraphQLInputObjectType).getFields().isNull?.type).toBeDefined();
+}
 
 function businessCol(
   drizzleKey: string,
@@ -41,6 +52,11 @@ const dalScalarFixture: EntityModel = {
     businessCol("durationMs", "interval", "durationMs"),
     businessCol("priority", "smallint", "priority"),
     businessCol("weight", "double", "weight"),
+    {
+      ...businessCol("lifecycle", "enum", "lifecycle"),
+      enumName: "HostLifecycle",
+      enumValues: ["ACTIVE", "RETIRED"],
+    },
   ],
 };
 
@@ -90,6 +106,18 @@ describe("schema registry DAL scalars", () => {
       "DoubleFilter",
     ]) {
       expect(registry.types.has(name)).toBe(true);
+    }
+  });
+
+  it("Int-comparable scalar filters and enum filters expose isNull (§10.4)", () => {
+    const registry = buildSchemaRegistry([dalScalarFixture]);
+    for (const filterName of [
+      "BigIntFilter",
+      "DecimalFilter",
+      "IntervalMsFilter",
+      "HostLifecycleFilter",
+    ]) {
+      expectFilterHasIsNull(registry, filterName);
     }
   });
 });

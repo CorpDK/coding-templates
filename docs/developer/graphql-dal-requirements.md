@@ -1219,6 +1219,7 @@ input BigIntFilter {
   lte: BigInt
   in: [BigInt!]
   notIn: [BigInt!]
+  isNull: Boolean
 }
 
 input DecimalFilter {
@@ -1230,6 +1231,7 @@ input DecimalFilter {
   lte: Decimal
   in: [Decimal!]
   notIn: [Decimal!]
+  isNull: Boolean
 }
 
 input DateFilter {
@@ -1259,6 +1261,7 @@ input IntervalMsFilter {
   lte: IntervalMs
   in: [IntervalMs!]
   notIn: [IntervalMs!]
+  isNull: Boolean
 }
 ```
 

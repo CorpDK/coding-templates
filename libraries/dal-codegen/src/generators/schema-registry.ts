@@ -410,6 +410,10 @@ function buildBigIntFilter(bigInt: GraphQLScalarType): GraphQLInputObjectType {
       lte: { type: bigInt },
       in: { type: new GraphQLList(new GraphQLNonNull(bigInt)) },
       notIn: { type: new GraphQLList(new GraphQLNonNull(bigInt)) },
+      isNull: {
+        type: GraphQLBoolean,
+        description: "True = IS NULL; false = IS NOT NULL; nullable columns only.",
+      },
     },
   });
 }
@@ -427,6 +431,10 @@ function buildDecimalFilter(decimal: GraphQLScalarType): GraphQLInputObjectType 
       lte: { type: decimal },
       in: { type: new GraphQLList(new GraphQLNonNull(decimal)) },
       notIn: { type: new GraphQLList(new GraphQLNonNull(decimal)) },
+      isNull: {
+        type: GraphQLBoolean,
+        description: "True = IS NULL; false = IS NOT NULL; nullable columns only.",
+      },
     },
   });
 }
@@ -486,6 +494,10 @@ function buildIntervalMsFilter(intervalMs: GraphQLScalarType): GraphQLInputObjec
       lte: { type: intervalMs },
       in: { type: new GraphQLList(new GraphQLNonNull(intervalMs)) },
       notIn: { type: new GraphQLList(new GraphQLNonNull(intervalMs)) },
+      isNull: {
+        type: GraphQLBoolean,
+        description: "True = IS NULL; false = IS NOT NULL; nullable columns only.",
+      },
     },
   });
 }
@@ -499,6 +511,10 @@ function buildEnumFilter(enumType: GraphQLEnumType): GraphQLInputObjectType {
       neq: { type: enumType },
       in: { type: new GraphQLList(new GraphQLNonNull(enumType)) },
       notIn: { type: new GraphQLList(new GraphQLNonNull(enumType)) },
+      isNull: {
+        type: GraphQLBoolean,
+        description: "True = IS NULL; false = IS NOT NULL; nullable columns only.",
+      },
     },
   });
 }
