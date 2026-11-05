@@ -11,13 +11,7 @@ const MS_PER_MONTH = 30n * MS_PER_DAY;
 const MS_PER_YEAR = 31557600000n;
 
 const BACKEND_INTERVAL = new RegExp(
-  [
-    "^(?:([+-]?\\d+)\\s+years?)?",
-    "(?:\\s*([+-]?\\d+)\\s+mons?)?",
-    "(?:\\s*([+-]?\\d+)\\s+days?)?",
-    "(?:\\s*([+-])?(\\d*):(\\d\\d):(\\d\\d)(?:\\.(\\d{1,6}))?)?",
-    "$",
-  ].join(""),
+  String.raw`^(?:([+-]?\d+)\s+years?)?(?:\s*([+-]?\d+)\s+mons?)?(?:\s*([+-]?\d+)\s+days?)?(?:\s*([+-])?(\d*):(\d\d):(\d\d)(?:\.(\d{1,6}))?)?$`,
   "i",
 );
 
@@ -134,20 +128,19 @@ function parseAmountToMs(amount: string, unitMs: bigint): bigint {
 function parseVerboseInterval(text: string): bigint | null {
   const trimmed = text.trim();
   if (!trimmed || TIME_ONLY.test(trimmed) || DAY_TIME.test(trimmed)) return null;
+  const tokens = trimmed.split(/\s+/);
+  if (tokens.length < 2 || tokens.length % 2 !== 0) return null;
   let total = 0n;
-  let matched = false;
-  const re = /([+-]?\d+(?:\.\d+)?)\s*([a-zA-Z]+)/g;
-  for (const match of trimmed.matchAll(re)) {
-    matched = true;
-    const amount = match[1]!;
-    const unitKey = match[2]!.toLowerCase();
+  for (let i = 0; i < tokens.length; i += 2) {
+    const amount = tokens[i]!;
+    const unitKey = tokens[i + 1]!.toLowerCase();
     const unitMs = VERBOSE_UNIT_MS[unitKey];
     if (unitMs === undefined) {
       throw new TypeError("Invalid PostgreSQL interval");
     }
     total += parseAmountToMs(amount, unitMs);
   }
-  return matched ? total : null;
+  return total;
 }
 
 function assertInt64Ms(ms: bigint): string {

@@ -9,9 +9,8 @@ import {
   PG_SMALLINT_MAX,
   PG_SMALLINT_MIN,
 } from "./pg-bounds.js";
-import { intervalMsToPgInterval, pgIntervalTextToMs } from "./pg-interval.js";
-
-export { intervalMsToPgInterval, pgIntervalTextToMs };
+export { intervalMsToPgInterval, pgIntervalTextToMs } from "./pg-interval.js";
+import { pgIntervalTextToMs } from "./pg-interval.js";
 
 /** Serialize timestamptz Date to ISO-8601 UTC with milliseconds and Z suffix. */
 export function serializeDateTime(value: Date | string | null | undefined): string | null {

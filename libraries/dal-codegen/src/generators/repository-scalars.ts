@@ -96,7 +96,8 @@ function parseWrapper(col: ColumnModel, ref: string, nullable: boolean): string 
   const fn = PARSE_BY_KIND[col.kind];
   if (!fn) return ref;
   if (nullable) {
-    return `${ref} === null || ${ref} === undefined ? ${ref} : ${dbValueFromParse(col, `${fn}(${ref})`)}`;
+    const parsed = dbValueFromParse(col, `${fn}(${ref})`);
+    return `${ref} === null || ${ref} === undefined ? ${ref} : ${parsed}`;
   }
   return dbValueFromParse(col, `${fn}(${ref})`);
 }
