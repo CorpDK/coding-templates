@@ -1,8 +1,10 @@
 name: DAL
 
+# pull_request for PR branches; push only on main (avoids duplicate runs per commit).
 on:
   push:
-    branches: ["**"]
+    branches:
+      - main
   pull_request:
     types: [opened, synchronize, reopened]
 
