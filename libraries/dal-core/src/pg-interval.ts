@@ -23,9 +23,6 @@ const TIME_ONLY = /^([+-])?(\d+):(\d{2}):(\d{2})(?:\.(\d{1,6}))?$/;
 const DAY_TIME = /^(\d+)\s+([+-])?(\d+):(\d{2}):(\d{2})(?:\.(\d{1,6}))?$/;
 
 const VERBOSE_UNIT_MS: Record<string, bigint> = {
-  microsecond: 1n,
-  microseconds: 1n,
-  us: 1n,
   millisecond: MS_PER_MILLISECOND,
   milliseconds: MS_PER_MILLISECOND,
   ms: MS_PER_MILLISECOND,
