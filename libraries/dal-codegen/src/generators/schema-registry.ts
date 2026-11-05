@@ -550,13 +550,28 @@ export function registryTypeRef(registry: SchemaRegistry, sdl: string): GraphQLT
   return nullable ? inner : new GraphQLNonNull(inner);
 }
 
+/**
+ * dal-core holds singleton scalars built with its own `graphql` copy; codegen builds
+ * types with this package's `graphql`. Re-instantiate so GraphQLNonNull/List checks pass.
+ */
+function registryDalScalar(name: DalCustomScalarName): GraphQLScalarType {
+  const source = dalGraphQLScalar(name);
+  return new GraphQLScalarType({
+    name: source.name,
+    description: source.description ?? undefined,
+    serialize: (value) => source.serialize(value),
+    parseValue: (value) => source.parseValue(value),
+    parseLiteral: (ast, variables) => source.parseLiteral(ast, variables),
+  });
+}
+
 export function buildSchemaRegistry(entities: EntityModel[]): SchemaRegistry {
   const { scalars, filters, enums } = collectUsedTypes(entities);
   const types = new Map<string, GraphQLNamedType>();
 
   const customScalars = new Map<CustomScalar, GraphQLScalarType>();
   for (const scalar of scalars) {
-    const type = dalGraphQLScalar(scalar);
+    const type = registryDalScalar(scalar);
     customScalars.set(scalar, type);
     types.set(scalar, type);
   }
