@@ -51,6 +51,17 @@ Scaffolded **`codegen.ts`** targets sibling **`../ds-sdk`** and **`../ds-cli`** 
 5. Runs **`entity:lint`** only when the monorepo `libraries/dal-codegen/dist/lint-cli.js` exists or **`node_modules/.bin/dal-entity-lint`** is present (skipped after a bare merge until `pnpm install` in DS-only repos).
 6. Prints **`pnpm install`** then **`pnpm dal:codegen`** as required follow-up.
 
+## Recent codegen output (`2026.10.0-alpha.13`)
+
+After bumping the lockstep DS automation packages and running **`pnpm dal:codegen`**:
+
+- Append-only entities no longer emit orphan update/bulk-update SDL types.
+- Hard-delete entities omit **`includeDeleted`** on read fields.
+- Delete mutation descriptions use correct **a/an** articles.
+- **`BigIntFilter`**, **`DecimalFilter`**, **`IntervalMsFilter`**, and enum filters include **`isNull`** for nullable columns; **`InsensitiveStringFilter`** drops redundant **`isCaseInsensitive`**.
+
+Details: [GraphQL DAL Requirements — SDL review fixes](graphql-dal-requirements.md#generated-sdl-review-fixes-2026100-alpha13).
+
 ## Upgrade playbook
 
 Published `@corpdk/*` libraries use [CalVer](../architecture/02-monorepo-design.md#calver-format-rules); rows below describe **compatibility impact**, not npm semver version fields.
@@ -94,4 +105,4 @@ Release **`@corpdk/create-ds`** on the same train as **`@corpdk/dal-codegen`** w
 
 **Related**: [Monorepo Overview](01-monorepo-overview.md) | [GraphQL DAL Requirements](graphql-dal-requirements.md) | [Monorepo Design — CalVer](../architecture/02-monorepo-design.md#calver-format-rules)
 
-**Last updated**: October 7, 2026
+**Last updated**: November 5, 2026

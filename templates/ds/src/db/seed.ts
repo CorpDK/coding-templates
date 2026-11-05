@@ -83,6 +83,7 @@ const IDS = {
   },
   scalarSpecimens: {
     reference: "c1000001-0000-4000-8000-000000000001",
+    nullsFixture: "c1000001-0000-4000-8000-000000000002",
   },
 } as const;
 
@@ -539,12 +540,12 @@ export async function seedDatabase(): Promise<void> {
 
       await tx
         .insert(scalarSpecimens)
-        .values([buildScalarSpecimenRow()])
+        .values([buildScalarSpecimenRow(), buildScalarSpecimenNullsRow()])
         .onConflictDoNothing();
     });
 
     console.log(
-      "[seed] Loaded sample data: 2 users, 2 labels, 2 user-labels, 3 categories, 5 items, 5 item-details, 3 tags, 6 item-tags, 2 orders, 4 order lines, 3 audit events, 1 scalar specimen.",
+      "[seed] Loaded sample data: 2 users, 2 labels, 2 user-labels, 3 categories, 5 items, 5 item-details, 3 tags, 6 item-tags, 2 orders, 4 order lines, 3 audit events, 2 scalar specimens.",
     );
   } finally {
     await pool.end();
@@ -636,12 +637,15 @@ function buildScalarSpecimenRow() {
     id: IDS.scalarSpecimens.reference,
     specimenCode: "scalar-reference-v1",
     fixedCode: "REF00001",
-    notes: "Single seed row covering every DAL-supported PostgreSQL scalar mapped to GraphQL.",
+    notes: "Populated optional columns for filter regression; pair with scalar-nulls-v1 for isNull tests.",
     slugInsensitive: "Scalar-Showcase-Slug",
+    slugInsensitiveOptional: "optional-slug",
     rankSmall: 42,
     countInt: 2_147_483_647,
     tokenBig: 9_007_199_254_740_991n,
+    tokenBigOptional: 42n,
     amountDecimal: "1234.5678",
+    amountDecimalOptional: "0.0001",
     ratioFloat: 3.14,
     ratioDouble: 2.718281828459045,
     isReference: true,
@@ -649,10 +653,52 @@ function buildScalarSpecimenRow() {
     observedAt: SCALAR_SPECIMEN_OBSERVED_AT,
     opensAt: "09:30:00+00",
     durationMs: "1 hour 30 minutes",
+    durationMsOptional: "15 minutes",
     hostIp: "192.0.2.42",
+    hostIpOptional: "198.51.100.10",
     networkCidr: "192.0.2.0/24",
+    networkCidrOptional: "198.51.100.0/24",
     nicMac: "08:00:2b:01:02:03",
+    nicMacOptional: "08:00:2b:04:05:06",
     kind: "REFERENCE" as const,
+    kindOptional: "EDGE_CASE" as const,
+    createdAt: SEEDED_AT,
+    updatedAt: SEEDED_AT,
+    createdBy: ACTOR,
+    updatedBy: ACTOR,
+  };
+}
+
+function buildScalarSpecimenNullsRow() {
+  return {
+    id: IDS.scalarSpecimens.nullsFixture,
+    specimenCode: "scalar-nulls-v1",
+    fixedCode: "NULL0001",
+    notes: "Optional scalar columns left NULL for isNull filter queries (BigInt, Decimal, IntervalMs, enum, network, citext).",
+    slugInsensitive: "null-fixture-slug",
+    slugInsensitiveOptional: null,
+    rankSmall: 0,
+    countInt: 0,
+    tokenBig: 0n,
+    tokenBigOptional: null,
+    amountDecimal: "0.0000",
+    amountDecimalOptional: null,
+    ratioFloat: 0,
+    ratioDouble: 0,
+    isReference: false,
+    effectiveOn: "2026-01-01",
+    observedAt: SEEDED_AT,
+    opensAt: "00:00:00+00",
+    durationMs: "0 seconds",
+    durationMsOptional: null,
+    hostIp: "127.0.0.1",
+    hostIpOptional: null,
+    networkCidr: "127.0.0.0/8",
+    networkCidrOptional: null,
+    nicMac: "00:00:00:00:00:01",
+    nicMacOptional: null,
+    kind: "EDGE_CASE" as const,
+    kindOptional: null,
     createdAt: SEEDED_AT,
     updatedAt: SEEDED_AT,
     createdBy: ACTOR,
@@ -669,8 +715,11 @@ async function seedScalarSpecimensIfEmpty(
     return;
   }
 
-  await db.insert(scalarSpecimens).values([buildScalarSpecimenRow()]).onConflictDoNothing();
-  console.log("[seed] Loaded scalar specimens: 1 reference row.");
+  await db
+    .insert(scalarSpecimens)
+    .values([buildScalarSpecimenRow(), buildScalarSpecimenNullsRow()])
+    .onConflictDoNothing();
+  console.log("[seed] Loaded scalar specimens: 2 rows (reference + nulls fixture).");
 }
 
 const isMainModule =

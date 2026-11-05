@@ -33,7 +33,7 @@ Comprehensive coverage for **PostgreSQL** (primary Drizzle dialect). Other SQL d
 | `char(n)` | `char()` | Supported | `String` | `StringFilter` | Yes | min/max | Fixed-length; trailing spaces trimmed on read |
 | `varchar(n)` | `varchar()` | Supported | `String` | `StringFilter` | Yes | min/max | |
 | `text` | `text()` | Supported | `String` | `StringFilter` | Yes | min/max | Actor columns (`createdBy`, etc.) use `text` |
-| `citext` | custom / extension | Supported | `InsensitiveString` | `InsensitiveStringFilter` | Yes | min/max | Custom scalar; filter uses `isCaseInsensitive` |
+| `citext` | custom / extension | Supported | `InsensitiveString` | `InsensitiveStringFilter` | Yes | min/max | Custom scalar; case-insensitive via PG citext (no `isCaseInsensitive` on filter) |
 | `name` | `name()` (internal) | Not supported | — | — | — | — | PostgreSQL catalog type — not for entity columns |
 
 ### Boolean
@@ -184,7 +184,7 @@ Formal mapping for **supported** PostgreSQL types only:
 | **`timestamp` (no TZ)** | **Not supported** | Ambiguous local time — **`timestamptz` only** ([§3.1](graphql-dal-requirements.md#31-custom-scalars), entity design) |
 | **`interval`** | Custom **`IntervalMs`** scalar — **milliseconds on wire** | Signed 64-bit integer as decimal string; PG `interval` ↔ total ms conversion in repository layer; JS/API convention, sub-second precision, avoids float |
 | **`uuid`** | GraphQL built-in **`ID`** — not a custom scalar | Relay/node identification convention; RFC 4122 validation at repository/DB — see [UUID → ID tradeoffs](#uuid--id-tradeoffs) |
-| **`citext`** | Custom **`InsensitiveString`** scalar | Case-insensitive storage in PG (`citext` extension); wire as string; **`InsensitiveStringFilter.isCaseInsensitive`** for matching |
+| **`citext`** | Custom **`InsensitiveString`** scalar | Case-insensitive storage and comparison in PG (`citext` extension); wire as string; **`InsensitiveStringFilter`** has no **`isCaseInsensitive`** flag |
 | **Network (`inet`, `cidr`, `macaddr`)** | **Supported (custom scalar, opt-in)** | Emitted when present in Drizzle schema; not in default templates; filters v1 **`eq` / `neq` / `isNull`** |
 | **Geometric, PostGIS, `macaddr8`** | **Not supported v1** | Codegen and `entity:lint` fail — normalize schema or defer |
 | **Range types** | **Not supported v1 (deliberation)** | v1 codegen fails — see [§ Range deliberation](#range-deliberation); recommended: two-column normalization |

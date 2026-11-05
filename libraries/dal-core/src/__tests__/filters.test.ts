@@ -85,6 +85,11 @@ describe("buildIdFilter and buildEnumFilter", () => {
     );
     expect(sqlText(buildEnumFilter(table.name, { in: ["DRAFT", "ACTIVE"] }))).toContain("in");
   });
+
+  it("compiles enum isNull for nullable enum columns", () => {
+    expect(sqlText(buildEnumFilter(table.name, { isNull: true }))).toContain("is null");
+    expect(sqlText(buildEnumFilter(table.name, { isNull: false }))).toContain("is not null");
+  });
 });
 
 describe("numeric and scalar string filters", () => {
@@ -95,6 +100,9 @@ describe("numeric and scalar string filters", () => {
     expect(sqlText(buildDateFilter(table.effectiveOn, { eq: "2026-09-21" }))).toContain("=");
     expect(sqlText(buildTimeTzFilter(table.name, { gte: "12:00:00Z" }))).toContain(">=");
     expect(sqlText(buildIntervalMsFilter(table.qty, { lte: "5000" }))).toContain("<=");
+    expect(sqlText(buildBigIntFilter(table.qty, { isNull: true }))).toContain("is null");
+    expect(sqlText(buildDecimalFilter(table.qty, { isNull: false }))).toContain("is not null");
+    expect(sqlText(buildIntervalMsFilter(table.qty, { isNull: true }))).toContain("is null");
   });
 });
 

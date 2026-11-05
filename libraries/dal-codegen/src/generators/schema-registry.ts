@@ -359,7 +359,8 @@ function buildInsensitiveStringFilter(
 ): GraphQLInputObjectType {
   return new GraphQLInputObjectType({
     name: "InsensitiveStringFilter",
-    description: "Filter operators for citext columns.",
+    description:
+      "Filter operators for citext columns; matching is case-insensitive via PostgreSQL citext (no isCaseInsensitive flag).",
     fields: {
       eq: { type: insensitiveString },
       neq: { type: insensitiveString },
@@ -369,10 +370,6 @@ function buildInsensitiveStringFilter(
       isNull: {
         type: GraphQLBoolean,
         description: "True = IS NULL; false = IS NOT NULL; nullable columns only.",
-      },
-      isCaseInsensitive: {
-        type: GraphQLBoolean,
-        description: "When true, eq/neq/like/in/notIn use case-insensitive matching.",
       },
     },
   });

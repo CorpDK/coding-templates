@@ -152,10 +152,13 @@ erDiagram
         char fixed_code "String"
         text notes "String"
         citext slug_insensitive "InsensitiveString"
+        citext slug_insensitive_optional "InsensitiveString nullable"
         smallint rank_small "SmallInt"
         integer count_int "Int"
         bigint token_big "BigInt"
+        bigint token_big_optional "BigInt nullable"
         numeric amount_decimal "Decimal"
+        numeric amount_decimal_optional "Decimal nullable"
         real ratio_float "Float"
         double ratio_double "Double"
         boolean is_reference "Boolean"
@@ -163,10 +166,15 @@ erDiagram
         timestamptz observed_at "DateTime"
         timetz opens_at "TimeTz"
         interval duration_ms "IntervalMs"
+        interval duration_ms_optional "IntervalMs nullable"
         inet host_ip "IP"
+        inet host_ip_optional "IP nullable"
         cidr network_cidr "CIDR"
+        cidr network_cidr_optional "CIDR nullable"
         macaddr nic_mac "MAC"
+        macaddr nic_mac_optional "MAC nullable"
         scalar_specimen_kind kind "GraphQL enum"
+        scalar_specimen_kind kind_optional "enum nullable"
         timestamptz created_at "DateTime audit"
         timestamptz updated_at "DateTime audit"
         text created_by
@@ -190,7 +198,7 @@ erDiagram
 | **labels** | full | hard | M:N → users via userLabels (distinct from item `tags`) |
 | **userLabels** | full | soft | Pure M:N junction (FKs + audit only); unique user+label pair |
 | **auditEvents** | append-only | hard | Standalone — no FK relations; `payload` required |
-| **scalarSpecimens** | full | hard | Standalone — no FK; one row seeds all supported PG → GraphQL scalars |
+| **scalarSpecimens** | full | hard | Standalone — no FK; seed rows cover all PG → GraphQL scalars plus nullable optional columns for `isNull` filters |
 
 ## PG → GraphQL scalar legend (`scalar_specimens`)
 
@@ -203,10 +211,13 @@ Reference table for DAL codegen and GraphQL Yoga wire types. Audit columns on al
 | `fixed_code` | `char(8)` | **`String`** |
 | `notes` | `text` | **`String`** |
 | `slug_insensitive` | `citext` | **`InsensitiveString`** |
+| `slug_insensitive_optional` | `citext` (nullable) | **`InsensitiveString`** + **`InsensitiveStringFilter.isNull`** |
 | `rank_small` | `smallint` | **`SmallInt`** |
 | `count_int` | `integer` | **`Int`** |
 | `token_big` | `bigint` | **`BigInt`** |
+| `token_big_optional` | `bigint` (nullable) | **`BigInt`** + **`BigIntFilter.isNull`** |
 | `amount_decimal` | `numeric(14,4)` | **`Decimal`** |
+| `amount_decimal_optional` | `numeric` (nullable) | **`Decimal`** + **`DecimalFilter.isNull`** |
 | `ratio_float` | `real` | **`Float`** |
 | `ratio_double` | `double precision` | **`Double`** |
 | `is_reference` | `boolean` | **`Boolean`** |
@@ -214,10 +225,21 @@ Reference table for DAL codegen and GraphQL Yoga wire types. Audit columns on al
 | `observed_at` | `timestamptz` | **`DateTime`** |
 | `opens_at` | `timetz` | **`TimeTz`** |
 | `duration_ms` | `interval` | **`IntervalMs`** |
+| `duration_ms_optional` | `interval` (nullable) | **`IntervalMs`** + **`IntervalMsFilter.isNull`** |
 | `host_ip` | `inet` | **`IP`** |
+| `host_ip_optional` | `inet` (nullable) | **`IP`** + **`IPFilter.isNull`** |
 | `network_cidr` | `cidr` | **`CIDR`** |
+| `network_cidr_optional` | `cidr` (nullable) | **`CIDR`** + **`CIDRFilter.isNull`** |
 | `nic_mac` | `macaddr` | **`MAC`** |
+| `nic_mac_optional` | `macaddr` (nullable) | **`MAC`** + **`MACFilter.isNull`** |
 | `kind` | `scalar_specimen_kind` (`pgEnum`) | **`ScalarSpecimenKind`** (enum) |
+| `kind_optional` | `scalar_specimen_kind` (nullable) | **`ScalarSpecimenKindFilter.isNull`** |
+
+## Migrations / local test
+
+- Apply Drizzle migrations through **`0003_last_black_tarantula`** so nullable optional columns exist on `scalar_specimens`.
+- Seed rows **`scalar-reference-v1`** (populated optionals) and **`scalar-nulls-v1`** (NULL optionals) cover filter edge cases (`isNull`, citext/network filters, etc.) — run `pnpm db:seed` (or your package’s seed script) after migrate.
+- If the database already had these columns from manual schema work, **`0003`** is catch-up only; confirm state before applying on shared or production databases.
 
 ## Notes
 
@@ -229,4 +251,4 @@ Reference table for DAL codegen and GraphQL Yoga wire types. Audit columns on al
 - **Pure junction (`userLabels`)**: M:N link for navigation validation — FKs and audit columns only (contrast with `itemTags`); soft-deletable links without touching `users` / `labels`.
 - **Append-only**: `tags` and `auditEvents` have `createdAt` + `createdBy` only — no `updatedAt` / `updatedBy`; `auditEvents.payload` is required (`notNull`).
 - **Soft delete**: `deletedAt` (+ optional `deletedBy`) on `items`, `tags`, `orders`, and junction `userLabels`.
-- **Scalar showcase**: `scalar_specimens` is intentionally outside the commerce ER — use it to regression-test filters, sorts, aggregates, and custom scalar parse/serialize for every supported PG type (enable `CREATE EXTENSION IF NOT EXISTS citext` before migrate/seed).
+- **Scalar showcase**: `scalar_specimens` is intentionally outside the commerce ER — use **`scalar-reference-v1`** (populated optionals) and **`scalar-nulls-v1`** (NULL optionals) to regression-test filters (`isNull`, citext eq/like without `isCaseInsensitive`, network `eq`/`neq`), sorts, aggregates, and custom scalar parse/serialize (enable `CREATE EXTENSION IF NOT EXISTS citext` before migrate/seed).

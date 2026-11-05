@@ -120,4 +120,12 @@ describe("schema registry DAL scalars", () => {
       expectFilterHasIsNull(registry, filterName);
     }
   });
+
+  it("InsensitiveStringFilter omits isCaseInsensitive (citext semantics)", () => {
+    const registry = buildSchemaRegistry([dalScalarFixture]);
+    const filter = registry.types.get("InsensitiveStringFilter");
+    expect(filter).toBeInstanceOf(GraphQLInputObjectType);
+    expect((filter as GraphQLInputObjectType).getFields().isCaseInsensitive).toBeUndefined();
+    expect((filter as GraphQLInputObjectType).getFields().eq).toBeDefined();
+  });
 });

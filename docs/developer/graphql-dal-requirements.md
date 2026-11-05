@@ -4,6 +4,20 @@ Requirements specification for a **standalone library/service pattern** that aut
 
 **Related:** [DAL Entity Design Guidelines](dal-entity-design.md) — conventions for authoring Drizzle schemas that feed codegen | [DAL PostgreSQL Type Reference](dal-pg-type-mapping.md) — PG type coverage and scalar mapping
 
+### Generated SDL review fixes (`2026.10.0-alpha.13`)
+
+Codegen output adjustments from merged-SDL review (DS automation five-pack **`2026.10.0-alpha.13`**):
+
+| Fix | Behavior |
+| --- | -------- |
+| **Append-only entities** | No orphan `*UpdateInput`, `Update*Payload`, or bulk-update types/mutations when audit profile is **`append-only`** only |
+| **Hard-delete reads** | **`includeDeleted`** omitted on list/get/connection/count/aggregate fields when the entity has no soft-delete columns (e.g. **`auditEvents`**) |
+| **Delete mutation docstrings** | Field descriptions use correct **a/an** articles (`Deletes an AuditEvent…`, `Deletes a Tag…`) |
+| **`isNull` on comparable filters** | **`BigIntFilter`**, **`DecimalFilter`**, **`IntervalMsFilter`**, and per-enum **`*Filter`** inputs expose **`isNull`** for nullable columns (same §10.4.1 rules as **`IntFilter`**) |
+| **`InsensitiveStringFilter`** | **`isCaseInsensitive` removed** — PostgreSQL **`citext`** matching is inherently case-insensitive; use **`StringFilter.isCaseInsensitive`** only on **`varchar`/`text`/`char`** columns |
+
+Demo coverage: **`templates/ds`** **`scalar_specimens`** optional nullable columns and seed rows **`scalar-reference-v1`** / **`scalar-nulls-v1`** ([ER diagram](../../templates/ds/src/db/ER-DIAGRAM.md)).
+
 ---
 
 ## Scope & Technology
@@ -1196,16 +1210,16 @@ Strongly typed inputs (no JSON). Codegen emits one filter input type per support
 | ------------ | -------------- | --------- |
 | **`SmallIntFilter`** | `smallint` | Same as `IntFilter`; values are **`SmallInt`** |
 | **`IntFilter`** | `integer` | `eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `in`, `notIn`, `isNull` (nullable columns only — §10.4.1) |
-| **`BigIntFilter`** | `bigint` | Same as `IntFilter`; values are **`BigInt`** (string on wire) |
-| **`DecimalFilter`** | `numeric`, `decimal` | Same as `IntFilter`; values are **`Decimal`** (string on wire) |
+| **`BigIntFilter`** | `bigint` | Same as `IntFilter` (including **`isNull`** on nullable columns); values are **`BigInt`** (string on wire) |
+| **`DecimalFilter`** | `numeric`, `decimal` | Same as `IntFilter` (including **`isNull`**); values are **`Decimal`** (string on wire) |
 | **`FloatFilter`** | `real` | Same as `IntFilter`; values are **`Float`** |
 | **`DoubleFilter`** | `double precision` | Same as `IntFilter`; values are **`Double`** |
-| **`InsensitiveStringFilter`** | `citext` | Same operators as **`StringFilter`** (§10.3); values are **`InsensitiveString`** |
+| **`InsensitiveStringFilter`** | `citext` | Same operators as **`StringFilter`** except **no `isCaseInsensitive`** — citext is case-insensitive in PostgreSQL; values are **`InsensitiveString`** |
 | **`BooleanFilter`** | `boolean` | `eq` — **no `isNull`** (non-nullable boolean semantics) |
 | **`DateFilter`** | `date` | Same comparators as `IntFilter`; values are **`Date`** (`YYYY-MM-DD`) |
 | **`DateTimeFilter`** | `timestamptz` | Same comparators as `IntFilter`; values are **`DateTime`** (ISO-8601 UTC) |
 | **`TimeTzFilter`** | `timetz` | Same comparators as `IntFilter`; values are **`TimeTz`** (ISO-8601 time with offset) |
-| **`IntervalMsFilter`** | `interval` | Same comparators as `IntFilter`; values are **`IntervalMs`** (ms string on wire) |
+| **`IntervalMsFilter`** | `interval` | Same comparators as `IntFilter` (including **`isNull`**); values are **`IntervalMs`** (ms string on wire) |
 | **`IDFilter`** | `uuid` | `eq`, `neq`, `in`, `notIn` — values are GraphQL **`ID`**; RFC 4122 validated at repository layer |
 | **`IPFilter`**, **`CIDRFilter`**, **`MACFilter`** | `inet`, `cidr`, `macaddr` | v1: **`eq`, `neq`, `isNull`** (nullable columns only — §10.4.1) ([opt-in custom scalars](dal-pg-type-mapping.md#opt-in-custom-scalars-rare)) |
 
@@ -1313,6 +1327,7 @@ input OrderStatusFilter {
   neq: OrderStatus
   in: [OrderStatus!]
   notIn: [OrderStatus!]
+  isNull: Boolean
 }
 ```
 
