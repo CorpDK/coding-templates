@@ -283,7 +283,7 @@ Do **not** use negated boolean names (`is_not_archived`, `has_no_lines`) — exp
 
 **Money:** PostgreSQL **`money`** is **unsupported** — entity validation **fails**. Never use `money()`. Store monetary amounts as **`integer` cents** (whole amounts) or **`numeric`/`decimal`** with explicit scale.
 
-**Case-insensitive text:** `citext` (requires PostgreSQL `citext` extension) is supported — same semantics as `text` for storage; case-insensitive matching is a query concern.
+**Case-insensitive text:** `citext` (requires PostgreSQL `citext` extension) maps to GraphQL **`InsensitiveString`** and **`InsensitiveStringFilter`** (no `isCaseInsensitive` flag) — see [DAL PostgreSQL type reference](dal-pg-type-mapping.md).
 
 **Specialized types:** network (`inet`, `cidr`, `macaddr`) use opt-in custom scalars when declared via Drizzle `customType`. **`macaddr8`**, all native **geometric** types, and **PostGIS** (`geometry`, `geography`) are **not supported v1** — codegen and `entity:lint` fail. See [Specialized types (rare)](#specialized-types-rare) and [dal-pg-type-mapping.md](dal-pg-type-mapping.md).
 

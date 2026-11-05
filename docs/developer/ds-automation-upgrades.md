@@ -86,7 +86,7 @@ pnpm dal:codegen
 | -------------------------------------- | -------- | ---------------------------------------------------- |
 | `src/db/schema/**`                     | Team     | Only hand-authored surface                           |
 | `src/db/seed.ts`                       | Team     | Optional demo data                                   |
-| `drizzle/migrations/**`                | Team     | `pnpm db:generate` / `db:migrate`                    |
+| `drizzle/migrations/**`                | Team     | `pnpm db:generate` / `db:migrate`; **`templates/ds`** ships tracked baseline migrations through **`0003`** (demo schema incl. `citext` / `scalar_specimens`) |
 | Auth wiring in `src/index.ts` context  | Team     | Future: auth plugin hook in bootstrap generator      |
 | Custom GraphQL extensions              | Team     | Future: `dal.config.yaml` extension points           |
 | Monorepo `turbo.json` / root workspace | Platform | Documented separately; not merged by `create-ds` yet |
