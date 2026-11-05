@@ -185,55 +185,55 @@ erDiagram
 
 ## Entity profiles
 
-| Entity | Audit | Delete | Relation pattern |
-| ------ | ----- | ------ | ---------------- |
-| **users** | full | hard | 1:M → orders; M:N → labels via userLabels |
-| **categories** | full | hard | 1:M parent of items |
-| **items** | full | soft | M:1 → categories; 1:1 → itemDetails; M:N → tags via itemTags; 1:M ← orderLines |
-| **itemDetails** | full | hard | 1:1 dependent of items (`itemId` unique FK) |
-| **tags** | append-only | soft | M:N → items via itemTags; `label` 2–30 chars |
-| **itemTags** | full | hard | Enriched M:N junction (`assignedAt` + unique item+tag pair) |
-| **orders** | full | soft | M:1 → users; 1:M parent of orderLines; PII `customerName` snapshot |
-| **orderLines** | full | hard | M:1 → orders; M:1 → items (one catalog item per line); `quantity` check &gt; 0 |
-| **labels** | full | hard | M:N → users via userLabels (distinct from item `tags`) |
-| **userLabels** | full | soft | Pure M:N junction (FKs + audit only); unique user+label pair |
-| **auditEvents** | append-only | hard | Standalone — no FK relations; `payload` required |
-| **scalarSpecimens** | full | hard | Standalone — no FK; seed rows cover all PG → GraphQL scalars plus nullable optional columns for `isNull` filters |
+| Entity              | Audit       | Delete | Relation pattern                                                                                                 |
+| ------------------- | ----------- | ------ | ---------------------------------------------------------------------------------------------------------------- |
+| **users**           | full        | hard   | 1:M → orders; M:N → labels via userLabels                                                                        |
+| **categories**      | full        | hard   | 1:M parent of items                                                                                              |
+| **items**           | full        | soft   | M:1 → categories; 1:1 → itemDetails; M:N → tags via itemTags; 1:M ← orderLines                                   |
+| **itemDetails**     | full        | hard   | 1:1 dependent of items (`itemId` unique FK)                                                                      |
+| **tags**            | append-only | soft   | M:N → items via itemTags; `label` 2–30 chars                                                                     |
+| **itemTags**        | full        | hard   | Enriched M:N junction (`assignedAt` + unique item+tag pair)                                                      |
+| **orders**          | full        | soft   | M:1 → users; 1:M parent of orderLines; PII `customerName` snapshot                                               |
+| **orderLines**      | full        | hard   | M:1 → orders; M:1 → items (one catalog item per line); `quantity` check &gt; 0                                   |
+| **labels**          | full        | hard   | M:N → users via userLabels (distinct from item `tags`)                                                           |
+| **userLabels**      | full        | soft   | Pure M:N junction (FKs + audit only); unique user+label pair                                                     |
+| **auditEvents**     | append-only | hard   | Standalone — no FK relations; `payload` required                                                                 |
+| **scalarSpecimens** | full        | hard   | Standalone — no FK; seed rows cover all PG → GraphQL scalars plus nullable optional columns for `isNull` filters |
 
 ## PG → GraphQL scalar legend (`scalar_specimens`)
 
 Reference table for DAL codegen and GraphQL Yoga wire types. Audit columns on all entities reuse `timestamptz` → **`DateTime`** and actor `text` → **`String`** (not duplicated on every business column below).
 
-| Column (physical) | PostgreSQL | GraphQL scalar |
-| ----------------- | ---------- | -------------- |
-| `id` | `uuid` | **`ID`** (built-in) |
-| `specimen_code` | `varchar` | **`String`** |
-| `fixed_code` | `char(8)` | **`String`** |
-| `notes` | `text` | **`String`** |
-| `slug_insensitive` | `citext` | **`InsensitiveString`** |
-| `slug_insensitive_optional` | `citext` (nullable) | **`InsensitiveString`** + **`InsensitiveStringFilter.isNull`** |
-| `rank_small` | `smallint` | **`SmallInt`** |
-| `count_int` | `integer` | **`Int`** |
-| `token_big` | `bigint` | **`BigInt`** |
-| `token_big_optional` | `bigint` (nullable) | **`BigInt`** + **`BigIntFilter.isNull`** |
-| `amount_decimal` | `numeric(14,4)` | **`Decimal`** |
-| `amount_decimal_optional` | `numeric` (nullable) | **`Decimal`** + **`DecimalFilter.isNull`** |
-| `ratio_float` | `real` | **`Float`** |
-| `ratio_double` | `double precision` | **`Double`** |
-| `is_reference` | `boolean` | **`Boolean`** |
-| `effective_on` | `date` | **`Date`** |
-| `observed_at` | `timestamptz` | **`DateTime`** |
-| `opens_at` | `timetz` | **`TimeTz`** |
-| `duration_ms` | `interval` | **`IntervalMs`** |
-| `duration_ms_optional` | `interval` (nullable) | **`IntervalMs`** + **`IntervalMsFilter.isNull`** |
-| `host_ip` | `inet` | **`IP`** |
-| `host_ip_optional` | `inet` (nullable) | **`IP`** + **`IPFilter.isNull`** |
-| `network_cidr` | `cidr` | **`CIDR`** |
-| `network_cidr_optional` | `cidr` (nullable) | **`CIDR`** + **`CIDRFilter.isNull`** |
-| `nic_mac` | `macaddr` | **`MAC`** |
-| `nic_mac_optional` | `macaddr` (nullable) | **`MAC`** + **`MACFilter.isNull`** |
-| `kind` | `scalar_specimen_kind` (`pgEnum`) | **`ScalarSpecimenKind`** (enum) |
-| `kind_optional` | `scalar_specimen_kind` (nullable) | **`ScalarSpecimenKindFilter.isNull`** |
+| Column (physical)           | PostgreSQL                        | GraphQL scalar                                                 |
+| --------------------------- | --------------------------------- | -------------------------------------------------------------- |
+| `id`                        | `uuid`                            | **`ID`** (built-in)                                            |
+| `specimen_code`             | `varchar`                         | **`String`**                                                   |
+| `fixed_code`                | `char(8)`                         | **`String`**                                                   |
+| `notes`                     | `text`                            | **`String`**                                                   |
+| `slug_insensitive`          | `citext`                          | **`InsensitiveString`**                                        |
+| `slug_insensitive_optional` | `citext` (nullable)               | **`InsensitiveString`** + **`InsensitiveStringFilter.isNull`** |
+| `rank_small`                | `smallint`                        | **`SmallInt`**                                                 |
+| `count_int`                 | `integer`                         | **`Int`**                                                      |
+| `token_big`                 | `bigint`                          | **`BigInt`**                                                   |
+| `token_big_optional`        | `bigint` (nullable)               | **`BigInt`** + **`BigIntFilter.isNull`**                       |
+| `amount_decimal`            | `numeric(14,4)`                   | **`Decimal`**                                                  |
+| `amount_decimal_optional`   | `numeric` (nullable)              | **`Decimal`** + **`DecimalFilter.isNull`**                     |
+| `ratio_float`               | `real`                            | **`Float`**                                                    |
+| `ratio_double`              | `double precision`                | **`Double`**                                                   |
+| `is_reference`              | `boolean`                         | **`Boolean`**                                                  |
+| `effective_on`              | `date`                            | **`Date`**                                                     |
+| `observed_at`               | `timestamptz`                     | **`DateTime`**                                                 |
+| `opens_at`                  | `timetz`                          | **`TimeTz`**                                                   |
+| `duration_ms`               | `interval`                        | **`IntervalMs`**                                               |
+| `duration_ms_optional`      | `interval` (nullable)             | **`IntervalMs`** + **`IntervalMsFilter.isNull`**               |
+| `host_ip`                   | `inet`                            | **`IP`**                                                       |
+| `host_ip_optional`          | `inet` (nullable)                 | **`IP`** + **`IPFilter.isNull`**                               |
+| `network_cidr`              | `cidr`                            | **`CIDR`**                                                     |
+| `network_cidr_optional`     | `cidr` (nullable)                 | **`CIDR`** + **`CIDRFilter.isNull`**                           |
+| `nic_mac`                   | `macaddr`                         | **`MAC`**                                                      |
+| `nic_mac_optional`          | `macaddr` (nullable)              | **`MAC`** + **`MACFilter.isNull`**                             |
+| `kind`                      | `scalar_specimen_kind` (`pgEnum`) | **`ScalarSpecimenKind`** (enum)                                |
+| `kind_optional`             | `scalar_specimen_kind` (nullable) | **`ScalarSpecimenKindFilter.isNull`**                          |
 
 ## Migrations / local test
 

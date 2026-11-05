@@ -14,135 +14,135 @@ Comprehensive coverage for **PostgreSQL** (primary Drizzle dialect). Other SQL d
 
 ### Numeric
 
-| PG type | Drizzle builder | DAL support | DAL scalar | Filter | Sort | Aggregate | Notes |
-| ------- | --------------- | ----------- | ---------- | ------ | ---- | --------- | ----- |
-| `smallint` | `smallint()` | Supported | `SmallInt` | `SmallIntFilter` | Yes | sum/avg/min/max | Custom scalar — PG 16-bit range on wire |
-| `integer` | `integer()` | Supported | `Int` | `IntFilter` | Yes | sum/avg/min/max | 32-bit max `2_147_483_647` |
-| `bigint` | `bigint()` | Supported (custom scalar) | `BigInt` | `BigIntFilter` | Yes | sum/avg/min/max | String on wire — avoids `Int` overflow |
-| `decimal` / `numeric` | `numeric()` / `decimal()` | Supported (custom scalar) | `Decimal` | `DecimalFilter` | Yes | sum/avg/min/max | String on wire — no Float precision loss |
-| `real` | `real()` | Supported | `Float` | `FloatFilter` | Yes | sum/avg/min/max | IEEE single precision |
-| `double precision` | `doublePrecision()` | Supported | `Double` | `DoubleFilter` | Yes | sum/avg/min/max | Custom scalar — IEEE binary64 |
-| `serial` | `serial()` | Not supported | — | — | — | — | Discouraged — use `uuid` PK; `serial` as business column fails codegen |
-| `bigserial` | `bigserial()` | Not supported | — | — | — | — | Same as `serial` |
-| `money` | `money()` | Not supported | — | — | — | — | **Hard ban** — entity validation and codegen **fail**; use `integer` cents or `numeric`/`decimal`; never PG `money` |
+| PG type               | Drizzle builder           | DAL support               | DAL scalar | Filter           | Sort | Aggregate       | Notes                                                                                                               |
+| --------------------- | ------------------------- | ------------------------- | ---------- | ---------------- | ---- | --------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `smallint`            | `smallint()`              | Supported                 | `SmallInt` | `SmallIntFilter` | Yes  | sum/avg/min/max | Custom scalar — PG 16-bit range on wire                                                                             |
+| `integer`             | `integer()`               | Supported                 | `Int`      | `IntFilter`      | Yes  | sum/avg/min/max | 32-bit max `2_147_483_647`                                                                                          |
+| `bigint`              | `bigint()`                | Supported (custom scalar) | `BigInt`   | `BigIntFilter`   | Yes  | sum/avg/min/max | String on wire — avoids `Int` overflow                                                                              |
+| `decimal` / `numeric` | `numeric()` / `decimal()` | Supported (custom scalar) | `Decimal`  | `DecimalFilter`  | Yes  | sum/avg/min/max | String on wire — no Float precision loss                                                                            |
+| `real`                | `real()`                  | Supported                 | `Float`    | `FloatFilter`    | Yes  | sum/avg/min/max | IEEE single precision                                                                                               |
+| `double precision`    | `doublePrecision()`       | Supported                 | `Double`   | `DoubleFilter`   | Yes  | sum/avg/min/max | Custom scalar — IEEE binary64                                                                                       |
+| `serial`              | `serial()`                | Not supported             | —          | —                | —    | —               | Discouraged — use `uuid` PK; `serial` as business column fails codegen                                              |
+| `bigserial`           | `bigserial()`             | Not supported             | —          | —                | —    | —               | Same as `serial`                                                                                                    |
+| `money`               | `money()`                 | Not supported             | —          | —                | —    | —               | **Hard ban** — entity validation and codegen **fail**; use `integer` cents or `numeric`/`decimal`; never PG `money` |
 
 ### Character
 
-| PG type | Drizzle builder | DAL support | DAL scalar | Filter | Sort | Aggregate | Notes |
-| ------- | --------------- | ----------- | ---------- | ------ | ---- | --------- | ----- |
-| `char(n)` | `char()` | Supported | `String` | `StringFilter` | Yes | min/max | Fixed-length; trailing spaces trimmed on read |
-| `varchar(n)` | `varchar()` | Supported | `String` | `StringFilter` | Yes | min/max | |
-| `text` | `text()` | Supported | `String` | `StringFilter` | Yes | min/max | Actor columns (`createdBy`, etc.) use `text` |
-| `citext` | custom / extension | Supported | `InsensitiveString` | `InsensitiveStringFilter` | Yes | min/max | Custom scalar; case-insensitive via PG citext (no `isCaseInsensitive` on filter) |
-| `name` | `name()` (internal) | Not supported | — | — | — | — | PostgreSQL catalog type — not for entity columns |
+| PG type      | Drizzle builder     | DAL support   | DAL scalar          | Filter                    | Sort | Aggregate | Notes                                                                            |
+| ------------ | ------------------- | ------------- | ------------------- | ------------------------- | ---- | --------- | -------------------------------------------------------------------------------- |
+| `char(n)`    | `char()`            | Supported     | `String`            | `StringFilter`            | Yes  | min/max   | Fixed-length; trailing spaces trimmed on read                                    |
+| `varchar(n)` | `varchar()`         | Supported     | `String`            | `StringFilter`            | Yes  | min/max   |                                                                                  |
+| `text`       | `text()`            | Supported     | `String`            | `StringFilter`            | Yes  | min/max   | Actor columns (`createdBy`, etc.) use `text`                                     |
+| `citext`     | custom / extension  | Supported     | `InsensitiveString` | `InsensitiveStringFilter` | Yes  | min/max   | Custom scalar; case-insensitive via PG citext (no `isCaseInsensitive` on filter) |
+| `name`       | `name()` (internal) | Not supported | —                   | —                         | —    | —         | PostgreSQL catalog type — not for entity columns                                 |
 
 ### Boolean
 
-| PG type | Drizzle builder | DAL support | DAL scalar | Filter | Sort | Aggregate | Notes |
-| ------- | --------------- | ----------- | ---------- | ------ | ---- | --------- | ----- |
-| `boolean` | `boolean()` | Supported | `Boolean` | `BooleanFilter` | Yes | — | Excluded from `ComparableFields` ([§15.2](graphql-dal-requirements.md#152-comparable-field-selection)) |
+| PG type   | Drizzle builder | DAL support | DAL scalar | Filter          | Sort | Aggregate | Notes                                                                                                  |
+| --------- | --------------- | ----------- | ---------- | --------------- | ---- | --------- | ------------------------------------------------------------------------------------------------------ |
+| `boolean` | `boolean()`     | Supported   | `Boolean`  | `BooleanFilter` | Yes  | —         | Excluded from `ComparableFields` ([§15.2](graphql-dal-requirements.md#152-comparable-field-selection)) |
 
 ### Date / time
 
 **Only timezone-aware time types are allowed:** `timestamptz` and `timetz`. Plain `timestamp` and plain `time` are **hard-banned** — validation fails.
 
-| PG type | Drizzle builder | DAL support | DAL scalar | Filter | Sort | Aggregate | Notes |
-| ------- | --------------- | ----------- | ---------- | ------ | ---- | --------- | ----- |
-| `date` | `date()` | Supported (custom scalar) | `Date` | `DateFilter` | Yes | min/max | ISO-8601 date (`YYYY-MM-DD`); no time component |
-| `time` | `time()` | Not supported | — | — | — | — | **Hard ban** — use `timetz` or `timestamptz` |
-| `time with time zone` (`timetz`) | `time({ withTimezone: true })` | Supported (custom scalar) | `TimeTz` | `TimeTzFilter` | Yes | min/max | ISO-8601 time with offset (e.g. `13:45:00.000+05:30`); no date component |
-| `timestamp` (without TZ) | `timestamp()` | Not supported | — | — | — | — | **Hard ban** — use `timestamptz` only ([§3.1](graphql-dal-requirements.md#31-custom-scalars)) |
-| `timestamp with time zone` (`timestamptz`) | `timestamp({ withTimezone: true })` | Supported (custom scalar) | `DateTime` | `DateTimeFilter` | Yes | min/max | UTC normalized; ISO-8601 wire with `Z` |
-| `interval` | `interval()` | Supported (custom scalar) | `IntervalMs` | `IntervalMsFilter` | Yes | min/max | Total duration as signed 64-bit **milliseconds** on wire; PG `interval` parsed to ms on read, ms converted to PG interval on write |
+| PG type                                    | Drizzle builder                     | DAL support               | DAL scalar   | Filter             | Sort | Aggregate | Notes                                                                                                                              |
+| ------------------------------------------ | ----------------------------------- | ------------------------- | ------------ | ------------------ | ---- | --------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `date`                                     | `date()`                            | Supported (custom scalar) | `Date`       | `DateFilter`       | Yes  | min/max   | ISO-8601 date (`YYYY-MM-DD`); no time component                                                                                    |
+| `time`                                     | `time()`                            | Not supported             | —            | —                  | —    | —         | **Hard ban** — use `timetz` or `timestamptz`                                                                                       |
+| `time with time zone` (`timetz`)           | `time({ withTimezone: true })`      | Supported (custom scalar) | `TimeTz`     | `TimeTzFilter`     | Yes  | min/max   | ISO-8601 time with offset (e.g. `13:45:00.000+05:30`); no date component                                                           |
+| `timestamp` (without TZ)                   | `timestamp()`                       | Not supported             | —            | —                  | —    | —         | **Hard ban** — use `timestamptz` only ([§3.1](graphql-dal-requirements.md#31-custom-scalars))                                      |
+| `timestamp with time zone` (`timestamptz`) | `timestamp({ withTimezone: true })` | Supported (custom scalar) | `DateTime`   | `DateTimeFilter`   | Yes  | min/max   | UTC normalized; ISO-8601 wire with `Z`                                                                                             |
+| `interval`                                 | `interval()`                        | Supported (custom scalar) | `IntervalMs` | `IntervalMsFilter` | Yes  | min/max   | Total duration as signed 64-bit **milliseconds** on wire; PG `interval` parsed to ms on read, ms converted to PG interval on write |
 
 ### UUID
 
-| PG type | Drizzle builder | DAL support | DAL scalar | Filter | Sort | Aggregate | Notes |
-| ------- | --------------- | ----------- | ---------- | ------ | ---- | --------- | ----- |
-| `uuid` | `uuid()` | Supported | GraphQL **`ID`** (built-in) | `IDFilter` | Yes | min/max | PKs, FKs, cursor keyset values — **only** `uuid` PG columns map to `ID`; non-uuid columns never use `ID` |
+| PG type | Drizzle builder | DAL support | DAL scalar                  | Filter     | Sort | Aggregate | Notes                                                                                                    |
+| ------- | --------------- | ----------- | --------------------------- | ---------- | ---- | --------- | -------------------------------------------------------------------------------------------------------- |
+| `uuid`  | `uuid()`        | Supported   | GraphQL **`ID`** (built-in) | `IDFilter` | Yes  | min/max   | PKs, FKs, cursor keyset values — **only** `uuid` PG columns map to `ID`; non-uuid columns never use `ID` |
 
 ### JSON
 
-| PG type | Drizzle builder | DAL support | DAL scalar | Filter | Sort | Aggregate | Notes |
-| ------- | --------------- | ----------- | ---------- | ------ | ---- | --------- | ----- |
-| `json` | `json()` | Not supported | — | — | — | — | Use typed columns or normalized child tables |
-| `jsonb` | `jsonb()` | Not supported | — | — | — | — | Same — no arbitrary JSON on GraphQL surface |
+| PG type | Drizzle builder | DAL support   | DAL scalar | Filter | Sort | Aggregate | Notes                                        |
+| ------- | --------------- | ------------- | ---------- | ------ | ---- | --------- | -------------------------------------------- |
+| `json`  | `json()`        | Not supported | —          | —      | —    | —         | Use typed columns or normalized child tables |
+| `jsonb` | `jsonb()`       | Not supported | —          | —      | —    | —         | Same — no arbitrary JSON on GraphQL surface  |
 
 ### Binary
 
-| PG type | Drizzle builder | DAL support | DAL scalar | Filter | Sort | Aggregate | Notes |
-| ------- | --------------- | ----------- | ---------- | ------ | ---- | --------- | ----- |
-| `bytea` | `byte()` / custom | Not supported | — | — | — | — | Use object storage + `text` URL/reference column |
+| PG type | Drizzle builder   | DAL support   | DAL scalar | Filter | Sort | Aggregate | Notes                                            |
+| ------- | ----------------- | ------------- | ---------- | ------ | ---- | --------- | ------------------------------------------------ |
+| `bytea` | `byte()` / custom | Not supported | —          | —      | —    | —         | Use object storage + `text` URL/reference column |
 
 ### Arrays
 
-| PG type | Drizzle builder | DAL support | DAL scalar | Filter | Sort | Aggregate | Notes |
-| ------- | --------------- | ----------- | ---------- | ------ | ---- | --------- | ----- |
-| `text[]`, `int[]`, `uuid[]`, etc. | `text().array()` etc. | Not supported | — | — | — | — | **All array variants** — use join tables or scalar columns |
+| PG type                           | Drizzle builder       | DAL support   | DAL scalar | Filter | Sort | Aggregate | Notes                                                      |
+| --------------------------------- | --------------------- | ------------- | ---------- | ------ | ---- | --------- | ---------------------------------------------------------- |
+| `text[]`, `int[]`, `uuid[]`, etc. | `text().array()` etc. | Not supported | —          | —      | —    | —         | **All array variants** — use join tables or scalar columns |
 
 ### Network
 
 Rare — opt-in when declared via Drizzle `customType`; not in default templates. Network filters v1: **`eq` / `neq` / `isNull`** (nullable columns only — [§10.4.1](graphql-dal-requirements.md#1041-null-filter-operator-isnull)).
 
-| PG type | Drizzle builder | DAL support | DAL scalar | Filter | Sort | Aggregate | Notes |
-| ------- | --------------- | ----------- | ---------- | ------ | ---- | --------- | ----- |
-| `inet` | custom | Supported (custom scalar) | `IP` | `IPFilter` | Yes | min/max | String — host IPv4/IPv6; SDL scalar **`IP`** from graphql-scalars **`GraphQLIP`** |
-| `cidr` | custom | Supported (custom scalar) | `CIDR` | `CIDRFilter` | Yes | min/max | String — CIDR notation; **no** `graphql-scalars` CIDR export (v1.26) — dal-core prefix + network-bit checks |
-| `macaddr` | custom | Supported (custom scalar) | `MAC` | `MACFilter` | Yes | min/max | String — IEEE 802 MAC; SDL scalar **`MAC`** from graphql-scalars **`GraphQLMAC`** |
-| `macaddr8` | custom | **Not supported v1** | — | — | — | — | Codegen and `entity:lint` fail — use `macaddr` or text |
+| PG type    | Drizzle builder | DAL support               | DAL scalar | Filter       | Sort | Aggregate | Notes                                                                                                       |
+| ---------- | --------------- | ------------------------- | ---------- | ------------ | ---- | --------- | ----------------------------------------------------------------------------------------------------------- |
+| `inet`     | custom          | Supported (custom scalar) | `IP`       | `IPFilter`   | Yes  | min/max   | String — host IPv4/IPv6; SDL scalar **`IP`** from graphql-scalars **`GraphQLIP`**                           |
+| `cidr`     | custom          | Supported (custom scalar) | `CIDR`     | `CIDRFilter` | Yes  | min/max   | String — CIDR notation; **no** `graphql-scalars` CIDR export (v1.26) — dal-core prefix + network-bit checks |
+| `macaddr`  | custom          | Supported (custom scalar) | `MAC`      | `MACFilter`  | Yes  | min/max   | String — IEEE 802 MAC; SDL scalar **`MAC`** from graphql-scalars **`GraphQLMAC`**                           |
+| `macaddr8` | custom          | **Not supported v1**      | —          | —            | —    | —         | Codegen and `entity:lint` fail — use `macaddr` or text                                                      |
 
 ### Geometric
 
 **Not supported v1** — codegen and `entity:lint` fail. Do not use native PostgreSQL geometry types in DAL entity schemas.
 
-| PG type | Drizzle builder | DAL support | DAL scalar | Filter | Sort | Aggregate | Notes |
-| ------- | --------------- | ----------- | ---------- | ------ | ---- | --------- | ----- |
-| `point` | custom | **Not supported v1** | — | — | — | — | Codegen and `entity:lint` fail — normalize to numeric columns or defer |
-| `line` | custom | **Not supported v1** | — | — | — | — | Same |
-| `lseg` | custom | **Not supported v1** | — | — | — | — | Same |
-| `box` | custom | **Not supported v1** | — | — | — | — | Same |
-| `path` | custom | **Not supported v1** | — | — | — | — | Same |
-| `polygon` | custom | **Not supported v1** | — | — | — | — | Same |
-| `circle` | custom | **Not supported v1** | — | — | — | — | Same |
+| PG type   | Drizzle builder | DAL support          | DAL scalar | Filter | Sort | Aggregate | Notes                                                                  |
+| --------- | --------------- | -------------------- | ---------- | ------ | ---- | --------- | ---------------------------------------------------------------------- |
+| `point`   | custom          | **Not supported v1** | —          | —      | —    | —         | Codegen and `entity:lint` fail — normalize to numeric columns or defer |
+| `line`    | custom          | **Not supported v1** | —          | —      | —    | —         | Same                                                                   |
+| `lseg`    | custom          | **Not supported v1** | —          | —      | —    | —         | Same                                                                   |
+| `box`     | custom          | **Not supported v1** | —          | —      | —    | —         | Same                                                                   |
+| `path`    | custom          | **Not supported v1** | —          | —      | —    | —         | Same                                                                   |
+| `polygon` | custom          | **Not supported v1** | —          | —      | —    | —         | Same                                                                   |
+| `circle`  | custom          | **Not supported v1** | —          | —      | —    | —         | Same                                                                   |
 
 ### PostGIS / spatial
 
 **Not supported v1** — codegen and `entity:lint` fail even when the PostGIS extension is installed. Use an external spatial service or defer.
 
-| PG type | Drizzle builder | DAL support | DAL scalar | Filter | Sort | Aggregate | Notes |
-| ------- | --------------- | ----------- | ---------- | ------ | ---- | --------- | ----- |
-| `geometry` | PostGIS extension | **Not supported v1** | — | — | — | — | Codegen and `entity:lint` fail — use external spatial service or defer |
-| `geography` | PostGIS extension | **Not supported v1** | — | — | — | — | Same |
+| PG type     | Drizzle builder   | DAL support          | DAL scalar | Filter | Sort | Aggregate | Notes                                                                  |
+| ----------- | ----------------- | -------------------- | ---------- | ------ | ---- | --------- | ---------------------------------------------------------------------- |
+| `geometry`  | PostGIS extension | **Not supported v1** | —          | —      | —    | —         | Codegen and `entity:lint` fail — use external spatial service or defer |
+| `geography` | PostGIS extension | **Not supported v1** | —          | —      | —    | —         | Same                                                                   |
 
 ### Full-text
 
-| PG type | Drizzle builder | DAL support | DAL scalar | Filter | Sort | Aggregate | Notes |
-| ------- | --------------- | ----------- | ---------- | ------ | ---- | --------- | ----- |
-| `tsvector` | custom | Not supported | — | — | — | — | Use external search (OpenSearch, etc.) |
-| `tsquery` | custom | Not supported | — | — | — | — | |
+| PG type    | Drizzle builder | DAL support   | DAL scalar | Filter | Sort | Aggregate | Notes                                  |
+| ---------- | --------------- | ------------- | ---------- | ------ | ---- | --------- | -------------------------------------- |
+| `tsvector` | custom          | Not supported | —          | —      | —    | —         | Use external search (OpenSearch, etc.) |
+| `tsquery`  | custom          | Not supported | —          | —      | —    | —         |                                        |
 
 ### Range
 
-| PG type | Drizzle builder | DAL support | DAL scalar | Filter | Sort | Aggregate | Notes |
-| ------- | --------------- | ----------- | ---------- | ------ | ---- | --------- | ----- |
-| `int4range`, `int8range`, `numrange`, `tsrange`, `tstzrange`, `daterange` | custom | Not supported (deliberation) | — | — | — | — | v1 codegen **fails** — see [§ Range deliberation](#range-deliberation); **recommended:** two scalar columns (`effectiveFrom` / `effectiveTo`, `minQty` / `maxQty`) |
+| PG type                                                                   | Drizzle builder | DAL support                  | DAL scalar | Filter | Sort | Aggregate | Notes                                                                                                                                                              |
+| ------------------------------------------------------------------------- | --------------- | ---------------------------- | ---------- | ------ | ---- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `int4range`, `int8range`, `numrange`, `tsrange`, `tstzrange`, `daterange` | custom          | Not supported (deliberation) | —          | —      | —    | —         | v1 codegen **fails** — see [§ Range deliberation](#range-deliberation); **recommended:** two scalar columns (`effectiveFrom` / `effectiveTo`, `minQty` / `maxQty`) |
 
 ### Composite / domain / custom
 
-| PG type | Drizzle builder | DAL support | DAL scalar | Filter | Sort | Aggregate | Notes |
-| ------- | --------------- | ----------- | ---------- | ------ | ---- | --------- | ----- |
-| User-defined composite types | custom | Not supported | — | — | — | — | Flatten to scalar columns |
-| `pgEnum` (Drizzle `pgEnum`) | `pgEnum()` | Supported | GraphQL enum | `<Enum>Filter` | Yes | — | Same member values as Drizzle ([§2.6](graphql-dal-requirements.md#26-enum-inference)) |
-| Domain types | custom | Not supported | — | — | — | — | Unless domain is a thin alias of a supported base type — then map to base |
+| PG type                      | Drizzle builder | DAL support   | DAL scalar   | Filter         | Sort | Aggregate | Notes                                                                                 |
+| ---------------------------- | --------------- | ------------- | ------------ | -------------- | ---- | --------- | ------------------------------------------------------------------------------------- |
+| User-defined composite types | custom          | Not supported | —            | —              | —    | —         | Flatten to scalar columns                                                             |
+| `pgEnum` (Drizzle `pgEnum`)  | `pgEnum()`      | Supported     | GraphQL enum | `<Enum>Filter` | Yes  | —         | Same member values as Drizzle ([§2.6](graphql-dal-requirements.md#26-enum-inference)) |
+| Domain types                 | custom          | Not supported | —            | —              | —    | —         | Unless domain is a thin alias of a supported base type — then map to base             |
 
 ### Other
 
-| PG type | Drizzle builder | DAL support | DAL scalar | Filter | Sort | Aggregate | Notes |
-| ------- | --------------- | ----------- | ---------- | ------ | ---- | --------- | ----- |
-| `oid` | — | Not supported | — | — | — | — | Catalog type |
-| `xml` | custom | Not supported | — | — | — | — | Store as `text` if needed |
-| `bit(n)`, `varbit(n)` | custom | Not supported | — | — | — | — | Use `boolean` or `text` |
-| `pg_lsn` | — | Not supported | — | — | — | — | Replication internal |
+| PG type               | Drizzle builder | DAL support   | DAL scalar | Filter | Sort | Aggregate | Notes                     |
+| --------------------- | --------------- | ------------- | ---------- | ------ | ---- | --------- | ------------------------- |
+| `oid`                 | —               | Not supported | —          | —      | —    | —         | Catalog type              |
+| `xml`                 | custom          | Not supported | —          | —      | —    | —         | Store as `text` if needed |
+| `bit(n)`, `varbit(n)` | custom          | Not supported | —          | —      | —    | —         | Use `boolean` or `text`   |
+| `pg_lsn`              | —               | Not supported | —          | —      | —    | —         | Replication internal      |
 
 **Codegen failure message (unsupported type):** `Column '<table>.<column>' uses unsupported PostgreSQL type '<pgType>'. Normalize to a supported scalar column, child table, Redis, or object storage. See dal-pg-type-mapping.md#postgresql-type-coverage.`
 
@@ -152,43 +152,43 @@ Rare — opt-in when declared via Drizzle `customType`; not in default templates
 
 Formal mapping for **supported** PostgreSQL types only:
 
-| PostgreSQL | GraphQL output scalar | Create / Update input | Filter input | Sort | Aggregate (sum / avg / min / max) | Cursor keyset |
-| ---------- | --------------------- | ------------------- | ------------ | ---- | --------------------------------- | ------------- |
-| `smallint` | `SmallInt` | `SmallInt` | `SmallIntFilter` | `<Entity>Field` | NumericFields / ComparableFields | `SmallInt` in cursor `values` |
-| `integer` | `Int` | `Int` | `IntFilter` | `<Entity>Field` | NumericFields / ComparableFields | `Int` in cursor `values` |
-| `bigint` | `BigInt` | `BigInt` | `BigIntFilter` | `<Entity>Field` | NumericFields / ComparableFields | `BigInt` (string) in cursor `values` |
-| `numeric` / `decimal` | `Decimal` | `Decimal` | `DecimalFilter` | `<Entity>Field` | NumericFields / ComparableFields | `Decimal` (string) in cursor `values` |
-| `real` | `Float` | `Float` | `FloatFilter` | `<Entity>Field` | NumericFields / ComparableFields | `Float` in cursor `values` |
-| `double precision` | `Double` | `Double` | `DoubleFilter` | `<Entity>Field` | NumericFields / ComparableFields | `Double` in cursor `values` |
-| `char`, `varchar`, `text` | `String` | `String` | `StringFilter` | `<Entity>Field` | ComparableFields (min/max) | `String` in cursor `values` |
-| `citext` | `InsensitiveString` | `InsensitiveString` | `InsensitiveStringFilter` | `<Entity>Field` | ComparableFields (min/max) | `InsensitiveString` in cursor `values` |
-| `boolean` | `Boolean` | `Boolean` | `BooleanFilter` | `<Entity>Field` | — | `Boolean` in cursor `values` |
-| `date` | `Date` | `Date` | `DateFilter` | `<Entity>Field` | ComparableFields (min/max) | `Date` in cursor `values` |
-| `timestamptz` | `DateTime` | `DateTime` | `DateTimeFilter` | `<Entity>Field` | ComparableFields (min/max) | `DateTime` in cursor `values` |
-| `timetz` | `TimeTz` | `TimeTz` | `TimeTzFilter` | `<Entity>Field` | ComparableFields (min/max) | `TimeTz` in cursor `values` |
-| `interval` | `IntervalMs` | `IntervalMs` | `IntervalMsFilter` | `<Entity>Field` | ComparableFields (min/max) | `IntervalMs` (string) in cursor `values` |
-| `uuid` | `ID` | `ID` | `IDFilter` | `<Entity>Field` | ComparableFields (min/max) | `ID` in cursor `values` |
-| `pgEnum` | GraphQL enum | Same enum | `<Enum>Filter` | `<Entity>Field` | — | Enum string in cursor `values` |
-| `inet`, `cidr`, `macaddr` | respective custom scalar | same | respective `*Filter` (v1 `eq`/`neq`/`isNull`) | `<Entity>Field` | ComparableFields (min/max) where applicable | scalar string in cursor `values` |
+| PostgreSQL                | GraphQL output scalar    | Create / Update input | Filter input                                  | Sort            | Aggregate (sum / avg / min / max)           | Cursor keyset                            |
+| ------------------------- | ------------------------ | --------------------- | --------------------------------------------- | --------------- | ------------------------------------------- | ---------------------------------------- |
+| `smallint`                | `SmallInt`               | `SmallInt`            | `SmallIntFilter`                              | `<Entity>Field` | NumericFields / ComparableFields            | `SmallInt` in cursor `values`            |
+| `integer`                 | `Int`                    | `Int`                 | `IntFilter`                                   | `<Entity>Field` | NumericFields / ComparableFields            | `Int` in cursor `values`                 |
+| `bigint`                  | `BigInt`                 | `BigInt`              | `BigIntFilter`                                | `<Entity>Field` | NumericFields / ComparableFields            | `BigInt` (string) in cursor `values`     |
+| `numeric` / `decimal`     | `Decimal`                | `Decimal`             | `DecimalFilter`                               | `<Entity>Field` | NumericFields / ComparableFields            | `Decimal` (string) in cursor `values`    |
+| `real`                    | `Float`                  | `Float`               | `FloatFilter`                                 | `<Entity>Field` | NumericFields / ComparableFields            | `Float` in cursor `values`               |
+| `double precision`        | `Double`                 | `Double`              | `DoubleFilter`                                | `<Entity>Field` | NumericFields / ComparableFields            | `Double` in cursor `values`              |
+| `char`, `varchar`, `text` | `String`                 | `String`              | `StringFilter`                                | `<Entity>Field` | ComparableFields (min/max)                  | `String` in cursor `values`              |
+| `citext`                  | `InsensitiveString`      | `InsensitiveString`   | `InsensitiveStringFilter`                     | `<Entity>Field` | ComparableFields (min/max)                  | `InsensitiveString` in cursor `values`   |
+| `boolean`                 | `Boolean`                | `Boolean`             | `BooleanFilter`                               | `<Entity>Field` | —                                           | `Boolean` in cursor `values`             |
+| `date`                    | `Date`                   | `Date`                | `DateFilter`                                  | `<Entity>Field` | ComparableFields (min/max)                  | `Date` in cursor `values`                |
+| `timestamptz`             | `DateTime`               | `DateTime`            | `DateTimeFilter`                              | `<Entity>Field` | ComparableFields (min/max)                  | `DateTime` in cursor `values`            |
+| `timetz`                  | `TimeTz`                 | `TimeTz`              | `TimeTzFilter`                                | `<Entity>Field` | ComparableFields (min/max)                  | `TimeTz` in cursor `values`              |
+| `interval`                | `IntervalMs`             | `IntervalMs`          | `IntervalMsFilter`                            | `<Entity>Field` | ComparableFields (min/max)                  | `IntervalMs` (string) in cursor `values` |
+| `uuid`                    | `ID`                     | `ID`                  | `IDFilter`                                    | `<Entity>Field` | ComparableFields (min/max)                  | `ID` in cursor `values`                  |
+| `pgEnum`                  | GraphQL enum             | Same enum             | `<Enum>Filter`                                | `<Entity>Field` | —                                           | Enum string in cursor `values`           |
+| `inet`, `cidr`, `macaddr` | respective custom scalar | same                  | respective `*Filter` (v1 `eq`/`neq`/`isNull`) | `<Entity>Field` | ComparableFields (min/max) where applicable | scalar string in cursor `values`         |
 
 ### v1 scalar decisions (rationale)
 
-| Decision | Choice | Rationale |
-| -------- | ------ | ----------- |
-| **`bigint`** | Custom **`BigInt`** scalar — **string on wire** | GraphQL `Int` is 32-bit signed; PostgreSQL `bigint` exceeds that. String encoding is JSON-safe and matches common GraphQL BigInt patterns |
-| **`numeric` / `decimal`** | Custom **`Decimal`** scalar — **string on wire** | Avoids IEEE Float precision loss for monetary amounts and fixed-scale decimals; clients parse with decimal libraries |
-| **`date`** | Custom **`Date`** scalar — ISO-8601 date | Calendar dates without time are common (birthdays, effective dates); simpler than overloading `DateTime` |
-| **`money`** | **Not supported (hard ban)** | Entity validation and codegen **fail**; store as `integer` cents (`Int`) or `numeric`/`decimal` + `Decimal` — never PG `money` |
-| **`time` (no TZ)** | **Not supported** | Ambiguous local time — **hard ban**; use `timetz` or `timestamptz` |
-| **`timetz`** | Custom **`TimeTz`** scalar — ISO-8601 time with offset | Time-of-day with timezone (e.g. store hours, daily cutoff); distinct from `timestamptz` instants |
-| **`timestamp` (no TZ)** | **Not supported** | Ambiguous local time — **`timestamptz` only** ([§3.1](graphql-dal-requirements.md#31-custom-scalars), entity design) |
-| **`interval`** | Custom **`IntervalMs`** scalar — **milliseconds on wire** | Signed 64-bit integer as decimal string; PG `interval` ↔ total ms conversion in repository layer; JS/API convention, sub-second precision, avoids float |
-| **`uuid`** | GraphQL built-in **`ID`** — not a custom scalar | Relay/node identification convention; RFC 4122 validation at repository/DB — see [UUID → ID tradeoffs](#uuid--id-tradeoffs) |
-| **`citext`** | Custom **`InsensitiveString`** scalar | Case-insensitive storage and comparison in PG (`citext` extension); wire as string; **`InsensitiveStringFilter`** has no **`isCaseInsensitive`** flag |
-| **Network (`inet`, `cidr`, `macaddr`)** | **Supported (custom scalar, opt-in)** | Emitted when present in Drizzle schema; not in default templates; filters v1 **`eq` / `neq` / `isNull`** |
-| **Geometric, PostGIS, `macaddr8`** | **Not supported v1** | Codegen and `entity:lint` fail — normalize schema or defer |
-| **Range types** | **Not supported v1 (deliberation)** | v1 codegen fails — see [§ Range deliberation](#range-deliberation); recommended: two-column normalization |
-| **Arrays, JSON, binary, full-text** | **Hard ban v1** | No typed GraphQL surface without arbitrary JSON — normalize schema instead |
+| Decision                                | Choice                                                    | Rationale                                                                                                                                               |
+| --------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`bigint`**                            | Custom **`BigInt`** scalar — **string on wire**           | GraphQL `Int` is 32-bit signed; PostgreSQL `bigint` exceeds that. String encoding is JSON-safe and matches common GraphQL BigInt patterns               |
+| **`numeric` / `decimal`**               | Custom **`Decimal`** scalar — **string on wire**          | Avoids IEEE Float precision loss for monetary amounts and fixed-scale decimals; clients parse with decimal libraries                                    |
+| **`date`**                              | Custom **`Date`** scalar — ISO-8601 date                  | Calendar dates without time are common (birthdays, effective dates); simpler than overloading `DateTime`                                                |
+| **`money`**                             | **Not supported (hard ban)**                              | Entity validation and codegen **fail**; store as `integer` cents (`Int`) or `numeric`/`decimal` + `Decimal` — never PG `money`                          |
+| **`time` (no TZ)**                      | **Not supported**                                         | Ambiguous local time — **hard ban**; use `timetz` or `timestamptz`                                                                                      |
+| **`timetz`**                            | Custom **`TimeTz`** scalar — ISO-8601 time with offset    | Time-of-day with timezone (e.g. store hours, daily cutoff); distinct from `timestamptz` instants                                                        |
+| **`timestamp` (no TZ)**                 | **Not supported**                                         | Ambiguous local time — **`timestamptz` only** ([§3.1](graphql-dal-requirements.md#31-custom-scalars), entity design)                                    |
+| **`interval`**                          | Custom **`IntervalMs`** scalar — **milliseconds on wire** | Signed 64-bit integer as decimal string; PG `interval` ↔ total ms conversion in repository layer; JS/API convention, sub-second precision, avoids float |
+| **`uuid`**                              | GraphQL built-in **`ID`** — not a custom scalar           | Relay/node identification convention; RFC 4122 validation at repository/DB — see [UUID → ID tradeoffs](#uuid--id-tradeoffs)                             |
+| **`citext`**                            | Custom **`InsensitiveString`** scalar                     | Case-insensitive storage and comparison in PG (`citext` extension); wire as string; **`InsensitiveStringFilter`** has no **`isCaseInsensitive`** flag   |
+| **Network (`inet`, `cidr`, `macaddr`)** | **Supported (custom scalar, opt-in)**                     | Emitted when present in Drizzle schema; not in default templates; filters v1 **`eq` / `neq` / `isNull`**                                                |
+| **Geometric, PostGIS, `macaddr8`**      | **Not supported v1**                                      | Codegen and `entity:lint` fail — normalize schema or defer                                                                                              |
+| **Range types**                         | **Not supported v1 (deliberation)**                       | v1 codegen fails — see [§ Range deliberation](#range-deliberation); recommended: two-column normalization                                               |
+| **Arrays, JSON, binary, full-text**     | **Hard ban v1**                                           | No typed GraphQL surface without arbitrary JSON — normalize schema instead                                                                              |
 
 ---
 
@@ -198,14 +198,14 @@ Codegen emits **six core custom scalars** in the generated base SDL when those P
 
 **GraphQL wire validation:** `@corpdk/dal-core` registers strict `GraphQLScalarType` instances for codegen SDL and Yoga (`parseValue` / `parseLiteral`). Codegen emits **`dalScalarResolvers`**; bootstrap **`src/schema.ts`** merges them with entity resolvers so Yoga enforces parse/serialize. **`DateTime`**, **`Date`**, **`BigInt`**, **`IP`**, and **`MAC`** delegate input validation to [graphql-scalars](https://the-guild.dev/graphql/scalars/docs) then normalize to dal-core wire; **`CIDR`** uses dal-core prefix, host, and network-bit rules aligned with PostgreSQL `cidr` (Guild has no `CIDR` export in v1.26). Generated mutation/filter Zod imports **`dalScalarZod`**, **`zPgInt32`**, and **`zPgReal`** from `@corpdk/dal-core` so inputs match parse rules (including PG **`integer`** / **`real`** range guards on built-in `Int` / `Float`).
 
-| Scalar | Wire format | PG source types | Validation | Parse error |
-| ------ | ----------- | --------------- | ---------- | ----------- |
-| **`DateTime`** | ISO-8601 UTC with milliseconds and `Z` suffix — e.g. `2026-09-10T13:28:00.000Z` | `timestamptz` | Parseable ISO-8601; normalize offsets to UTC | `BAD_USER_INPUT` |
-| **`Date`** | ISO-8601 calendar date — `YYYY-MM-DD` | `date` | Valid calendar date; no time or timezone | `BAD_USER_INPUT` |
-| **`TimeTz`** | ISO-8601 time with offset — e.g. `13:45:00.000+05:30` or `13:45:00Z` (no date component) | `timetz` | Valid time with offset; reject date components | `BAD_USER_INPUT` |
-| **`BigInt`** | Decimal integer string — e.g. `"9223372036854775807"` | `bigint` | Matches `/^-?\d+$/`; must fit signed 64-bit PG range | `BAD_USER_INPUT` |
-| **`Decimal`** | Decimal string — e.g. `"1234.56"` or `"99"` | `numeric`, `decimal` | Valid decimal notation; no scientific notation in v1 | `BAD_USER_INPUT` |
-| **`IntervalMs`** | Signed decimal integer string of **total milliseconds** — e.g. `"3600000"`, `"-1500"` | `interval` | Matches `/^-?\d+$/`; must fit signed 64-bit range | `BAD_USER_INPUT` |
+| Scalar           | Wire format                                                                              | PG source types      | Validation                                           | Parse error      |
+| ---------------- | ---------------------------------------------------------------------------------------- | -------------------- | ---------------------------------------------------- | ---------------- |
+| **`DateTime`**   | ISO-8601 UTC with milliseconds and `Z` suffix — e.g. `2026-09-10T13:28:00.000Z`          | `timestamptz`        | Parseable ISO-8601; normalize offsets to UTC         | `BAD_USER_INPUT` |
+| **`Date`**       | ISO-8601 calendar date — `YYYY-MM-DD`                                                    | `date`               | Valid calendar date; no time or timezone             | `BAD_USER_INPUT` |
+| **`TimeTz`**     | ISO-8601 time with offset — e.g. `13:45:00.000+05:30` or `13:45:00Z` (no date component) | `timetz`             | Valid time with offset; reject date components       | `BAD_USER_INPUT` |
+| **`BigInt`**     | Decimal integer string — e.g. `"9223372036854775807"`                                    | `bigint`             | Matches `/^-?\d+$/`; must fit signed 64-bit PG range | `BAD_USER_INPUT` |
+| **`Decimal`**    | Decimal string — e.g. `"1234.56"` or `"99"`                                              | `numeric`, `decimal` | Valid decimal notation; no scientific notation in v1 | `BAD_USER_INPUT` |
+| **`IntervalMs`** | Signed decimal integer string of **total milliseconds** — e.g. `"3600000"`, `"-1500"`    | `interval`           | Matches `/^-?\d+$/`; must fit signed 64-bit range    | `BAD_USER_INPUT` |
 
 **IntervalMs and calendar units:** GraphQL writes and filters use millisecond wire only; repositories persist filters as `"N milliseconds"` PG literals. On read, PG backend `mon` / `year` components in stored intervals are converted to fixed ms constants (30-day month, 365.25-day year). PostgreSQL does not treat a stored `1 mon` as equal to that millisecond literal, so filtering by the serialized ms value after read may not match rows whose intervals were stored with calendar month/year fields (e.g. from raw SQL or migrations). Prefer day/time/hour/minute/second components for round-trip filter equality.
 
@@ -213,10 +213,10 @@ Codegen emits **six core custom scalars** in the generated base SDL when those P
 
 Codegen emits these **only when** the corresponding PG type appears in the Drizzle schema — not in default templates.
 
-| Group | Scalars | Wire format | Filters v1 |
-| ----- | ------- | ------------- | ------------ |
-| **PG-accurate** | `SmallInt`, `Double`, `InsensitiveString` | PG range / citext string wire | Same comparators as `IntFilter` / `StringFilter` ([§10.4](graphql-dal-requirements.md#104-other-scalar-filters)) |
-| **Network** | `IP`, `CIDR`, `MAC` | Validated string in PG-native notation | **`eq` / `neq` / `isNull`** (nullable columns only) |
+| Group           | Scalars                                   | Wire format                            | Filters v1                                                                                                       |
+| --------------- | ----------------------------------------- | -------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| **PG-accurate** | `SmallInt`, `Double`, `InsensitiveString` | PG range / citext string wire          | Same comparators as `IntFilter` / `StringFilter` ([§10.4](graphql-dal-requirements.md#104-other-scalar-filters)) |
+| **Network**     | `IP`, `CIDR`, `MAC`                       | Validated string in PG-native notation | **`eq` / `neq` / `isNull`** (nullable columns only)                                                              |
 
 Geometric and PostGIS PG types (`point`, `geometry`, etc.) and **`macaddr8`** are **not supported v1** — codegen and `entity:lint` fail with `PG_TYPE_BANNED` / schema load errors.
 
@@ -230,9 +230,9 @@ GraphQL enums map from Drizzle `pgEnum` — not custom scalars ([§2.6](graphql-
 
 PostgreSQL `uuid` columns map to GraphQL **`ID`** (built-in), not a custom `UUID` scalar.
 
-| | |
-| --- | --- |
-| **Pros** | Relay/node identification convention; no custom scalar to register or document; familiar to GraphQL clients and tooling |
+|          |                                                                                                                                                  |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Pros** | Relay/node identification convention; no custom scalar to register or document; familiar to GraphQL clients and tooling                          |
 | **Cons** | `ID` does not enforce RFC 4122 at the GraphQL parse layer — it accepts any opaque string until repository/DB validation rejects malformed values |
 
 RFC 4122 validation runs at repository write and on filter/mutation args before SQL bind. Generated Zod maps `uuid` columns and GraphQL **`ID`** filter fields to **`z.string().uuid()`** (not The Guild `UUID` scalar). Serialize lowercases canonical UUID strings on output.
@@ -243,20 +243,20 @@ PostgreSQL range types (`int4range`, `int8range`, `numrange`, `tsrange`, `tstzra
 
 **Option A — Custom range scalars**
 
-| Aspect | Detail |
-| ------ | ------ |
-| **Scalars** | Per-type: `Int4Range`, `Int8Range`, `NumRange`, `TsRange`, `TstzRange`, `DateRange` |
+| Aspect          | Detail                                                                                                                    |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| **Scalars**     | Per-type: `Int4Range`, `Int8Range`, `NumRange`, `TsRange`, `TstzRange`, `DateRange`                                       |
 | **Wire format** | PostgreSQL range literal string (e.g. `[1,10)`) **or** structured JSON `{ lower, upper, lowerInclusive, upperInclusive }` |
-| **Filters** | Overlap, contains, contained-by — complex in v1; likely deferred |
-| **Tradeoff** | Preserves single-column PG semantics; harder filter/sort/codegen surface |
+| **Filters**     | Overlap, contains, contained-by — complex in v1; likely deferred                                                          |
+| **Tradeoff**    | Preserves single-column PG semantics; harder filter/sort/codegen surface                                                  |
 
 **Option B — Normalize to two columns (recommended for v1)**
 
-| Aspect | Detail |
-| ------ | ------ |
-| **Pattern** | `effectiveFrom` / `effectiveTo` (`timestamptz`), `minQty` / `maxQty` (`integer`), etc. |
-| **Filters** | Full filter/sort support via existing scalars (`DateTimeFilter`, `IntFilter`, …) |
-| **Indexing** | Two scalar columns index cleanly for range queries |
+| Aspect       | Detail                                                                                     |
+| ------------ | ------------------------------------------------------------------------------------------ |
+| **Pattern**  | `effectiveFrom` / `effectiveTo` (`timestamptz`), `minQty` / `maxQty` (`integer`), etc.     |
+| **Filters**  | Full filter/sort support via existing scalars (`DateTimeFilter`, `IntFilter`, …)           |
+| **Indexing** | Two scalar columns index cleanly for range queries                                         |
 | **Tradeoff** | Two columns instead of one PG range; explicit null-open-bound semantics in schema comments |
 
 **v1 codegen default:** **Not supported (deliberation)** — fail with message suggesting Option B (two-column normalization) or explicit opt-in range scalars if added in a future version. Schema authors should prefer two-column patterns — see [DAL Entity Design Guidelines § Column Types](dal-entity-design.md#column-types).

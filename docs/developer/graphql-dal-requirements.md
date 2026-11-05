@@ -260,7 +260,7 @@ GraphQL introspection, GraphiQL, and Altair display descriptions sourced from DB
 
 The generated GraphQL API is the **only** application-facing access surface for persisted data. All application clients — UI, BFF, external services — read and write data exclusively through GraphQL HTTP (queries/mutations and subscription streams). On **`@corpdk/ds`**, subscriptions use **SSE** on the same `/graphql` route; other DS variants may still use WebSocket until migrated ([11-ds-subscription-sse.md](11-ds-subscription-sse.md)).
 
-```
+```text
 Application client (UI, BFF, worker)
   → GraphQL HTTP (SSE subscriptions on @corpdk/ds; WebSocket elsewhere as applicable)
     → GraphQL Yoga resolvers
@@ -320,7 +320,7 @@ Additional columns are inferred from Drizzle:
 
 ### Example: `full` audit + soft delete
 
-```
+```text
 id, createdAt, updatedAt, createdBy, updatedBy, deletedAt, deletedBy, …business fields
 ```
 
@@ -460,7 +460,7 @@ Every PersistedEntity has at least **`createdBy`** (both **`full`** and **`appen
 
 GraphQL Yoga exposes a plugin hook:
 
-```
+```text
 resolveActor(context) → string | null
 ```
 
@@ -505,7 +505,7 @@ The repository layer is **server-internal only**. Application clients **never** 
 
 ### 6.3 Query translation pipeline
 
-```
+```text
 GraphQL filter input
   → validated & parsed to FilterAST (shared, backend-agnostic tree)
   → QueryTranslator (Drizzle-specific)
@@ -2353,7 +2353,7 @@ Extensibility is scoped to the **Drizzle + GraphQL Yoga + SQL** stack documented
 
 Codegen emits a three-layer repository hierarchy per entity:
 
-```
+```text
 BaseOrderRepository          ← dal-core: sealed pipeline (FilterAST, QueryTranslator, cursors, bulk guards, actor columns)
   └── GeneratedOrderRepository   ← codegen: default CRUD + list + bulk implementations
         └── OrderRepository      ← consumer: optional overrides
