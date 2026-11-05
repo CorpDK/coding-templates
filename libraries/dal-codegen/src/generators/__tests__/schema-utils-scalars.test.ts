@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { ColumnModel } from "../../model.js";
-import { filterForColumn, scalarForColumn } from "../schema-utils.js";
+import { filterForColumn, indefiniteArticle, scalarForColumn } from "../schema-utils.js";
 
 function col(kind: ColumnModel["kind"], extra: Partial<ColumnModel> = {}): ColumnModel {
   return {
@@ -46,5 +46,14 @@ describe("schema-utils DAL scalar mapping", () => {
     expect(filterForColumn(col("smallint"))).toBe("SmallIntFilter");
     expect(filterForColumn(col("double"))).toBe("DoubleFilter");
     expect(filterForColumn(col("enum", { enumName: "Status" }))).toBe("StatusFilter");
+  });
+
+  it("chooses a vs an for GraphQL type names in descriptions", () => {
+    expect(indefiniteArticle("Category")).toBe("a");
+    expect(indefiniteArticle("Tag")).toBe("a");
+    expect(indefiniteArticle("User")).toBe("a");
+    expect(indefiniteArticle("Item")).toBe("an");
+    expect(indefiniteArticle("AuditEvent")).toBe("an");
+    expect(indefiniteArticle("Order")).toBe("an");
   });
 });

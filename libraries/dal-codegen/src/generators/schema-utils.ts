@@ -99,6 +99,15 @@ export function columnGraphqlDescription(col: ColumnModel): string | undefined {
   return col.comment || undefined;
 }
 
+/** Indefinite article for GraphQL type names in mutation descriptions. */
+export function indefiniteArticle(typeName: string): "a" | "an" {
+  if (!typeName) return "a";
+  const first = typeName[0].toLowerCase();
+  if (first === "u") return "a";
+  if (first === "a" || first === "e" || first === "i" || first === "o") return "an";
+  return "a";
+}
+
 export function visibleOutputColumns(entity: EntityModel): ColumnModel[] {
   return entity.columns.filter(
     (c) =>

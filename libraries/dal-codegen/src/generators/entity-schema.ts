@@ -9,6 +9,7 @@ import {
   GraphQLEnumType,
   GraphQLString,
   GraphQLUnionType,
+  type GraphQLFieldConfigArgumentMap,
   type GraphQLFieldConfigMap,
   type GraphQLInputFieldConfigMap,
   type GraphQLInputType,
@@ -20,6 +21,7 @@ import {
   filterForColumn,
   filterableColumns,
   columnGraphqlDescription,
+  indefiniteArticle,
   scalarForColumn,
   toSortEnumMember,
   visibleOutputColumns,
@@ -295,19 +297,22 @@ export function buildEntitySchema(
   });
   types.push(createPayload);
 
-  const updatePayload = new GraphQLObjectType({
-    name: `Update${entity.graphqlType}Payload`,
-    description: `Result of update${entity.graphqlType} mutation.`,
-    fields: {
-      [entity.fieldBasename]: { type: objectType },
-      userErrors: {
-        type: new GraphQLNonNull(
-          new GraphQLList(new GraphQLNonNull(registry.mutationUserError)),
-        ),
+  let updatePayload: GraphQLObjectType | undefined;
+  if (updateInput) {
+    updatePayload = new GraphQLObjectType({
+      name: `Update${entity.graphqlType}Payload`,
+      description: `Result of update${entity.graphqlType} mutation.`,
+      fields: {
+        [entity.fieldBasename]: { type: objectType },
+        userErrors: {
+          type: new GraphQLNonNull(
+            new GraphQLList(new GraphQLNonNull(registry.mutationUserError)),
+          ),
+        },
       },
-    },
-  });
-  types.push(updatePayload);
+    });
+    types.push(updatePayload);
+  }
 
   const deletePayload = new GraphQLObjectType({
     name: `Delete${entity.graphqlType}Payload`,
@@ -344,58 +349,61 @@ export function buildEntitySchema(
   });
   types.push(aggregateType);
 
+  const softDelete = entity.deleteStrategy === "soft";
   const includeDeletedArg = {
     type: GraphQLBoolean,
     description: "When true, include soft-deleted rows.",
   };
 
+  function withIncludeDeleted(
+    args: GraphQLFieldConfigArgumentMap,
+  ): GraphQLFieldConfigArgumentMap {
+    if (!softDelete) return args;
+    return { ...args, includeDeleted: includeDeletedArg };
+  }
+
   const queryFields: GraphQLFieldConfigMap<unknown, unknown> = {
     [entity.listField]: {
       type: new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(objectType))),
       description: `Returns ${entity.listField} matching the filter.`,
-      args: {
+      args: withIncludeDeleted({
         filter: { type: filterInput },
         sort: { type: new GraphQLList(new GraphQLNonNull(sortInput)) },
         limit: { type: GraphQLInt, defaultValue: 100 },
-        includeDeleted: includeDeletedArg,
-      },
+      }),
     },
     [entity.fieldBasename]: {
       type: objectType,
       description: `Returns a single ${entity.fieldBasename} by ID.`,
-      args: {
+      args: withIncludeDeleted({
         id: { type: new GraphQLNonNull(GraphQLID) },
-        includeDeleted: includeDeletedArg,
-      },
+      }),
     },
     [`${entity.fieldBasename}Connection`]: {
       type: new GraphQLNonNull(connectionType),
       description: `Relay connection for paginated ${entity.listField} queries.`,
-      args: {
+      args: withIncludeDeleted({
         filter: { type: filterInput },
         sort: { type: new GraphQLList(new GraphQLNonNull(sortInput)) },
         first: { type: GraphQLInt },
         after: { type: GraphQLString },
         last: { type: GraphQLInt },
         before: { type: GraphQLString },
-        includeDeleted: includeDeletedArg,
-      },
+      }),
     },
     [`${entity.listField}Count`]: {
       type: new GraphQLNonNull(GraphQLInt),
       description: `Count of ${entity.listField} matching the filter.`,
-      args: {
+      args: withIncludeDeleted({
         filter: { type: filterInput },
-        includeDeleted: includeDeletedArg,
-      },
+      }),
     },
     [`${entity.fieldBasename}Aggregate`]: {
       type: new GraphQLNonNull(aggregateType),
       description: `Aggregate metrics for ${entity.listField} matching the filter.`,
-      args: {
+      args: withIncludeDeleted({
         filter: { type: filterInput },
-        includeDeleted: includeDeletedArg,
-      },
+      }),
     },
   };
 
@@ -409,14 +417,14 @@ export function buildEntitySchema(
     },
     [`delete${entity.graphqlType}`]: {
       type: new GraphQLNonNull(deletePayload),
-      description: `Deletes an ${entity.graphqlType} by ID.`,
+      description: `Deletes ${indefiniteArticle(entity.graphqlType)} ${entity.graphqlType} by ID.`,
       args: {
         id: { type: new GraphQLNonNull(GraphQLID) },
       },
     },
   };
 
-  if (updateInput) {
+  if (updateInput && updatePayload) {
     mutationFields[`update${entity.graphqlType}`] = {
       type: new GraphQLNonNull(updatePayload),
       description: `Updates an existing ${entity.graphqlType} by ID.`,
@@ -454,15 +462,6 @@ export function buildEntitySchema(
   });
   types.push(bulkCreateUnion);
 
-  const bulkUpdateUnion = new GraphQLUnionType({
-    name: `BulkUpdate${entity.graphqlType}Result`,
-    description: `Bulk update result for ${entity.graphqlType}.`,
-    types: [listPayload, registry.bulkMutationResult],
-    resolveType: (value: { items?: unknown[]; successCount?: number }) =>
-      value.items ? `${entity.graphqlType}ListPayload` : "BulkMutationResult",
-  });
-  types.push(bulkUpdateUnion);
-
   const bulkDeleteUnion = new GraphQLUnionType({
     name: `BulkDelete${entity.graphqlType}Result`,
     description: `Bulk delete result for ${entity.graphqlType}.`,
@@ -472,7 +471,16 @@ export function buildEntitySchema(
   });
   types.push(bulkDeleteUnion);
 
-  if (updateInput) {
+  if (updateInput && updatePayload) {
+    const bulkUpdateUnion = new GraphQLUnionType({
+      name: `BulkUpdate${entity.graphqlType}Result`,
+      description: `Bulk update result for ${entity.graphqlType}.`,
+      types: [listPayload, registry.bulkMutationResult],
+      resolveType: (value: { items?: unknown[]; successCount?: number }) =>
+        value.items ? `${entity.graphqlType}ListPayload` : "BulkMutationResult",
+    });
+    types.push(bulkUpdateUnion);
+
     const updateEntry = new GraphQLInputObjectType({
       name: `${entity.graphqlType}UpdateEntry`,
       description: `Single row update entry for bulk update.`,

@@ -123,6 +123,12 @@ export function generateResolvers(entities: EntityModel[]): string {
     const e = entity.fieldBasename;
     const list = entity.listField;
     const full = entity.auditProfile === "full";
+    const soft = entity.deleteStrategy === "soft";
+    const includeDeletedRead = soft
+      ? "includeDeleted: args.includeDeleted as boolean | null,"
+      : "";
+    const findByIdArgs = soft ? "{ id: string; includeDeleted?: boolean | null }" : "{ id: string }";
+    const findByIdOpts = soft ? "{ includeDeleted: args.includeDeleted }" : "{}";
     const topic = `${e.toUpperCase()}_CHANGED`;
 
     queryFields.push(`    ${list}: async (_: unknown, args: Record<string, unknown>, ctx: DalContext, info: GraphQLResolveInfo) =>
@@ -135,13 +141,13 @@ export function generateResolvers(entities: EntityModel[]): string {
             safeParseOptionalGraphqlInputList("${E}SortInput", args.sort),
           ) as never,
           limit: args.limit as number | null,
-          includeDeleted: args.includeDeleted as boolean | null,
+          ${includeDeletedRead}
         },
         info,
       )) as ResolversTypes["${E}"][],
 
-    ${e}: async (_: unknown, args: { id: string; includeDeleted?: boolean | null }, ctx: DalContext, info: GraphQLResolveInfo) =>
-      (await ctx.repositories.${e}.findById(args.id, { includeDeleted: args.includeDeleted }, info)) as ResolversTypes["${E}"] | null,
+    ${e}: async (_: unknown, args: ${findByIdArgs}, ctx: DalContext, info: GraphQLResolveInfo) =>
+      (await ctx.repositories.${e}.findById(args.id, ${findByIdOpts}, info)) as ResolversTypes["${E}"] | null,
 
     ${e}Connection: async (_: unknown, args: Record<string, unknown>, ctx: DalContext, info: GraphQLResolveInfo) =>
       (await ctx.repositories.${e}.listConnection(
@@ -156,7 +162,7 @@ export function generateResolvers(entities: EntityModel[]): string {
           after: args.after as string | null,
           last: args.last as number | null,
           before: args.before as string | null,
-          includeDeleted: args.includeDeleted as boolean | null,
+          ${includeDeletedRead}
         },
         info,
       )) as ResolversTypes["${E}Connection"],
@@ -166,7 +172,7 @@ export function generateResolvers(entities: EntityModel[]): string {
         filter: unwrapGraphqlInputParseResult(
           safeParseOptionalGraphqlInput("${E}Filter", args.filter),
         ) as never,
-        includeDeleted: args.includeDeleted as boolean | null,
+        ${includeDeletedRead}
       }),
 
     ${e}Aggregate: async (_: unknown, args: Record<string, unknown>, ctx: DalContext) =>
@@ -175,7 +181,7 @@ export function generateResolvers(entities: EntityModel[]): string {
           filter: unwrapGraphqlInputParseResult(
             safeParseOptionalGraphqlInput("${E}Filter", args.filter),
           ) as never,
-          includeDeleted: args.includeDeleted as boolean | null,
+          ${includeDeletedRead}
         }),
       }) as ResolversTypes["${E}Aggregate"],`);
 
