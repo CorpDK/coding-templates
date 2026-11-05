@@ -12112,7 +12112,7 @@ snapshots:
   '@vitest/browser-playwright@4.1.2(msw@2.12.14(@types/node@24.19.1)(typescript@6.0.2))(playwright@1.58.2)(vite@8.0.10(@types/node@24.19.1)(esbuild@0.27.4)(jiti@2.6.1)(sass@1.99.0)(tsx@4.21.0)(yaml@2.8.3))(vitest@4.1.2)':
     dependencies:
       '@vitest/browser': 4.1.2(msw@2.12.14(@types/node@24.19.1)(typescript@6.0.2))(vite@8.0.10(@types/node@24.19.1)(esbuild@0.27.4)(jiti@2.6.1)(sass@1.99.0)(tsx@4.21.0)(yaml@2.8.3))(vitest@4.1.2)
-      '@vitest/mocker': 4.1.2(msw@2.12.14(@types/node@24.19.1)(typescript@6.0.2))(vite@8.0.10(@types/node@24.19.1)(jiti@2.6.1)(sass@1.99.0)(tsx@4.21.0)(yaml@2.8.3))
+      '@vitest/mocker': 4.1.2(msw@2.12.14(@types/node@24.19.1)(typescript@6.0.2))(vite@8.0.10(@types/node@24.19.1)(esbuild@0.27.4)(jiti@2.6.1)(sass@1.99.0)(tsx@4.21.0)(yaml@2.8.3))
       playwright: 1.58.2
       tinyrainbow: 3.1.0
       vitest: 4.1.2(@opentelemetry/api@1.9.1)(@types/node@24.19.1)(@vitest/browser-playwright@4.1.2)(msw@2.12.14(@types/node@24.19.1)(typescript@6.0.2))(vite@8.0.10(@types/node@24.19.1)(esbuild@0.27.4)(jiti@2.6.1)(sass@1.99.0)(tsx@4.21.0)(yaml@2.8.3))
@@ -12139,7 +12139,7 @@ snapshots:
   '@vitest/browser@4.1.2(msw@2.12.14(@types/node@24.19.1)(typescript@6.0.2))(vite@8.0.10(@types/node@24.19.1)(esbuild@0.27.4)(jiti@2.6.1)(sass@1.99.0)(tsx@4.21.0)(yaml@2.8.3))(vitest@4.1.2)':
     dependencies:
       '@blazediff/core': 1.9.1
-      '@vitest/mocker': 4.1.2(msw@2.12.14(@types/node@24.19.1)(typescript@6.0.2))(vite@8.0.10(@types/node@24.19.1)(jiti@2.6.1)(sass@1.99.0)(tsx@4.21.0)(yaml@2.8.3))
+      '@vitest/mocker': 4.1.2(msw@2.12.14(@types/node@24.19.1)(typescript@6.0.2))(vite@8.0.10(@types/node@24.19.1)(esbuild@0.27.4)(jiti@2.6.1)(sass@1.99.0)(tsx@4.21.0)(yaml@2.8.3))
       '@vitest/utils': 4.1.2
       magic-string: 0.30.21
       pngjs: 7.0.0
@@ -12203,6 +12203,15 @@ snapshots:
       '@vitest/utils': 4.1.2
       chai: 6.2.2
       tinyrainbow: 3.1.0
+
+  '@vitest/mocker@4.1.2(msw@2.12.14(@types/node@24.19.1)(typescript@6.0.2))(vite@8.0.10(@types/node@24.19.1)(esbuild@0.27.4)(jiti@2.6.1)(sass@1.99.0)(tsx@4.21.0)(yaml@2.8.3))':
+    dependencies:
+      '@vitest/spy': 4.1.2
+      estree-walker: 3.0.3
+      magic-string: 0.30.21
+    optionalDependencies:
+      msw: 2.12.14(@types/node@24.19.1)(typescript@6.0.2)
+      vite: 8.0.10(@types/node@24.19.1)(esbuild@0.27.4)(jiti@2.6.1)(sass@1.99.0)(tsx@4.21.0)(yaml@2.8.3)
 
   '@vitest/mocker@4.1.2(msw@2.12.14(@types/node@24.19.1)(typescript@6.0.2))(vite@8.0.10(@types/node@24.19.1)(jiti@2.6.1)(sass@1.99.0)(tsx@4.21.0)(yaml@2.8.3))':
     dependencies:
@@ -16410,7 +16419,7 @@ snapshots:
   vitest@4.1.2(@opentelemetry/api@1.9.1)(@types/node@24.19.1)(@vitest/browser-playwright@4.1.2)(msw@2.12.14(@types/node@24.19.1)(typescript@6.0.2))(vite@8.0.10(@types/node@24.19.1)(esbuild@0.27.4)(jiti@2.6.1)(sass@1.99.0)(tsx@4.21.0)(yaml@2.8.3)):
     dependencies:
       '@vitest/expect': 4.1.2
-      '@vitest/mocker': 4.1.2(msw@2.12.14(@types/node@24.19.1)(typescript@6.0.2))(vite@8.0.10(@types/node@24.19.1)(jiti@2.6.1)(sass@1.99.0)(tsx@4.21.0)(yaml@2.8.3))
+      '@vitest/mocker': 4.1.2(msw@2.12.14(@types/node@24.19.1)(typescript@6.0.2))(vite@8.0.10(@types/node@24.19.1)(esbuild@0.27.4)(jiti@2.6.1)(sass@1.99.0)(tsx@4.21.0)(yaml@2.8.3))
       '@vitest/pretty-format': 4.1.2
       '@vitest/runner': 4.1.2
       '@vitest/snapshot': 4.1.2

@@ -70,6 +70,7 @@ export function collectScalarImports(entity: EntityModel): string[] {
     const ser = SERIALIZE_BY_KIND[col.kind];
     if (parse) names.add(parse);
     if (ser) names.add(ser);
+    if (col.kind === "interval") names.add("intervalMsToPgInterval");
   }
   return [...names].sort((a, b) => a.localeCompare(b));
 }
@@ -84,6 +85,9 @@ export function inputRef(col: ColumnModel): string {
 function dbValueFromParse(col: ColumnModel, parsedExpr: string): string {
   if (col.kind === "bigint") {
     return `BigInt(${parsedExpr})`;
+  }
+  if (col.kind === "interval") {
+    return `intervalMsToPgInterval(${parsedExpr})`;
   }
   return parsedExpr;
 }

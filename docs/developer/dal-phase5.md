@@ -37,7 +37,7 @@ Supported in codegen model + filters + repository wire helpers (v1 subset):
 - **GraphQL wire validation:** Yoga registers `dalGraphQLScalar` instances; generated Zod uses `dalScalarZod` — see [custom DAL scalars registry](dal-pg-type-mapping.md#custom-dal-scalars-registry)
 - **Hard bans:** plain `timestamp`, plain `time`, `money`, geometric / PostGIS / `macaddr8` fail codegen or `entity:lint` with explicit errors
 
-Deferred (unchanged): PG interval ↔ ms conversion at the Drizzle read layer (wire uses `IntervalMs`; DB binding remains dialect-specific).
+PG `interval` ↔ total ms conversion lives in `@corpdk/dal-core` (`serializeIntervalMs`, `intervalMsToPgInterval`, `buildIntervalMsFilter`); generated repositories bind converted values at create/update and filters.
 
 ## Commands
 

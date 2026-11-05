@@ -12,6 +12,7 @@ import {
   parseDecimal,
   parseIntervalMs,
   parseTimeTz,
+  intervalMsToPgInterval,
   resolveActorId,
   serializeBigInt,
   serializeDate,
@@ -226,6 +227,10 @@ describe("PostgreSQL type filters and scalars (P5)", () => {
     expect(parseDecimal("12.5")).toBe("12.5");
     expect(serializeIntervalMs(1500)).toBe("1500");
     expect(parseIntervalMs("1500")).toBe("1500");
+    expect(serializeIntervalMs("1 hour 30 minutes")).toBe("5400000");
+    expect(serializeIntervalMs("15 minutes")).toBe("900000");
+    expect(intervalMsToPgInterval("5400000")).toBe("5400000 milliseconds");
+    expect(intervalMsToPgInterval("0")).toBe("0");
     expect(resolveActorId("  alice ")).toBe("alice");
     expect(resolveActorId(undefined)).toBe("system");
   });

@@ -9,6 +9,9 @@ import {
   PG_SMALLINT_MAX,
   PG_SMALLINT_MIN,
 } from "./pg-bounds.js";
+import { intervalMsToPgInterval, pgIntervalTextToMs } from "./pg-interval.js";
+
+export { intervalMsToPgInterval, pgIntervalTextToMs };
 
 /** Serialize timestamptz Date to ISO-8601 UTC with milliseconds and Z suffix. */
 export function serializeDateTime(value: Date | string | null | undefined): string | null {
@@ -109,7 +112,20 @@ export function parseDecimal(value: unknown): string {
 const INTERVAL_MS_RE = /^-?\d+$/;
 
 export function serializeIntervalMs(value: string | number | bigint | null | undefined): string | null {
-  return serializeIntegralString(value);
+  if (value == null) return null;
+  if (typeof value === "bigint") return assertInt64WireDecimal(value.toString());
+  if (typeof value === "number") {
+    if (!Number.isSafeInteger(value)) {
+      throw new TypeError(
+        "IntervalMs number input must be a safe integer; use a decimal string for larger values",
+      );
+    }
+    return assertInt64WireDecimal(value.toString());
+  }
+  if (INTERVAL_MS_RE.test(value)) {
+    return assertInt64WireDecimal(value);
+  }
+  return pgIntervalTextToMs(value);
 }
 
 function assertInt64WireDecimal(decimal: string): string {
@@ -120,7 +136,7 @@ function assertInt64WireDecimal(decimal: string): string {
   return decimal;
 }
 
-/** Parse PG interval or milliseconds wire value to total milliseconds string. */
+/** Parse GraphQL IntervalMs wire value (milliseconds) to decimal ms string. */
 export function parseIntervalMs(value: unknown): string {
   if (typeof value === "number" && Number.isFinite(value)) {
     if (!Number.isSafeInteger(value)) {

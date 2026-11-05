@@ -20,6 +20,7 @@ import {
 } from "drizzle-orm";
 import { ValidationError } from "./errors.js";
 import { extractAssociationFilter, scalarFilterKeys } from "./filter-ast.js";
+import { intervalMsToPgInterval } from "./pg-interval.js";
 
 export interface StringFilter {
   eq?: string | null;
@@ -417,11 +418,32 @@ export function buildTimeTzFilter(
   return buildStringComparableFilter(column, filter, true);
 }
 
+function pgIntervalFilterValue(msWire: string): string {
+  return intervalMsToPgInterval(msWire);
+}
+
+function mapIntervalMsFilterToPg(filter: IntervalMsFilter): IntervalMsFilter {
+  const map = (value: string | null | undefined) =>
+    value == null ? value : pgIntervalFilterValue(value);
+  return {
+    eq: map(filter.eq),
+    neq: map(filter.neq),
+    gt: map(filter.gt),
+    gte: map(filter.gte),
+    lt: map(filter.lt),
+    lte: map(filter.lte),
+    in: filter.in?.map((value) => pgIntervalFilterValue(value)) ?? filter.in,
+    notIn: filter.notIn?.map((value) => pgIntervalFilterValue(value)) ?? filter.notIn,
+    isNull: filter.isNull,
+  };
+}
+
 export function buildIntervalMsFilter(
   column: Column,
   filter: IntervalMsFilter | null | undefined,
 ): SQL | undefined {
-  return buildStringComparableFilter(column, filter, true);
+  if (!filter) return undefined;
+  return buildStringComparableFilter(column, mapIntervalMsFilterToPg(filter), true);
 }
 
 function isScalarPredicateNode(value: Record<string, unknown>): boolean {
