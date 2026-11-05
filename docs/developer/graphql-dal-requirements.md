@@ -15,6 +15,7 @@ Codegen output adjustments from merged-SDL review (DS automation five-pack **`20
 | **Delete mutation docstrings** | Field descriptions use correct **a/an** articles (`Deletes an AuditEvent…`, `Deletes a Tag…`) |
 | **`isNull` on comparable filters** | **`BigIntFilter`**, **`DecimalFilter`**, **`IntervalMsFilter`**, and per-enum **`*Filter`** inputs expose **`isNull`** for nullable columns (same §10.4.1 rules as **`IntFilter`**) |
 | **`InsensitiveStringFilter`** | **`isCaseInsensitive` removed** — PostgreSQL **`citext`** matching is inherently case-insensitive; use **`StringFilter.isCaseInsensitive`** only on **`varchar`/`text`/`char`** columns |
+| **Custom scalar wire validation** | Codegen emits **`dalScalarResolvers`**; Yoga bootstrap merges them with entity resolvers; input Zod uses **`dalScalarZod`** — PG-accurate and network scalars per [registry](dal-pg-type-mapping.md#custom-dal-scalars-registry); geometric / PostGIS / **`macaddr8`** fail **`entity:lint`** |
 
 Demo coverage: **`templates/ds`** **`scalar_specimens`** optional nullable columns and seed rows **`scalar-reference-v1`** / **`scalar-nulls-v1`** ([ER diagram](../../templates/ds/src/db/ER-DIAGRAM.md)).
 

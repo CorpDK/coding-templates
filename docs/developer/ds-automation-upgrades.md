@@ -59,6 +59,7 @@ After bumping the lockstep DS automation packages and running **`pnpm dal:codege
 - Hard-delete entities omit **`includeDeleted`** on read fields.
 - Delete mutation descriptions use correct **a/an** articles.
 - **`BigIntFilter`**, **`DecimalFilter`**, **`IntervalMsFilter`**, and enum filters include **`isNull`** for nullable columns; **`InsensitiveStringFilter`** drops redundant **`isCaseInsensitive`**.
+- **Custom scalar wire validation:** codegen emits **`dalScalarResolvers`** (bootstrap **`src/schema.ts`** merges with entity resolvers); mutation/filter Zod uses **`dalScalarZod`** / PG range helpers — PG-accurate and network scalars per [custom DAL scalars registry](dal-pg-type-mapping.md#custom-dal-scalars-registry). Demo: **`templates/ds`** **`scalar_specimens`** + migrations through **`0003`**.
 
 Details: [GraphQL DAL Requirements — SDL review fixes](graphql-dal-requirements.md#generated-sdl-review-fixes-2026100-alpha13).
 

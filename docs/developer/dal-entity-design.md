@@ -248,7 +248,8 @@ Supported and unsupported PostgreSQL column types for entity tables. Entity desi
 
 | PostgreSQL type | Drizzle builder | Typical use | Index for sort/filter |
 | --------------- | --------------- | ----------- | --------------------- |
-| `text`, `varchar`, `char`, `citext` | `text()`, `varchar()`, `char()` | Names, descriptions, actor IDs | Yes — when used in WHERE/ORDER BY |
+| `text`, `varchar`, `char` | `text()`, `varchar()`, `char()` | Names, descriptions, actor IDs | Yes — when used in WHERE/ORDER BY |
+| `citext` | Drizzle `customType` (requires PG `citext` extension) | Case-insensitive strings — GraphQL **`InsensitiveString`** | Yes — when used in WHERE/ORDER BY |
 | `smallint`, `integer` | `smallint()`, `integer()` | Counts, ordinals, amounts in cents | Yes |
 | `bigint` | `bigint()` | Large integers, counters exceeding 32-bit | Yes |
 | `numeric`, `decimal` | `numeric()`, `decimal()` | Monetary amounts, rates, fixed-precision decimals | Yes |
@@ -257,7 +258,7 @@ Supported and unsupported PostgreSQL column types for entity tables. Entity desi
 | `date` | `date()` | Calendar dates without time (birthdays, effective dates) | Yes — when used in sort/filter |
 | `timestamp with time zone` (`timestamptz`) | `timestamp(..., { withTimezone: true })` | All instant timestamps (audit, soft-delete, business events) — **only** instant timestamp type allowed | Yes — when used in sort/filter |
 | `time with time zone` (`timetz`) | `time(..., { withTimezone: true })` | Time-of-day with offset (business hours, daily cutoff) — **not** for instants | Yes — when used in sort/filter |
-| `interval` | `interval()` | Durations (rare) — stored as PG `interval`; application code converts to total milliseconds when needed | Optional |
+| `interval` | `interval()` | Durations (rare) — PG `interval`; GraphQL **`IntervalMs`** wire (ms); repositories convert ↔ PG per [type reference](dal-pg-type-mapping.md) | Optional |
 | `bigint` (duration) | `bigint()` | Durations stored as **milliseconds** (preferred over `interval` for new schemas) | Optional |
 | `uuid` | `uuid()` | Primary keys, foreign keys — opaque identifiers | Yes — FK columns always indexed |
 | `pgEnum(...)` | `pgEnum()` | Constrained string values | Yes — when filtered or sorted |
@@ -279,7 +280,7 @@ Do **not** use negated boolean names (`is_not_archived`, `has_no_lines`) — exp
 
 **Time-of-day:** use **`timetz`** (`time(..., { withTimezone: true })`) when a column stores clock time with offset — not for audit or event instants.
 
-**Durations:** prefer a **`bigint`** column storing **total milliseconds** for new schemas. PostgreSQL **`interval`** is supported when present — application code converts between PG `interval` and total milliseconds on read/write. Do **not** store durations as `float` or `numeric`.
+**Durations:** prefer a **`bigint`** column storing **total milliseconds** for new schemas. PostgreSQL **`interval`** is supported when present — generated repositories convert PG `interval` ↔ **`IntervalMs`** ms wire via `@corpdk/dal-core` ([type reference](dal-pg-type-mapping.md)). Do **not** store durations as `float` or `numeric`.
 
 **Money:** PostgreSQL **`money`** is **unsupported** — entity validation **fails**. Never use `money()`. Store monetary amounts as **`integer` cents** (whole amounts) or **`numeric`/`decimal`** with explicit scale.
 
