@@ -517,6 +517,7 @@ const BUILTIN_TYPES = new Map<string, GraphQLNamedType>([
   ["Boolean", GraphQLBoolean],
   ["ID", GraphQLID],
   ["Int", GraphQLInt],
+  ["Float", GraphQLFloat],
 ]);
 
 /** Resolves a named type from the registry; throws if missing. */

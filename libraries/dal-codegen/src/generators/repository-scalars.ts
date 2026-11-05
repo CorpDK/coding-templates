@@ -81,13 +81,24 @@ export function inputRef(col: ColumnModel): string {
   return `input.${col.graphqlName}`;
 }
 
+function dbValueFromParse(col: ColumnModel, parsedExpr: string): string {
+  if (col.kind === "bigint") {
+    return `BigInt(${parsedExpr})`;
+  }
+  return parsedExpr;
+}
+
 function parseWrapper(col: ColumnModel, ref: string, nullable: boolean): string {
   const fn = PARSE_BY_KIND[col.kind];
   if (!fn) return ref;
   if (nullable) {
-    return `${ref} === null || ${ref} === undefined ? ${ref} : ${fn}(${ref})`;
+    const parsed = `${ref} === null || ${ref} === undefined ? ${ref} : ${fn}(${ref})`;
+    if (col.kind === "bigint") {
+      return `${ref} === null || ${ref} === undefined ? ${ref} : BigInt(${fn}(${ref}))`;
+    }
+    return parsed;
   }
-  return `${ref} ? ${fn}(${ref}) : undefined`;
+  return dbValueFromParse(col, `${fn}(${ref})`);
 }
 
 export function assignCreateValue(col: ColumnModel): string {
@@ -106,12 +117,20 @@ export function assignUpdateValue(col: ColumnModel): string {
   if (PARSE_BY_KIND[col.kind]) {
     const fn = PARSE_BY_KIND[col.kind]!;
     if (col.notNull) {
+      const assign =
+        col.kind === "bigint"
+          ? `BigInt(${fn}(input.${col.graphqlName}))`
+          : `${fn}(input.${col.graphqlName})`;
       return `    if (input.${col.graphqlName} !== undefined && input.${col.graphqlName} !== null) {
-      set.${col.drizzleKey} = ${fn}(input.${col.graphqlName});
+      set.${col.drizzleKey} = ${assign};
     }`;
     }
+    const nullableAssign =
+      col.kind === "bigint"
+        ? `input.${col.graphqlName} === null ? null : BigInt(${fn}(input.${col.graphqlName}))`
+        : `input.${col.graphqlName} === null ? null : ${fn}(input.${col.graphqlName})`;
     return `    if (input.${col.graphqlName} !== undefined) {
-      set.${col.drizzleKey} = input.${col.graphqlName} === null ? null : ${fn}(input.${col.graphqlName});
+      set.${col.drizzleKey} = ${nullableAssign};
     }`;
   }
   if (col.kind === "enum") {

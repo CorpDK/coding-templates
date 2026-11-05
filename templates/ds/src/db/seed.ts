@@ -11,6 +11,7 @@ import { itemTags } from "./schema/item-tags.js";
 import { items } from "./schema/items.js";
 import { orderLines } from "./schema/order-lines.js";
 import { orders } from "./schema/orders.js";
+import { scalarSpecimens } from "./schema/scalar-specimens.js";
 import { tags } from "./schema/tags.js";
 import * as schema from "./schema/index.js";
 
@@ -80,7 +81,12 @@ const IDS = {
     aliceEarlyAdopter: "b3000001-0000-4000-8000-000000000001",
     aliceBeta: "b3000001-0000-4000-8000-000000000002",
   },
+  scalarSpecimens: {
+    reference: "c1000001-0000-4000-8000-000000000001",
+  },
 } as const;
+
+const SCALAR_SPECIMEN_OBSERVED_AT = new Date("2026-06-15T13:45:00.000Z");
 
 export async function seedDatabase(): Promise<void> {
   const connectionString = process.env.DATABASE_URL;
@@ -99,6 +105,7 @@ export async function seedDatabase(): Promise<void> {
     if (row.count > 0) {
       console.log("[seed] Sample data already present — skipping.");
       await seedUsersAndLabelsIfEmpty(db);
+      await seedScalarSpecimensIfEmpty(db);
       return;
     }
 
@@ -529,10 +536,15 @@ export async function seedDatabase(): Promise<void> {
           },
         ])
         .onConflictDoNothing();
+
+      await tx
+        .insert(scalarSpecimens)
+        .values([buildScalarSpecimenRow()])
+        .onConflictDoNothing();
     });
 
     console.log(
-      "[seed] Loaded sample data: 2 users, 2 labels, 2 user-labels, 3 categories, 5 items, 5 item-details, 3 tags, 6 item-tags, 2 orders, 4 order lines, 3 audit events.",
+      "[seed] Loaded sample data: 2 users, 2 labels, 2 user-labels, 3 categories, 5 items, 5 item-details, 3 tags, 6 item-tags, 2 orders, 4 order lines, 3 audit events, 1 scalar specimen.",
     );
   } finally {
     await pool.end();
@@ -617,6 +629,48 @@ async function seedUsersAndLabelsIfEmpty(db: ReturnType<typeof drizzle<typeof sc
   });
 
   console.log("[seed] Loaded users/labels: 2 users, 2 labels, 2 user-label links.");
+}
+
+function buildScalarSpecimenRow() {
+  return {
+    id: IDS.scalarSpecimens.reference,
+    specimenCode: "scalar-reference-v1",
+    fixedCode: "REF00001",
+    notes: "Single seed row covering every DAL-supported PostgreSQL scalar mapped to GraphQL.",
+    slugInsensitive: "Scalar-Showcase-Slug",
+    rankSmall: 42,
+    countInt: 2_147_483_647,
+    tokenBig: 9_007_199_254_740_991n,
+    amountDecimal: "1234.5678",
+    ratioFloat: 3.14,
+    ratioDouble: 2.718281828459045,
+    isReference: true,
+    effectiveOn: "2026-06-15",
+    observedAt: SCALAR_SPECIMEN_OBSERVED_AT,
+    opensAt: "09:30:00+00",
+    durationMs: "1 hour 30 minutes",
+    hostIp: "192.0.2.42",
+    networkCidr: "192.0.2.0/24",
+    nicMac: "08:00:2b:01:02:03",
+    kind: "REFERENCE" as const,
+    createdAt: SEEDED_AT,
+    updatedAt: SEEDED_AT,
+    createdBy: ACTOR,
+    updatedBy: ACTOR,
+  };
+}
+
+async function seedScalarSpecimensIfEmpty(
+  db: ReturnType<typeof drizzle<typeof schema>>,
+): Promise<void> {
+  const [row] = await db.select({ count: sql<number>`count(*)::int` }).from(scalarSpecimens);
+  if (row.count > 0) {
+    console.log("[seed] Scalar specimens already present — skipping.");
+    return;
+  }
+
+  await db.insert(scalarSpecimens).values([buildScalarSpecimenRow()]).onConflictDoNothing();
+  console.log("[seed] Loaded scalar specimens: 1 reference row.");
 }
 
 const isMainModule =

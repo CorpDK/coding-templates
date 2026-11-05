@@ -7,3 +7,9 @@ export const orderStatusEnum = pgEnum("order_status", [
   "COMPLETED",
   "CANCELLED",
 ]);
+
+/** Scalar showcase row classification for GraphQL enum coverage. */
+export const scalarSpecimenKindEnum = pgEnum("scalar_specimen_kind", [
+  "REFERENCE",
+  "EDGE_CASE",
+]);

@@ -9,6 +9,7 @@ import { itemTags } from "./item-tags.js";
 import { items } from "./items.js";
 import { orderLines } from "./order-lines.js";
 import { orders } from "./orders.js";
+import { scalarSpecimens } from "./scalar-specimens.js";
 import { tags } from "./tags.js";
 
 export const categoriesRelations = relations(categories, ({ many }) => ({
@@ -68,6 +69,9 @@ export const orderLinesRelations = relations(orderLines, ({ one }) => ({
 
 /** auditEvents has no FK relations — standalone append-only log. */
 export const auditEventsRelations = relations(auditEvents, () => ({}));
+
+/** scalarSpecimens has no FK relations — standalone scalar type showcase. */
+export const scalarSpecimensRelations = relations(scalarSpecimens, () => ({}));
 
 export const usersRelations = relations(users, ({ many }) => ({
   orders: many(orders),

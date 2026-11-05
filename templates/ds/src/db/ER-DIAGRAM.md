@@ -9,7 +9,7 @@ Reference ER for `@corpdk/ds`: a small catalog-and-checkout domain wired end-to-
 - **Catalog**: `categories` group `items`; each `item` has optional `item_details` (1:1). `tags` classify items through enriched junction `item_tags` (M:N).
 - **Checkout**: `users` are customers. Each user places many `orders` (1:M). Each order has many `order_lines` (1:M); **each line references exactly one `item`** via `item_id` (with `quantity` for units).
 - **Segmentation**: `labels` tag users through pure junction `user_labels` (M:N, soft-deletable links) — distinct from item `tags`.
-- **Supporting (no FK into core ER)**: `audit_events` append-only log.
+- **Supporting (no FK into core ER)**: `audit_events` append-only log; `scalar_specimens` exercises every DAL-supported PG → GraphQL scalar (requires `citext` extension).
 - **Phase 5 constraints (commerce)**: `tags.label` (2–30 chars) and `order_lines.quantity` (must be &gt; 0).
 
 ```mermaid
@@ -146,6 +146,33 @@ erDiagram
         text created_by
     }
 
+    scalar_specimens {
+        uuid id PK "GraphQL ID"
+        varchar specimen_code "String"
+        char fixed_code "String"
+        text notes "String"
+        citext slug_insensitive "InsensitiveString"
+        smallint rank_small "SmallInt"
+        integer count_int "Int"
+        bigint token_big "BigInt"
+        numeric amount_decimal "Decimal"
+        real ratio_float "Float"
+        double ratio_double "Double"
+        boolean is_reference "Boolean"
+        date effective_on "Date"
+        timestamptz observed_at "DateTime"
+        timetz opens_at "TimeTz"
+        interval duration_ms "IntervalMs"
+        inet host_ip "IP"
+        cidr network_cidr "CIDR"
+        macaddr nic_mac "MAC"
+        scalar_specimen_kind kind "GraphQL enum"
+        timestamptz created_at "DateTime audit"
+        timestamptz updated_at "DateTime audit"
+        text created_by
+        text updated_by
+    }
+
 ```
 
 ## Entity profiles
@@ -163,6 +190,34 @@ erDiagram
 | **labels** | full | hard | M:N → users via userLabels (distinct from item `tags`) |
 | **userLabels** | full | soft | Pure M:N junction (FKs + audit only); unique user+label pair |
 | **auditEvents** | append-only | hard | Standalone — no FK relations; `payload` required |
+| **scalarSpecimens** | full | hard | Standalone — no FK; one row seeds all supported PG → GraphQL scalars |
+
+## PG → GraphQL scalar legend (`scalar_specimens`)
+
+Reference table for DAL codegen and GraphQL Yoga wire types. Audit columns on all entities reuse `timestamptz` → **`DateTime`** and actor `text` → **`String`** (not duplicated on every business column below).
+
+| Column (physical) | PostgreSQL | GraphQL scalar |
+| ----------------- | ---------- | -------------- |
+| `id` | `uuid` | **`ID`** (built-in) |
+| `specimen_code` | `varchar` | **`String`** |
+| `fixed_code` | `char(8)` | **`String`** |
+| `notes` | `text` | **`String`** |
+| `slug_insensitive` | `citext` | **`InsensitiveString`** |
+| `rank_small` | `smallint` | **`SmallInt`** |
+| `count_int` | `integer` | **`Int`** |
+| `token_big` | `bigint` | **`BigInt`** |
+| `amount_decimal` | `numeric(14,4)` | **`Decimal`** |
+| `ratio_float` | `real` | **`Float`** |
+| `ratio_double` | `double precision` | **`Double`** |
+| `is_reference` | `boolean` | **`Boolean`** |
+| `effective_on` | `date` | **`Date`** |
+| `observed_at` | `timestamptz` | **`DateTime`** |
+| `opens_at` | `timetz` | **`TimeTz`** |
+| `duration_ms` | `interval` | **`IntervalMs`** |
+| `host_ip` | `inet` | **`IP`** |
+| `network_cidr` | `cidr` | **`CIDR`** |
+| `nic_mac` | `macaddr` | **`MAC`** |
+| `kind` | `scalar_specimen_kind` (`pgEnum`) | **`ScalarSpecimenKind`** (enum) |
 
 ## Notes
 
@@ -174,3 +229,4 @@ erDiagram
 - **Pure junction (`userLabels`)**: M:N link for navigation validation — FKs and audit columns only (contrast with `itemTags`); soft-deletable links without touching `users` / `labels`.
 - **Append-only**: `tags` and `auditEvents` have `createdAt` + `createdBy` only — no `updatedAt` / `updatedBy`; `auditEvents.payload` is required (`notNull`).
 - **Soft delete**: `deletedAt` (+ optional `deletedBy`) on `items`, `tags`, `orders`, and junction `userLabels`.
+- **Scalar showcase**: `scalar_specimens` is intentionally outside the commerce ER — use it to regression-test filters, sorts, aggregates, and custom scalar parse/serialize for every supported PG type (enable `CREATE EXTENSION IF NOT EXISTS citext` before migrate/seed).
