@@ -8,6 +8,13 @@ const PARSE_BY_KIND: Partial<Record<ColumnModel["kind"], string>> = {
   bigint: "parseBigInt",
   decimal: "parseDecimal",
   interval: "parseIntervalMs",
+  smallint: "parseSmallInt",
+  double: "parseDouble",
+  real: "parseReal",
+  citext: "parseCitext",
+  inet: "parseInet",
+  cidr: "parseCidr",
+  macaddr: "parseMacAddr",
 };
 
 const SERIALIZE_BY_KIND: Partial<Record<ColumnModel["kind"], string>> = {
@@ -17,6 +24,12 @@ const SERIALIZE_BY_KIND: Partial<Record<ColumnModel["kind"], string>> = {
   bigint: "serializeBigInt",
   decimal: "serializeDecimal",
   interval: "serializeIntervalMs",
+  smallint: "serializeSmallInt",
+  double: "serializeDouble",
+  citext: "serializeCitext",
+  inet: "serializeInet",
+  cidr: "serializeCidr",
+  macaddr: "serializeMacAddr",
 };
 
 const WIRE_SCALAR_KINDS = new Set<ColumnModel["kind"]>([
@@ -26,11 +39,24 @@ const WIRE_SCALAR_KINDS = new Set<ColumnModel["kind"]>([
   "bigint",
   "decimal",
   "interval",
+  "smallint",
+  "double",
+  "citext",
+  "inet",
+  "cidr",
+  "macaddr",
 ]);
 
 export function tsTypeForColumn(col: ColumnModel): string {
   if (col.kind === "boolean") return "boolean";
-  if (col.kind === "smallint" || col.kind === "integer" || col.kind === "float") return "number";
+  if (
+    col.kind === "smallint" ||
+    col.kind === "integer" ||
+    col.kind === "real" ||
+    col.kind === "double"
+  ) {
+    return "number";
+  }
   if (col.kind === "enum" && col.enumValues?.length) {
     return col.enumValues.map((value) => JSON.stringify(value)).join(" | ");
   }
@@ -44,6 +70,7 @@ export function collectScalarImports(entity: EntityModel): string[] {
     const ser = SERIALIZE_BY_KIND[col.kind];
     if (parse) names.add(parse);
     if (ser) names.add(ser);
+    if (col.kind === "interval") names.add("intervalMsToPgInterval");
   }
   return [...names].sort((a, b) => a.localeCompare(b));
 }
@@ -55,13 +82,24 @@ export function inputRef(col: ColumnModel): string {
   return `input.${col.graphqlName}`;
 }
 
+function dbValueFromParse(col: ColumnModel, parsedExpr: string): string {
+  if (col.kind === "bigint") {
+    return `BigInt(${parsedExpr})`;
+  }
+  if (col.kind === "interval") {
+    return `intervalMsToPgInterval(${parsedExpr})`;
+  }
+  return parsedExpr;
+}
+
 function parseWrapper(col: ColumnModel, ref: string, nullable: boolean): string {
   const fn = PARSE_BY_KIND[col.kind];
   if (!fn) return ref;
   if (nullable) {
-    return `${ref} === null || ${ref} === undefined ? ${ref} : ${fn}(${ref})`;
+    const parsed = dbValueFromParse(col, `${fn}(${ref})`);
+    return `${ref} === null || ${ref} === undefined ? ${ref} : ${parsed}`;
   }
-  return `${ref} ? ${fn}(${ref}) : undefined`;
+  return dbValueFromParse(col, `${fn}(${ref})`);
 }
 
 export function assignCreateValue(col: ColumnModel): string {
@@ -79,13 +117,14 @@ export function assignCreateValue(col: ColumnModel): string {
 export function assignUpdateValue(col: ColumnModel): string {
   if (PARSE_BY_KIND[col.kind]) {
     const fn = PARSE_BY_KIND[col.kind]!;
+    const parsed = dbValueFromParse(col, `${fn}(input.${col.graphqlName})`);
     if (col.notNull) {
       return `    if (input.${col.graphqlName} !== undefined && input.${col.graphqlName} !== null) {
-      set.${col.drizzleKey} = ${fn}(input.${col.graphqlName});
+      set.${col.drizzleKey} = ${parsed};
     }`;
     }
     return `    if (input.${col.graphqlName} !== undefined) {
-      set.${col.drizzleKey} = input.${col.graphqlName} === null ? null : ${fn}(input.${col.graphqlName});
+      set.${col.drizzleKey} = input.${col.graphqlName} === null ? null : ${parsed};
     }`;
   }
   if (col.kind === "enum") {
@@ -213,6 +252,10 @@ export function cursorDeserializeBody(entity: EntityModel, sortCols: ColumnModel
       if (c.kind === "timestamptz") {
         return `      case "${c.drizzleKey}":
         return new Date(value as string);`;
+      }
+      if (c.kind === "interval") {
+        return `      case "${c.drizzleKey}":
+        return intervalMsToPgInterval(value as string);`;
       }
       return `      case "${c.drizzleKey}":
         return value;`;

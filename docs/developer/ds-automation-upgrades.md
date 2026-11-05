@@ -51,16 +51,28 @@ Scaffolded **`codegen.ts`** targets sibling **`../ds-sdk`** and **`../ds-cli`** 
 5. Runs **`entity:lint`** only when the monorepo `libraries/dal-codegen/dist/lint-cli.js` exists or **`node_modules/.bin/dal-entity-lint`** is present (skipped after a bare merge until `pnpm install` in DS-only repos).
 6. Prints **`pnpm install`** then **`pnpm dal:codegen`** as required follow-up.
 
+## Recent codegen output (`2026.10.0-alpha.13`)
+
+After bumping the lockstep DS automation packages and running **`pnpm dal:codegen`**:
+
+- Append-only entities no longer emit orphan update/bulk-update SDL types.
+- Hard-delete entities omit **`includeDeleted`** on read fields.
+- Delete mutation descriptions use correct **a/an** articles.
+- **`BigIntFilter`**, **`DecimalFilter`**, **`IntervalMsFilter`**, and enum filters include **`isNull`** for nullable columns; **`InsensitiveStringFilter`** drops redundant **`isCaseInsensitive`**.
+- **Custom scalar wire validation:** codegen emits **`dalScalarResolvers`** (bootstrap **`src/schema.ts`** merges with entity resolvers); mutation/filter Zod uses **`dalScalarZod`** / PG range helpers — PG-accurate and network scalars per [custom DAL scalars registry](dal-pg-type-mapping.md#custom-dal-scalars-registry). Demo: **`templates/ds`** **`scalar_specimens`** + migrations through **`0003`**.
+
+Details: [GraphQL DAL Requirements — SDL review fixes](graphql-dal-requirements.md#generated-sdl-review-fixes-2026100-alpha13).
+
 ## Upgrade playbook
 
 Published `@corpdk/*` libraries use [CalVer](../architecture/02-monorepo-design.md#calver-format-rules); rows below describe **compatibility impact**, not npm semver version fields.
 
-| Bump                                                     | When                                                  | Consumer action                                                                   |
-| -------------------------------------------------------- | ----------------------------------------------------- | --------------------------------------------------------------------------------- |
-| **Patch** `@corpdk/dal-core` / `@corpdk/dal-codegen`     | Bug fixes, lint rules, generated output tweaks        | `create-ds upgrade` → `pnpm install` → `pnpm dal:codegen`                         |
-| **Minor** `@corpdk/dal-core`                             | New filter operators, relation behavior, optional env | Same; review `entity:lint` warnings                                               |
-| **Major** `@corpdk/dal-core` or codegen breaking changes | GraphQL naming, payload shape, removed scalars        | Upgrade tool + fix schema comments/indexes per release notes; run full test suite |
-| **Template-only** (scripts, Docker, bootstrap)           | No `@corpdk` library release                          | `create-ds upgrade` sufficient; schema untouched                                  |
+| Bump                                                     | When                                                                                                        | Consumer action                                                                   |
+| -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
+| **Patch** `@corpdk/dal-core` / `@corpdk/dal-codegen`     | Bug fixes, lint rules, generated output tweaks                                                              | `create-ds upgrade` → `pnpm install` → `pnpm dal:codegen`                         |
+| **Minor** `@corpdk/dal-core`                             | New filter operators, relation behavior, optional env, **`dalScalarZod`** / graphql-scalars wire validation | Same; review `entity:lint` warnings; re-run **`pnpm dal:codegen`** after bump     |
+| **Major** `@corpdk/dal-core` or codegen breaking changes | GraphQL naming, payload shape, removed scalars                                                              | Upgrade tool + fix schema comments/indexes per release notes; run full test suite |
+| **Template-only** (scripts, Docker, bootstrap)           | No `@corpdk` library release                                                                                | `create-ds upgrade` sufficient; schema untouched                                  |
 
 Always run the three-step codegen chain after upgrading libraries:
 
@@ -71,22 +83,22 @@ pnpm dal:codegen
 
 ## What stays manual (today)
 
-| Area                                   | Owner    | Roadmap                                              |
-| -------------------------------------- | -------- | ---------------------------------------------------- |
-| `src/db/schema/**`                     | Team     | Only hand-authored surface                           |
-| `src/db/seed.ts`                       | Team     | Optional demo data                                   |
-| `drizzle/migrations/**`                | Team     | `pnpm db:generate` / `db:migrate`                    |
-| Auth wiring in `src/index.ts` context  | Team     | Future: auth plugin hook in bootstrap generator      |
-| Custom GraphQL extensions              | Team     | Future: `dal.config.yaml` extension points           |
-| Monorepo `turbo.json` / root workspace | Platform | Documented separately; not merged by `create-ds` yet |
+| Area                                   | Owner    | Roadmap                                                                                                                                                      |
+| -------------------------------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `src/db/schema/**`                     | Team     | Only hand-authored surface                                                                                                                                   |
+| `src/db/seed.ts`                       | Team     | Optional demo data                                                                                                                                           |
+| `drizzle/migrations/**`                | Team     | `pnpm db:generate` / `db:migrate`; **`templates/ds`** ships tracked baseline migrations through **`0003`** (demo schema incl. `citext` / `scalar_specimens`) |
+| Auth wiring in `src/index.ts` context  | Team     | Future: auth plugin hook in bootstrap generator                                                                                                              |
+| Custom GraphQL extensions              | Team     | Future: `dal.config.yaml` extension points                                                                                                                   |
+| Monorepo `turbo.json` / root workspace | Platform | Documented separately; not merged by `create-ds` yet                                                                                                         |
 
 ## Maintainers
 
 When changing `templates/ds` automation files, refresh the bundled snapshot under **`engines/create-ds/canonical/`** (paths merged on upgrade):
 
-`package.json`, `LICENSE`, `dal/dal.config.yaml`, `codegen.ts`, `drizzle.config.ts`, `tsconfig.json`, `Dockerfile`, `docker-compose.yml`, `docker/otel-collector-config.yaml`, `docker-entrypoint.sh`, `.gitignore`, `.env.example`, `src/schema.ts`, `src/index.ts`, `src/db/index.ts`, `src/health.ts`, `src/validation/parse-input.ts`, `src/observability/**`
+`package.json`, `LICENSE`, `dal/dal.config.yaml`, `codegen.ts`, `drizzle.config.ts`, `tsconfig.json`, `Dockerfile`, `docker-compose.yml`, `docker/otel-collector-config.yaml`, `docker/postgres-init/**`, `docker-entrypoint.sh`, `.gitignore`, `.env.example`, `src/schema.ts`, `src/index.ts`, `src/db/index.ts`, `src/health.ts`, `src/validation/parse-input.ts`, `src/observability/**`
 
-Copy from `templates/ds` (omit `src/db/schema/**`, `drizzle/**`, and generated output). Keep **`engines/create-ds/starter/`** in sync when changing the minimal default schema.
+Copy from `templates/ds` (omit `src/db/schema/**`, `drizzle/**`, and generated output). When refreshing **`engines/create-ds/canonical/.gitignore`**, keep the **`drizzle/migrations/`** ignore line — the monorepo **`templates/ds`** template tracks demo baseline migrations in git; scaffolded DS packages treat migration SQL as team-owned and gitignored. Keep **`engines/create-ds/starter/`** in sync when changing the minimal default schema.
 
 Release **`@corpdk/create-ds`** on the same train as **`@corpdk/dal-codegen`** when upgrade deltas matter.
 
@@ -94,4 +106,4 @@ Release **`@corpdk/create-ds`** on the same train as **`@corpdk/dal-codegen`** w
 
 **Related**: [Monorepo Overview](01-monorepo-overview.md) | [GraphQL DAL Requirements](graphql-dal-requirements.md) | [Monorepo Design — CalVer](../architecture/02-monorepo-design.md#calver-format-rules)
 
-**Last updated**: October 7, 2026
+**Last updated**: November 5, 2026

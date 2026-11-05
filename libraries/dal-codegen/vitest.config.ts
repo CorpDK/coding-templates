@@ -23,13 +23,18 @@ function codegenDbStubPlugin(): Plugin {
 
 export default defineConfig({
   plugins: [codegenDbStubPlugin()],
+  resolve: {
+    alias: {
+      "@corpdk/dal-core": join(packageRoot, "../dal-core/src/index.ts"),
+    },
+  },
   test: {
     include: ["src/**/*.test.ts"],
     coverage: {
       provider: "v8",
       reporter: ["text", "lcov"],
       include: ["src/**/*.ts"],
-      exclude: ["src/**/*.test.ts", "src/**/__tests__/**"],
+      exclude: ["src/**/*.test.ts", "src/**/__tests__/**", "vitest.config.ts"],
     },
   },
 });

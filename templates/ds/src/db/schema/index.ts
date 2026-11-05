@@ -14,6 +14,7 @@
  * | labels       | user segmentation (M:N via userLabels)               |
  * | userLabels   | pure M:N junction (soft-deletable links)             |
  * | auditEvents  | append-only audit log (no FK)                        |
+ * | scalarSpecimens | standalone PG → GraphQL scalar showcase (no FK)   |
  */
 export * from "./audit-events.js";
 export * from "./categories.js";
@@ -24,7 +25,9 @@ export * from "./items.js";
 export * from "./labels.js";
 export * from "./order-lines.js";
 export * from "./orders.js";
+export * from "./pg-custom-types.js";
 export * from "./relations.js";
+export * from "./scalar-specimens.js";
 export * from "./tags.js";
 export * from "./user-labels.js";
 export * from "./users.js";

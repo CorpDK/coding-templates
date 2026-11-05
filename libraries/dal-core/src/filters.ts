@@ -20,6 +20,7 @@ import {
 } from "drizzle-orm";
 import { ValidationError } from "./errors.js";
 import { extractAssociationFilter, scalarFilterKeys } from "./filter-ast.js";
+import { intervalMsToPgInterval } from "./pg-interval.js";
 
 export interface StringFilter {
   eq?: string | null;
@@ -59,6 +60,7 @@ export interface EnumFilter<T extends string = string> {
   neq?: T | null;
   in?: T[] | null;
   notIn?: T[] | null;
+  isNull?: boolean | null;
 }
 
 export interface IntFilter {
@@ -94,6 +96,7 @@ export interface BigIntFilter {
   lte?: string | null;
   in?: string[] | null;
   notIn?: string[] | null;
+  isNull?: boolean | null;
 }
 
 export interface DecimalFilter {
@@ -105,6 +108,7 @@ export interface DecimalFilter {
   lte?: string | null;
   in?: string[] | null;
   notIn?: string[] | null;
+  isNull?: boolean | null;
 }
 
 export interface DateFilter {
@@ -140,6 +144,7 @@ export interface IntervalMsFilter {
   lte?: string | null;
   in?: string[] | null;
   notIn?: string[] | null;
+  isNull?: boolean | null;
 }
 
 export interface FilterBudgetLimits {
@@ -267,6 +272,10 @@ export function buildEnumFilter<T extends string>(
   column: Column,
   filter: EnumFilter<T> | null | undefined,
 ): SQL | undefined {
+  if (!filter) return undefined;
+  assertExclusiveIsNull(filter, ["eq", "neq", "in", "notIn"]);
+  if (filter.isNull === true) return isNull(column);
+  if (filter.isNull === false) return isNotNull(column);
   return buildIdFilter(column, filter);
 }
 
@@ -388,14 +397,14 @@ export function buildBigIntFilter(
   column: Column,
   filter: BigIntFilter | null | undefined,
 ): SQL | undefined {
-  return buildStringComparableFilter(column, filter, false);
+  return buildStringComparableFilter(column, filter, true);
 }
 
 export function buildDecimalFilter(
   column: Column,
   filter: DecimalFilter | null | undefined,
 ): SQL | undefined {
-  return buildStringComparableFilter(column, filter, false);
+  return buildStringComparableFilter(column, filter, true);
 }
 
 export function buildDateFilter(column: Column, filter: DateFilter | null | undefined): SQL | undefined {
@@ -409,11 +418,32 @@ export function buildTimeTzFilter(
   return buildStringComparableFilter(column, filter, true);
 }
 
+function pgIntervalFilterValue(msWire: string): string {
+  return intervalMsToPgInterval(msWire);
+}
+
+function mapIntervalMsFilterToPg(filter: IntervalMsFilter): IntervalMsFilter {
+  const map = (value: string | null | undefined) =>
+    value == null ? value : pgIntervalFilterValue(value);
+  return {
+    eq: map(filter.eq),
+    neq: map(filter.neq),
+    gt: map(filter.gt),
+    gte: map(filter.gte),
+    lt: map(filter.lt),
+    lte: map(filter.lte),
+    in: filter.in?.map((value) => pgIntervalFilterValue(value)) ?? filter.in,
+    notIn: filter.notIn?.map((value) => pgIntervalFilterValue(value)) ?? filter.notIn,
+    isNull: filter.isNull,
+  };
+}
+
 export function buildIntervalMsFilter(
   column: Column,
   filter: IntervalMsFilter | null | undefined,
 ): SQL | undefined {
-  return buildStringComparableFilter(column, filter, false);
+  if (!filter) return undefined;
+  return buildStringComparableFilter(column, mapIntervalMsFilterToPg(filter), true);
 }
 
 function isScalarPredicateNode(value: Record<string, unknown>): boolean {

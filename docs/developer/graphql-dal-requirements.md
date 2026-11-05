@@ -4,6 +4,21 @@ Requirements specification for a **standalone library/service pattern** that aut
 
 **Related:** [DAL Entity Design Guidelines](dal-entity-design.md) — conventions for authoring Drizzle schemas that feed codegen | [DAL PostgreSQL Type Reference](dal-pg-type-mapping.md) — PG type coverage and scalar mapping
 
+## Generated SDL review fixes (`2026.10.0-alpha.13`)
+
+Codegen output adjustments from merged-SDL review (DS automation five-pack **`2026.10.0-alpha.13`**):
+
+| Fix                                | Behavior                                                                                                                                                                                                                                                                                      |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Append-only entities**           | No orphan `*UpdateInput`, `Update*Payload`, or bulk-update types/mutations when audit profile is **`append-only`** only                                                                                                                                                                       |
+| **Hard-delete reads**              | **`includeDeleted`** omitted on list/get/connection/count/aggregate fields when the entity has no soft-delete columns (e.g. **`auditEvents`**)                                                                                                                                                |
+| **Delete mutation docstrings**     | Field descriptions use correct **a/an** articles (`Deletes an AuditEvent…`, `Deletes a Tag…`)                                                                                                                                                                                                 |
+| **`isNull` on comparable filters** | **`BigIntFilter`**, **`DecimalFilter`**, **`IntervalMsFilter`**, and per-enum **`*Filter`** inputs expose **`isNull`** for nullable columns (same §10.4.1 rules as **`IntFilter`**)                                                                                                           |
+| **`InsensitiveStringFilter`**      | **`isCaseInsensitive` removed** — PostgreSQL **`citext`** matching is inherently case-insensitive; use **`StringFilter.isCaseInsensitive`** only on **`varchar`/`text`/`char`** columns                                                                                                       |
+| **Custom scalar wire validation**  | Codegen emits **`dalScalarResolvers`**; Yoga bootstrap merges them with entity resolvers; input Zod uses **`dalScalarZod`** — PG-accurate and network scalars per [registry](dal-pg-type-mapping.md#custom-dal-scalars-registry); geometric / PostGIS / **`macaddr8`** fail **`entity:lint`** |
+
+Demo coverage: **`templates/ds`** **`scalar_specimens`** optional nullable columns and seed rows **`scalar-reference-v1`** / **`scalar-nulls-v1`** ([ER diagram](../../templates/ds/src/db/ER-DIAGRAM.md)).
+
 ---
 
 ## Scope & Technology
@@ -12,39 +27,39 @@ This specification describes a **standalone library/service pattern** for auto-g
 
 ### In scope
 
-| Layer | Technology |
-| ----- | ---------- |
-| ORM | **Drizzle ORM** |
-| GraphQL server | **GraphQL Yoga** |
-| Databases | **Drizzle-supported SQL databases** — PostgreSQL, MySQL, SQLite, CockroachDB, and similar |
+| Layer          | Technology                                                                                |
+| -------------- | ----------------------------------------------------------------------------------------- |
+| ORM            | **Drizzle ORM**                                                                           |
+| GraphQL server | **GraphQL Yoga**                                                                          |
+| Databases      | **Drizzle-supported SQL databases** — PostgreSQL, MySQL, SQLite, CockroachDB, and similar |
 
 ### Out of scope
 
-* Non-SQL backends (MongoDB, Couchbase, file storage, etc.)
-* Raw SQL, direct Drizzle, or repository access from **application client code** (UI, BFF, external services)
-* Per-backend query translators outside the Drizzle + SQL stack
-* YAML/Zod entity metadata registries or `dal/entities/*.metadata.yaml` files
-* GraphQL-excluded "internal" app tables — business tables the application needs must be PersistedEntity with full GraphQL API; **application cache is never in a database**; **sessions** are auth infrastructure (§2.12)
+- Non-SQL backends (MongoDB, Couchbase, file storage, etc.)
+- Raw SQL, direct Drizzle, or repository access from **application client code** (UI, BFF, external services)
+- Per-backend query translators outside the Drizzle + SQL stack
+- YAML/Zod entity metadata registries or `dal/entities/*.metadata.yaml` files
+- GraphQL-excluded "internal" app tables — business tables the application needs must be PersistedEntity with full GraphQL API; **application cache is never in a database**; **sessions** are auth infrastructure (§2.12)
 
 All query translation, filtering, pagination, and aggregation logic assumes Drizzle can express the operation against the target SQL dialect.
 
 ### Canonical terminology
 
-| Term | Meaning |
-| ---- | ------- |
-| **PersistedEntity** | Storage-backed Drizzle table with UUID `id` PK, required audit columns (**`full`** or **`append-only`**), and optional soft-delete columns |
-| **DrizzleSchema** | Hand-written Drizzle table, enum, index, and relation definitions — **sole source of truth** for codegen |
-| **GeneratedDataAccess** | Auto-generated filter, pagination, and aggregate layer per entity |
-| **QueryEngine** | Runtime component that executes GeneratedDataAccess operations |
-| **QueryTranslator** | Maps a shared **FilterAST** to Drizzle query builders |
-| **AssociationFilter** | Relation filters (`some` / `every` / `none`) for every Drizzle relation codegen can translate |
-| **AssociationField** | GraphQL output navigation field for a Drizzle relation; resolved via per-request DataLoader, never via ColumnProjection |
-| **ColumnProjection** | Column set derived from the GraphQL selection set that limits which scalar columns QueryEngine fetches from SQL |
-| **EntityChangeEvent** | Unified subscription payload for create, update, and delete operations |
-| **Application client** | Any code outside the DS server that consumes data — UI, BFF, background workers calling the GraphQL API. Must use GraphQL HTTP/WS only |
-| **Non-app table** | Database object outside the codegen-scanned Drizzle schema — migration metadata, DBA-only, ETL staging, **auth session tables**. Never accessed as business data by application clients |
-| **Application cache** | Ephemeral or TTL-backed cache state in **Redis**, **CDN**, or **client InMemory** — **never** database tables, PersistedEntities, or GraphQL |
-| **Auth session store** | Server-side session persistence in a database (Postgres, MySQL, SQLite, or other supported DS backend) — e.g. Auth.js adapter tables — **auth infrastructure**, not business PersistedEntity unless admin GraphQL is explicitly required |
+| Term                    | Meaning                                                                                                                                                                                                                                  |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **PersistedEntity**     | Storage-backed Drizzle table with UUID `id` PK, required audit columns (**`full`** or **`append-only`**), and optional soft-delete columns                                                                                               |
+| **DrizzleSchema**       | Hand-written Drizzle table, enum, index, and relation definitions — **sole source of truth** for codegen                                                                                                                                 |
+| **GeneratedDataAccess** | Auto-generated filter, pagination, and aggregate layer per entity                                                                                                                                                                        |
+| **QueryEngine**         | Runtime component that executes GeneratedDataAccess operations                                                                                                                                                                           |
+| **QueryTranslator**     | Maps a shared **FilterAST** to Drizzle query builders                                                                                                                                                                                    |
+| **AssociationFilter**   | Relation filters (`some` / `every` / `none`) for every Drizzle relation codegen can translate                                                                                                                                            |
+| **AssociationField**    | GraphQL output navigation field for a Drizzle relation; resolved via per-request DataLoader, never via ColumnProjection                                                                                                                  |
+| **ColumnProjection**    | Column set derived from the GraphQL selection set that limits which scalar columns QueryEngine fetches from SQL                                                                                                                          |
+| **EntityChangeEvent**   | Unified subscription payload for create, update, and delete operations                                                                                                                                                                   |
+| **Application client**  | Any code outside the DS server that consumes data — UI, BFF, background workers calling the GraphQL API. Must use GraphQL HTTP/WS only                                                                                                   |
+| **Non-app table**       | Database object outside the codegen-scanned Drizzle schema — migration metadata, DBA-only, ETL staging, **auth session tables**. Never accessed as business data by application clients                                                  |
+| **Application cache**   | Ephemeral or TTL-backed cache state in **Redis**, **CDN**, or **client InMemory** — **never** database tables, PersistedEntities, or GraphQL                                                                                             |
+| **Auth session store**  | Server-side session persistence in a database (Postgres, MySQL, SQLite, or other supported DS backend) — e.g. Auth.js adapter tables — **auth infrastructure**, not business PersistedEntity unless admin GraphQL is explicitly required |
 
 ---
 
@@ -52,12 +67,12 @@ All query translation, filtering, pagination, and aggregation logic assumes Driz
 
 This document defines a **generic, entity-agnostic GraphQL Data Access Layer (DAL)** that provides:
 
-* **GraphQL-only application access** — the generated GraphQL API over HTTP (queries/mutations; subscriptions via SSE on `@corpdk/ds` or WebSocket on other DS variants until migrated) is the sole application-facing data surface — see [11-ds-subscription-sse.md](11-ds-subscription-sse.md)
-* Fully abstracted database access via a **server-internal** repository boundary
-* Strong typing (no arbitrary JSON inputs/outputs)
-* Advanced filtering, pagination, sorting, and aggregation
-* Auto-generated queries, mutations, and subscriptions
-* **Drizzle-first** schema, API, and persistence mapping
+- **GraphQL-only application access** — the generated GraphQL API over HTTP (queries/mutations; subscriptions via SSE on `@corpdk/ds` or WebSocket on other DS variants until migrated) is the sole application-facing data surface — see [11-ds-subscription-sse.md](11-ds-subscription-sse.md)
+- Fully abstracted database access via a **server-internal** repository boundary
+- Strong typing (no arbitrary JSON inputs/outputs)
+- Advanced filtering, pagination, sorting, and aggregation
+- Auto-generated queries, mutations, and subscriptions
+- **Drizzle-first** schema, API, and persistence mapping
 
 Developers author **Drizzle schemas** once; `pnpm dal:codegen` emits GraphQL SDL, repository implementations, resolvers, and cursor codec constants. Audit profiles, delete strategy, filter/sort whitelists, relation exposure, and index validation are **inferred** from Drizzle — not declared in parallel metadata files.
 
@@ -71,23 +86,23 @@ Codegen reads configured Drizzle schema path(s) and derives all entity contracts
 
 ### 2.1 Input and output
 
-| Concern | Rule |
-| ------- | ---- |
-| **Codegen input** | One or more Drizzle schema module paths (configured in workspace — e.g. `src/db/schema.ts` or `src/db/schema/`) |
-| **Workspace config** | **`dal/dal.config.yaml`** only — workspace-wide flags such as index **`strict`** mode (§17.1) and filter complexity limits (§10.7); **not** per-entity metadata |
-| **No parallel metadata** | No `dal/entities/*.metadata.yaml`, no EntityMetadata Zod registry, no YAML-to-Drizzle generation step |
+| Concern                  | Rule                                                                                                                                                            |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Codegen input**        | One or more Drizzle schema module paths (configured in workspace — e.g. `src/db/schema.ts` or `src/db/schema/`)                                                 |
+| **Workspace config**     | **`dal/dal.config.yaml`** only — workspace-wide flags such as index **`strict`** mode (§17.1) and filter complexity limits (§10.7); **not** per-entity metadata |
+| **No parallel metadata** | No `dal/entities/*.metadata.yaml`, no EntityMetadata Zod registry, no YAML-to-Drizzle generation step                                                           |
 
 ### 2.2 Entity discovery
 
 Every exported Drizzle `pgTable` / dialect table with a **UUID `id` primary key** in a codegen-scanned schema path becomes a **PersistedEntity** with the full auto-generated GraphQL API (list, get, mutations, subscriptions, filters, pagination, aggregation).
 
-| Rule | Detail |
-| ---- | ------ |
-| **Discovery input** | All exported tables in configured Drizzle schema path(s) — no separate-file exclusion for app-accessible tables |
-| **UUID `id` required** | Exported tables without UUID `id` fail codegen validation |
-| **No hide flag** | v1 has **no entity hide flag** and **no ignore list** — every exported table with UUID `id` gets full generated CRUD |
+| Rule                             | Detail                                                                                                                                                                                                                                                                         |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Discovery input**              | All exported tables in configured Drizzle schema path(s) — no separate-file exclusion for app-accessible tables                                                                                                                                                                |
+| **UUID `id` required**           | Exported tables without UUID `id` fail codegen validation                                                                                                                                                                                                                      |
+| **No hide flag**                 | v1 has **no entity hide flag** and **no ignore list** — every exported table with UUID `id` gets full generated CRUD                                                                                                                                                           |
 | **App-accessible business data** | If the application needs a **business** table (domain entities, join tables, lookups), it **must** be a PersistedEntity here. **Application cache** is never in a database (§2.12). **Sessions** may be stored in a database as auth infrastructure outside this model (§2.12) |
-| **Non-app tables** | Migration metadata, DBA-only objects, ETL staging live **outside** the scanned Drizzle schema — not as GraphQL exclusions |
+| **Non-app tables**               | Migration metadata, DBA-only objects, ETL staging live **outside** the scanned Drizzle schema — not as GraphQL exclusions                                                                                                                                                      |
 
 See [DAL Entity Design Guidelines § Schema Scope](dal-entity-design.md#schema-scope) for schema-author guidance.
 
@@ -97,9 +112,9 @@ Inferred from **column presence** on each table. See [DAL Entity Design Guidelin
 
 **Every PersistedEntity must match exactly one valid profile.** Codegen **fails** on any other column combination.
 
-| Profile | Required columns | Update mutations |
-| ------- | ---------------- | ---------------- |
-| **`full`** | `createdAt`, `updatedAt`, `createdBy`, `updatedBy` (all four required) | Generated |
+| Profile           | Required columns                                                               | Update mutations   |
+| ----------------- | ------------------------------------------------------------------------------ | ------------------ |
+| **`full`**        | `createdAt`, `updatedAt`, `createdBy`, `updatedBy` (all four required)         | Generated          |
 | **`append-only`** | `createdAt`, `createdBy` only — **`updatedAt` and `updatedBy` must be absent** | **Omitted** (§7.3) |
 
 **Detection order:**
@@ -108,26 +123,26 @@ Inferred from **column presence** on each table. See [DAL Entity Design Guidelin
 2. `createdAt` **and** `createdBy` present **and** `updatedAt` **and** `updatedBy` absent → **`append-only`**
 3. Any other combination → **codegen validation error**
 
-| Edge case | Result |
-| --------- | ------ |
-| All four audit columns | **`full`** — update mutations generated |
-| `createdAt` + `createdBy` only | **`append-only`** — update mutations omitted |
-| No audit columns | **Codegen fails** — every entity requires audit columns |
-| `createdAt` + `updatedAt` only (no actor columns) | **Codegen fails** — timestamps-only is not supported; use **`full`** |
-| Three of four audit columns | **Codegen fails** — incomplete **`full`** profile |
-| `createdBy` without `createdAt` | **Codegen fails** |
-| `updatedAt` without `createdAt` | **Codegen fails** |
-| `updatedBy` without `updatedAt` | **Codegen fails** |
-| `createdAt` + `createdBy` + `updatedAt` without `updatedBy` | **Codegen fails** — mixes **`append-only`** with update timestamps |
+| Edge case                                                   | Result                                                               |
+| ----------------------------------------------------------- | -------------------------------------------------------------------- |
+| All four audit columns                                      | **`full`** — update mutations generated                              |
+| `createdAt` + `createdBy` only                              | **`append-only`** — update mutations omitted                         |
+| No audit columns                                            | **Codegen fails** — every entity requires audit columns              |
+| `createdAt` + `updatedAt` only (no actor columns)           | **Codegen fails** — timestamps-only is not supported; use **`full`** |
+| Three of four audit columns                                 | **Codegen fails** — incomplete **`full`** profile                    |
+| `createdBy` without `createdAt`                             | **Codegen fails**                                                    |
+| `updatedAt` without `createdAt`                             | **Codegen fails**                                                    |
+| `updatedBy` without `updatedAt`                             | **Codegen fails**                                                    |
+| `createdAt` + `createdBy` + `updatedAt` without `updatedBy` | **Codegen fails** — mixes **`append-only`** with update timestamps   |
 
 Actor columns are never accepted from mutation input (§5).
 
 ### 2.4 Delete strategy inference
 
-| Columns present | Strategy | Behavior |
-| --------------- | -------- | -------- |
+| Columns present | Strategy   | Behavior                                                                        |
+| --------------- | ---------- | ------------------------------------------------------------------------------- |
 | **`deletedAt`** | **`soft`** | Soft delete mutations; reads exclude deleted rows unless `includeDeleted: true` |
-| No `deletedAt` | **`hard`** | Physical `DELETE`; no `includeDeleted` parameter |
+| No `deletedAt`  | **`hard`** | Physical `DELETE`; no `includeDeleted` parameter                                |
 
 When `deletedBy` is also present, it follows the actor trust boundary (§5). `deletedBy` without `deletedAt` fails codegen.
 
@@ -143,14 +158,14 @@ Full type coverage tables, PG → DAL mapping, custom scalar registry, and v1 sc
 
 Every **supported** Drizzle column on a PersistedEntity ([supported types](dal-pg-type-mapping.md#postgresql-type-coverage)) becomes:
 
-| Derived artifact | Rule |
-| ---------------- | ---- |
+| Derived artifact         | Rule                                                                                                                                                                                                                                                                                                                                    |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **GraphQL output field** | Mapped scalar or enum per [PG → DAL mapping](dal-pg-type-mapping.md#pg-dal-type-mapping); **boolean columns** map to GraphQL fields with an **`is`/`has` prefix** — Drizzle physical names **must** use `is_*` / `has_*` snake_case (§7.1); codegen maps without adding a second prefix — e.g. Drizzle `is_active` → GraphQL `isActive` |
-| **Filter input field** | **All scalar columns filterable by default** — typed filter input per column |
-| **Sort enum member** | **All scalar columns sortable by default** — entry in `<Entity>Field` enum |
-| **Create input** | Business scalars only — excludes **`id`** (server-generated via `.defaultRandom()`; client-supplied `id` on create is **never** allowed), all audit columns (`createdAt`, `updatedAt`, `createdBy`, `updatedBy`), and soft-delete columns (`deletedAt`, `deletedBy`) |
-| **Update input** | Business scalars only — excludes **`id`**, **`createdAt`**, **`createdBy`**, **`updatedAt`**, **`updatedBy`**, **`deletedAt`**, **`deletedBy`** (all server-managed); **not emitted** for **`append-only`** entities (§7.3) |
-| **Aggregate selectors** | Numeric scalars → `NumericFields`; comparable scalars → `ComparableFields` per §15 |
+| **Filter input field**   | **All scalar columns filterable by default** — typed filter input per column                                                                                                                                                                                                                                                            |
+| **Sort enum member**     | **All scalar columns sortable by default** — entry in `<Entity>Field` enum                                                                                                                                                                                                                                                              |
+| **Create input**         | Business scalars only — excludes **`id`** (server-generated via `.defaultRandom()`; client-supplied `id` on create is **never** allowed), all audit columns (`createdAt`, `updatedAt`, `createdBy`, `updatedBy`), and soft-delete columns (`deletedAt`, `deletedBy`)                                                                    |
+| **Update input**         | Business scalars only — excludes **`id`**, **`createdAt`**, **`createdBy`**, **`updatedAt`**, **`updatedBy`**, **`deletedAt`**, **`deletedBy`** (all server-managed); **not emitted** for **`append-only`** entities (§7.3)                                                                                                             |
+| **Aggregate selectors**  | Numeric scalars → `NumericFields`; comparable scalars → `ComparableFields` per §15                                                                                                                                                                                                                                                      |
 
 Unsupported column types fail codegen ([PostgreSQL type coverage](dal-pg-type-mapping.md#postgresql-type-coverage)).
 
@@ -158,10 +173,10 @@ Unsupported column types fail codegen ([PostgreSQL type coverage](dal-pg-type-ma
 
 Drizzle `pgEnum` columns produce:
 
-* GraphQL enum type (PascalCase type name; member values **UPPERCASE** or **SCREAMING_SNAKE_CASE**)
-* `<Enum>Filter` with `eq`, `neq`, `in`, `notIn`
-* Sort enum entry
-* Create input default from Drizzle `.default()` when declared
+- GraphQL enum type (PascalCase type name; member values **UPPERCASE** or **SCREAMING_SNAKE_CASE**)
+- `<Enum>Filter` with `eq`, `neq`, `in`, `notIn`
+- Sort enum entry
+- Create input default from Drizzle `.default()` when declared
 
 **Value convention:** enum member values in Drizzle and GraphQL must be **UPPERCASE** (single word, e.g. `ACTIVE`) or **SCREAMING_SNAKE_CASE** (multi-word, e.g. `IN_PROGRESS`). Codegen emits GraphQL enum members with the **same strings** as declared in Drizzle `pgEnum` — no case transformation. See [DAL Entity Design Guidelines § Enums](dal-entity-design.md#enums).
 
@@ -173,12 +188,12 @@ Codegen validates Drizzle defaults against declared enum members. Invalid defaul
 
 Every Drizzle `relations()` entry is **fully exposed on GraphQL** via **navigation fields only** on output types — per [graphql.org naming design](https://graphql.org/learn/naming-design/), clients traverse **object edges**, not bare FK scalars (§7.1).
 
-| Relation kind | GraphQL output | Filter | Loader |
-| ------------- | -------------- | ------ | ------ |
-| **One-to-one** | Singular navigation field on both sides (`Target!` or `Target` per nullability) — **no FK scalar on output types** | Nested `<RelatedEntity>Filter` + inverse association filter on principal | DataLoader keyed by `(Target, fkColumn)` — same batch pattern as M:1; Drizzle unique constraint on FK enforces cardinality |
-| **Many-to-one** | Navigation field only (`customer: Customer!`) — **FK scalar omitted from output** | Nested `<RelatedEntity>Filter` on parent (e.g. `customer: CustomerFilter`) — **no `customerId` filter field** | DataLoader keyed by `(Target, fkColumn)` |
-| **One-to-many** | Navigation `[Target!]!` | `AssociationFilter` (`some` / `every` / `none`) | DataLoader batching child rows by parent FK |
-| **Many-to-many** | Navigation `[Target!]!` on both sides | `AssociationFilter` → `EXISTS` on join table | DataLoader + join-table batch query |
+| Relation kind    | GraphQL output                                                                                                     | Filter                                                                                                        | Loader                                                                                                                     |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| **One-to-one**   | Singular navigation field on both sides (`Target!` or `Target` per nullability) — **no FK scalar on output types** | Nested `<RelatedEntity>Filter` + inverse association filter on principal                                      | DataLoader keyed by `(Target, fkColumn)` — same batch pattern as M:1; Drizzle unique constraint on FK enforces cardinality |
+| **Many-to-one**  | Navigation field only (`customer: Customer!`) — **FK scalar omitted from output**                                  | Nested `<RelatedEntity>Filter` on parent (e.g. `customer: CustomerFilter`) — **no `customerId` filter field** | DataLoader keyed by `(Target, fkColumn)`                                                                                   |
+| **One-to-many**  | Navigation `[Target!]!`                                                                                            | `AssociationFilter` (`some` / `every` / `none`)                                                               | DataLoader batching child rows by parent FK                                                                                |
+| **Many-to-many** | Navigation `[Target!]!` on both sides                                                                              | `AssociationFilter` → `EXISTS` on join table                                                                  | DataLoader + join-table batch query                                                                                        |
 
 **FK columns remain on mutation inputs** (`customerId` on `<Entity>CreateInput` / `<Entity>UpdateInput`) — clients assign relations by FK on write; reads resolve related objects via navigation fields and DataLoaders.
 
@@ -196,9 +211,9 @@ Indexes declared via Drizzle (`index()`, `uniqueIndex()`, primary key) feed code
 
 Inferred from Drizzle column constraints:
 
-* **Nullability** — `notNull()` columns reject absent/null on create; update follows absent-vs-null semantics (§9.3)
-* **Enum membership** — values must match Drizzle enum members exactly (case-sensitive; **UPPERCASE** / **SCREAMING_SNAKE_CASE** — §2.6)
-* **Custom scalar parse** — `DateTime`, `Date`, `TimeTz`, `BigInt`, `Decimal`, `IntervalMs` (§3.1); **`ID`** parse for `uuid` columns (RFC 4122 at repository layer)
+- **Nullability** — `notNull()` columns reject absent/null on create; update follows absent-vs-null semantics (§9.3)
+- **Enum membership** — values must match Drizzle enum members exactly (case-sensitive; **UPPERCASE** / **SCREAMING_SNAKE_CASE** — §2.6)
+- **Custom scalar parse** — core and opt-in scalars per [custom DAL scalars registry](dal-pg-type-mapping.md#custom-dal-scalars-registry) (§3.1); **`ID`** parse for `uuid` columns (RFC 4122 at repository layer). Generated **`input-zod.ts`** uses **`dalScalarZod`** from `@corpdk/dal-core` so mutation/filter inputs match GraphQL parse rules.
 
 **No length, range, or regex constraints in v1.** Drizzle column length limits are not mirrored into GraphQL validation in v1.
 
@@ -208,11 +223,11 @@ Inferred from Drizzle column constraints:
 
 When Drizzle declares `.default()` on an enum column:
 
-| Concern | Rule |
-| ------- | ---- |
-| **Codegen** | Mirrors default in GraphQL SDL on create input (e.g. `status: OrderStatus = PENDING`) |
-| **Repository** | Applies Drizzle default before INSERT when client omits field; explicit client value wins |
-| **Update path** | Defaults do not re-apply — absent field means no change (§9.3) |
+| Concern         | Rule                                                                                      |
+| --------------- | ----------------------------------------------------------------------------------------- |
+| **Codegen**     | Mirrors default in GraphQL SDL on create input (e.g. `status: OrderStatus = PENDING`)     |
+| **Repository**  | Applies Drizzle default before INSERT when client omits field; explicit client value wins |
+| **Update path** | Defaults do not re-apply — absent field means no change (§9.3)                            |
 
 Non-enum Drizzle defaults follow the same repository fill-on-omit rule; GraphQL SDL mirroring applies to enum defaults in v1.
 
@@ -220,22 +235,22 @@ Non-enum Drizzle defaults follow the same repository fill-on-omit rule; GraphQL 
 
 Database object comments are **schema author responsibility** — declared in Drizzle via `.comment()` on columns and `comment()` in the `pgTable` extra-config callback before codegen. See [DAL Entity Design Guidelines § Database Object Comments](dal-entity-design.md#database-object-comments-required) for objects in scope, content guidance, dialect notes, and Drizzle examples.
 
-| Concern | Rule |
-| ------- | ---- |
-| **Source of truth** | Drizzle schema comments only — no parallel comment metadata files or separate GraphQL-only description files for generated entities |
+| Concern                | Rule                                                                                                                                                                                                                                                                         |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Source of truth**    | Drizzle schema comments only — no parallel comment metadata files or separate GraphQL-only description files for generated entities                                                                                                                                          |
 | **Codegen validation** | Every PersistedEntity **table** and **column** must have a non-empty comment; default mode **warns**, **`strict: true`** in `dal/dal.config.yaml` **fails codegen** (same config flag as index enforcement — §17.1). Missing comments = missing GraphQL schema documentation |
-| **GraphQL SDL output** | Codegen **auto-generates** GraphQL schema documentation from Drizzle DB object comments — embedded as `"""…"""` docstrings in generated SDL at **`src/generated/generated-schema.ts`** (outside the wiped `dal/` tree) |
-| **Bootstrap SDL** | Server health/connectivity fields (`hello`, `status`, `ping`, `pingSent`) are generated by `@corpdk/dal-codegen` alongside entity SDL — no manual `src/schema/` files in `templates/ds` |
-| **App bootstrap** | `dal-codegen --mode=bootstrap` emits `src/schema.ts`, `src/index.ts`, and `src/db/index.ts` (Yoga wiring); used by `@corpdk/create-ds init` |
+| **GraphQL SDL output** | Codegen **auto-generates** GraphQL schema documentation from Drizzle DB object comments — embedded as `"""…"""` docstrings in generated SDL at **`src/generated/generated-schema.ts`** (outside the wiped `dal/` tree)                                                       |
+| **Bootstrap SDL**      | Server health/connectivity fields (`hello`, `status`, `ping`, `pingSent`) are generated by `@corpdk/dal-codegen` alongside entity SDL — no manual `src/schema/` files in `templates/ds`                                                                                      |
+| **App bootstrap**      | `dal-codegen --mode=bootstrap` emits `src/schema.ts`, `src/index.ts`, and `src/db/index.ts` (Yoga wiring); used by `@corpdk/create-ds init`                                                                                                                                  |
 
 **Comment → GraphQL documentation mapping (codegen):**
 
-| Source (Drizzle) | Generated GraphQL documentation |
-| ---------------- | ------------------------------- |
-| PersistedEntity table `comment()` | `"""…"""` on GraphQL **object type** (e.g. `type Order`) |
-| Column `.comment('…')` | `"""…"""` on GraphQL **output fields**, and on corresponding **filter input fields**, **sort enum** (if applicable), **create/update input fields** |
-| `pgEnum` type comment (migration `COMMENT ON TYPE` or future Drizzle API) | `"""…"""` on GraphQL **enum type** and optionally enum value descriptions if stored |
-| Operations (list, get, mutations) | Codegen-generated operation docstrings derived from entity/table comment + operation verb (e.g. "Returns a paginated list of Order entities.") |
+| Source (Drizzle)                                                          | Generated GraphQL documentation                                                                                                                     |
+| ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| PersistedEntity table `comment()`                                         | `"""…"""` on GraphQL **object type** (e.g. `type Order`)                                                                                            |
+| Column `.comment('…')`                                                    | `"""…"""` on GraphQL **output fields**, and on corresponding **filter input fields**, **sort enum** (if applicable), **create/update input fields** |
+| `pgEnum` type comment (migration `COMMENT ON TYPE` or future Drizzle API) | `"""…"""` on GraphQL **enum type** and optionally enum value descriptions if stored                                                                 |
+| Operations (list, get, mutations)                                         | Codegen-generated operation docstrings derived from entity/table comment + operation verb (e.g. "Returns a paginated list of Order entities.")      |
 
 Index, view, enum, and schema comments are enforced by author review and the entity-design pre-codegen checklist — custom migration `COMMENT ON …` SQL is not parsed by codegen in v1 except where noted for `pgEnum` type comments above.
 
@@ -245,7 +260,7 @@ GraphQL introspection, GraphiQL, and Altair display descriptions sourced from DB
 
 The generated GraphQL API is the **only** application-facing access surface for persisted data. All application clients — UI, BFF, external services — read and write data exclusively through GraphQL HTTP (queries/mutations and subscription streams). On **`@corpdk/ds`**, subscriptions use **SSE** on the same `/graphql` route; other DS variants may still use WebSocket until migrated ([11-ds-subscription-sse.md](11-ds-subscription-sse.md)).
 
-```
+```text
 Application client (UI, BFF, worker)
   → GraphQL HTTP (SSE subscriptions on @corpdk/ds; WebSocket elsewhere as applicable)
     → GraphQL Yoga resolvers
@@ -254,12 +269,12 @@ Application client (UI, BFF, worker)
           → SQL database
 ```
 
-| Actor | Allowed access | Forbidden |
-| ----- | -------------- | --------- |
-| **Application runtime** (UI, BFF, services) | GraphQL HTTP/WS directly (Apollo, urql, `fetch`, etc.) | Raw SQL, Drizzle imports, repository imports, direct DB connections |
-| **Ops / automation** | `@corpdk/ds-sdk` (TypedDocumentNode) or **ds-cli** — both are **GraphQL clients** that POST/WS to the same API | Treating SDK or CLI as a bypass around GraphQL |
-| **DS server resolvers** | Generated repository methods only (§6.2) | Direct Drizzle or FilterAST from resolver code |
-| **Non-app infrastructure** | Separate schemas/tools (migration runners, ETL, DBA scripts) | Placing non-app tables in the codegen-scanned Drizzle path |
+| Actor                                       | Allowed access                                                                                                 | Forbidden                                                           |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| **Application runtime** (UI, BFF, services) | GraphQL HTTP/WS directly (Apollo, urql, `fetch`, etc.)                                                         | Raw SQL, Drizzle imports, repository imports, direct DB connections |
+| **Ops / automation**                        | `@corpdk/ds-sdk` (TypedDocumentNode) or **ds-cli** — both are **GraphQL clients** that POST/WS to the same API | Treating SDK or CLI as a bypass around GraphQL                      |
+| **DS server resolvers**                     | Generated repository methods only (§6.2)                                                                       | Direct Drizzle or FilterAST from resolver code                      |
+| **Non-app infrastructure**                  | Separate schemas/tools (migration runners, ETL, DBA scripts)                                                   | Placing non-app tables in the codegen-scanned Drizzle path          |
 
 **SDK and ds-cli positioning:** `@corpdk/ds-sdk` and **ds-cli** execute GraphQL operations against the same endpoint as application clients. They are optional conveniences for scripts, CI, and LLM automation — not alternate data-access layers. Production application code should prefer GraphQL HTTP/WS directly; SDK and CLI are for ops/automation workflows (see [Appendix A](#appendix-a--ds-cli-conventions)).
 
@@ -269,11 +284,11 @@ Application client (UI, BFF, worker)
 
 Application cache **must** be stored **completely** in **Redis**, **CDN**, or **client InMemory** — **never** in database tables (any SQL backend).
 
-| Store | Typical use |
-| ----- | ----------- |
-| **Redis** | Server-side cache, rate limits, TTL/eviction, cross-instance shared ephemeral state |
-| **CDN** | Static or edge-cacheable assets |
-| **Client InMemory** | Apollo/urql cache, component memoization, browser sessionStorage where appropriate |
+| Store               | Typical use                                                                         |
+| ------------------- | ----------------------------------------------------------------------------------- |
+| **Redis**           | Server-side cache, rate limits, TTL/eviction, cross-instance shared ephemeral state |
+| **CDN**             | Static or edge-cacheable assets                                                     |
+| **Client InMemory** | Apollo/urql cache, component memoization, browser sessionStorage where appropriate  |
 
 **Forbidden:** Database cache tables — not in the codegen-scanned Drizzle schema, not PersistedEntity, not GraphQL. Do not model cache rows as domain entities. For durable cache semantics (TTL, eviction, shared across instances), use **Redis** (or **CDN** for static assets).
 
@@ -281,12 +296,12 @@ Application cache **must** be stored **completely** in **Redis**, **CDN**, or **
 
 **Sessions may be stored in a database** (Postgres, MySQL, SQLite, or other supported DS backend) — e.g. Auth.js `Session` table. This is an allowed exception to the "everything through GraphQL" rule for **business data** only.
 
-| Concern | Rule |
-| ------- | ---- |
-| **Scope** | **Auth infrastructure** — cookie + middleware lifecycle, not public business CRUD |
-| **DAL / codegen** | Session tables are typically **outside** the codegen-scanned Drizzle schema, managed by the auth adapter (Auth.js Drizzle/Prisma adapter migrations) |
-| **Client access** | Applications do not list/create/update/delete sessions via the public GraphQL API like domain entities |
-| **Admin GraphQL (optional)** | Support or security tooling may expose **admin-only** session list/revoke operations — scoped resolvers, not standard generated public CRUD |
+| Concern                      | Rule                                                                                                                                                 |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Scope**                    | **Auth infrastructure** — cookie + middleware lifecycle, not public business CRUD                                                                    |
+| **DAL / codegen**            | Session tables are typically **outside** the codegen-scanned Drizzle schema, managed by the auth adapter (Auth.js Drizzle/Prisma adapter migrations) |
+| **Client access**            | Applications do not list/create/update/delete sessions via the public GraphQL API like domain entities                                               |
+| **Admin GraphQL (optional)** | Support or security tooling may expose **admin-only** session list/revoke operations — scoped resolvers, not standard generated public CRUD          |
 
 The GraphQL-only rule in this section applies to **application business data**. Sessions remain a server-internal auth concern unless an explicit admin GraphQL surface is designed.
 
@@ -296,22 +311,22 @@ The GraphQL-only rule in this section applies to **application business data**. 
 
 Every **PersistedEntity** includes at minimum:
 
-* **`id`** — UUID primary key (mandatory)
-* **Audit columns** per inferred **audit profile** (§2.3) — **`full`** (all four) or **`append-only`** (`createdAt` + `createdBy` only). Tables without a valid audit profile fail codegen.
+- **`id`** — UUID primary key (mandatory)
+- **Audit columns** per inferred **audit profile** (§2.3) — **`full`** (all four) or **`append-only`** (`createdAt` + `createdBy` only). Tables without a valid audit profile fail codegen.
 
 Additional columns are inferred from Drizzle:
 
-* Soft-delete columns per inferred **delete strategy** (§2.4)
+- Soft-delete columns per inferred **delete strategy** (§2.4)
 
 ### Example: `full` audit + soft delete
 
-```
+```text
 id, createdAt, updatedAt, createdBy, updatedBy, deletedAt, deletedBy, …business fields
 ```
 
 ### 3.1 Custom scalars
 
-Codegen emits **six core custom scalars** in the generated base SDL ([custom DAL scalars registry](dal-pg-type-mapping.md#custom-dal-scalars-registry)): **`DateTime`**, **`Date`**, **`TimeTz`**, **`BigInt`**, **`Decimal`**, **`IntervalMs`**. Opt-in custom scalars (`Inet`, `GeoPoint`, `Geometry`, etc.) are emitted only when rare PG types appear in the Drizzle schema ([opt-in custom scalars](dal-pg-type-mapping.md#opt-in-custom-scalars-rare)).
+Which custom scalars codegen emits, PG column kinds, wire formats, and parse/serialize rules live in the [custom DAL scalars registry](dal-pg-type-mapping.md#custom-dal-scalars-registry) (core six, opt-in PG-accurate and network scalars, and v1 bans). This section records GraphQL API requirements that apply across those scalars.
 
 Built-in GraphQL scalars (`Int`, `Float`, `String`, `Boolean`, **`ID`**) are used for supported PG types that do not require custom wire encoding ([PG → DAL mapping](dal-pg-type-mapping.md#pg-dal-type-mapping)).
 
@@ -319,91 +334,91 @@ Built-in GraphQL scalars (`Int`, `Float`, `String`, `Boolean`, **`ID`**) are use
 
 PostgreSQL **`uuid`** columns map to GraphQL **`ID`** (built-in) — **not** a custom `UUID` scalar. **Only** `uuid` PG columns use `ID`; non-uuid string columns remain **`String`**.
 
-| Concern | Rule |
-| ------- | ---- |
-| **Usage** | Entity PKs, FK columns, `IDFilter`, mutation `id` args, cursor keyset values, subscription `ids` |
-| **Parse** | GraphQL `ID` accepts any opaque string; RFC 4122 validation at repository layer before SQL bind → **`BAD_USER_INPUT`** on malformed UUID |
-| **Serialize** | Lowercase RFC 4122 string |
-| **Tradeoffs** | See [UUID → ID tradeoffs](dal-pg-type-mapping.md#uuid--id-tradeoffs) |
+| Concern       | Rule                                                                                                                                     |
+| ------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| **Usage**     | Entity PKs, FK columns, `IDFilter`, mutation `id` args, cursor keyset values, subscription `ids`                                         |
+| **Parse**     | GraphQL `ID` accepts any opaque string; RFC 4122 validation at repository layer before SQL bind → **`BAD_USER_INPUT`** on malformed UUID |
+| **Serialize** | Lowercase RFC 4122 string                                                                                                                |
+| **Tradeoffs** | See [UUID → ID tradeoffs](dal-pg-type-mapping.md#uuid--id-tradeoffs)                                                                     |
 
 #### `scalar DateTime`
 
 All **instant** timestamp values — audit columns, soft-delete columns, and business date/time fields — are stored as **UTC** in the database and transmitted on the wire as **ISO-8601 UTC with milliseconds and a `Z` suffix**. No separate timezone column is required for entity timestamps; user display timezones are a UI concern. See [DAL Entity Design Guidelines § Timestamps & UTC](dal-entity-design.md#timestamps--utc).
 
-| Concern | Rule |
-| ------- | ---- |
-| **Wire format** | ISO-8601 UTC with milliseconds and `Z` suffix — e.g. `2026-09-10T13:28:00.000Z` |
-| **Usage** | Outputs, inputs, filters, cursors, aggregate min/max on `timestamptz` fields |
-| **Storage** | Drizzle `timestamp with time zone` (`timestamptz` in PostgreSQL) — `{ withTimezone: true }`; values normalized to UTC on write |
-| **Serialize** | Always normalize to UTC with `Z` suffix |
-| **Parse** | Accept ISO-8601 strings (including offset forms); reject unparseable strings → **`BAD_USER_INPUT`**; Unix timestamps and timezone-less local strings without offset are **not** accepted (Appendix A) |
-| **Timezone column** | Not generated — do not add per-entity timezone storage unless a documented business requirement exists |
-| **Plain `timestamp` (no TZ)** | **Not supported** — codegen fails on columns without `{ withTimezone: true }`; **`timestamptz` only** for all instant timestamps |
-| **Plain `time` (no TZ)** | **Not supported** — hard ban; use `timetz` or `timestamptz` |
+| Concern                       | Rule                                                                                                                                                                                                  |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Wire format**               | ISO-8601 UTC with milliseconds and `Z` suffix — e.g. `2026-09-10T13:28:00.000Z`                                                                                                                       |
+| **Usage**                     | Outputs, inputs, filters, cursors, aggregate min/max on `timestamptz` fields                                                                                                                          |
+| **Storage**                   | Drizzle `timestamp with time zone` (`timestamptz` in PostgreSQL) — `{ withTimezone: true }`; values normalized to UTC on write                                                                        |
+| **Serialize**                 | Always normalize to UTC with `Z` suffix                                                                                                                                                               |
+| **Parse**                     | Accept ISO-8601 strings (including offset forms); reject unparseable strings → **`BAD_USER_INPUT`**; Unix timestamps and timezone-less local strings without offset are **not** accepted (Appendix A) |
+| **Timezone column**           | Not generated — do not add per-entity timezone storage unless a documented business requirement exists                                                                                                |
+| **Plain `timestamp` (no TZ)** | **Not supported** — codegen fails on columns without `{ withTimezone: true }`; **`timestamptz` only** for all instant timestamps                                                                      |
+| **Plain `time` (no TZ)**      | **Not supported** — hard ban; use `timetz` or `timestamptz`                                                                                                                                           |
 
 #### `scalar TimeTz`
 
 Time-of-day values with timezone offset — distinct from `DateTime` instants (which include a date) and `Date` calendar dates (which have no time).
 
-| Concern | Rule |
-| ------- | ---- |
-| **Wire format** | ISO-8601 time with offset — e.g. `13:45:00.000+05:30` or `13:45:00Z` (no date component) |
-| **Usage** | Outputs, inputs, filters, cursors, aggregate min/max on `timetz` fields |
-| **Storage** | Drizzle `time({ withTimezone: true })` — PostgreSQL `timetz` |
-| **Serialize** | ISO-8601 time with offset; preserve declared offset |
-| **Parse** | Accept ISO-8601 time strings with offset; reject date components and unparseable strings → **`BAD_USER_INPUT`** |
+| Concern         | Rule                                                                                                            |
+| --------------- | --------------------------------------------------------------------------------------------------------------- |
+| **Wire format** | ISO-8601 time with offset — e.g. `13:45:00.000+05:30` or `13:45:00Z` (no date component)                        |
+| **Usage**       | Outputs, inputs, filters, cursors, aggregate min/max on `timetz` fields                                         |
+| **Storage**     | Drizzle `time({ withTimezone: true })` — PostgreSQL `timetz`                                                    |
+| **Serialize**   | ISO-8601 time with offset; preserve declared offset                                                             |
+| **Parse**       | Accept ISO-8601 time strings with offset; reject date components and unparseable strings → **`BAD_USER_INPUT`** |
 
 #### `scalar Date`
 
 Calendar dates without a time component — distinct from `DateTime` instants.
 
-| Concern | Rule |
-| ------- | ---- |
-| **Wire format** | ISO-8601 calendar date — `YYYY-MM-DD` (e.g. `2026-09-10`) |
-| **Usage** | Outputs, inputs, filters, cursors, aggregate min/max on `date` columns |
-| **Storage** | Drizzle `date()` — PostgreSQL `date` |
-| **Serialize** | `YYYY-MM-DD` |
-| **Parse** | Valid calendar date; reject datetime strings with time components → **`BAD_USER_INPUT`** |
+| Concern         | Rule                                                                                     |
+| --------------- | ---------------------------------------------------------------------------------------- |
+| **Wire format** | ISO-8601 calendar date — `YYYY-MM-DD` (e.g. `2026-09-10`)                                |
+| **Usage**       | Outputs, inputs, filters, cursors, aggregate min/max on `date` columns                   |
+| **Storage**     | Drizzle `date()` — PostgreSQL `date`                                                     |
+| **Serialize**   | `YYYY-MM-DD`                                                                             |
+| **Parse**       | Valid calendar date; reject datetime strings with time components → **`BAD_USER_INPUT`** |
 
 #### `scalar BigInt`
 
 Large integers that exceed GraphQL `Int` (32-bit signed) range.
 
-| Concern | Rule |
-| ------- | ---- |
-| **Wire format** | Decimal integer **string** — e.g. `"9223372036854775807"` |
-| **Usage** | Outputs, inputs, filters, cursors, aggregate sum/avg/min/max on `bigint` columns |
-| **Storage** | Drizzle `bigint()` — PostgreSQL `bigint` |
-| **Serialize** | Decimal string; no scientific notation |
-| **Parse** | Must match `/^-?\d+$/` and fit signed 64-bit range → **`BAD_USER_INPUT`** on violation |
-| **Rationale** | Safer than mapping to `Int` (overflow) or `Float` (precision loss) |
+| Concern         | Rule                                                                                                                                                                                                                                                                                          |
+| --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Wire format** | Decimal integer **string** — e.g. `"9223372036854775807"`                                                                                                                                                                                                                                     |
+| **Usage**       | Outputs, inputs, filters, cursors, aggregate sum/avg/min/max on `bigint` columns                                                                                                                                                                                                              |
+| **Storage**     | Drizzle `bigint()` — PostgreSQL `bigint`                                                                                                                                                                                                                                                      |
+| **Serialize**   | Decimal string; no scientific notation                                                                                                                                                                                                                                                        |
+| **Parse**       | Decimal string matching `/^-?\d+$/` within signed 64-bit range; **`parseValue`** also accepts JSON **safe integers** (coerced to wire string); **`parseLiteral`** accepts integer/string literals via graphql-scalars **`GraphQLBigInt`** then normalizes → **`BAD_USER_INPUT`** on violation |
+| **Rationale**   | Safer than mapping to `Int` (overflow) or `Float` (precision loss)                                                                                                                                                                                                                            |
 
 #### `scalar Decimal`
 
 Fixed-precision decimal values — monetary amounts, rates, quantities requiring exact arithmetic.
 
-| Concern | Rule |
-| ------- | ---- |
-| **Wire format** | Decimal **string** — e.g. `"1234.56"`, `"99"`, `"-0.01"` |
-| **Usage** | Outputs, inputs, filters, cursors, aggregate sum/avg/min/max on `numeric` / `decimal` columns |
-| **Storage** | Drizzle `numeric()` / `decimal()` — PostgreSQL `numeric` |
-| **Serialize** | Decimal string; preserve scale where possible |
-| **Parse** | Valid decimal notation; scientific notation **not** accepted in v1 → **`BAD_USER_INPUT`** |
-| **Rationale** | Avoids IEEE Float precision loss for financial and high-precision values |
+| Concern                | Rule                                                                                                                                                                      |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Wire format**        | Decimal **string** — e.g. `"1234.56"`, `"99"`, `"-0.01"`                                                                                                                  |
+| **Usage**              | Outputs, inputs, filters, cursors, aggregate sum/avg/min/max on `numeric` / `decimal` columns                                                                             |
+| **Storage**            | Drizzle `numeric()` / `decimal()` — PostgreSQL `numeric`                                                                                                                  |
+| **Serialize**          | Decimal string; preserve scale where possible                                                                                                                             |
+| **Parse**              | Valid decimal notation; scientific notation **not** accepted in v1 → **`BAD_USER_INPUT`**                                                                                 |
+| **Rationale**          | Avoids IEEE Float precision loss for financial and high-precision values                                                                                                  |
 | **PostgreSQL `money`** | **Not supported (hard ban)** — entity validation and codegen **fail**; use `integer` cents or `numeric`/`decimal`; see [PG type coverage](dal-pg-type-mapping.md#numeric) |
 
 #### `scalar IntervalMs`
 
 PostgreSQL `interval` durations — normalized to **total milliseconds** on the wire.
 
-| Concern | Rule |
-| ------- | ---- |
-| **Wire format** | Signed decimal integer **string** of total milliseconds — e.g. `"3600000"`, `"-1500"` |
-| **Usage** | Outputs, inputs, filters, cursors, aggregate min/max on `interval` columns |
-| **Storage** | Drizzle `interval()` — PostgreSQL `interval`; repository converts PG interval ↔ total ms |
-| **Serialize** | Total milliseconds as decimal string (signed 64-bit range) |
-| **Parse** | Must match `/^-?\d+$/` and fit signed 64-bit range → **`BAD_USER_INPUT`** on violation |
-| **Rationale** | JS/API convention, sub-second precision, avoids float; single fixed unit across all docs |
+| Concern         | Rule                                                                                                                                                                                                                                                                                                         |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Wire format** | Signed decimal integer **string** of total milliseconds — e.g. `"3600000"`, `"-1500"`                                                                                                                                                                                                                        |
+| **Usage**       | Outputs, inputs, filters, cursors, aggregate min/max on `interval` columns                                                                                                                                                                                                                                   |
+| **Storage**     | Drizzle `interval()` — PostgreSQL `interval`; repository converts PG interval ↔ total ms                                                                                                                                                                                                                     |
+| **Serialize**   | Total milliseconds as decimal string (signed 64-bit range)                                                                                                                                                                                                                                                   |
+| **Parse**       | Decimal string matching `/^-?\d+$/` within signed 64-bit range; **`parseValue`** also accepts JSON **safe integers**; **`parseLiteral`** accepts string literals (decimal string) or integer literals (safe integers only — unsafe magnitudes must use a string literal) → **`BAD_USER_INPUT`** on violation |
+| **Rationale**   | JS/API convention, sub-second precision, avoids float; single fixed unit across all docs                                                                                                                                                                                                                     |
 
 Alternative storage for durations in new schemas: `bigint` column holding milliseconds directly (maps to `BigInt` scalar) — see [DAL Entity Design Guidelines § Column Types](dal-entity-design.md#column-types).
 
@@ -425,8 +440,8 @@ Entities with inferred **`soft`** delete strategy (`deletedAt` column present) f
 
 The DAL **does not expose permanent physical deletion** for soft-delete entities. GraphQL `delete` mutations only set `deletedAt`. After the compliance retention window:
 
-* **Archive** and **hard purge** are performed by **scheduled retention jobs** outside the GraphQL API
-* Purge jobs must be auditable, logged, and suspended during legal hold
+- **Archive** and **hard purge** are performed by **scheduled retention jobs** outside the GraphQL API
+- Purge jobs must be auditable, logged, and suspended during legal hold
 
 See [DAL Entity Design Guidelines § Soft Delete](dal-entity-design.md#soft-delete) for the schema-author decision guide.
 
@@ -438,30 +453,30 @@ Every PersistedEntity has at least **`createdBy`** (both **`full`** and **`appen
 
 ### 5.1 Defaults
 
-* **`createdBy`** and **`updatedBy`** (when present) default to **`"system"`** when no actor is resolved.
-* Values are **never** accepted from mutation input — the trust boundary is server-side only.
+- **`createdBy`** and **`updatedBy`** (when present) default to **`"system"`** when no actor is resolved.
+- Values are **never** accepted from mutation input — the trust boundary is server-side only.
 
 ### 5.2 Yoga plugin hook
 
 GraphQL Yoga exposes a plugin hook:
 
-```
+```text
 resolveActor(context) → string | null
 ```
 
-* Called on every create, update (when update mutations exist), and soft-delete write.
-* Returns the authenticated actor identifier, or `null` (falls back to `"system"`).
-* **Unconfigured hook** — when the Yoga plugin does not register `resolveActor`, the hook is treated as **missing** and behaves identically to returning `null` → **`"system"`** fallback. This is valid for local dev and tests.
-* **Never SQL NULL** — every entity has `createdBy`; **`full`** entities also have `updatedBy`. The repository **always** writes a string value; unresolved actors become `"system"`, not database NULL.
-* Future auth integrations implement this hook; generated resolvers do not embed auth logic.
+- Called on every create, update (when update mutations exist), and soft-delete write.
+- Returns the authenticated actor identifier, or `null` (falls back to `"system"`).
+- **Unconfigured hook** — when the Yoga plugin does not register `resolveActor`, the hook is treated as **missing** and behaves identically to returning `null` → **`"system"`** fallback. This is valid for local dev and tests.
+- **Never SQL NULL** — every entity has `createdBy`; **`full`** entities also have `updatedBy`. The repository **always** writes a string value; unresolved actors become `"system"`, not database NULL.
+- Future auth integrations implement this hook; generated resolvers do not embed auth logic.
 
 ### 5.3 Population rules
 
-| Operation | Actor column |
-| --------- | ------------ |
-| Create | `createdBy` ← resolved actor; on **`full`** profile also `updatedBy` ← resolved actor |
-| Update | `updatedBy` ← resolved actor (**`full`** profile only — no update path on **`append-only`**) |
-| Soft delete | `deletedBy` ← resolved actor |
+| Operation   | Actor column                                                                                 |
+| ----------- | -------------------------------------------------------------------------------------------- |
+| Create      | `createdBy` ← resolved actor; on **`full`** profile also `updatedBy` ← resolved actor        |
+| Update      | `updatedBy` ← resolved actor (**`full`** profile only — no update path on **`append-only`**) |
+| Soft delete | `deletedBy` ← resolved actor                                                                 |
 
 On **`append-only`** entities, only **`createdBy`** is populated (on create). There is no `updatedBy` column and no update mutation path.
 
@@ -471,10 +486,10 @@ On **`append-only`** entities, only **`createdBy`** is populated (on create). Th
 
 ### 6.1 Library layout (planned)
 
-| Package | Role |
-| ------- | ---- |
-| **`libraries/dal-core`** | Shared types: FilterAST, pagination cursors, aggregate descriptors, audit/delete enums, QueryTranslator interface, repository base contracts |
-| **`libraries/codegen-cli` extension** | Reads Drizzle schema; emits GraphQL SDL fragments, GeneratedDataAccess, default repository impl, and resolver stubs |
+| Package                               | Role                                                                                                                                         |
+| ------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`libraries/dal-core`**              | Shared types: FilterAST, pagination cursors, aggregate descriptors, audit/delete enums, QueryTranslator interface, repository base contracts |
+| **`libraries/codegen-cli` extension** | Reads Drizzle schema; emits GraphQL SDL fragments, GeneratedDataAccess, default repository impl, and resolver stubs                          |
 
 This spec documents the **planned library architecture**. Implementation lives in these packages; consuming services compose them with GraphQL Yoga.
 
@@ -482,15 +497,15 @@ This spec documents the **planned library architecture**. Implementation lives i
 
 The repository layer is **server-internal only**. Application clients **never** import or call repository classes — they use GraphQL exclusively (§2.12).
 
-* GraphQL resolvers call **repository methods only** — never Drizzle or FilterAST directly.
-* Codegen produces a **default repository implementation** per entity that delegates to **QueryEngine** / **GeneratedDataAccess**.
-* The repository interface is **expanded** beyond minimal CRUD to cover list, connection, count, aggregate, and bulk operations — but **GraphQL is the only public API surface** for application data access.
-* Custom behavior uses the **subclass override pattern** (§19): DS service authors extend `Generated<Entity>Repository` and override specific methods while calling `super.*` by default. Sealed internals (FilterAST, QueryTranslator wiring, cursor codec, bulk safety guards, actor column population) are not overridable.
-* **No repository export to application clients** — repositories are wired inside the DS server package only; UI and external services consume the GraphQL schema, not repository TypeScript APIs.
+- GraphQL resolvers call **repository methods only** — never Drizzle or FilterAST directly.
+- Codegen produces a **default repository implementation** per entity that delegates to **QueryEngine** / **GeneratedDataAccess**.
+- The repository interface is **expanded** beyond minimal CRUD to cover list, connection, count, aggregate, and bulk operations — but **GraphQL is the only public API surface** for application data access.
+- Custom behavior uses the **subclass override pattern** (§19): DS service authors extend `Generated<Entity>Repository` and override specific methods while calling `super.*` by default. Sealed internals (FilterAST, QueryTranslator wiring, cursor codec, bulk safety guards, actor column population) are not overridable.
+- **No repository export to application clients** — repositories are wired inside the DS server package only; UI and external services consume the GraphQL schema, not repository TypeScript APIs.
 
 ### 6.3 Query translation pipeline
 
-```
+```text
 GraphQL filter input
   → validated & parsed to FilterAST (shared, backend-agnostic tree)
   → QueryTranslator (Drizzle-specific)
@@ -498,33 +513,33 @@ GraphQL filter input
   → SQL execution via Drizzle
 ```
 
-* **FilterAST** is shared across list, count, aggregate, and filter-based bulk operations.
-* **QueryTranslator** is implemented once for Drizzle + SQL dialects; there is no per-database translator matrix beyond Drizzle's dialect support.
-* **AssociationFilter** nodes are emitted for every Drizzle relation **and** Drizzle can express the required join/subquery.
+- **FilterAST** is shared across list, count, aggregate, and filter-based bulk operations.
+- **QueryTranslator** is implemented once for Drizzle + SQL dialects; there is no per-database translator matrix beyond Drizzle's dialect support.
+- **AssociationFilter** nodes are emitted for every Drizzle relation **and** Drizzle can express the required join/subquery.
 
 ### 6.4 GeneratedDataAccess / QueryEngine
 
 Per entity, codegen emits:
 
-* Filter input GraphQL types (Prisma-style recursive shape) — **all scalar columns**
-* Sort field enum — **all scalar columns**
-* Aggregate field selectors — inferred from scalar types
-* A **QueryEngine** class wiring FilterAST → QueryTranslator → Drizzle
+- Filter input GraphQL types (Prisma-style recursive shape) — **all scalar columns**
+- Sort field enum — **all scalar columns**
+- Aggregate field selectors — inferred from scalar types
+- A **QueryEngine** class wiring FilterAST → QueryTranslator → Drizzle
 
 ### 6.5 Codegen workflow
 
-| Concern | Rule |
-| ------- | ---- |
-| **Schema input** | Configured Drizzle schema path(s) — not metadata YAML |
-| **Workspace config** | Optional **`dal/dal.config.yaml`** for workspace-wide settings (e.g. index **`strict`** mode — §17.1; filter complexity limits — §10.7) |
-| **Command** | `pnpm dal:codegen` (meta: **`dal:codegen:schema`** → **`pnpm codegen`** → **`dal:codegen:impl`**) |
-| **Phase 1 output** | **`src/generated/generated-schema.ts`**, **`src/generated/entity-records.ts`**, **`src/generated/graphql-codegen.mappers.ts`** (gitignored) |
-| **Phase 2 output** | **`src/generated/graphql/resolvers.generated.ts`** (graphql-codegen; gitignored) — plus `@corpdk/ds-sdk` / `@corpdk/ds-cli` SDK outputs |
-| **Phase 3 output** | **`src/generated/dal/`** repositories, resolvers, pubsub, **`input-zod.ts`** (wiped each impl run; gitignored) |
-| **Output** | Full idempotent regen across all phases above — run locally or via Turbo before `@corpdk/ds#dev` / `#build` |
-| **Invalid schema** | **Fails codegen** (non-zero exit); CI treats this as a gate |
-| **Turbo pipeline** | Only **`@corpdk/ds`** defines `dal:codegen`; Turbo wires it into `@corpdk/ds#dev`, `@corpdk/ds#build`, and DS `codegen` |
-| **Local dev** | Optional **`--watch`** on the Drizzle schema directory for iterative regen |
+| Concern              | Rule                                                                                                                                        |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Schema input**     | Configured Drizzle schema path(s) — not metadata YAML                                                                                       |
+| **Workspace config** | Optional **`dal/dal.config.yaml`** for workspace-wide settings (e.g. index **`strict`** mode — §17.1; filter complexity limits — §10.7)     |
+| **Command**          | `pnpm dal:codegen` (meta: **`dal:codegen:schema`** → **`pnpm codegen`** → **`dal:codegen:impl`**)                                           |
+| **Phase 1 output**   | **`src/generated/generated-schema.ts`**, **`src/generated/entity-records.ts`**, **`src/generated/graphql-codegen.mappers.ts`** (gitignored) |
+| **Phase 2 output**   | **`src/generated/graphql/resolvers.generated.ts`** (graphql-codegen; gitignored) — plus `@corpdk/ds-sdk` / `@corpdk/ds-cli` SDK outputs     |
+| **Phase 3 output**   | **`src/generated/dal/`** repositories, resolvers, pubsub, **`input-zod.ts`** (wiped each impl run; gitignored)                              |
+| **Output**           | Full idempotent regen across all phases above — run locally or via Turbo before `@corpdk/ds#dev` / `#build`                                 |
+| **Invalid schema**   | **Fails codegen** (non-zero exit); CI treats this as a gate                                                                                 |
+| **Turbo pipeline**   | Only **`@corpdk/ds`** defines `dal:codegen`; Turbo wires it into `@corpdk/ds#dev`, `@corpdk/ds#build`, and DS `codegen`                     |
+| **Local dev**        | Optional **`--watch`** on the Drizzle schema directory for iterative regen                                                                  |
 
 Codegen parses Drizzle tables, enums, indexes, and relations, validates entity shape (UUID `id`, audit/delete column rules, database object comments — §2.11), emits **`src/generated/generated-schema.ts`** exporting merged GraphQL SDL as `typeDefs` (with docstrings from DB object comments — §2.11), GeneratedDataAccess, default repository implementations, resolver stubs, and cursor codec version constants per entity. Re-running codegen with unchanged schema produces byte-identical output (idempotent). Physical `.graphqls` files are not emitted — SDL is merged in-memory during codegen and written as a TypeScript string export for runtime and graphql-codegen consumption.
 
@@ -541,11 +556,11 @@ Codegen parses Drizzle tables, enums, indexes, and relations, validates entity s
 **`dal/dal.config.yaml` example:**
 
 ```yaml
-strict: false  # when true, fail codegen on sort-field index gaps (§17.1) and missing table/column comments (§2.11)
+strict: false # when true, fail codegen on sort-field index gaps (§17.1) and missing table/column comments (§2.11)
 
 # Runtime filter parse guards (§10.7) — omitted keys use documented defaults
-filterMaxDepth: 2   # max nested logical / association filter levels (default: 2)
-filterMaxNodes: 50  # max total nodes in a filter tree (default: 50)
+filterMaxDepth: 2 # max nested logical / association filter levels (default: 2)
+filterMaxNodes: 50 # max total nodes in a filter tree (default: 50)
 ```
 
 ### 6.6 Association output fields and DataLoaders
@@ -556,12 +571,12 @@ Association handling splits into three concerns: **output shape**, **filter tran
 
 **All Drizzle relations** receive GraphQL navigation fields:
 
-| Association kind | GraphQL output |
-| ---------------- | -------------- |
-| **One-to-one** | Singular navigation field on both sides — **no FK scalar on output types** (§2.7) |
-| **Many-to-one** | Navigation field only (`Target!` or `Target` per nullability) — **FK scalar omitted** |
-| **One-to-many** | Navigation field `[Target!]!` |
-| **Many-to-many** | Navigation field `[Target!]!` on each side with declared inverse relation |
+| Association kind | GraphQL output                                                                        |
+| ---------------- | ------------------------------------------------------------------------------------- |
+| **One-to-one**   | Singular navigation field on both sides — **no FK scalar on output types** (§2.7)     |
+| **Many-to-one**  | Navigation field only (`Target!` or `Target` per nullability) — **FK scalar omitted** |
+| **One-to-many**  | Navigation field `[Target!]!`                                                         |
+| **Many-to-many** | Navigation field `[Target!]!` on each side with declared inverse relation             |
 
 FK columns are fetched internally for DataLoader keys but are **not exposed** as GraphQL output fields (§17.2).
 
@@ -569,12 +584,12 @@ FK columns are fetched internally for DataLoader keys but are **not exposed** as
 
 Every **AssociationField** (navigation field) **must** resolve through a **per-request DataLoader** — never via direct Drizzle calls from the resolver (§6.2 preserved).
 
-| Concern | Rule |
-| ------- | ---- |
-| **Scope** | One DataLoader instance per GraphQL request (Yoga context) |
-| **Key** | `(targetEntity, foreignKeyColumn)` — one loader per distinct FK relationship |
-| **Batch fn** | Batches into repository `findByIds` (many-to-one) or join-table batch queries (many-to-many) |
-| **Resolver contract** | AssociationField resolvers call `loader.load(key)` only; repository boundary unchanged |
+| Concern               | Rule                                                                                         |
+| --------------------- | -------------------------------------------------------------------------------------------- |
+| **Scope**             | One DataLoader instance per GraphQL request (Yoga context)                                   |
+| **Key**               | `(targetEntity, foreignKeyColumn)` — one loader per distinct FK relationship                 |
+| **Batch fn**          | Batches into repository `findByIds` (many-to-one) or join-table batch queries (many-to-many) |
+| **Resolver contract** | AssociationField resolvers call `loader.load(key)` only; repository boundary unchanged       |
 
 **Many-to-one example:** `Order.customer` → DataLoader keyed by `(Customer, customerId)` batches `customerRepository.findByIds([...])`.
 
@@ -594,33 +609,33 @@ All generated GraphQL names follow [graphql.org naming design](https://graphql.o
 
 **Drizzle vs GraphQL entity names:**
 
-| Layer | Convention | Example |
-| ----- | ---------- | ------- |
-| Drizzle **`export const`** | **camelCase plural** table symbol | `orders`, `auditEvents` |
-| GraphQL **entity type** | **PascalCase singular** derived from table | `Order`, `AuditEvent` |
-| GraphQL **field basename** | **camelCase singular** entity name | `item`, `order`, `auditEvent` |
-| GraphQL **plural list basename** | **camelCase plural** entity name | `items`, `orders`, `auditEvents` |
+| Layer                            | Convention                                 | Example                          |
+| -------------------------------- | ------------------------------------------ | -------------------------------- |
+| Drizzle **`export const`**       | **camelCase plural** table symbol          | `orders`, `auditEvents`          |
+| GraphQL **entity type**          | **PascalCase singular** derived from table | `Order`, `AuditEvent`            |
+| GraphQL **field basename**       | **camelCase singular** entity name         | `item`, `order`, `auditEvent`    |
+| GraphQL **plural list basename** | **camelCase plural** entity name           | `items`, `orders`, `auditEvents` |
 
 **Canonical query field names** (noun-based — no verb prefixes):
 
-| Operation | Pattern | Example (`Item`) |
-| --------- | ------- | ---------------- |
-| Unified list | **`<entities>`** — plural camelCase noun | `items` |
-| Get by ID | **`<entity>(id: ID!)`** — singular camelCase noun | `item(id: ID!): Item` |
-| Relay connection | **`<entity>Connection`** | `itemConnection` |
-| Count sugar | **`<entities>Count`** | `itemsCount` |
-| Aggregate | **`<entity>Aggregate`** | `itemAggregate` |
+| Operation        | Pattern                                           | Example (`Item`)      |
+| ---------------- | ------------------------------------------------- | --------------------- |
+| Unified list     | **`<entities>`** — plural camelCase noun          | `items`               |
+| Get by ID        | **`<entity>(id: ID!)`** — singular camelCase noun | `item(id: ID!): Item` |
+| Relay connection | **`<entity>Connection`**                          | `itemConnection`      |
+| Count sugar      | **`<entities>Count`**                             | `itemsCount`          |
+| Aggregate        | **`<entity>Aggregate`**                           | `itemAggregate`       |
 
 **Boolean naming:**
 
-| Context | Rule | Example |
-| ------- | ---- | ------- |
-| **Boolean output fields** | **`is`/`has` prefix** on all GraphQL boolean output fields — derived from Drizzle `is_*` / `has_*` physical names | Drizzle `is_active` → GraphQL `isActive`; subscription `isTruncated` → `isTruncated` |
-| **Drizzle column authoring (required)** | All boolean columns **must** use **`is_*` / `has_*` snake_case** physical names when the flag is semantic state — unprefixed names fail entity design validation | Drizzle `isActive: boolean('is_active')` → GraphQL `isActive` |
-| **No double-prefix** | Codegen maps Drizzle `is_*` / `has_*` snake_case to camelCase without stacking prefixes | Drizzle `is_active` → `isActive` (**not** `isIsActive`) |
-| **Boolean filter operators** | Same rule on filter input fields derived from boolean columns | Drizzle `is_active` → `isActive: BooleanFilter` on `<Entity>Filter` |
-| **Boolean query/mutation args (state)** | **`is`/`has` prefix** when the arg represents entity state | `StringFilter.isCaseInsensitive: Boolean` |
-| **Boolean action opt-in args** | Descriptive verb/noun phrase — **no `is`/`has` required** | `includeDeleted`, `confirmDeleteAll`, `confirmUpdateAll`, `atomic` |
+| Context                                 | Rule                                                                                                                                                             | Example                                                                              |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| **Boolean output fields**               | **`is`/`has` prefix** on all GraphQL boolean output fields — derived from Drizzle `is_*` / `has_*` physical names                                                | Drizzle `is_active` → GraphQL `isActive`; subscription `isTruncated` → `isTruncated` |
+| **Drizzle column authoring (required)** | All boolean columns **must** use **`is_*` / `has_*` snake_case** physical names when the flag is semantic state — unprefixed names fail entity design validation | Drizzle `isActive: boolean('is_active')` → GraphQL `isActive`                        |
+| **No double-prefix**                    | Codegen maps Drizzle `is_*` / `has_*` snake_case to camelCase without stacking prefixes                                                                          | Drizzle `is_active` → `isActive` (**not** `isIsActive`)                              |
+| **Boolean filter operators**            | Same rule on filter input fields derived from boolean columns                                                                                                    | Drizzle `is_active` → `isActive: BooleanFilter` on `<Entity>Filter`                  |
+| **Boolean query/mutation args (state)** | **`is`/`has` prefix** when the arg represents entity state                                                                                                       | `StringFilter.isCaseInsensitive: Boolean`                                            |
+| **Boolean action opt-in args**          | Descriptive verb/noun phrase — **no `is`/`has` required**                                                                                                        | `includeDeleted`, `confirmDeleteAll`, `confirmUpdateAll`, `atomic`                   |
 
 See [DAL Entity Design Guidelines § Boolean columns](dal-entity-design.md#boolean-columns) for schema-author guidance.
 
@@ -628,17 +643,17 @@ See [DAL Entity Design Guidelines § Boolean columns](dal-entity-design.md#boole
 
 Codegen **must not** emit boolean **output fields**, **filter fields**, or **boolean arguments** whose names use negated prefixes:
 
-| Prohibited pattern | Examples (do not emit) |
-| ------------------ | ---------------------- |
-| **`isNot*`** | `isNotActive`, `isNotDeleted` |
-| **`isNon*`** | `isNonEmpty`, `isNonZero` |
-| **`hasNo*`** | `hasNoLines`, `hasNoTags` |
+| Prohibited pattern | Examples (do not emit)        |
+| ------------------ | ----------------------------- |
+| **`isNot*`**       | `isNotActive`, `isNotDeleted` |
+| **`isNon*`**       | `isNonEmpty`, `isNonZero`     |
+| **`hasNo*`**       | `hasNoLines`, `hasNoTags`     |
 
 **Use positive predicates only.** Negation belongs in filter operators and logical combinators:
 
-* **`BooleanFilter.eq: false`** — e.g. `{ isActive: { eq: false } }`
-* **Filter `not { … }`** — compound or association negation
-* **Action opt-in args** — e.g. `includeDeleted: true` to include soft-deleted rows (default excludes them)
+- **`BooleanFilter.eq: false`** — e.g. `{ isActive: { eq: false } }`
+- **Filter `not { … }`** — compound or association negation
+- **Action opt-in args** — e.g. `includeDeleted: true` to include soft-deleted rows (default excludes them)
 
 **Relation output policy:** GraphQL entity output types expose **navigation fields only** — FK scalar columns (`customerId`, etc.) are **omitted** from output types. FK columns remain on create/update inputs and are used internally for DataLoader batch keys (§2.7).
 
@@ -672,38 +687,38 @@ deleteOrder(id: ID!): DeleteOrderPayload!
 
 ### 7.2 Queries
 
-* **`<entities>`** — unified list (plural noun)
-* **`<entity>Connection`** — Relay connection (singular noun + `Connection`)
-* **`<entity>(id:)`** — get by ID (singular noun)
-* **`<entities>Count`** — mandatory count sugar (§15.6)
-* **`<entity>Aggregate`** — typed aggregation
+- **`<entities>`** — unified list (plural noun)
+- **`<entity>Connection`** — Relay connection (singular noun + `Connection`)
+- **`<entity>(id:)`** — get by ID (singular noun)
+- **`<entities>Count`** — mandatory count sugar (§15.6)
+- **`<entity>Aggregate`** — typed aggregation
 
 ### 7.3 Mutations
 
 **Standard entities** (`full` audit profile):
 
-* `create<Entity>`
-* `bulkCreate<Entity>`
-* `update<Entity>`
-* `bulkUpdate<Entity>`
-* `bulkUpdate<Entity>ByFilter`
-* `delete<Entity>`
-* `bulkDelete<Entity>`
-* `bulkDelete<Entity>ByFilter`
+- `create<Entity>`
+- `bulkCreate<Entity>`
+- `update<Entity>`
+- `bulkUpdate<Entity>`
+- `bulkUpdate<Entity>ByFilter`
+- `delete<Entity>`
+- `bulkDelete<Entity>`
+- `bulkDelete<Entity>ByFilter`
 
 **Append-only entities** (inferred when `createdAt` + `createdBy` present and `updatedAt` + `updatedBy` absent — §2.3):
 
-| Generated | Omitted |
-| --------- | ------- |
-| `create<Entity>`, `bulkCreate<Entity>` | `update<Entity>` |
-| `delete<Entity>`, `bulkDelete<Entity>`, `bulkDelete<Entity>ByFilter` | `bulkUpdate<Entity>` |
-| | `bulkUpdate<Entity>ByFilter` |
+| Generated                                                            | Omitted                      |
+| -------------------------------------------------------------------- | ---------------------------- |
+| `create<Entity>`, `bulkCreate<Entity>`                               | `update<Entity>`             |
+| `delete<Entity>`, `bulkDelete<Entity>`, `bulkDelete<Entity>ByFilter` | `bulkUpdate<Entity>`         |
+|                                                                      | `bulkUpdate<Entity>ByFilter` |
 
 Codegen does **not** emit `<Entity>UpdateInput`, `<Entity>UpdateEntry`, or `BulkUpdate<Entity>Result` union members for append-only entities. Delete mutations remain unless separately restricted (soft delete, custom repository overrides). See [DAL Entity Design Guidelines § Append-only entities](dal-entity-design.md#append-only-entities).
 
 ### 7.4 Subscriptions
 
-* `<entity>Changed` — unified per entity (§14)
+- `<entity>Changed` — unified per entity (§14)
 
 ---
 
@@ -733,9 +748,9 @@ items(
 
 **Limit rules:**
 
-* Default: **`100`**
-* Maximum: **`1000`** — values above max return a **validation error** (reject; do not clamp)
-* Applies independently of connection pagination
+- Default: **`100`**
+- Maximum: **`1000`** — values above max return a **validation error** (reject; do not clamp)
+- Applies independently of connection pagination
 
 ---
 
@@ -790,14 +805,14 @@ Codegen emits `<Entity>Connection` and `<Entity>Edge` per entity following this 
 
 #### Connection pagination defaults
 
-| Rule | Value |
-| ---- | ----- |
-| Default **`first`** | **`100`** when only `after` is provided or neither `first` nor `last` is set |
-| Default **`last`** | **`100`** when only `before` is provided (recommended; see §12.1) |
-| Max **`first`** / **`last`** | **`1000`** — values above max return a **validation error** (reject; do not clamp) |
-| **`first: 0`** / **`last: 0`** | Returns empty `edges` / `nodes` with valid `pageInfo` (not an error) |
-| **`first` + `last` together** | **Forbidden** — validation error (Relay strongly discourages this; we reject it) |
-| **`after` + `before` together** | **Allowed** — bounded window paging (Relay-allowed; see §12.1) |
+| Rule                            | Value                                                                              |
+| ------------------------------- | ---------------------------------------------------------------------------------- |
+| Default **`first`**             | **`100`** when only `after` is provided or neither `first` nor `last` is set       |
+| Default **`last`**              | **`100`** when only `before` is provided (recommended; see §12.1)                  |
+| Max **`first`** / **`last`**    | **`1000`** — values above max return a **validation error** (reject; do not clamp) |
+| **`first: 0`** / **`last: 0`**  | Returns empty `edges` / `nodes` with valid `pageInfo` (not an error)               |
+| **`first` + `last` together**   | **Forbidden** — validation error (Relay strongly discourages this; we reject it)   |
+| **`after` + `before` together** | **Allowed** — bounded window paging (Relay-allowed; see §12.1)                     |
 
 See §12 for Relay conformance, execution semantics, and edge-ordering invariants.
 
@@ -835,10 +850,10 @@ All mutations use a **two-tier error model** separating exceptional system failu
 
 Unexpected, exceptional failures that are **not** modeled in the mutation payload:
 
-| Category | Examples |
-| -------- | -------- |
-| **Infrastructure** | DB connection loss, query timeout, unhandled exceptions |
-| **Auth / transport** | Authentication/authorization failures, malformed GraphQL document |
+| Category              | Examples                                                                 |
+| --------------------- | ------------------------------------------------------------------------ |
+| **Infrastructure**    | DB connection loss, query timeout, unhandled exceptions                  |
+| **Auth / transport**  | Authentication/authorization failures, malformed GraphQL document        |
 | **Bulk guard breach** | Filter-based bulk cap exceeded, empty filter without confirm flag (§9.8) |
 
 Client may receive partial or no `data`. HTTP status may be **5xx** or **200** depending on GraphQL execution rules. These errors are **exceptional** — clients should retry or escalate, not parse as field-level validation.
@@ -847,24 +862,24 @@ Client may receive partial or no `data`. HTTP status may be **5xx** or **200** d
 
 Expected failures that belong in the mutation result shape:
 
-| Category | Examples | `field` | `id` |
-| -------- | -------- | ------- | ---- |
-| **Validation** | Required field missing, invalid enum, custom scalar parse failure | Path segments, e.g. `["input", "email"]` | `null` |
-| **Business rules** | Archived entity update rejected, inactive customer on create | Relevant input path when applicable | `null` |
-| **Constraint mapping** | Unique index conflict, FK violation, not found | `null` or input path | Row **`ID`** for ID-list bulk row failures |
-| **Bulk row failures** | Per-row failure in non-atomic bulk | Row-scoped when applicable | Affected row **`ID`** |
+| Category               | Examples                                                          | `field`                                  | `id`                                       |
+| ---------------------- | ----------------------------------------------------------------- | ---------------------------------------- | ------------------------------------------ |
+| **Validation**         | Required field missing, invalid enum, custom scalar parse failure | Path segments, e.g. `["input", "email"]` | `null`                                     |
+| **Business rules**     | Archived entity update rejected, inactive customer on create      | Relevant input path when applicable      | `null`                                     |
+| **Constraint mapping** | Unique index conflict, FK violation, not found                    | `null` or input path                     | Row **`ID`** for ID-list bulk row failures |
+| **Bulk row failures**  | Per-row failure in non-atomic bulk                                | Row-scoped when applicable               | Affected row **`ID`**                      |
 
 HTTP **200** with `data` present. Entity field **`null`** (create/update) or **`success: false`** (delete) when errors block success.
 
 #### System vs domain-adjacent DB failures
 
-| Failure | Delivery | Rationale |
-| ------- | -------- | --------- |
-| Unique constraint on insert/update | **`userError`** — code **`UNIQUE_VIOLATION`** | Expected, client-fixable |
-| FK constraint violation | **`userError`** — code **`FK_VIOLATION`** | Expected, client-fixable |
-| Row not found (update/delete) | **`userError`** — code **`NOT_FOUND`** | Expected, client-fixable |
-| Connection timeout / pool exhausted | **Top-level GraphQL error** | System — retry |
-| Unexpected driver error | **Top-level GraphQL error** | System — never expose raw SQL/driver text in `userErrors` |
+| Failure                             | Delivery                                      | Rationale                                                 |
+| ----------------------------------- | --------------------------------------------- | --------------------------------------------------------- |
+| Unique constraint on insert/update  | **`userError`** — code **`UNIQUE_VIOLATION`** | Expected, client-fixable                                  |
+| FK constraint violation             | **`userError`** — code **`FK_VIOLATION`**     | Expected, client-fixable                                  |
+| Row not found (update/delete)       | **`userError`** — code **`NOT_FOUND`**        | Expected, client-fixable                                  |
+| Connection timeout / pool exhausted | **Top-level GraphQL error**                   | System — retry                                            |
+| Unexpected driver error             | **Top-level GraphQL error**                   | System — never expose raw SQL/driver text in `userErrors` |
 
 #### Shared type
 
@@ -877,21 +892,21 @@ type MutationUserError {
 }
 ```
 
-* **`code`** — canonical string taxonomy in **Appendix B** (dal-core fixed union; GraphQL type remains `String`).
-* **`message`** — always a **safe, client-facing string** — raw SQL, table names, and driver internals are **never** exposed.
-* **`field`** — GraphQL input path segments for field-level validation; **`null`** for row-scoped or non-field errors.
-* **`id`** — affected row **`ID`** for ID-list bulk row failures; **`null`** otherwise.
+- **`code`** — canonical string taxonomy in **Appendix B** (dal-core fixed union; GraphQL type remains `String`).
+- **`message`** — always a **safe, client-facing string** — raw SQL, table names, and driver internals are **never** exposed.
+- **`field`** — GraphQL input path segments for field-level validation; **`null`** for row-scoped or non-field errors.
+- **`id`** — affected row **`ID`** for ID-list bulk row failures; **`null`** otherwise.
 
 #### Delivery matrix
 
-| Failure class | Delivery | HTTP (typical) | `data` present? | Payload entity / success field |
-| ------------- | -------- | -------------- | --------------- | -------------------------------- |
-| Validation / business rule | `userErrors` on payload | 200 | Yes | `order: null` or `success: false` |
-| Unique / FK / not-found (single) | `userErrors` on payload | 200 | Yes | `order: null` or `success: false` |
-| Bulk row failure (`atomic: false`) | `userErrors` on `BulkMutationResult` | 200 | Yes | Partial counts + per-row `id` |
-| Bulk cap / empty-filter guard | Top-level GraphQL `errors` | 200 or 4xx | Partial/none | N/A — no payload union member |
-| DB timeout / connection loss | Top-level GraphQL `errors` | 5xx or 200 | Partial/none | N/A |
-| Unhandled exception | Top-level GraphQL `errors` | 5xx or 200 | Partial/none | N/A |
+| Failure class                      | Delivery                             | HTTP (typical) | `data` present? | Payload entity / success field    |
+| ---------------------------------- | ------------------------------------ | -------------- | --------------- | --------------------------------- |
+| Validation / business rule         | `userErrors` on payload              | 200            | Yes             | `order: null` or `success: false` |
+| Unique / FK / not-found (single)   | `userErrors` on payload              | 200            | Yes             | `order: null` or `success: false` |
+| Bulk row failure (`atomic: false`) | `userErrors` on `BulkMutationResult` | 200            | Yes             | Partial counts + per-row `id`     |
+| Bulk cap / empty-filter guard      | Top-level GraphQL `errors`           | 200 or 4xx     | Partial/none    | N/A — no payload union member     |
+| DB timeout / connection loss       | Top-level GraphQL `errors`           | 5xx or 200     | Partial/none    | N/A                               |
+| Unhandled exception                | Top-level GraphQL `errors`           | 5xx or 200     | Partial/none    | N/A                               |
 
 ---
 
@@ -902,9 +917,13 @@ ID-list bulk mutations return a **named per-entity union** (GraphQL requires nam
 Codegen emits the following pattern per entity (example: `Item`):
 
 ```graphql
-type ItemListPayload { items: [Item!]! }
+type ItemListPayload {
+  items: [Item!]!
+}
 
-type BulkDeleteCountPayload { count: Int! }
+type BulkDeleteCountPayload {
+  count: Int!
+}
 
 union BulkCreateItemResult = ItemListPayload | BulkMutationResult
 union BulkUpdateItemResult = ItemListPayload | BulkMutationResult
@@ -950,12 +969,12 @@ createOrder(input: OrderCreateInput!): CreateOrderPayload!
 
 Create inputs include **business scalars only** and **exclude**:
 
-| Excluded field | Reason |
-| -------------- | ------ |
-| **`id`** | Server-generated via Drizzle `.defaultRandom()` — client-supplied `id` on create is **never** allowed |
-| **`createdAt`**, **`updatedAt`** | Auto-managed timestamps |
-| **`createdBy`**, **`updatedBy`** | Server-populated actor columns (§5) |
-| **`deletedAt`**, **`deletedBy`** | Soft-delete columns — server-managed |
+| Excluded field                   | Reason                                                                                                |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| **`id`**                         | Server-generated via Drizzle `.defaultRandom()` — client-supplied `id` on create is **never** allowed |
+| **`createdAt`**, **`updatedAt`** | Auto-managed timestamps                                                                               |
+| **`createdBy`**, **`updatedBy`** | Server-populated actor columns (§5)                                                                   |
+| **`deletedAt`**, **`deletedBy`** | Soft-delete columns — server-managed                                                                  |
 
 Enum fields with Drizzle `.default()` appear with GraphQL default values (§2.10); omitted client values are filled by the repository before INSERT.
 
@@ -985,25 +1004,25 @@ updateOrder(id: ID!, input: OrderUpdateInput!): UpdateOrderPayload!
 
 Update inputs include **business scalars only** and **exclude** all server-managed fields:
 
-| Excluded field | Reason |
-| -------------- | ------ |
-| **`id`** | Immutable primary key |
-| **`createdAt`**, **`createdBy`** | Set once at insert — never mutable |
-| **`updatedAt`**, **`updatedBy`** | Repository-managed on every update (§5) |
+| Excluded field                   | Reason                                             |
+| -------------------------------- | -------------------------------------------------- |
+| **`id`**                         | Immutable primary key                              |
+| **`createdAt`**, **`createdBy`** | Set once at insert — never mutable                 |
+| **`updatedAt`**, **`updatedBy`** | Repository-managed on every update (§5)            |
 | **`deletedAt`**, **`deletedBy`** | Soft-delete columns — set only by delete mutations |
 
 #### Null semantics
 
-| Input state | SQL effect |
-| ----------- | ---------- |
-| **Field absent** | **No change** — column is not included in the UPDATE |
-| **Field explicitly `null`** | **Set column to SQL NULL** |
+| Input state                 | SQL effect                                           |
+| --------------------------- | ---------------------------------------------------- |
+| **Field absent**            | **No change** — column is not included in the UPDATE |
+| **Field explicitly `null`** | **Set column to SQL NULL**                           |
 
 Additional rules:
 
-* **Nullable fields** appear as optional in `<EntityUpdateInput>` — omit to leave unchanged, pass `null` to clear.
-* **Non-nullable fields** are **omitted from update input entirely** — they cannot be changed via update (create-only or immutable after create).
-* Bulk update (`bulkUpdate`, `bulkUpdateByFilter`) follows the same absent-vs-null semantics per entry.
+- **Nullable fields** appear as optional in `<EntityUpdateInput>` — omit to leave unchanged, pass `null` to clear.
+- **Non-nullable fields** are **omitted from update input entirely** — they cannot be changed via update (create-only or immutable after create).
+- Bulk update (`bulkUpdate`, `bulkUpdateByFilter`) follows the same absent-vs-null semantics per entry.
 
 ---
 
@@ -1075,18 +1094,18 @@ deleteOrder(id: ID!): DeleteOrderPayload!
 
 Bulk mutations accept an optional **`atomic: Boolean`**:
 
-| Scenario | Default | Behavior |
-| -------- | ------- | -------- |
-| ID-list bulk (`bulkCreate`, `bulkUpdate`, `bulkDelete`) with **≤ 100 items** | `atomic: true` | All succeed or all roll back |
-| ID-list bulk with **> 100 items** | `atomic: false` | Best-effort per row; partial success allowed |
-| Filter-based bulk (`*ByFilter`) | Always atomic | Single transaction; no `atomic` parameter |
+| Scenario                                                                     | Default         | Behavior                                     |
+| ---------------------------------------------------------------------------- | --------------- | -------------------------------------------- |
+| ID-list bulk (`bulkCreate`, `bulkUpdate`, `bulkDelete`) with **≤ 100 items** | `atomic: true`  | All succeed or all roll back                 |
+| ID-list bulk with **> 100 items**                                            | `atomic: false` | Best-effort per row; partial success allowed |
+| Filter-based bulk (`*ByFilter`)                                              | Always atomic   | Single transaction; no `atomic` parameter    |
 
 When **`atomic: false`**, the mutation resolves to **`BulkMutationResult`** inside the per-entity union (see §9.1).
 
 When **`atomic: true`** (or item count ≤ 100 with default):
 
-* **`bulkCreate`** / **`bulkUpdate`** resolve to **`ItemListPayload`** (`items: [Entity!]!`) inside the per-entity union.
-* **`bulkDelete`** resolves to **`BulkDeleteCountPayload`** (`count: Int!`) inside the per-entity union.
+- **`bulkCreate`** / **`bulkUpdate`** resolve to **`ItemListPayload`** (`items: [Entity!]!`) inside the per-entity union.
+- **`bulkDelete`** resolves to **`BulkDeleteCountPayload`** (`count: Int!`) inside the per-entity union.
 
 When **`atomic: false`**, all ID-list bulk mutations resolve to **`BulkMutationResult`**. Filter-based mutations always return **`BulkMutationResult!`** directly (no union).
 
@@ -1112,12 +1131,12 @@ These guards apply to **`bulkUpdate<Entity>ByFilter`** (when generated) and **`b
 
 All **atomic** bulk mutations (ID-list with `atomic: true`, or default ≤ 100 items) and **all filter-based bulk operations** execute in a **single database transaction**.
 
-| Concern | Rule |
-| ------- | ---- |
-| **Isolation level** | **`READ COMMITTED`** explicitly — not configurable in v1 |
-| **Filter-based ops** | Matched-row **count** and **write** (update or delete) run in the **same transaction** |
-| **Row-level locks** | Where the dialect supports it, matched rows are locked for the duration of the transaction (`FOR UPDATE` or dialect equivalent) before write |
-| **Rollback** | Any validation failure, cap breach, or driver error rolls back the entire transaction |
+| Concern              | Rule                                                                                                                                         |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Isolation level**  | **`READ COMMITTED`** explicitly — not configurable in v1                                                                                     |
+| **Filter-based ops** | Matched-row **count** and **write** (update or delete) run in the **same transaction**                                                       |
+| **Row-level locks**  | Where the dialect supports it, matched rows are locked for the duration of the transaction (`FOR UPDATE` or dialect equivalent) before write |
+| **Rollback**         | Any validation failure, cap breach, or driver error rolls back the entire transaction                                                        |
 
 Non-atomic ID-list bulk (`atomic: false`, > 100 items) uses **per-row transactions** — partial success is allowed and errors are collected in `BulkMutationResult`.
 
@@ -1160,9 +1179,9 @@ Logical operators and field filters compose recursively. There is no flat or SQL
 
 Logical combinator fields on filter inputs use **camelCase** per graphql.org field naming:
 
-* **`and`** — conjunction of sub-filters
-* **`or`** — disjunction of sub-filters
-* **`not`** — negation of a sub-filter (composes recursively with other logical operators)
+- **`and`** — conjunction of sub-filters
+- **`or`** — disjunction of sub-filters
+- **`not`** — negation of a sub-filter (composes recursively with other logical operators)
 
 **`neq` and `notIn` remain first-class scalar operators** (§10.3, §10.4) — they map directly to FilterAST leaf nodes and QueryTranslator emits Drizzle `.neq()` / `notInArray()`. For simple scalar negation, **prefer `neq` / `notIn`** over wrapping a single equality in `not { … }`. Use **`not`** when negating compound or association sub-filters that have no single-operator equivalent.
 
@@ -1182,9 +1201,9 @@ input StringFilter {
 }
 ```
 
-* **`isNull`** — nullable columns only; see §10.4.1.
-* **`ilike` is not used** — `like` with `isCaseInsensitive: true` provides case-insensitive matching.
-* All string comparisons are parameterized via Drizzle; no client-supplied SQL fragments.
+- **`isNull`** — nullable columns only; see §10.4.1.
+- **`ilike` is not used** — `like` with `isCaseInsensitive: true` provides case-insensitive matching.
+- All string comparisons are parameterized via Drizzle; no client-supplied SQL fragments.
 
 ---
 
@@ -1192,19 +1211,22 @@ input StringFilter {
 
 Strongly typed inputs (no JSON). Codegen emits one filter input type per supported scalar column ([PG → DAL mapping](dal-pg-type-mapping.md#pg-dal-type-mapping)):
 
-| Filter input | Scalar columns | Operators |
-| ------------ | -------------- | --------- |
-| **`IntFilter`** | `smallint`, `integer` | `eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `in`, `notIn`, `isNull` (nullable columns only — §10.4.1) |
-| **`BigIntFilter`** | `bigint` | Same as `IntFilter`; values are **`BigInt`** (string on wire) |
-| **`DecimalFilter`** | `numeric`, `decimal` | Same as `IntFilter`; values are **`Decimal`** (string on wire) |
-| **`FloatFilter`** | `real`, `double precision` | Same as `IntFilter`; values are **`Float`** |
-| **`BooleanFilter`** | `boolean` | `eq` — **no `isNull`** (non-nullable boolean semantics) |
-| **`DateFilter`** | `date` | Same comparators as `IntFilter`; values are **`Date`** (`YYYY-MM-DD`) |
-| **`DateTimeFilter`** | `timestamptz` | Same comparators as `IntFilter`; values are **`DateTime`** (ISO-8601 UTC) |
-| **`TimeTzFilter`** | `timetz` | Same comparators as `IntFilter`; values are **`TimeTz`** (ISO-8601 time with offset) |
-| **`IntervalMsFilter`** | `interval` | Same comparators as `IntFilter`; values are **`IntervalMs`** (ms string on wire) |
-| **`IDFilter`** | `uuid` | `eq`, `neq`, `in`, `notIn` — values are GraphQL **`ID`**; RFC 4122 validated at repository layer |
-| **Opt-in `*Filter`** | network, geometric, PostGIS scalars | v1: **`eq`, `neq` only** ([opt-in custom scalars](dal-pg-type-mapping.md#opt-in-custom-scalars-rare)) |
+| Filter input                                      | Scalar columns            | Operators                                                                                                                                             |
+| ------------------------------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`SmallIntFilter`**                              | `smallint`                | Same as `IntFilter`; values are **`SmallInt`**                                                                                                        |
+| **`IntFilter`**                                   | `integer`                 | `eq`, `neq`, `gt`, `gte`, `lt`, `lte`, `in`, `notIn`, `isNull` (nullable columns only — §10.4.1)                                                      |
+| **`BigIntFilter`**                                | `bigint`                  | Same as `IntFilter` (including **`isNull`** on nullable columns); values are **`BigInt`** (string on wire)                                            |
+| **`DecimalFilter`**                               | `numeric`, `decimal`      | Same as `IntFilter` (including **`isNull`**); values are **`Decimal`** (string on wire)                                                               |
+| **`FloatFilter`**                                 | `real`                    | Same as `IntFilter`; values are **`Float`**                                                                                                           |
+| **`DoubleFilter`**                                | `double precision`        | Same as `IntFilter`; values are **`Double`**                                                                                                          |
+| **`InsensitiveStringFilter`**                     | `citext`                  | Same operators as **`StringFilter`** except **no `isCaseInsensitive`** — citext is case-insensitive in PostgreSQL; values are **`InsensitiveString`** |
+| **`BooleanFilter`**                               | `boolean`                 | `eq` — **no `isNull`** (non-nullable boolean semantics)                                                                                               |
+| **`DateFilter`**                                  | `date`                    | Same comparators as `IntFilter`; values are **`Date`** (`YYYY-MM-DD`)                                                                                 |
+| **`DateTimeFilter`**                              | `timestamptz`             | Same comparators as `IntFilter`; values are **`DateTime`** (ISO-8601 UTC)                                                                             |
+| **`TimeTzFilter`**                                | `timetz`                  | Same comparators as `IntFilter`; values are **`TimeTz`** (ISO-8601 time with offset)                                                                  |
+| **`IntervalMsFilter`**                            | `interval`                | Same comparators as `IntFilter` (including **`isNull`**); values are **`IntervalMs`** (ms string on wire)                                             |
+| **`IDFilter`**                                    | `uuid`                    | `eq`, `neq`, `in`, `notIn` — values are GraphQL **`ID`**; RFC 4122 validated at repository layer                                                      |
+| **`IPFilter`**, **`CIDRFilter`**, **`MACFilter`** | `inet`, `cidr`, `macaddr` | v1: **`eq`, `neq`, `isNull`** (nullable columns only — §10.4.1) ([opt-in custom scalars](dal-pg-type-mapping.md#opt-in-custom-scalars-rare))          |
 
 ```graphql
 input BigIntFilter {
@@ -1216,6 +1238,7 @@ input BigIntFilter {
   lte: BigInt
   in: [BigInt!]
   notIn: [BigInt!]
+  isNull: Boolean
 }
 
 input DecimalFilter {
@@ -1227,6 +1250,7 @@ input DecimalFilter {
   lte: Decimal
   in: [Decimal!]
   notIn: [Decimal!]
+  isNull: Boolean
 }
 
 input DateFilter {
@@ -1256,6 +1280,7 @@ input IntervalMsFilter {
   lte: IntervalMs
   in: [IntervalMs!]
   notIn: [IntervalMs!]
+  isNull: Boolean
 }
 ```
 
@@ -1265,17 +1290,17 @@ All filter values are parameterized via Drizzle; no client-supplied SQL fragment
 
 Nullable **scalar** and **enum** filter inputs expose an optional **`isNull: Boolean`** operator. **`BooleanFilter`** and non-nullable fields do **not** expose `isNull`.
 
-| Value | SQL semantics |
-| ----- | ------------- |
-| **`isNull: true`** | Column **IS NULL** |
+| Value               | SQL semantics          |
+| ------------------- | ---------------------- |
+| **`isNull: true`**  | Column **IS NULL**     |
 | **`isNull: false`** | Column **IS NOT NULL** |
-| **Omitted** | No nullness predicate |
+| **Omitted**         | No nullness predicate  |
 
 Rules:
 
-* **`isNull` is mutually exclusive** with all other operators on the same filter field (`eq`, `neq`, `gt`, `in`, …). Combining `isNull` with any other operator → **`VALIDATION_FAILED`** in `userErrors` (queries) or top-level GraphQL error (malformed document at parse time when possible).
-* **Do not use `eq: null`** in v1 — nullness is expressed only via `isNull`.
-* Applies to nullable columns only — non-nullable Drizzle columns omit `isNull` from the generated filter input.
+- **`isNull` is mutually exclusive** with all other operators on the same filter field (`eq`, `neq`, `gt`, `in`, …). Combining `isNull` with any other operator → **`VALIDATION_FAILED`** in `userErrors` (queries) or top-level GraphQL error (malformed document at parse time when possible).
+- **Do not use `eq: null`** in v1 — nullness is expressed only via `isNull`.
+- Applies to nullable columns only — non-nullable Drizzle columns omit `isNull` from the generated filter input.
 
 ```graphql
 input StringFilter {
@@ -1307,15 +1332,16 @@ input OrderStatusFilter {
   neq: OrderStatus
   in: [OrderStatus!]
   notIn: [OrderStatus!]
+  isNull: Boolean
 }
 ```
 
-| Rule | Detail |
-| ---- | ------ |
-| **Value convention** | GraphQL enum members mirror Drizzle `pgEnum` values — **UPPERCASE** or **SCREAMING_SNAKE_CASE** (§2.6) |
-| **Matching** | Case-sensitive on enum **value** — filter `eq` / `in` / `notIn` must match Drizzle members exactly (e.g. `PENDING`, not `pending`); no `like` / case-insensitive variant |
-| **ComparableFields** | **Enum fields are excluded** from `<Entity>ComparableFields` — min/max are meaningless (§15.2) |
-| **Sort** | Enum fields appear in `<Entity>Field` sort enum |
+| Rule                 | Detail                                                                                                                                                                   |
+| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Value convention** | GraphQL enum members mirror Drizzle `pgEnum` values — **UPPERCASE** or **SCREAMING_SNAKE_CASE** (§2.6)                                                                   |
+| **Matching**         | Case-sensitive on enum **value** — filter `eq` / `in` / `notIn` must match Drizzle members exactly (e.g. `PENDING`, not `pending`); no `like` / case-insensitive variant |
+| **ComparableFields** | **Enum fields are excluded** from `<Entity>ComparableFields` — min/max are meaningless (§15.2)                                                                           |
+| **Sort**             | Enum fields appear in `<Entity>Field` sort enum                                                                                                                          |
 
 ---
 
@@ -1323,9 +1349,9 @@ input OrderStatusFilter {
 
 For every Drizzle relation codegen can translate:
 
-* **`some`** — at least one related row matches
-* **`every`** — all related rows match
-* **`none`** — no related rows match
+- **`some`** — at least one related row matches
+- **`every`** — all related rows match
+- **`none`** — no related rows match
 
 **Association filter field names match output navigation fields** — the same camelCase relation name clients use on entity output types (Prisma convention). Example: output field `lines: [OrderLine!]!` → filter field `lines: OrderLineAssociationFilter`. Codegen **must not** emit alternate names such as `having` or generic placeholders like `items` when the navigation field is `lines`.
 
@@ -1341,18 +1367,33 @@ See **§10.6.1** for end-to-end GraphQL and ds-cli examples on a multi-entity do
 
 The examples below use a realistic e-commerce slice inferred from Drizzle (§2.7). Relation names match codegen output from `relations()` declarations.
 
-| Entity | Key columns | Relations |
-| ------ | ----------- | --------- |
-| **Order** | `id`, `status` (`OrderStatus`), `customerId`, `total`, `createdAt`, … | M:1 → **Customer** (`customerId`); 1:M → **OrderLine** (`lines`) |
-| **Customer** | `id`, `name`, `email`, `tier` (`CustomerTier`), … | inverse 1:M → Order |
-| **OrderLine** | `id`, `orderId`, `productId`, `quantity`, `status` (`OrderLineStatus`), … | M:1 → **Product** (`productId`) |
-| **Product** | `id`, `name`, `category` (`ProductCategory`), … | inverse M:1 ← OrderLine |
+| Entity        | Key columns                                                               | Relations                                                        |
+| ------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| **Order**     | `id`, `status` (`OrderStatus`), `customerId`, `total`, `createdAt`, …     | M:1 → **Customer** (`customerId`); 1:M → **OrderLine** (`lines`) |
+| **Customer**  | `id`, `name`, `email`, `tier` (`CustomerTier`), …                         | inverse 1:M → Order                                              |
+| **OrderLine** | `id`, `orderId`, `productId`, `quantity`, `status` (`OrderLineStatus`), … | M:1 → **Product** (`productId`)                                  |
+| **Product**   | `id`, `name`, `category` (`ProductCategory`), …                           | inverse M:1 ← OrderLine                                          |
 
 ```graphql
-enum OrderStatus { PENDING ACTIVE ARCHIVED }
-enum OrderLineStatus { OPEN FULFILLED CANCELLED }
-enum CustomerTier { STANDARD VIP }
-enum ProductCategory { ELECTRONICS APPAREL OTHER }
+enum OrderStatus {
+  PENDING
+  ACTIVE
+  ARCHIVED
+}
+enum OrderLineStatus {
+  OPEN
+  FULFILLED
+  CANCELLED
+}
+enum CustomerTier {
+  STANDARD
+  VIP
+}
+enum ProductCategory {
+  ELECTRONICS
+  APPAREL
+  OTHER
+}
 ```
 
 Filter inputs (abbreviated):
@@ -1364,7 +1405,7 @@ input OrderFilter {
   not: OrderFilter
   status: OrderStatusFilter
   total: IntFilter
-  customer: CustomerFilter          # M:1 — direct nested filter (no some/every/none)
+  customer: CustomerFilter # M:1 — direct nested filter (no some/every/none)
   lines: OrderLineAssociationFilter # 1:M — field name matches output navigation field
 }
 
@@ -1377,7 +1418,7 @@ input OrderLineAssociationFilter {
 input OrderLineFilter {
   quantity: IntFilter
   status: OrderLineStatusFilter
-  product: ProductFilter            # M:1 from OrderLine
+  product: ProductFilter # M:1 from OrderLine
 }
 
 input CustomerFilter {
@@ -1392,12 +1433,12 @@ input ProductFilter {
 
 **Translation cheat sheet** (QueryTranslator — §16):
 
-| Pattern | Drizzle strategy |
-| ------- | ---------------- |
-| 1:M `some` / `every` / `none` on child collection | **`EXISTS` / `NOT EXISTS` subquery** (or equivalent) on child table keyed by parent FK (`orderLine.orderId = order.id`) |
-| M:1 nested filter on parent (`customer: { … }`) | **`INNER JOIN`** (or `EXISTS`) on related table via owner FK (`order.customerId = customer.id`) |
-| M:N `some` / `every` / `none` | **`EXISTS` subquery** on join table (§10.6) |
-| Nested association inside `some` / `every` / `none` | Composed subquery/join chain (child filter + related-table join) |
+| Pattern                                             | Drizzle strategy                                                                                                        |
+| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| 1:M `some` / `every` / `none` on child collection   | **`EXISTS` / `NOT EXISTS` subquery** (or equivalent) on child table keyed by parent FK (`orderLine.orderId = order.id`) |
+| M:1 nested filter on parent (`customer: { … }`)     | **`INNER JOIN`** (or `EXISTS`) on related table via owner FK (`order.customerId = customer.id`)                         |
+| M:N `some` / `every` / `none`                       | **`EXISTS` subquery** on join table (§10.6)                                                                             |
+| Nested association inside `some` / `every` / `none` | Composed subquery/join chain (child filter + related-table join)                                                        |
 
 **FilterAST budgets** (§10.7): each example lists approximate **depth** (logical operators + association levels) and **nodes** (each association filter node + each leaf scalar predicate). Defaults: `filterMaxDepth: 2`, `filterMaxNodes: 50`.
 
@@ -1432,10 +1473,10 @@ query OrdersWithLargeLines {
 }
 ```
 
-| Budget | Value |
-| ------ | ----- |
-| **Depth** | `1` — one association level (`lines` → `some`) |
-| **Nodes** | `2` — `lines.some` association node + `quantity.gt` leaf |
+| Budget          | Value                                                                             |
+| --------------- | --------------------------------------------------------------------------------- |
+| **Depth**       | `1` — one association level (`lines` → `some`)                                    |
+| **Nodes**       | `2` — `lines.some` association node + `quantity.gt` leaf                          |
 | **Translation** | `EXISTS` subquery on `order_line` where `order_id = order.id` AND `quantity > 10` |
 
 Connection variant: same `filter` on `orderConnection(first: 20, filter: { … })`.
@@ -1449,13 +1490,7 @@ Connection variant: same `filter` on `orderConnection(first: 20, filter: { … }
 ```graphql
 query AllElectronicsOrders {
   orders(
-    filter: {
-      lines: {
-        every: {
-          product: { category: { eq: ELECTRONICS } }
-        }
-      }
-    }
+    filter: { lines: { every: { product: { category: { eq: ELECTRONICS } } } } }
   ) {
     id
     status
@@ -1477,10 +1512,10 @@ query AllElectronicsOrders {
 }
 ```
 
-| Budget | Value |
-| ------ | ----- |
-| **Depth** | `2` — `lines` → `every` (association level 1) + nested `product` on `OrderLineFilter` (association level 2) — **at default `filterMaxDepth`** |
-| **Nodes** | `3` — `lines.every`, nested `product`, `category.eq` leaf |
+| Budget          | Value                                                                                                                                                                                            |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Depth**       | `2` — `lines` → `every` (association level 1) + nested `product` on `OrderLineFilter` (association level 2) — **at default `filterMaxDepth`**                                                    |
+| **Nodes**       | `3` — `lines.every`, nested `product`, `category.eq` leaf                                                                                                                                        |
 | **Translation** | Subquery for `every`: no child row fails the predicate — typically `NOT EXISTS` line where product category ≠ `ELECTRONICS`, composed with join/subquery to `product` on `order_line.product_id` |
 
 ---
@@ -1491,13 +1526,7 @@ query AllElectronicsOrders {
 
 ```graphql
 query OrdersWithoutCancelledLines {
-  orders(
-    filter: {
-      lines: {
-        none: { status: { eq: CANCELLED } }
-      }
-    }
-  ) {
+  orders(filter: { lines: { none: { status: { eq: CANCELLED } } } }) {
     id
     status
     total
@@ -1517,10 +1546,10 @@ query OrdersWithoutCancelledLines {
 }
 ```
 
-| Budget | Value |
-| ------ | ----- |
-| **Depth** | `1` — `lines` → `none` |
-| **Nodes** | `2` — `lines.none` + `status.eq` leaf |
+| Budget          | Value                                                                                        |
+| --------------- | -------------------------------------------------------------------------------------------- |
+| **Depth**       | `1` — `lines` → `none`                                                                       |
+| **Nodes**       | `2` — `lines.none` + `status.eq` leaf                                                        |
 | **Translation** | `NOT EXISTS` subquery on `order_line` where `order_id = order.id` AND `status = 'CANCELLED'` |
 
 Prefer **`none`** over `not { lines: { some: { … } } }` when expressing "no related row matches" — clearer intent and identical FilterAST cost.
@@ -1535,16 +1564,14 @@ Prefer **`none`** over `not { lines: { some: { … } } }` when expressing "no re
 query AcmeCustomerOrders {
   orders(
     filter: {
-      customer: {
-        email: {
-          like: "%@acme.com"
-          isCaseInsensitive: true
-        }
-      }
+      customer: { email: { like: "%@acme.com", isCaseInsensitive: true } }
     }
   ) {
     id
-    customer { name email }
+    customer {
+      name
+      email
+    }
   }
 }
 ```
@@ -1562,10 +1589,10 @@ query AcmeCustomerOrders {
 }
 ```
 
-| Budget | Value |
-| ------ | ----- |
-| **Depth** | `1` — M:1 association navigation on `OrderFilter` |
-| **Nodes** | `2` — `customer` association node + `email.like` leaf |
+| Budget          | Value                                                                                                                   |
+| --------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| **Depth**       | `1` — M:1 association navigation on `OrderFilter`                                                                       |
+| **Nodes**       | `2` — `customer` association node + `email.like` leaf                                                                   |
 | **Translation** | **`INNER JOIN`** to `customer` on `order.customer_id = customer.id` (or `EXISTS` equivalent) with parameterized `ILIKE` |
 
 M:1 filters use **direct nested `<RelatedEntity>Filter`** — not `AssociationFilter`. FK scalar filter fields are **not emitted** on `<Entity>Filter` (§2.7); nested relation filters keep a single round-trip.
@@ -1582,19 +1609,17 @@ query ActiveVipOrHighValue {
     filter: {
       and: [
         { status: { eq: ACTIVE } }
-        {
-          or: [
-            { customer: { tier: { eq: VIP } } }
-            { total: { gt: 10000 } }
-          ]
-        }
+        { or: [{ customer: { tier: { eq: VIP } } }, { total: { gt: 10000 } }] }
       ]
     }
   ) {
     id
     status
     total
-    customer { name tier }
+    customer {
+      name
+      tier
+    }
   }
 }
 ```
@@ -1615,10 +1640,10 @@ query ActiveVipOrHighValue {
 }
 ```
 
-| Budget | Value |
-| ------ | ----- |
-| **Depth** | `3` — root `and` (1) → nested `or` (2) → `customer` association in `or` branch (3) — **exceeds default `filterMaxDepth: 2`** |
-| **Nodes** | `5` — `and`, `or`, `status.eq`, `customer` + `tier.eq`, `total.gt` |
+| Budget          | Value                                                                                                                                                            |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Depth**       | `3` — root `and` (1) → nested `or` (2) → `customer` association in `or` branch (3) — **exceeds default `filterMaxDepth: 2`**                                     |
+| **Nodes**       | `5` — `and`, `or`, `status.eq`, `customer` + `tier.eq`, `total.gt`                                                                                               |
 | **Translation** | Root entity `WHERE` with `status = 'ACTIVE' AND (customer.tier = 'VIP' OR total > 10000)` — `customer` branch uses join/`EXISTS` on `customer` via `customer_id` |
 
 Raise limits before using in production: `filterMaxDepth: 3` in `dal/dal.config.yaml` or `DAL_FILTER_MAX_DEPTH=3` (§10.7).
@@ -1633,11 +1658,7 @@ Raise limits before using in production: `filterMaxDepth: 3` in `dal/dal.config.
 query CoursesWithSmithStudent {
   courses(
     filter: {
-      students: {
-        some: {
-          name: { like: "%Smith%", isCaseInsensitive: true }
-        }
-      }
+      students: { some: { name: { like: "%Smith%", isCaseInsensitive: true } } }
     }
   ) {
     id
@@ -1661,10 +1682,10 @@ query CoursesWithSmithStudent {
 }
 ```
 
-| Budget | Value |
-| ------ | ----- |
-| **Depth** | `1` — `students` → `some` |
-| **Nodes** | `2` — `students.some` + `name.like` leaf |
+| Budget          | Value                                                                                                                                              |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Depth**       | `1` — `students` → `some`                                                                                                                          |
+| **Nodes**       | `2` — `students.some` + `name.like` leaf                                                                                                           |
 | **Translation** | **`EXISTS` subquery** on join table `course_enrollment` linking `course.id` to `student.id`, with join to `student` for the name predicate (§10.6) |
 
 Index join-table **owner columns** (`course_id`, `student_id`) for filter performance (§2.8, §17.1 planned v2).
@@ -1692,12 +1713,12 @@ ds-cli orders --input-json '{
 }'
 ```
 
-| Note | Detail |
-| ---- | ------ |
-| **Wire format** | Enum values as **strings** (`"ACTIVE"`, `"VIP"`) in JSON — GraphQL parse normalizes to enum members (§10.5) |
-| **Depth guard** | Requires `filterMaxDepth ≥ 3` (Example 5) |
-| **Alternatives** | `--input-file orders-filter.json` for large trees; see [Appendix A — ds-cli Conventions](#appendix-a--ds-cli-conventions) |
-| **SDK** | `@corpdk/ds-sdk` TypedDocumentNode calls avoid shell-escaping — still GraphQL under the hood; ops/automation only, not a primary app runtime path |
+| Note             | Detail                                                                                                                                            |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Wire format**  | Enum values as **strings** (`"ACTIVE"`, `"VIP"`) in JSON — GraphQL parse normalizes to enum members (§10.5)                                       |
+| **Depth guard**  | Requires `filterMaxDepth ≥ 3` (Example 5)                                                                                                         |
+| **Alternatives** | `--input-file orders-filter.json` for large trees; see [Appendix A — ds-cli Conventions](#appendix-a--ds-cli-conventions)                         |
+| **SDK**          | `@corpdk/ds-sdk` TypedDocumentNode calls avoid shell-escaping — still GraphQL under the hood; ops/automation only, not a primary app runtime path |
 
 ---
 
@@ -1705,19 +1726,19 @@ ds-cli orders --input-json '{
 
 To prevent abusive filter parse trees, the DAL enforces configurable depth and node budgets at **filter parse time** — before the FilterAST is passed to QueryTranslator. Limits apply to all filter-bearing operations: `<entities>`, `<entity>Connection`, `<entities>Count`, `<entity>Aggregate`, and filter-based bulk mutations.
 
-| Limit | Config key | Default | Env override |
-| ----- | ---------- | ------- | ------------ |
-| **maxDepth** | `filterMaxDepth` | `2` | `DAL_FILTER_MAX_DEPTH` |
-| **maxNodes** | `filterMaxNodes` | `50` | `DAL_FILTER_MAX_NODES` |
+| Limit        | Config key       | Default | Env override           |
+| ------------ | ---------------- | ------- | ---------------------- |
+| **maxDepth** | `filterMaxDepth` | `2`     | `DAL_FILTER_MAX_DEPTH` |
+| **maxNodes** | `filterMaxNodes` | `50`    | `DAL_FILTER_MAX_NODES` |
 
 #### Configuration
 
-| Surface | Rule |
-| ------- | ---- |
-| **Primary** | `dal/dal.config.yaml` workspace config (§6.5) |
-| **Override** | Optional environment variables take **precedence** over config-file values when set |
-| **Fallback** | When a key is omitted from config **and** its env var is unset, the **default** in the table above applies |
-| **Validation** | Values must be positive integers; invalid config fails at **DAL startup** (not per-request) |
+| Surface        | Rule                                                                                                       |
+| -------------- | ---------------------------------------------------------------------------------------------------------- |
+| **Primary**    | `dal/dal.config.yaml` workspace config (§6.5)                                                              |
+| **Override**   | Optional environment variables take **precedence** over config-file values when set                        |
+| **Fallback**   | When a key is omitted from config **and** its env var is unset, the **default** in the table above applies |
+| **Validation** | Values must be positive integers; invalid config fails at **DAL startup** (not per-request)                |
 
 Defaults (`2`, `50`) are **config defaults**, not hardcoded constants without an override path — deployers may raise or lower limits via config file or env.
 
@@ -1770,11 +1791,11 @@ input ItemSortInput {
 
 ### Rules
 
-* Codegen emits **`<Entity>SortInput`** per PersistedEntity — used on `<entities>`, `<entity>Connection` (`sort` arg), and echoed in `PaginationRequestInfo.sort` (§12.3).
-* Sort fields are a **whitelist enum** (`<Entity>Field`) generated from **all scalar columns** inferred from Drizzle ([PostgreSQL type coverage](dal-pg-type-mapping.md#postgresql-type-coverage)).
-* When **`sort` is omitted**, default is **`[{ field: ID, direction: ASC }]`** — primary key ascending.
-* System enforces deterministic ordering with **`id` as tie-breaker** on the final sort key (appended after client-provided sort keys when `id` is not already the last key).
-* Changes to the sort enum bump the entity's **cursor codec version** (§13.2), invalidating existing cursors.
+- Codegen emits **`<Entity>SortInput`** per PersistedEntity — used on `<entities>`, `<entity>Connection` (`sort` arg), and echoed in `PaginationRequestInfo.sort` (§12.3).
+- Sort fields are a **whitelist enum** (`<Entity>Field`) generated from **all scalar columns** inferred from Drizzle ([PostgreSQL type coverage](dal-pg-type-mapping.md#postgresql-type-coverage)).
+- When **`sort` is omitted**, default is **`[{ field: ID, direction: ASC }]`** — primary key ascending.
+- System enforces deterministic ordering with **`id` as tie-breaker** on the final sort key (appended after client-provided sort keys when `id` is not already the last key).
+- Changes to the sort enum bump the entity's **cursor codec version** (§13.2), invalidating existing cursors.
 
 ---
 
@@ -1788,23 +1809,23 @@ Connection SDL shapes follow the [Relay GraphQL Cursor Connections Specification
 
 Codegen **must** emit:
 
-* A single global **`PageInfo`** type (shared across all entities).
-* Per-entity **`<Entity>Connection`** and **`<Entity>Edge`** types (names ending in `Connection` / `Edge`).
+- A single global **`PageInfo`** type (shared across all entities).
+- Per-entity **`<Entity>Connection`** and **`<Entity>Edge`** types (names ending in `Connection` / `Edge`).
 
 These names are reserved per Relay §1.
 
 #### Intentional deviations
 
-| Deviation | Relay spec | This spec |
-| --------- | ---------- | --------- |
-| **`nodes` convenience field** | Additional connection fields allowed | Exposed on every `<Entity>Connection` for direct node access without mapping `edges` |
-| **`first` + `last` together** | Strongly discouraged | **Forbidden** — validation error |
-| **Default / max page size** | Not specified | Default **`first: 100`**; max **`1000`** for `first` / `last` |
-| **`sort` on connection field** | Not specified | **`sort: [<Entity>SortInput!]`** top-level on connection field (§11); bound into cursor payload |
-| **`PageInfo.request` echo** | Not specified | **`request: PaginationRequestInfo`** echoes resolved connection field args (§12.3) |
-| **`totalCount` on Connection** | Not forbidden | **Omitted** — use `<entities>Count` separately (§15.6) |
-| **Cursor contents** | Agnostic (opaque to client) | **Keyset JSON payload**, Base64url-encoded, with optional **HMAC-SHA256** signing (§13) |
-| **Unknown / invalid cursor** | `ApplyCursorsToEdges` no-op when cursor not found | **`BAD_USER_INPUT`** — stricter than Relay's silent skip |
+| Deviation                      | Relay spec                                        | This spec                                                                                       |
+| ------------------------------ | ------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| **`nodes` convenience field**  | Additional connection fields allowed              | Exposed on every `<Entity>Connection` for direct node access without mapping `edges`            |
+| **`first` + `last` together**  | Strongly discouraged                              | **Forbidden** — validation error                                                                |
+| **Default / max page size**    | Not specified                                     | Default **`first: 100`**; max **`1000`** for `first` / `last`                                   |
+| **`sort` on connection field** | Not specified                                     | **`sort: [<Entity>SortInput!]`** top-level on connection field (§11); bound into cursor payload |
+| **`PageInfo.request` echo**    | Not specified                                     | **`request: PaginationRequestInfo`** echoes resolved connection field args (§12.3)              |
+| **`totalCount` on Connection** | Not forbidden                                     | **Omitted** — use `<entities>Count` separately (§15.6)                                          |
+| **Cursor contents**            | Agnostic (opaque to client)                       | **Keyset JSON payload**, Base64url-encoded, with optional **HMAC-SHA256** signing (§13)         |
+| **Unknown / invalid cursor**   | `ApplyCursorsToEdges` no-op when cursor not found | **`BAD_USER_INPUT`** — stricter than Relay's silent skip                                        |
 
 ---
 
@@ -1812,30 +1833,30 @@ These names are reserved per Relay §1.
 
 Relay-compliant pagination and sort arguments are declared **directly on** `<entity>Connection` (§8.2) — not nested in an input object.
 
-| Argument | Type | Role |
-| -------- | ---- | ---- |
-| **`sort`** | `[<Entity>SortInput!]` | Entity-specific sort keys (§11); bound into cursor payload |
-| **`first`** | `Int` | Forward page size |
-| **`after`** | `String` | Forward cursor |
-| **`last`** | `Int` | Backward page size |
-| **`before`** | `String` | Backward cursor |
+| Argument     | Type                   | Role                                                       |
+| ------------ | ---------------------- | ---------------------------------------------------------- |
+| **`sort`**   | `[<Entity>SortInput!]` | Entity-specific sort keys (§11); bound into cursor payload |
+| **`first`**  | `Int`                  | Forward page size                                          |
+| **`after`**  | `String`               | Forward cursor                                             |
+| **`last`**   | `Int`                  | Backward page size                                         |
+| **`before`** | `String`               | Backward cursor                                            |
 
 **Validation rules** (see also §8.2):
 
-* **`first < 0`** or **`last < 0`** → validation error (Relay: throw on negative slice).
-* Max **`first`** / **`last`**: **`1000`** — values above max return a **validation error** (reject; do not clamp).
-* **`first: 0`** or **`last: 0`** → valid empty page (`edges` / `nodes` empty; `pageInfo` populated).
-* **`first` + `last` together** → validation error (Relay strongly discourages; we forbid).
+- **`first < 0`** or **`last < 0`** → validation error (Relay: throw on negative slice).
+- Max **`first`** / **`last`**: **`1000`** — values above max return a **validation error** (reject; do not clamp).
+- **`first: 0`** or **`last: 0`** → valid empty page (`edges` / `nodes` empty; `pageInfo` populated).
+- **`first` + `last` together** → validation error (Relay strongly discourages; we forbid).
 
 **Allowed argument combinations:**
 
-| Combination | Status | Notes |
-| ----------- | ------ | ----- |
-| **`after` + `before`** | **Allowed** | Bounded window paging — Relay-allowed; both cursors applied before slicing (§12.4) |
-| **`first` + `last`** | **Forbidden** | Validation error |
-| Only **`after`** (no `first` / `last`) | Allowed | Default **`first: 100`** |
-| Only **`before`** (no `first` / `last`) | Allowed | Recommend default **`last: 100`** |
-| Neither **`first`** nor **`last`** | Allowed | Default **`first: 100`** |
+| Combination                             | Status        | Notes                                                                              |
+| --------------------------------------- | ------------- | ---------------------------------------------------------------------------------- |
+| **`after` + `before`**                  | **Allowed**   | Bounded window paging — Relay-allowed; both cursors applied before slicing (§12.4) |
+| **`first` + `last`**                    | **Forbidden** | Validation error                                                                   |
+| Only **`after`** (no `first` / `last`)  | Allowed       | Default **`first: 100`**                                                           |
+| Only **`before`** (no `first` / `last`) | Allowed       | Recommend default **`last: 100`**                                                  |
+| Neither **`first`** nor **`last`**      | Allowed       | Default **`first: 100`**                                                           |
 
 ---
 
@@ -1853,19 +1874,19 @@ type PageInfo {
 
 **`hasNextPage` / `hasPreviousPage`** — keyset equivalents of Relay `HasNextPage` / `HasPreviousPage` (§12.4):
 
-| Client paging mode | Required computation |
-| ------------------ | -------------------- |
-| **`first` set** | **`hasNextPage`** = after applying cursor filters and fetching one more row than `first`, additional matching rows exist beyond the returned slice. When **`first: 0`**, **`hasNextPage`** reflects whether any rows match after cursor filters (typically `false` when the slice is empty). |
-| **`last` set** | **`hasPreviousPage`** = after applying cursor filters and fetching one more row than `last`, additional matching rows exist before the returned slice. When **`last: 0`**, **`hasPreviousPage`** reflects whether any rows match before cursor filters (typically `false` when the slice is empty). |
-| **`after` only** (no `first` / `last`; default `first: 100` applies) | **`hasNextPage`** as above; **`hasPreviousPage`** = `true` when rows exist before the `after` cursor (keyset can determine this efficiently). |
-| **`before` only** (default `last: 100` recommended) | **`hasPreviousPage`** as above; **`hasNextPage`** = `true` when rows exist after the `before` cursor. |
+| Client paging mode                                                   | Required computation                                                                                                                                                                                                                                                                                |
+| -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **`first` set**                                                      | **`hasNextPage`** = after applying cursor filters and fetching one more row than `first`, additional matching rows exist beyond the returned slice. When **`first: 0`**, **`hasNextPage`** reflects whether any rows match after cursor filters (typically `false` when the slice is empty).        |
+| **`last` set**                                                       | **`hasPreviousPage`** = after applying cursor filters and fetching one more row than `last`, additional matching rows exist before the returned slice. When **`last: 0`**, **`hasPreviousPage`** reflects whether any rows match before cursor filters (typically `false` when the slice is empty). |
+| **`after` only** (no `first` / `last`; default `first: 100` applies) | **`hasNextPage`** as above; **`hasPreviousPage`** = `true` when rows exist before the `after` cursor (keyset can determine this efficiently).                                                                                                                                                       |
+| **`before` only** (default `last: 100` recommended)                  | **`hasPreviousPage`** as above; **`hasNextPage`** = `true` when rows exist after the `before` cursor.                                                                                                                                                                                               |
 
 Implementation: fetch **`limit + 1`** rows in the slice direction, return the first **`limit`** edges, and set the relevant `has*Page` flag from the extra row.
 
 **`startCursor` / `endCursor`:**
 
-* **`null`** when **`edges`** is empty.
-* Otherwise **`startCursor`** = cursor of the **first** edge in `edges`; **`endCursor`** = cursor of the **last** edge in `edges` (Relay §5.1).
+- **`null`** when **`edges`** is empty.
+- Otherwise **`startCursor`** = cursor of the **first** edge in `edges`; **`endCursor`** = cursor of the **last** edge in `edges` (Relay §5.1).
 
 ---
 
@@ -1895,20 +1916,20 @@ Relay defines pagination over an in-memory edge list (`ApplyCursorsToEdges` → 
 
 1. **Resolve sort** — use connection field `sort` or default `[{ field: ID, direction: ASC }]` (§11); append **`id` tie-breaker** when not already the final key.
 2. **Apply cursors** (Relay `ApplyCursorsToEdges`) — translate `after` / `before` into keyset `WHERE` predicates:
-   * **`after`**: exclude rows at or before the cursor position; the row **closest to the cursor** (if any) becomes the **first** edge in the result (§12.5).
-   * **`before`**: exclude rows at or after the cursor position; the row **closest to the cursor** (if any) becomes the **last** edge in the result (§12.5).
+   - **`after`**: exclude rows at or before the cursor position; the row **closest to the cursor** (if any) becomes the **first** edge in the result (§12.5).
+   - **`before`**: exclude rows at or after the cursor position; the row **closest to the cursor** (if any) becomes the **last** edge in the result (§12.5).
 3. **Apply `first`** — when set, keep at most **`first`** rows from the start of the filtered set (after fetching **`first + 1`** for `hasNextPage`).
 4. **Apply `last`** — when set, keep at most **`last`** rows from the end of the filtered set (after fetching **`last + 1`** for `hasPreviousPage`). Step 4 runs only when **`last`** is set; **`first` + `last` together** is forbidden (§12.1).
 
 **Validation and error semantics:**
 
-| Condition | Result |
-| --------- | ------ |
-| **`first < 0`** or **`last < 0`** | Validation error |
-| **`first: 0`** or **`last: 0`** | Valid empty page |
-| Malformed cursor (decode failure, bad signature, version mismatch) | **`BAD_USER_INPUT`** |
+| Condition                                                                                                  | Result                                                                     |
+| ---------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| **`first < 0`** or **`last < 0`**                                                                          | Validation error                                                           |
+| **`first: 0`** or **`last: 0`**                                                                            | Valid empty page                                                           |
+| Malformed cursor (decode failure, bad signature, version mismatch)                                         | **`BAD_USER_INPUT`**                                                       |
 | Valid cursor but **no visible row** at cursor position (deleted row, filter mismatch, sort contract drift) | **`BAD_USER_INPUT`** — treat as stale; client must restart from first page |
-| Unknown cursor (Relay: no-op) | **`BAD_USER_INPUT`** — stricter than Relay |
+| Unknown cursor (Relay: no-op)                                                                              | **`BAD_USER_INPUT`** — stricter than Relay                                 |
 
 Relay's reference `ApplyCursorsToEdges` silently ignores cursors that do not match an edge in the current result set. This spec **rejects** such cursors because keyset SQL cannot reliably distinguish "cursor not found" from "row deleted" without an extra lookup — and a failed lookup indicates stale pagination state.
 
@@ -1918,14 +1939,14 @@ Relay's reference `ApplyCursorsToEdges` silently ignores cursors that do not mat
 
 Per Relay §4.3, edge order must be **consistent across pages** and **must not reverse** when switching between forward (`first` / `after`) and backward (`last` / `before`) paging.
 
-| Rule | Requirement |
-| ---- | ----------- |
-| **Stable global order** | Same sort order for every page of the same query (sort keys + `id` tie-breaker; §11). |
+| Rule                               | Requirement                                                                                                   |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| **Stable global order**            | Same sort order for every page of the same query (sort keys + `id` tie-breaker; §11).                         |
 | **Forward / backward consistency** | Order when using `last` / `before` is **identical** to order when using `first` / `after` — **not reversed**. |
-| **`after: cursor`** | Edge **closest to `cursor`** appears **first** in `edges`. |
-| **`before: cursor`** | Edge **closest to `cursor`** appears **last** in `edges`. |
-| **Default sort** | When `sort` is omitted: **`[{ field: ID, direction: ASC }]`** (§11). |
-| **Tie-breaker** | **`id`** appended as final sort key when not already last (§11). |
+| **`after: cursor`**                | Edge **closest to `cursor`** appears **first** in `edges`.                                                    |
+| **`before: cursor`**               | Edge **closest to `cursor`** appears **last** in `edges`.                                                     |
+| **Default sort**                   | When `sort` is omitted: **`[{ field: ID, direction: ASC }]`** (§11).                                          |
+| **Tie-breaker**                    | **`id`** appended as final sort key when not already last (§11).                                              |
 
 Cursors encode the active sort keys and keyset values so that seek predicates preserve this ordering across requests.
 
@@ -1939,42 +1960,42 @@ Cursors are **opaque**, server-decoded keyset pagination tokens. They are **dete
 
 Each cursor encodes a JSON payload with these fields:
 
-| Field | Type | Description |
-| ----- | ---- | ----------- |
-| **`version`** | `Int` | **Cursor codec version** for this entity's pagination contract (§13.2) |
-| **`entity`** | `String` | Entity name (prevents cross-entity cursor reuse) |
-| **`sort`** | `[{ field, direction }]` | Sort keys and directions active when the cursor was issued (mirrors resolved **`<Entity>SortInput`** entries) |
-| **`values`** | `[Scalar]` | Keyset values aligned 1:1 with `sort` entries (plus implicit `id` tie-breaker value); typed per [PG → DAL mapping](dal-pg-type-mapping.md#pg-dal-type-mapping) — `ID`, `DateTime`, `Date`, `TimeTz`, `BigInt`, `Decimal`, `IntervalMs`, `String`, `Int`, `Float`, `Boolean`, opt-in custom scalars, or enum string |
-| **`includeDeleted`** | `Boolean` | Whether soft-deleted rows were included in the originating query |
+| Field                | Type                     | Description                                                                                                                                                                                                                                                                                                        |
+| -------------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **`version`**        | `Int`                    | **Cursor codec version** for this entity's pagination contract (§13.2)                                                                                                                                                                                                                                             |
+| **`entity`**         | `String`                 | Entity name (prevents cross-entity cursor reuse)                                                                                                                                                                                                                                                                   |
+| **`sort`**           | `[{ field, direction }]` | Sort keys and directions active when the cursor was issued (mirrors resolved **`<Entity>SortInput`** entries)                                                                                                                                                                                                      |
+| **`values`**         | `[Scalar]`               | Keyset values aligned 1:1 with `sort` entries (plus implicit `id` tie-breaker value); typed per [PG → DAL mapping](dal-pg-type-mapping.md#pg-dal-type-mapping) — `ID`, `DateTime`, `Date`, `TimeTz`, `BigInt`, `Decimal`, `IntervalMs`, `String`, `Int`, `Float`, `Boolean`, opt-in custom scalars, or enum string |
+| **`includeDeleted`** | `Boolean`                | Whether soft-deleted rows were included in the originating query                                                                                                                                                                                                                                                   |
 
 The payload is **Base64url-encoded**. When signing is enabled (§13.3), the wire format is **`{base64urlPayload}.{signature}`**.
 
 ### 13.2 Version semantics and stale cursor rejection
 
-* **`version`** is the **cursor codec version** for that entity's pagination contract — **not** app, npm, or database version.
-* Codegen emits a per-entity version constant; it is **bumped by codegen** when any of the following change: sort enum membership, tie-breaker rules, `includeDeleted` semantics, or payload shape.
-* **No time-based TTL** — cursors remain valid indefinitely as long as the codec version and sort contract are unchanged.
-* A cursor is **rejected** (validation error) when:
-  * **`version` mismatches** the current codec version for that entity, **or**
-  * **Any encoded sort field is absent** from the current `<Entity>Field` enum (Drizzle schema / sort contract changed).
-* Sort enum changes constitute a **breaking cursor migration** — clients must restart pagination from the first page.
+- **`version`** is the **cursor codec version** for that entity's pagination contract — **not** app, npm, or database version.
+- Codegen emits a per-entity version constant; it is **bumped by codegen** when any of the following change: sort enum membership, tie-breaker rules, `includeDeleted` semantics, or payload shape.
+- **No time-based TTL** — cursors remain valid indefinitely as long as the codec version and sort contract are unchanged.
+- A cursor is **rejected** (validation error) when:
+  - **`version` mismatches** the current codec version for that entity, **or**
+  - **Any encoded sort field is absent** from the current `<Entity>Field` enum (Drizzle schema / sort contract changed).
+- Sort enum changes constitute a **breaking cursor migration** — clients must restart pagination from the first page.
 
 ### 13.3 Signing (optional)
 
-| Concern | Rule |
-| ------- | ---- |
-| **Algorithm** | **HMAC-SHA256** over the Base64url payload |
-| **Wire format** | `{base64urlPayload}.{signature}` where `signature` is Base64url-encoded HMAC digest |
-| **Activation** | Signing is **enabled when `DAL_CURSOR_SECRET` env var is set**; unsigned cursors are allowed in local dev only |
-| **Invalid signature** | Returns **`BAD_USER_INPUT` GraphQL error** — no fallback unsigned decode |
+| Concern               | Rule                                                                                                           |
+| --------------------- | -------------------------------------------------------------------------------------------------------------- |
+| **Algorithm**         | **HMAC-SHA256** over the Base64url payload                                                                     |
+| **Wire format**       | `{base64urlPayload}.{signature}` where `signature` is Base64url-encoded HMAC digest                            |
+| **Activation**        | Signing is **enabled when `DAL_CURSOR_SECRET` env var is set**; unsigned cursors are allowed in local dev only |
+| **Invalid signature** | Returns **`BAD_USER_INPUT` GraphQL error** — no fallback unsigned decode                                       |
 
 When signing is disabled (local dev), cursors are Base64url-encoded payload only (no `.` suffix).
 
 ### 13.4 Decode rules
 
-* Decoded **only server-side** — clients treat cursors as opaque strings.
-* Decode validates signature (when enabled), version, entity name, and sort field membership before executing keyset pagination.
-* Cursor values are bound as parameterized query values via Drizzle — never interpolated into SQL.
+- Decoded **only server-side** — clients treat cursors as opaque strings.
+- Decode validates signature (when enabled), version, entity name, and sort field membership before executing keyset pagination.
+- Cursor values are bound as parameterized query values via Drizzle — never interpolated into SQL.
 
 ### 13.5 Cursor migration runbook (deploy-and-reject)
 
@@ -2009,9 +2030,9 @@ enum ChangeOperation {
 }
 ```
 
-* **`subscribeTo`** filters which operations the client receives. When omitted, all **applicable** operations are delivered.
-* Bulk and single mutations emit the **same event type**.
-* On **`append-only`** entities (§2.3), only **`CREATED`** and **`DELETED`** are emitted — **`UPDATED`** is never published because update mutations do not exist. Clients may still pass `UPDATED` in `subscribeTo`; it simply never matches an event for that entity.
+- **`subscribeTo`** filters which operations the client receives. When omitted, all **applicable** operations are delivered.
+- Bulk and single mutations emit the **same event type**.
+- On **`append-only`** entities (§2.3), only **`CREATED`** and **`DELETED`** are emitted — **`UPDATED`** is never published because update mutations do not exist. Clients may still pass `UPDATED` in `subscribeTo`; it simply never matches an event for that entity.
 
 ---
 
@@ -2026,33 +2047,33 @@ type ItemChangeEvent {
 }
 ```
 
-| Condition | Payload |
-| --------- | ------- |
+| Condition              | Payload                                                   |
+| ---------------------- | --------------------------------------------------------- |
 | Affected IDs **≤ 100** | `{ operation, ids: [...], isTruncated: false, count: N }` |
-| Affected IDs **> 100** | `{ operation, ids: [], isTruncated: true, count: N }` |
+| Affected IDs **> 100** | `{ operation, ids: [], isTruncated: true, count: N }`     |
 
 Clients refetch affected records via `<entity>(id:)` or `<entities>` with an `id in` filter when truncation occurs.
 
 ### 14.3 Delivery guarantees
 
-| Concern | Guarantee |
-| ------- | --------- |
-| **Publish timing** | Events are published **after** the write transaction **commits** — subscribers never observe uncommitted data |
-| **Delivery model** | **Best-effort, at-most-once** — no replay buffer, no gap recovery |
-| **Ordering** | **No cross-client ordering guarantee** — events may arrive out of order relative to other clients |
-| **Multi-instance** | **Redis pubsub required** when running multiple DS instances; still **no durability** — a disconnect means missed events |
+| Concern             | Guarantee                                                                                                                       |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| **Publish timing**  | Events are published **after** the write transaction **commits** — subscribers never observe uncommitted data                   |
+| **Delivery model**  | **Best-effort, at-most-once** — no replay buffer, no gap recovery                                                               |
+| **Ordering**        | **No cross-client ordering guarantee** — events may arrive out of order relative to other clients                               |
+| **Multi-instance**  | **Redis pubsub required** when running multiple DS instances; still **no durability** — a disconnect means missed events        |
 | **Client contract** | Subscriptions are **signals**, not an audit log — clients **refetch** affected records on reconnect or when `isTruncated: true` |
 
 ### 14.4 Event scope
 
-| Rule | Detail |
-| ---- | ------ |
-| **Emitting entity** | Only the **directly mutated PersistedEntity** emits `<entity>Changed` |
-| **No cascade** | FK changes on related entities do **not** emit events on those related entities |
-| **Bulk mutations** | **One `<entity>Changed` event per mutation call** — not one event per row (payload carries all affected IDs up to truncation limit) |
-| **Soft delete** | Emits **`DELETED`** (same as hard delete from the client's perspective) |
-| **Append-only** | Emits **`CREATED`** and **`DELETED`** only — **`UPDATED`** never applies (§14.1) |
-| **Payload** | IDs only — never full entity objects |
+| Rule                | Detail                                                                                                                              |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| **Emitting entity** | Only the **directly mutated PersistedEntity** emits `<entity>Changed`                                                               |
+| **No cascade**      | FK changes on related entities do **not** emit events on those related entities                                                     |
+| **Bulk mutations**  | **One `<entity>Changed` event per mutation call** — not one event per row (payload carries all affected IDs up to truncation limit) |
+| **Soft delete**     | Emits **`DELETED`** (same as hard delete from the client's perspective)                                                             |
+| **Append-only**     | Emits **`CREATED`** and **`DELETED`** only — **`UPDATED`** never applies (§14.1)                                                    |
+| **Payload**         | IDs only — never full entity objects                                                                                                |
 
 ---
 
@@ -2062,12 +2083,14 @@ Clients refetch affected records via `<entity>(id:)` or `<entities>` with an `id
 
 Codegen emits `<Entity>NumericFields` from Drizzle numeric scalars suitable for **`sum`** / **`avg`** ([PG → DAL mapping](dal-pg-type-mapping.md#pg-dal-type-mapping)):
 
-| Included PG types | GraphQL scalar | Aggregate result type in `NumericResult` |
-| ----------------- | -------------- | ------------------------------------------ |
-| `smallint`, `integer` | `Int` | `Float` (SQL aggregate returns float/double) |
-| `bigint` | `BigInt` | `Decimal` (string on wire — preserves large sums) |
-| `numeric`, `decimal` | `Decimal` | `Decimal` |
-| `real`, `double precision` | `Float` | `Float` |
+| Included PG types    | GraphQL scalar | Aggregate result type in `NumericResult`          |
+| -------------------- | -------------- | ------------------------------------------------- |
+| `smallint`           | `SmallInt`     | `Double` (SQL aggregate returns float/double)     |
+| `integer`            | `Int`          | `Double` (SQL aggregate returns float/double)     |
+| `bigint`             | `BigInt`       | `Decimal` (string on wire — preserves large sums) |
+| `numeric`, `decimal` | `Decimal`      | `Decimal`                                         |
+| `real`               | `Float`        | `Float`                                           |
+| `double precision`   | `Double`       | `Double`                                          |
 
 ```graphql
 input <Entity>NumericFields {
@@ -2086,14 +2109,14 @@ Only numeric columns inferred from Drizzle appear in this type.
 
 Codegen emits `<Entity>ComparableFields` from Drizzle scalars where **min/max are meaningful** ([PG → DAL mapping](dal-pg-type-mapping.md#pg-dal-type-mapping)):
 
-| Included | Excluded |
-| -------- | -------- |
-| **Int**, **BigInt**, **Decimal**, **Float** (all numeric PG types) | **Boolean** |
-| **DateTime** (`timestamptz`) | **Enum** |
-| **TimeTz** (`timetz`) | Associations |
-| **Date** (`date`) | |
-| **IntervalMs** (`interval`) | |
-| **String**, **ID** (`uuid` columns) | Unsupported types (JSON, binary, arrays, range, etc.) |
+| Included                                                           | Excluded                                              |
+| ------------------------------------------------------------------ | ----------------------------------------------------- |
+| **Int**, **BigInt**, **Decimal**, **Float** (all numeric PG types) | **Boolean**                                           |
+| **DateTime** (`timestamptz`)                                       | **Enum**                                              |
+| **TimeTz** (`timetz`)                                              | Associations                                          |
+| **Date** (`date`)                                                  |                                                       |
+| **IntervalMs** (`interval`)                                        |                                                       |
+| **String**, **ID** (`uuid` columns)                                | Unsupported types (JSON, binary, arrays, range, etc.) |
 
 **Nullability does not exclude a field** — nullable columns may appear in ComparableFields.
 
@@ -2170,11 +2193,11 @@ Result field types match the underlying GraphQL scalar per [PG → DAL mapping](
 
 ### 15.5 Nullable semantics (SQL-aligned)
 
-| Aggregate | Empty set (zero matching rows) | All-null group |
-| --------- | ------------------------------ | -------------- |
-| **`count`** (when requested) | **`0`** | **`0`** |
-| **`sum`** / **`avg`** | **`null`** (top-level and per-field) | **`null`** |
-| **`min`** / **`max`** | **`null`** (top-level and per-field) | **`null`** |
+| Aggregate                    | Empty set (zero matching rows)       | All-null group |
+| ---------------------------- | ------------------------------------ | -------------- |
+| **`count`** (when requested) | **`0`**                              | **`0`**        |
+| **`sum`** / **`avg`**        | **`null`** (top-level and per-field) | **`null`**     |
+| **`min`** / **`max`**        | **`null`** (top-level and per-field) | **`null`**     |
 
 Unrequested top-level keys (`sum`, `avg`, `min`, `max`, `count`) are **`null`** in the result — not omitted.
 
@@ -2212,20 +2235,20 @@ ordersCount(
 
 **`<entities>Count` is mandatory sugar** for `<entity>Aggregate(input: { count: true })`:
 
-| Concern | Rule |
-| ------- | ---- |
-| **Semantics** | Identical filter and `includeDeleted` behavior; same **QueryEngine** path |
-| **`<entities>Count` return type** | **`Int!`** — zero matching rows → **`0`** |
+| Concern                                   | Rule                                                                                                                      |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| **Semantics**                             | Identical filter and `includeDeleted` behavior; same **QueryEngine** path                                                 |
+| **`<entities>Count` return type**         | **`Int!`** — zero matching rows → **`0`**                                                                                 |
 | **`<entity>Aggregate.count` return type** | Nullable **`Int`** in the composite result per §15.5 (requested `count` on empty set → **`0`**; unrequested → **`null`**) |
 
 ---
 
 ### 15.7 Rules
 
-* **`sum`** and **`avg`** operate only on numeric fields (via `<Entity>NumericFields`).
-* **`min`** and **`max`** operate on comparable fields (via `<Entity>ComparableFields`).
-* Fields are explicitly selected via boolean flags — no arbitrary column names.
-* Aggregation reuses the same FilterAST → QueryTranslator pipeline as list queries.
+- **`sum`** and **`avg`** operate only on numeric fields (via `<Entity>NumericFields`).
+- **`min`** and **`max`** operate on comparable fields (via `<Entity>ComparableFields`).
+- Fields are explicitly selected via boolean flags — no arbitrary column names.
+- Aggregation reuses the same FilterAST → QueryTranslator pipeline as list queries.
 
 ---
 
@@ -2233,23 +2256,23 @@ ordersCount(
 
 The **Query Translation Layer** replaces direct SQL generation. Responsibilities:
 
-| Concern | Translation |
-| ------- | ----------- |
-| Filter | FilterAST → Drizzle `.where()` |
-| Sort | `<Entity>SortInput` → Drizzle `.orderBy()` |
-| Cursor | Opaque cursor → keyset (seek) pagination |
-| ColumnProjection | GraphQL selection set → limited column SELECT (§17.2) |
-| Aggregation | AggregateInput → Drizzle aggregate functions |
-| Associations | AssociationFilter → Drizzle joins / subqueries / EXISTS on join tables |
+| Concern          | Translation                                                            |
+| ---------------- | ---------------------------------------------------------------------- |
+| Filter           | FilterAST → Drizzle `.where()`                                         |
+| Sort             | `<Entity>SortInput` → Drizzle `.orderBy()`                             |
+| Cursor           | Opaque cursor → keyset (seek) pagination                               |
+| ColumnProjection | GraphQL selection set → limited column SELECT (§17.2)                  |
+| Aggregation      | AggregateInput → Drizzle aggregate functions                           |
+| Associations     | AssociationFilter → Drizzle joins / subqueries / EXISTS on join tables |
 
 ### Shared pipeline
 
 The same FilterAST and QueryTranslator power:
 
-* `<entities>` / `<entity>Connection`
-* `<entities>Count`
-* `<entity>Aggregate`
-* Filter-based bulk mutations (match count + update/delete)
+- `<entities>` / `<entity>Connection`
+- `<entities>Count`
+- `<entity>Aggregate`
+- Filter-based bulk mutations (match count + update/delete)
 
 There is **no raw SQL string API** exposed to resolvers or clients. Drizzle generates parameterized SQL at execution time.
 
@@ -2257,28 +2280,28 @@ There is **no raw SQL string API** exposed to resolvers or clients. Drizzle gene
 
 ## 17. Performance Requirements
 
-* **Keyset pagination only** — no OFFSET-based paging
-* **Indexed sort fields** — Drizzle-declared indexes; codegen validates sort field index coverage at codegen time (§17.1)
-* **Lazy aggregation** — aggregate functions run only when requested in `AggregateInput`
-* **ColumnProjection** — GraphQL field selection limits scalar columns fetched on list/get (§17.2)
-* **Filter complexity caps** — configurable `filterMaxDepth` / `filterMaxNodes` in `dal/dal.config.yaml` (optional env overrides — §10.7); defaults prevent runaway parse trees at filter parse time
+- **Keyset pagination only** — no OFFSET-based paging
+- **Indexed sort fields** — Drizzle-declared indexes; codegen validates sort field index coverage at codegen time (§17.1)
+- **Lazy aggregation** — aggregate functions run only when requested in `AggregateInput`
+- **ColumnProjection** — GraphQL field selection limits scalar columns fetched on list/get (§17.2)
+- **Filter complexity caps** — configurable `filterMaxDepth` / `filterMaxNodes` in `dal/dal.config.yaml` (optional env overrides — §10.7); defaults prevent runaway parse trees at filter parse time
 
 ### 17.1 Index enforcement (codegen-time)
 
 Index validation runs **at codegen time only** — not at query runtime. Indexes are read from Drizzle schema definitions.
 
-| Mode | Behavior |
-| ---- | -------- |
-| **Default** | **Warn** when the primary sort column (first client-provided sort key, or `id` when no sort is given) lacks a covering index in Drizzle |
+| Mode                                        | Behavior                                                                                                                                                                         |
+| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Default**                                 | **Warn** when the primary sort column (first client-provided sort key, or `id` when no sort is given) lacks a covering index in Drizzle                                          |
 | **`strict: true`** in `dal/dal.config.yaml` | **Fail codegen** (non-zero exit) if any whitelisted sort field (**except `id`**) lacks a covering index declared in Drizzle; also fails on missing table/column comments (§2.11) |
 
 **Multi-sort rules:** when the client provides multiple sort keys, a composite index must cover the sort **prefix through the last client-provided key**. The implicit **`id` tie-breaker** is assumed indexed (primary key) and is not validated separately.
 
 **Filter-field index enforcement (v2 — implemented in [DAL Phase 4](dal-phase4.md); codegen / lint gate only, no runtime enforcement):**
 
-| Mode | Behavior |
-| ---- | -------- |
-| **Default** | **Warn** when a filterable scalar field lacks a covering index declared in Drizzle |
+| Mode               | Behavior                                                                                                                       |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| **Default**        | **Warn** when a filterable scalar field lacks a covering index declared in Drizzle                                             |
 | **`strict: true`** | Extends to filter fields — **fail codegen** when any filterable scalar (and association filter columns) lacks a covering index |
 
 Association filters: indexes must cover **join-table owner columns** (many-to-many) and **M:1 FK columns** used in association filter translation. This is a codegen-time gate only — queries are not blocked at runtime in v2.
@@ -2287,11 +2310,11 @@ Association filters: indexes must cover **join-table owner columns** (many-to-ma
 
 **QueryEngine** derives a **ColumnProjection** from the GraphQL selection set for each entity fetch. This limits SQL column reads without affecting association navigation.
 
-| Category | Columns | Rule |
-| -------- | ------- | ---- |
-| **Always fetched** | `id`; soft-delete columns (`deletedAt`, `deletedBy`) when entity uses soft delete | Included in every SELECT regardless of client selection |
-| **Fetched when selected** | Business scalars; audit columns (`createdAt`, `updatedAt`, `createdBy`, `updatedBy`) | Included only when the corresponding GraphQL field appears in the selection set |
-| **Never via projection** | **AssociationField** navigation fields | Resolved separately via per-request DataLoader (§6.6) — not part of the root entity SELECT |
+| Category                  | Columns                                                                              | Rule                                                                                       |
+| ------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------ |
+| **Always fetched**        | `id`; soft-delete columns (`deletedAt`, `deletedBy`) when entity uses soft delete    | Included in every SELECT regardless of client selection                                    |
+| **Fetched when selected** | Business scalars; audit columns (`createdAt`, `updatedAt`, `createdBy`, `updatedBy`) | Included only when the corresponding GraphQL field appears in the selection set            |
+| **Never via projection**  | **AssociationField** navigation fields                                               | Resolved separately via per-request DataLoader (§6.6) — not part of the root entity SELECT |
 
 **Applies to:** `<entities>`, `<entity>Connection` (node fields), and `<entity>(id:)`.
 
@@ -2305,24 +2328,24 @@ FK scalar columns are **not exposed** on GraphQL output types (§2.7) — Column
 
 ## 18. Security Requirements
 
-* **Strong typing** — no JSON filter blobs or untyped inputs
-* **Field whitelisting** — filter, sort, and aggregate fields are enum-constrained from inferred Drizzle columns
-* **Parameterized queries** — all values bound via Drizzle; no string interpolation
-* **Actor trust boundary** — `createdBy`, `updatedBy`, `deletedBy` never from client input
-* **Bulk safety** — empty-filter guard, matched-row cap, and `confirmDeleteAll` for filter-based ops (§9.8)
-* **Optional cursor signing** — HMAC-SHA256 when `DAL_CURSOR_SECRET` is set; invalid signature → `BAD_USER_INPUT` (§13.3)
-* **Filter complexity limits** — configurable `filterMaxDepth` / `filterMaxNodes` (config file + optional env overrides) enforced at parse time before query translation; independent of codegen **`strict`** mode (§10.7)
-* **Mutation error messages** — `MutationUserError.message` is always safe for clients; raw SQL and driver internals never exposed (Appendix B)
+- **Strong typing** — no JSON filter blobs or untyped inputs
+- **Field whitelisting** — filter, sort, and aggregate fields are enum-constrained from inferred Drizzle columns
+- **Parameterized queries** — all values bound via Drizzle; no string interpolation
+- **Actor trust boundary** — `createdBy`, `updatedBy`, `deletedBy` never from client input
+- **Bulk safety** — empty-filter guard, matched-row cap, and `confirmDeleteAll` for filter-based ops (§9.8)
+- **Optional cursor signing** — HMAC-SHA256 when `DAL_CURSOR_SECRET` is set; invalid signature → `BAD_USER_INPUT` (§13.3)
+- **Filter complexity limits** — configurable `filterMaxDepth` / `filterMaxNodes` (config file + optional env overrides) enforced at parse time before query translation; independent of codegen **`strict`** mode (§10.7)
+- **Mutation error messages** — `MutationUserError.message` is always safe for clients; raw SQL and driver internals never exposed (Appendix B)
 
 ---
 
 ## 19. Extensibility
 
-* **New entities** — add a Drizzle table with UUID `id`; rerun codegen; no DAL redesign
-* **Custom repository methods** — override generated defaults via the subclass pattern (below)
-* **Filter and aggregate extensions** — new scalar types or operators added to dal-core + codegen templates
-* **Actor resolution** — plug in via Yoga `resolveActor(context)` without changing generated resolvers
-* **Drizzle dialects** — new SQL databases supported when Drizzle adds dialect support; QueryTranslator adapts to dialect-specific operators only where Drizzle exposes them
+- **New entities** — add a Drizzle table with UUID `id`; rerun codegen; no DAL redesign
+- **Custom repository methods** — override generated defaults via the subclass pattern (below)
+- **Filter and aggregate extensions** — new scalar types or operators added to dal-core + codegen templates
+- **Actor resolution** — plug in via Yoga `resolveActor(context)` without changing generated resolvers
+- **Drizzle dialects** — new SQL databases supported when Drizzle adds dialect support; QueryTranslator adapts to dialect-specific operators only where Drizzle exposes them
 
 Extensibility is scoped to the **Drizzle + GraphQL Yoga + SQL** stack documented in this spec. Multi-backend translator plugins for non-SQL stores are out of scope.
 
@@ -2330,7 +2353,7 @@ Extensibility is scoped to the **Drizzle + GraphQL Yoga + SQL** stack documented
 
 Codegen emits a three-layer repository hierarchy per entity:
 
-```
+```text
 BaseOrderRepository          ← dal-core: sealed pipeline (FilterAST, QueryTranslator, cursors, bulk guards, actor columns)
   └── GeneratedOrderRepository   ← codegen: default CRUD + list + bulk implementations
         └── OrderRepository      ← consumer: optional overrides
@@ -2338,23 +2361,23 @@ BaseOrderRepository          ← dal-core: sealed pipeline (FilterAST, QueryTran
 
 **Overridable methods** (each generated stub calls `super.*` by default):
 
-* `create`, `update`, `delete`, `findById` — **`update` and bulk update methods are not generated** for **`append-only`** entities (§7.3)
-* `list`, `listConnection`, `count`, `aggregate`
-* Bulk variants: `bulkCreate`, `bulkUpdate`, `bulkDelete`, `bulkUpdateByFilter`, `bulkDeleteByFilter` — update variants omitted for **`append-only`**
+- `create`, `update`, `delete`, `findById` — **`update` and bulk update methods are not generated** for **`append-only`** entities (§7.3)
+- `list`, `listConnection`, `count`, `aggregate`
+- Bulk variants: `bulkCreate`, `bulkUpdate`, `bulkDelete`, `bulkUpdateByFilter`, `bulkDeleteByFilter` — update variants omitted for **`append-only`**
 
 **Sealed (non-overridable)** — implemented in `Base<Entity>Repository` or private helpers; consumers must not bypass:
 
-* FilterAST parsing and validation
-* QueryTranslator wiring and SQL generation
-* Cursor encode/decode and codec version checks (§13)
-* Filter-based bulk safety guards (§9.8)
-* Actor column population (§5)
+- FilterAST parsing and validation
+- QueryTranslator wiring and SQL generation
+- Cursor encode/decode and codec version checks (§13)
+- Filter-based bulk safety guards (§9.8)
+- Actor column population (§5)
 
 **Canonical override example:**
 
 ```typescript
 // src/repositories/order.repository.ts — consumer-owned
-import { GeneratedOrderRepository } from '../generated/dal/repositories/generated-order.repository.js';
+import { GeneratedOrderRepository } from "../generated/dal/repositories/generated-order.repository.js";
 
 export class OrderRepository extends GeneratedOrderRepository {
   override async create(input: OrderCreateInput, ctx: RepositoryContext) {
@@ -2363,10 +2386,14 @@ export class OrderRepository extends GeneratedOrderRepository {
     return super.create(input, ctx);
   }
 
-  override async update(id: string, input: OrderUpdateInput, ctx: RepositoryContext) {
+  override async update(
+    id: string,
+    input: OrderUpdateInput,
+    ctx: RepositoryContext,
+  ) {
     const existing = await super.findById(id, ctx);
-    if (existing?.status === 'ARCHIVED') {
-      throw new ValidationError('Cannot update archived order');
+    if (existing?.status === "ARCHIVED") {
+      throw new ValidationError("Cannot update archived order");
     }
     return super.update(id, input, ctx);
   }
@@ -2381,30 +2408,30 @@ Resolvers and GraphQL Yoga wiring inject the consumer's `OrderRepository` instan
 
 This system provides:
 
-* **GraphQL-only application access** — the sole application-facing data surface; SDK and ds-cli are GraphQL client conveniences for ops/automation (§2.12)
-* A **Drizzle-first, fully typed GraphQL query engine**
-* Zero SQL or repository exposure to application clients; resolvers use repositories server-internally only (§6.2)
-* High-performance keyset pagination with deterministic sort
-* Strongly typed aggregation
-* Unified `<entity>Changed` subscription with safe ID payloads and post-commit, best-effort delivery
-* GraphQL **`ID`** for all `uuid` columns (PKs, FKs, filters, cursors, subscription payloads) — RFC 4122 validated at repository layer ([UUID → ID tradeoffs](dal-pg-type-mapping.md#uuid--id-tradeoffs))
-* Custom **`DateTime`**, **`Date`**, **`TimeTz`**, **`BigInt`**, **`Decimal`**, and **`IntervalMs`** scalars with strict parse/serialize rules ([custom DAL scalars registry](dal-pg-type-mapping.md#custom-dal-scalars-registry), §3.1); opt-in scalars for rare network/geometric/PostGIS types
-* Mandatory per-request **DataLoader** for **all** association navigation fields
-* **ColumnProjection** field-level selection on list/get queries
-* Configurable bulk atomicity with filter-based safety guards
-* Inferred audit profiles (**`full`**, **`append-only`**) — required on every entity; invalid combinations fail codegen — and soft delete from Drizzle column presence
-* A reusable **dal-core + codegen-cli** architecture for Drizzle-backed services
-* Gitignored **`src/generated/generated-schema.ts`** + **`src/generated/dal/`** output via `pnpm dal:codegen` (idempotent regen before dev/build) — including GraphQL SDL with **`"""…"""` descriptions** auto-generated from Drizzle DB object comments (§2.11)
-* Mandatory **`<entities>Count`** sugar alongside strongly typed **`<entity>Aggregate`**
-* Tamper-evident cursor signing (HMAC-SHA256) when `DAL_CURSOR_SECRET` is configured
-* **All scalar columns** filterable and sortable by default
-* **All Drizzle relations** exposed on GraphQL with navigation fields and DataLoaders
-* v1 field validation: nullability, enum membership, custom scalar parse (`DateTime`, `Date`, `TimeTz`, `BigInt`, `Decimal`, `IntervalMs`), `ID` validation for uuid columns — no length/range/regex constraints (§2.9)
-* **Repository subclass override** contract with sealed pipeline internals (§19.1)
-* **`READ COMMITTED`** transactions for atomic bulk and filter-based ops with row-level locks (§9.9)
-* **`MutationUserError` code taxonomy** with deterministic driver mapping and two-tier delivery (Appendix B, §9.0)
-* **Deploy-and-reject** cursor migration runbook — no dual-decode window (§13.5)
-* Full entity rows on bulk create/update success paths — no ColumnProjection on mutations (§9.7, §17.2)
+- **GraphQL-only application access** — the sole application-facing data surface; SDK and ds-cli are GraphQL client conveniences for ops/automation (§2.12)
+- A **Drizzle-first, fully typed GraphQL query engine**
+- Zero SQL or repository exposure to application clients; resolvers use repositories server-internally only (§6.2)
+- High-performance keyset pagination with deterministic sort
+- Strongly typed aggregation
+- Unified `<entity>Changed` subscription with safe ID payloads and post-commit, best-effort delivery
+- GraphQL **`ID`** for all `uuid` columns (PKs, FKs, filters, cursors, subscription payloads) — RFC 4122 validated at repository layer ([UUID → ID tradeoffs](dal-pg-type-mapping.md#uuid--id-tradeoffs))
+- Custom **`DateTime`**, **`Date`**, **`TimeTz`**, **`BigInt`**, **`Decimal`**, and **`IntervalMs`** scalars with strict parse/serialize rules ([custom DAL scalars registry](dal-pg-type-mapping.md#custom-dal-scalars-registry), §3.1); PG-accurate and network opt-in scalars when matching columns exist (geometric / PostGIS / **`macaddr8`** banned v1)
+- Mandatory per-request **DataLoader** for **all** association navigation fields
+- **ColumnProjection** field-level selection on list/get queries
+- Configurable bulk atomicity with filter-based safety guards
+- Inferred audit profiles (**`full`**, **`append-only`**) — required on every entity; invalid combinations fail codegen — and soft delete from Drizzle column presence
+- A reusable **dal-core + codegen-cli** architecture for Drizzle-backed services
+- Gitignored **`src/generated/generated-schema.ts`** + **`src/generated/dal/`** output via `pnpm dal:codegen` (idempotent regen before dev/build) — including GraphQL SDL with **`"""…"""` descriptions** auto-generated from Drizzle DB object comments (§2.11)
+- Mandatory **`<entities>Count`** sugar alongside strongly typed **`<entity>Aggregate`**
+- Tamper-evident cursor signing (HMAC-SHA256) when `DAL_CURSOR_SECRET` is configured
+- **All scalar columns** filterable and sortable by default
+- **All Drizzle relations** exposed on GraphQL with navigation fields and DataLoaders
+- v1 field validation: nullability, enum membership, custom scalar parse per [registry](dal-pg-type-mapping.md#custom-dal-scalars-registry), `ID` validation for uuid columns — no length/range/regex constraints at GraphQL layer (§2.9); Phase 5+ Drizzle check hints via generated Zod where inferred
+- **Repository subclass override** contract with sealed pipeline internals (§19.1)
+- **`READ COMMITTED`** transactions for atomic bulk and filter-based ops with row-level locks (§9.9)
+- **`MutationUserError` code taxonomy** with deterministic driver mapping and two-tier delivery (Appendix B, §9.0)
+- **Deploy-and-reject** cursor migration runbook — no dual-decode window (§13.5)
+- Full entity rows on bulk create/update success paths — no ColumnProjection on mutations (§9.7, §17.2)
 
 ---
 
@@ -2412,13 +2439,13 @@ This system provides:
 
 The auto-generated **`ds-cli`** is an **ops/automation GraphQL client** — not an alternate data-access layer. Every command executes a GraphQL operation (query, mutation, or subscription) against the same HTTP/WS endpoint as application clients (§2.12). Production UI and service code should call GraphQL directly; ds-cli is for scripts, CI, and LLM automation workflows.
 
-| Concern | Convention |
-| ------- | ---------- |
-| **Purpose** | Ops, automation, and scripting — **not** primary application runtime data access |
-| **Transport** | GraphQL HTTP (and WS for subscriptions) — same API surface as Apollo/urql clients |
-| **Nested / complex inputs** | **`--input-file <path>`** (JSON file) or **`--input-json '<json>'`** |
-| **Union or complex outputs** | Raw JSON stdout — no automatic field selection |
-| **Complex filters** | LLM/automation clients may prefer the **TypedDocumentNode SDK** (`@corpdk/ds-sdk` pattern) over shell escaping; both SDK and ds-cli remain GraphQL clients |
+| Concern                      | Convention                                                                                                                                                 |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Purpose**                  | Ops, automation, and scripting — **not** primary application runtime data access                                                                           |
+| **Transport**                | GraphQL HTTP (and WS for subscriptions) — same API surface as Apollo/urql clients                                                                          |
+| **Nested / complex inputs**  | **`--input-file <path>`** (JSON file) or **`--input-json '<json>'`**                                                                                       |
+| **Union or complex outputs** | Raw JSON stdout — no automatic field selection                                                                                                             |
+| **Complex filters**          | LLM/automation clients may prefer the **TypedDocumentNode SDK** (`@corpdk/ds-sdk` pattern) over shell escaping; both SDK and ds-cli remain GraphQL clients |
 
 ds-cli does not attempt to flatten recursive filter inputs into flat CLI flags. For bulk mutations returning per-entity unions (§9), CLI output is the raw GraphQL response JSON.
 
@@ -2428,15 +2455,15 @@ ds-cli does not attempt to flatten recursive filter inputs into flat CLI flags. 
 
 `--input-json` passes values through in **wire format** — normalization happens at **GraphQL scalar parse** (§3.1), not in the CLI layer.
 
-| Scalar | Wire format in JSON | Not accepted in v1 |
-| ------ | ------------------- | -------------------- |
-| **ID** (uuid columns) | Lowercase RFC 4122 string | Uppercase variants, brace-wrapped forms, non-string types |
-| **DateTime** | ISO-8601 UTC with milliseconds | Unix timestamps (numeric or string), timezone-less local strings without offset |
-| **TimeTz** | ISO-8601 time with offset — `"13:45:00.000+05:30"` or `"13:45:00Z"` | Date components, timezone-less local time without offset |
-| **Date** | ISO-8601 date — `"2026-09-10"` | Datetime strings with time component, numeric epoch |
-| **BigInt** | Decimal integer string — `"9223372036854775807"` | JSON numbers (must be string), scientific notation |
-| **Decimal** | Decimal string — `"1234.56"` | JSON numbers (must be string), scientific notation |
-| **IntervalMs** | Signed ms string — `"3600000"` | JSON numbers (must be string), fractional values |
+| Scalar                | Wire format in JSON                                                                                  | Not accepted in v1                                                              |
+| --------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| **ID** (uuid columns) | Lowercase RFC 4122 string                                                                            | Uppercase variants, brace-wrapped forms, non-string types                       |
+| **DateTime**          | ISO-8601 UTC with milliseconds                                                                       | Unix timestamps (numeric or string), timezone-less local strings without offset |
+| **TimeTz**            | ISO-8601 time with offset — `"13:45:00.000+05:30"` or `"13:45:00Z"`                                  | Date components, timezone-less local time without offset                        |
+| **Date**              | ISO-8601 date — `"2026-09-10"`                                                                       | Datetime strings with time component, numeric epoch                             |
+| **BigInt**            | Decimal integer string — `"9223372036854775807"` (JSON **safe integers** also accepted in variables) | Out-of-range values, unsafe JSON integers, scientific notation                  |
+| **Decimal**           | Decimal string — `"1234.56"`                                                                         | JSON numbers (must be string), scientific notation                              |
+| **IntervalMs**        | Signed ms string — `"3600000"` (JSON **safe integers** also accepted in variables)                   | Fractional values, unsafe JSON integers, non-integer strings                    |
 
 **Examples:**
 
@@ -2471,23 +2498,23 @@ See **§9.0** for the two-tier delivery model (top-level GraphQL `errors` vs pay
 
 ### Canonical codes (v1)
 
-| Code | When used | Typical delivery |
-| ---- | --------- | ---------------- |
-| **`NOT_FOUND`** | Target row does not exist (or soft-deleted without `includeDeleted`) | Payload `userErrors` |
-| **`VALIDATION_FAILED`** | Input or business-rule validation rejected the row; includes `isNull` combined with other operators | Payload `userErrors` with `field` path |
-| **`UNIQUE_VIOLATION`** | Unique index or constraint conflict on insert/update | Payload `userErrors` |
-| **`FK_VIOLATION`** | Foreign key constraint violation | Payload `userErrors` |
-| **`CONSTRAINT_VIOLATION`** | Other check/constraint failures not covered above | Payload `userErrors` |
-| **`UNKNOWN`** | Unmapped but **recoverable** domain-adjacent failure mapped to a safe message | Payload `userErrors` — never raw SQL |
+| Code                       | When used                                                                                           | Typical delivery                       |
+| -------------------------- | --------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| **`NOT_FOUND`**            | Target row does not exist (or soft-deleted without `includeDeleted`)                                | Payload `userErrors`                   |
+| **`VALIDATION_FAILED`**    | Input or business-rule validation rejected the row; includes `isNull` combined with other operators | Payload `userErrors` with `field` path |
+| **`UNIQUE_VIOLATION`**     | Unique index or constraint conflict on insert/update                                                | Payload `userErrors`                   |
+| **`FK_VIOLATION`**         | Foreign key constraint violation                                                                    | Payload `userErrors`                   |
+| **`CONSTRAINT_VIOLATION`** | Other check/constraint failures not covered above                                                   | Payload `userErrors`                   |
+| **`UNKNOWN`**              | Unmapped but **recoverable** domain-adjacent failure mapped to a safe message                       | Payload `userErrors` — never raw SQL   |
 
 **Not payload codes** — these surface as **top-level GraphQL `errors`**: connection timeout, pool exhaustion, unhandled driver exceptions, auth failures, bulk guard breaches (cap exceeded, empty filter without confirm).
 
 ### Mapping rules
 
-* Drizzle/driver errors are mapped **deterministically** to the codes above based on error class / SQLSTATE (dialect-specific mappers in dal-core).
-* **`message`** is always a **safe, client-facing string** — raw SQL, table names, and driver internals are **never** exposed in `userErrors`.
-* **`field`** — GraphQL input path segments for field-level validation; **`null`** when not field-scoped.
-* **`id`** — set to the affected row's **`ID`** (uuid PK) when the error maps to a specific entry in an ID-list bulk operation; **`null`** for single-entity and non-row-scoped errors.
+- Drizzle/driver errors are mapped **deterministically** to the codes above based on error class / SQLSTATE (dialect-specific mappers in dal-core).
+- **`message`** is always a **safe, client-facing string** — raw SQL, table names, and driver internals are **never** exposed in `userErrors`.
+- **`field`** — GraphQL input path segments for field-level validation; **`null`** when not field-scoped.
+- **`id`** — set to the affected row's **`ID`** (uuid PK) when the error maps to a specific entry in an ID-list bulk operation; **`null`** for single-entity and non-row-scoped errors.
 
 Filter-based bulk mutations that fail entirely (cap exceeded, empty filter without confirm) return **top-level GraphQL errors** — not per-row `MutationUserError` entries.
 

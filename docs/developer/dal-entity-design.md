@@ -248,7 +248,8 @@ Supported and unsupported PostgreSQL column types for entity tables. Entity desi
 
 | PostgreSQL type | Drizzle builder | Typical use | Index for sort/filter |
 | --------------- | --------------- | ----------- | --------------------- |
-| `text`, `varchar`, `char`, `citext` | `text()`, `varchar()`, `char()` | Names, descriptions, actor IDs | Yes — when used in WHERE/ORDER BY |
+| `text`, `varchar`, `char` | `text()`, `varchar()`, `char()` | Names, descriptions, actor IDs | Yes — when used in WHERE/ORDER BY |
+| `citext` | Drizzle `customType` (requires PG `citext` extension) | Case-insensitive strings — GraphQL **`InsensitiveString`** | Yes — when used in WHERE/ORDER BY |
 | `smallint`, `integer` | `smallint()`, `integer()` | Counts, ordinals, amounts in cents | Yes |
 | `bigint` | `bigint()` | Large integers, counters exceeding 32-bit | Yes |
 | `numeric`, `decimal` | `numeric()`, `decimal()` | Monetary amounts, rates, fixed-precision decimals | Yes |
@@ -257,7 +258,7 @@ Supported and unsupported PostgreSQL column types for entity tables. Entity desi
 | `date` | `date()` | Calendar dates without time (birthdays, effective dates) | Yes — when used in sort/filter |
 | `timestamp with time zone` (`timestamptz`) | `timestamp(..., { withTimezone: true })` | All instant timestamps (audit, soft-delete, business events) — **only** instant timestamp type allowed | Yes — when used in sort/filter |
 | `time with time zone` (`timetz`) | `time(..., { withTimezone: true })` | Time-of-day with offset (business hours, daily cutoff) — **not** for instants | Yes — when used in sort/filter |
-| `interval` | `interval()` | Durations (rare) — stored as PG `interval`; application code converts to total milliseconds when needed | Optional |
+| `interval` | `interval()` | Durations (rare) — PG `interval`; GraphQL **`IntervalMs`** wire (ms); repositories convert ↔ PG per [type reference](dal-pg-type-mapping.md) | Optional |
 | `bigint` (duration) | `bigint()` | Durations stored as **milliseconds** (preferred over `interval` for new schemas) | Optional |
 | `uuid` | `uuid()` | Primary keys, foreign keys — opaque identifiers | Yes — FK columns always indexed |
 | `pgEnum(...)` | `pgEnum()` | Constrained string values | Yes — when filtered or sorted |
@@ -279,13 +280,13 @@ Do **not** use negated boolean names (`is_not_archived`, `has_no_lines`) — exp
 
 **Time-of-day:** use **`timetz`** (`time(..., { withTimezone: true })`) when a column stores clock time with offset — not for audit or event instants.
 
-**Durations:** prefer a **`bigint`** column storing **total milliseconds** for new schemas. PostgreSQL **`interval`** is supported when present — application code converts between PG `interval` and total milliseconds on read/write. Do **not** store durations as `float` or `numeric`.
+**Durations:** prefer a **`bigint`** column storing **total milliseconds** for new schemas. PostgreSQL **`interval`** is supported when present — generated repositories convert PG `interval` ↔ **`IntervalMs`** ms wire via `@corpdk/dal-core` ([type reference](dal-pg-type-mapping.md)). Do **not** store durations as `float` or `numeric`.
 
 **Money:** PostgreSQL **`money`** is **unsupported** — entity validation **fails**. Never use `money()`. Store monetary amounts as **`integer` cents** (whole amounts) or **`numeric`/`decimal`** with explicit scale.
 
-**Case-insensitive text:** `citext` (requires PostgreSQL `citext` extension) is supported — same semantics as `text` for storage; case-insensitive matching is a query concern.
+**Case-insensitive text:** `citext` (requires PostgreSQL `citext` extension) maps to GraphQL **`InsensitiveString`** and **`InsensitiveStringFilter`** (no `isCaseInsensitive` flag) — see [DAL PostgreSQL type reference](dal-pg-type-mapping.md).
 
-**Specialized types:** network (`inet`, `cidr`, `macaddr`, `macaddr8`), geometric (`point`, `line`, `lseg`, `box`, `path`, `polygon`, `circle`), and PostGIS (`geometry`, `geography`) columns are supported but rare — see [Specialized types (rare)](#specialized-types-rare).
+**Specialized types:** network (`inet`, `cidr`, `macaddr`) use opt-in custom scalars when declared via Drizzle `customType`. **`macaddr8`**, all native **geometric** types, and **PostGIS** (`geometry`, `geography`) are **not supported v1** — codegen and `entity:lint` fail. See [Specialized types (rare)](#specialized-types-rare) and [dal-pg-type-mapping.md](dal-pg-type-mapping.md).
 
 ### Unsupported column types
 
@@ -320,13 +321,13 @@ Document open-bound semantics in column comments (e.g. `NULL` upper bound = unbo
 
 ### Specialized types (rare)
 
-Network, geometric, and PostGIS column types are **supported but rare** — use only when the domain requires them. They are not in default entity templates:
+**Network** column types are **supported but rare** — use only when the domain requires them. They are not in default entity templates:
 
 | Category | PostgreSQL types | Drizzle builder | Notes |
 | -------- | ---------------- | --------------- | ----- |
-| **Network** | `inet`, `cidr`, `macaddr`, `macaddr8` | custom / extension | IP and MAC address storage |
-| **Geometric** | `point`, `line`, `lseg`, `box`, `path`, `polygon`, `circle` | custom | Native PostgreSQL geometry types |
-| **PostGIS** | `geometry`, `geography` | PostGIS extension | Requires PostGIS extension |
+| **Network** | `inet`, `cidr`, `macaddr` | custom / extension | GraphQL scalars **`IP`**, **`CIDR`**, **`MAC`** — see [dal-pg-type-mapping.md](dal-pg-type-mapping.md) |
+
+**Not supported v1:** **`macaddr8`**, all native **geometric** types, and **PostGIS** (`geometry`, `geography`) — entity validation and codegen fail.
 
 ### UUID keys
 

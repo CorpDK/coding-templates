@@ -26,6 +26,11 @@ function sqlText(fragment: SQL | undefined): string {
   return dialect.sqlToQuery(fragment).sql;
 }
 
+function sqlQuery(fragment: SQL | undefined): { sql: string; params: unknown[] } {
+  if (!fragment) return { sql: "", params: [] };
+  return dialect.sqlToQuery(fragment);
+}
+
 const table = pgTable("widgets", {
   id: uuid("id").primaryKey(),
   name: text("name").notNull(),
@@ -85,6 +90,11 @@ describe("buildIdFilter and buildEnumFilter", () => {
     );
     expect(sqlText(buildEnumFilter(table.name, { in: ["DRAFT", "ACTIVE"] }))).toContain("in");
   });
+
+  it("compiles enum isNull for nullable enum columns", () => {
+    expect(sqlText(buildEnumFilter(table.name, { isNull: true }))).toContain("is null");
+    expect(sqlText(buildEnumFilter(table.name, { isNull: false }))).toContain("is not null");
+  });
 });
 
 describe("numeric and scalar string filters", () => {
@@ -94,7 +104,12 @@ describe("numeric and scalar string filters", () => {
     expect(sqlText(buildDecimalFilter(table.qty, { neq: "1.5" }))).toContain("<>");
     expect(sqlText(buildDateFilter(table.effectiveOn, { eq: "2026-09-21" }))).toContain("=");
     expect(sqlText(buildTimeTzFilter(table.name, { gte: "12:00:00Z" }))).toContain(">=");
-    expect(sqlText(buildIntervalMsFilter(table.qty, { lte: "5000" }))).toContain("<=");
+    const intervalLte = sqlQuery(buildIntervalMsFilter(table.qty, { lte: "5000" }));
+    expect(intervalLte.sql).toContain("<=");
+    expect(intervalLte.params).toEqual(["5000 milliseconds"]);
+    expect(sqlText(buildBigIntFilter(table.qty, { isNull: true }))).toContain("is null");
+    expect(sqlText(buildDecimalFilter(table.qty, { isNull: false }))).toContain("is not null");
+    expect(sqlText(buildIntervalMsFilter(table.qty, { isNull: true }))).toContain("is null");
   });
 });
 

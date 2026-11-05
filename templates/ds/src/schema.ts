@@ -2,6 +2,7 @@ import { createSchema } from "graphql-yoga";
 import { typeDefs } from "./generated/generated-schema.js";
 import {
   generatedResolvers,
+  dalScalarResolvers,
   createDalContext,
   pubsub,
 } from "./generated/dal/index.js";
@@ -13,13 +14,17 @@ import {
 
 const resolvers = otelSmokeTestEnabled
   ? {
+      ...dalScalarResolvers,
       ...generatedResolvers,
       Query: {
         ...generatedResolvers.Query,
         ...otelSmokeResolvers.Query,
       },
     }
-  : generatedResolvers;
+  : {
+      ...dalScalarResolvers,
+      ...generatedResolvers,
+    };
 
 export const schema = createSchema({
   typeDefs: otelSmokeTestEnabled ? [typeDefs, otelSmokeTypeDefs] : typeDefs,

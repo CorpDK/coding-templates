@@ -13,10 +13,14 @@ import {
   type GraphQLNamedType,
   type GraphQLType,
 } from "graphql";
+import {
+  dalGraphQLScalar,
+  type DalCustomScalarName,
+} from "@corpdk/dal-core";
 import type { ColumnModel, EntityModel } from "../model.js";
 import { filterableColumns, visibleOutputColumns } from "./schema-utils.js";
 
-type CustomScalar = "DateTime" | "Date" | "TimeTz" | "BigInt" | "Decimal" | "IntervalMs";
+type CustomScalar = DalCustomScalarName;
 
 type FilterInputName =
   | "StringFilter"
@@ -24,35 +28,27 @@ type FilterInputName =
   | "DateTimeFilter"
   | "IDFilter"
   | "IntFilter"
+  | "SmallIntFilter"
   | "FloatFilter"
+  | "DoubleFilter"
   | "BigIntFilter"
   | "DecimalFilter"
   | "DateFilter"
   | "TimeTzFilter"
-  | "IntervalMsFilter";
-
-const SCALAR_DOCS: Record<CustomScalar, string> = {
-  DateTime: "ISO-8601 UTC timestamp with milliseconds.",
-  Date: "ISO-8601 calendar date (YYYY-MM-DD).",
-  TimeTz: "ISO-8601 time with timezone offset.",
-  BigInt: "Signed 64-bit integer serialized as a decimal string.",
-  Decimal: "Arbitrary-precision decimal serialized as a string.",
-  IntervalMs: "Duration as signed milliseconds.",
-};
+  | "IntervalMsFilter"
+  | "InsensitiveStringFilter"
+  | "IPFilter"
+  | "CIDRFilter"
+  | "MACFilter";
 
 export interface GraphqlEnumDef {
   name: string;
   values: string[];
 }
 
-function passthroughScalar(name: string, description: string): GraphQLScalarType {
-  return new GraphQLScalarType({
-    name,
-    description,
-    serialize: (value) => value,
-    parseValue: (value) => value,
-    parseLiteral: (ast) => ast,
-  });
+/** Custom scalars referenced by entity columns (stable order for SDL emission). */
+export function collectUsedDalScalars(entities: EntityModel[]): CustomScalar[] {
+  return collectUsedTypes(entities).scalars;
 }
 
 function customScalarForColumn(col: ColumnModel): CustomScalar | null {
@@ -69,6 +65,18 @@ function customScalarForColumn(col: ColumnModel): CustomScalar | null {
       return "TimeTz";
     case "interval":
       return "IntervalMs";
+    case "smallint":
+      return "SmallInt";
+    case "double":
+      return "Double";
+    case "citext":
+      return "InsensitiveString";
+    case "inet":
+      return "IP";
+    case "cidr":
+      return "CIDR";
+    case "macaddr":
+      return "MAC";
     default:
       return null;
   }
@@ -86,10 +94,21 @@ function filterForColumnKind(col: ColumnModel): FilterInputName | null {
     case "varchar":
       return "StringFilter";
     case "smallint":
+      return "SmallIntFilter";
     case "integer":
       return "IntFilter";
-    case "float":
+    case "real":
       return "FloatFilter";
+    case "double":
+      return "DoubleFilter";
+    case "citext":
+      return "InsensitiveStringFilter";
+    case "inet":
+      return "IPFilter";
+    case "cidr":
+      return "CIDRFilter";
+    case "macaddr":
+      return "MACFilter";
     case "bigint":
       return "BigIntFilter";
     case "decimal":
@@ -151,6 +170,12 @@ function collectUsedTypes(entities: EntityModel[]): {
     "BigInt",
     "Decimal",
     "IntervalMs",
+    "SmallInt",
+    "Double",
+    "InsensitiveString",
+    "IP",
+    "CIDR",
+    "MAC",
   ];
   const filterOrder: FilterInputName[] = [
     "StringFilter",
@@ -158,12 +183,18 @@ function collectUsedTypes(entities: EntityModel[]): {
     "DateTimeFilter",
     "IDFilter",
     "IntFilter",
+    "SmallIntFilter",
     "FloatFilter",
+    "DoubleFilter",
     "BigIntFilter",
     "DecimalFilter",
     "DateFilter",
     "TimeTzFilter",
     "IntervalMsFilter",
+    "InsensitiveStringFilter",
+    "IPFilter",
+    "CIDRFilter",
+    "MACFilter",
   ];
 
   return {
@@ -260,10 +291,31 @@ function buildIntFilter(): GraphQLInputObjectType {
   });
 }
 
+function buildSmallIntFilter(smallInt: GraphQLScalarType): GraphQLInputObjectType {
+  return new GraphQLInputObjectType({
+    name: "SmallIntFilter",
+    description: "Filter operators for smallint columns.",
+    fields: {
+      eq: { type: smallInt },
+      neq: { type: smallInt },
+      gt: { type: smallInt },
+      gte: { type: smallInt },
+      lt: { type: smallInt },
+      lte: { type: smallInt },
+      in: { type: new GraphQLList(new GraphQLNonNull(smallInt)) },
+      notIn: { type: new GraphQLList(new GraphQLNonNull(smallInt)) },
+      isNull: {
+        type: GraphQLBoolean,
+        description: "True = IS NULL; false = IS NOT NULL; nullable columns only.",
+      },
+    },
+  });
+}
+
 function buildFloatFilter(): GraphQLInputObjectType {
   return new GraphQLInputObjectType({
     name: "FloatFilter",
-    description: "Filter operators for floating-point columns.",
+    description: "Filter operators for real (binary32) columns.",
     fields: {
       eq: { type: GraphQLFloat },
       neq: { type: GraphQLFloat },
@@ -273,6 +325,67 @@ function buildFloatFilter(): GraphQLInputObjectType {
       lte: { type: GraphQLFloat },
       in: { type: new GraphQLList(new GraphQLNonNull(GraphQLFloat)) },
       notIn: { type: new GraphQLList(new GraphQLNonNull(GraphQLFloat)) },
+      isNull: {
+        type: GraphQLBoolean,
+        description: "True = IS NULL; false = IS NOT NULL; nullable columns only.",
+      },
+    },
+  });
+}
+
+function buildDoubleFilter(doubleScalar: GraphQLScalarType): GraphQLInputObjectType {
+  return new GraphQLInputObjectType({
+    name: "DoubleFilter",
+    description: "Filter operators for double precision columns.",
+    fields: {
+      eq: { type: doubleScalar },
+      neq: { type: doubleScalar },
+      gt: { type: doubleScalar },
+      gte: { type: doubleScalar },
+      lt: { type: doubleScalar },
+      lte: { type: doubleScalar },
+      in: { type: new GraphQLList(new GraphQLNonNull(doubleScalar)) },
+      notIn: { type: new GraphQLList(new GraphQLNonNull(doubleScalar)) },
+      isNull: {
+        type: GraphQLBoolean,
+        description: "True = IS NULL; false = IS NOT NULL; nullable columns only.",
+      },
+    },
+  });
+}
+
+function buildInsensitiveStringFilter(
+  insensitiveString: GraphQLScalarType,
+): GraphQLInputObjectType {
+  return new GraphQLInputObjectType({
+    name: "InsensitiveStringFilter",
+    description:
+      "Filter operators for citext columns; matching is case-insensitive via PostgreSQL citext (no isCaseInsensitive flag).",
+    fields: {
+      eq: { type: insensitiveString },
+      neq: { type: insensitiveString },
+      like: { type: insensitiveString },
+      in: { type: new GraphQLList(new GraphQLNonNull(insensitiveString)) },
+      notIn: { type: new GraphQLList(new GraphQLNonNull(insensitiveString)) },
+      isNull: {
+        type: GraphQLBoolean,
+        description: "True = IS NULL; false = IS NOT NULL; nullable columns only.",
+      },
+    },
+  });
+}
+
+function buildEqNeqNetworkFilter(
+  name: string,
+  description: string,
+  scalar: GraphQLScalarType,
+): GraphQLInputObjectType {
+  return new GraphQLInputObjectType({
+    name,
+    description,
+    fields: {
+      eq: { type: scalar },
+      neq: { type: scalar },
       isNull: {
         type: GraphQLBoolean,
         description: "True = IS NULL; false = IS NOT NULL; nullable columns only.",
@@ -294,6 +407,10 @@ function buildBigIntFilter(bigInt: GraphQLScalarType): GraphQLInputObjectType {
       lte: { type: bigInt },
       in: { type: new GraphQLList(new GraphQLNonNull(bigInt)) },
       notIn: { type: new GraphQLList(new GraphQLNonNull(bigInt)) },
+      isNull: {
+        type: GraphQLBoolean,
+        description: "True = IS NULL; false = IS NOT NULL; nullable columns only.",
+      },
     },
   });
 }
@@ -311,6 +428,10 @@ function buildDecimalFilter(decimal: GraphQLScalarType): GraphQLInputObjectType 
       lte: { type: decimal },
       in: { type: new GraphQLList(new GraphQLNonNull(decimal)) },
       notIn: { type: new GraphQLList(new GraphQLNonNull(decimal)) },
+      isNull: {
+        type: GraphQLBoolean,
+        description: "True = IS NULL; false = IS NOT NULL; nullable columns only.",
+      },
     },
   });
 }
@@ -370,6 +491,10 @@ function buildIntervalMsFilter(intervalMs: GraphQLScalarType): GraphQLInputObjec
       lte: { type: intervalMs },
       in: { type: new GraphQLList(new GraphQLNonNull(intervalMs)) },
       notIn: { type: new GraphQLList(new GraphQLNonNull(intervalMs)) },
+      isNull: {
+        type: GraphQLBoolean,
+        description: "True = IS NULL; false = IS NOT NULL; nullable columns only.",
+      },
     },
   });
 }
@@ -383,6 +508,10 @@ function buildEnumFilter(enumType: GraphQLEnumType): GraphQLInputObjectType {
       neq: { type: enumType },
       in: { type: new GraphQLList(new GraphQLNonNull(enumType)) },
       notIn: { type: new GraphQLList(new GraphQLNonNull(enumType)) },
+      isNull: {
+        type: GraphQLBoolean,
+        description: "True = IS NULL; false = IS NOT NULL; nullable columns only.",
+      },
     },
   });
 }
@@ -401,6 +530,7 @@ const BUILTIN_TYPES = new Map<string, GraphQLNamedType>([
   ["Boolean", GraphQLBoolean],
   ["ID", GraphQLID],
   ["Int", GraphQLInt],
+  ["Float", GraphQLFloat],
 ]);
 
 /** Resolves a named type from the registry; throws if missing. */
@@ -433,13 +563,28 @@ export function registryTypeRef(registry: SchemaRegistry, sdl: string): GraphQLT
   return nullable ? inner : new GraphQLNonNull(inner);
 }
 
+/**
+ * dal-core holds singleton scalars built with its own `graphql` copy; codegen builds
+ * types with this package's `graphql`. Re-instantiate so GraphQLNonNull/List checks pass.
+ */
+function registryDalScalar(name: DalCustomScalarName): GraphQLScalarType {
+  const source = dalGraphQLScalar(name);
+  return new GraphQLScalarType({
+    name: source.name,
+    description: source.description ?? undefined,
+    serialize: (value) => source.serialize(value),
+    parseValue: (value) => source.parseValue(value),
+    parseLiteral: (ast, variables) => source.parseLiteral(ast, variables),
+  });
+}
+
 export function buildSchemaRegistry(entities: EntityModel[]): SchemaRegistry {
   const { scalars, filters, enums } = collectUsedTypes(entities);
   const types = new Map<string, GraphQLNamedType>();
 
   const customScalars = new Map<CustomScalar, GraphQLScalarType>();
   for (const scalar of scalars) {
-    const type = passthroughScalar(scalar, SCALAR_DOCS[scalar]);
+    const type = registryDalScalar(scalar);
     customScalars.set(scalar, type);
     types.set(scalar, type);
   }
@@ -522,6 +667,12 @@ export function buildSchemaRegistry(entities: EntityModel[]): SchemaRegistry {
   const date = customScalars.get("Date");
   const timeTz = customScalars.get("TimeTz");
   const intervalMs = customScalars.get("IntervalMs");
+  const smallInt = customScalars.get("SmallInt");
+  const doubleScalar = customScalars.get("Double");
+  const insensitiveString = customScalars.get("InsensitiveString");
+  const ip = customScalars.get("IP");
+  const cidr = customScalars.get("CIDR");
+  const mac = customScalars.get("MAC");
 
   const filterBuilders: Partial<Record<FilterInputName, () => GraphQLInputObjectType>> = {
     StringFilter: buildStringFilter,
@@ -532,7 +683,15 @@ export function buildSchemaRegistry(entities: EntityModel[]): SchemaRegistry {
     },
     IDFilter: buildIdFilter,
     IntFilter: buildIntFilter,
+    SmallIntFilter: () => {
+      if (!smallInt) throw new Error("SmallIntFilter requires SmallInt scalar");
+      return buildSmallIntFilter(smallInt);
+    },
     FloatFilter: buildFloatFilter,
+    DoubleFilter: () => {
+      if (!doubleScalar) throw new Error("DoubleFilter requires Double scalar");
+      return buildDoubleFilter(doubleScalar);
+    },
     BigIntFilter: () => {
       if (!bigInt) throw new Error("BigIntFilter requires BigInt scalar");
       return buildBigIntFilter(bigInt);
@@ -552,6 +711,28 @@ export function buildSchemaRegistry(entities: EntityModel[]): SchemaRegistry {
     IntervalMsFilter: () => {
       if (!intervalMs) throw new Error("IntervalMsFilter requires IntervalMs scalar");
       return buildIntervalMsFilter(intervalMs);
+    },
+    InsensitiveStringFilter: () => {
+      if (!insensitiveString) {
+        throw new Error("InsensitiveStringFilter requires InsensitiveString scalar");
+      }
+      return buildInsensitiveStringFilter(insensitiveString);
+    },
+    IPFilter: () => {
+      if (!ip) throw new Error("IPFilter requires IP scalar");
+      return buildEqNeqNetworkFilter("IPFilter", "Filter operators for inet columns.", ip);
+    },
+    CIDRFilter: () => {
+      if (!cidr) throw new Error("CIDRFilter requires CIDR scalar");
+      return buildEqNeqNetworkFilter("CIDRFilter", "Filter operators for cidr columns.", cidr);
+    },
+    MACFilter: () => {
+      if (!mac) throw new Error("MACFilter requires MAC scalar");
+      return buildEqNeqNetworkFilter(
+        "MACFilter",
+        "Filter operators for macaddr columns.",
+        mac,
+      );
     },
   };
 

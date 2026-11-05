@@ -9,4 +9,5 @@ src/generated/graphql-codegen.mappers.ts
 src/generated/dal/
 src/__tests__/entity-records.ts
 src/__tests__/tmp-generated-ds/
-drizzle/migrations/
+# Baseline demo migrations 0000–0003 are tracked in this template (see docs/developer/ds-automation-upgrades.md).
+# Scaffolded DS packages from create-ds still gitignore drizzle/migrations/ in canonical/.gitignore.

@@ -7,7 +7,7 @@ import {
   generateMergedTypeDefs,
   generateSchemaModule,
 } from "../sdl.js";
-import { itemFixture } from "./sdl.fixture.js";
+import { auditEventFixture, itemFixture, tagFixture } from "./sdl.fixture.js";
 
 describe("schema builder", () => {
   const entities = [itemFixture];
@@ -50,6 +50,27 @@ describe("schema builder", () => {
       "line with \\`backtick\\` and \\${not interpolation}",
     );
     expect(escapeSdlForTemplateLiteral("a\\b")).toBe("a\\\\b");
+  });
+
+  it("append-only entities omit update payload and bulk update SDL types", () => {
+    const merged = generateMergedTypeDefs([auditEventFixture, tagFixture]);
+    expect(merged).not.toMatch(/UpdateAuditEventPayload|BulkUpdateAuditEventResult/);
+    expect(merged).not.toMatch(/UpdateTagPayload|BulkUpdateTagResult|TagUpdateInput/);
+    expect(merged).not.toMatch(/updateAuditEvent|updateTag|bulkUpdateAuditEvent|bulkUpdateTag/);
+    const schema = buildSchema(merged);
+    expect(validateSchema(schema)).toEqual([]);
+  });
+
+  it("hard-delete entities omit includeDeleted on read fields", () => {
+    const merged = generateMergedTypeDefs([auditEventFixture]);
+    const auditList = merged.match(/auditEvents\([^)]*\)/)?.[0] ?? "";
+    expect(auditList.length).toBeGreaterThan(0);
+    expect(auditList).not.toContain("includeDeleted");
+  });
+
+  it("soft-delete entities keep includeDeleted on read fields", () => {
+    const merged = generateMergedTypeDefs([tagFixture]);
+    expect(merged).toMatch(/tags\([\s\S]*includeDeleted: Boolean/);
   });
 
   it("emits a TypeScript module whose typeDefs build a valid schema", () => {

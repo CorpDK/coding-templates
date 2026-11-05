@@ -65,11 +65,12 @@ Run the DS on the host against Dockerized Postgres on `localhost:5433`:
 ```bash
 cd templates/ds
 pnpm db:up          # postgres only — dhi.io/postgres:18-alpine3.23 on localhost:5433
-pnpm db:generate    # first run only — migrations are gitignored
-pnpm db:migrate
-pnpm db:seed      # idempotent — skips when categories already exist
+pnpm db:migrate     # applies tracked drizzle/migrations through 0003 (citext + scalar_specimens)
+pnpm db:seed        # idempotent — skips when categories already exist
 pnpm dev
 ```
+
+Fresh Postgres volumes run `docker/postgres-init/01-citext.sql` on first boot. Existing volumes need `CREATE EXTENSION IF NOT EXISTS citext` once before migrate (the DS Docker entrypoint does this automatically). Run **`pnpm db:generate`** only after you change the Drizzle schema and need a new migration SQL file.
 
 Stop with `pnpm db:down`. Override the host port with `POSTGRES_HOST_PORT=5434 pnpm db:up` if 5433 is taken.
 
@@ -86,7 +87,7 @@ curl http://localhost:4000/graphql \
   -d '{"query":"{ hello }"}'
 ```
 
-The DS image runs `drizzle-kit migrate` then `node dist/src/db/seed.js` on startup (migrations are generated during the Docker build from the Drizzle schema). Seeding is idempotent: it loads sample categories, items, tags, orders, and audit events only when the database is empty. Rebuild after schema changes with `pnpm compose:recreate`. Stop with `pnpm compose:down`.
+The DS image runs `CREATE EXTENSION IF NOT EXISTS citext`, `drizzle-kit migrate`, then `node dist/src/db/seed.js` on startup. The build runs `pnpm db:generate` so the image carries current migration SQL alongside tracked files under `drizzle/migrations/`. Seeding is idempotent: it loads sample categories, items, tags, orders, audit events, and **`scalar_specimens`** demo rows only when the database is empty. Rebuild after schema changes with `pnpm compose:recreate`. Stop with `pnpm compose:down`.
 
 Verify seeded data:
 

@@ -2,12 +2,17 @@ import { join } from "node:path";
 import { loadDalConfig, type DalConfig } from "./config.js";
 import { lintFilterIndexCoverage } from "./filter-index-lint.js";
 import { hasIndexCoverage } from "./index-coverage.js";
+import { getTableColumns, isTable } from "drizzle-orm";
 import {
   collectSchemaFiles,
   importSchemaModule,
   loadEntities,
   type EntityModel,
 } from "./model.js";
+import {
+  bannedPgTypeMessage,
+  columnKindFromPgSqlType,
+} from "./pg-sql-types.js";
 
 export type { LintSeverity, LintViolation } from "./lint-types.js";
 import type { LintSeverity, LintViolation } from "./lint-types.js";
@@ -89,8 +94,31 @@ function lintSortIndexCoverage(
   return violations;
 }
 
+function lintBannedPgSqlColumns(
+  exportName: string,
+  combined: Record<string, unknown>,
+): LintViolation[] {
+  const violations: LintViolation[] = [];
+  const table = combined[exportName];
+  if (!isTable(table)) return violations;
+  for (const [drizzleKey, col] of Object.entries(getTableColumns(table))) {
+    if (col.columnType !== "PgCustomColumn") continue;
+    const pgSql = (col as { getSQLType?: () => string }).getSQLType?.() ?? "";
+    if (columnKindFromPgSqlType(pgSql) !== "banned") continue;
+    violations.push({
+      severity: "error",
+      code: "PG_TYPE_BANNED",
+      message: bannedPgTypeMessage(exportName, drizzleKey, pgSql),
+      entity: exportName,
+      column: drizzleKey,
+    });
+  }
+  return violations;
+}
+
 function lintEntityModel(entity: EntityModel, combined: Record<string, unknown>, strict: boolean): LintViolation[] {
   return [
+    ...lintBannedPgSqlColumns(entity.exportName, combined),
     ...lintBooleanNaming(entity),
     ...lintEnumCasing(entity),
     ...lintSoftDeleteShape(entity),

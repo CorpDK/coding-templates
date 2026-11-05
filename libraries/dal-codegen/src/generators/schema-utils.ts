@@ -10,10 +10,21 @@ export function scalarForColumn(col: ColumnModel): string {
     case "timestamptz":
       return "DateTime";
     case "smallint":
+      return "SmallInt";
     case "integer":
       return "Int";
-    case "float":
+    case "real":
       return "Float";
+    case "double":
+      return "Double";
+    case "citext":
+      return "InsensitiveString";
+    case "inet":
+      return "IP";
+    case "cidr":
+      return "CIDR";
+    case "macaddr":
+      return "MAC";
     case "bigint":
       return "BigInt";
     case "decimal":
@@ -44,10 +55,21 @@ export function filterForColumn(col: ColumnModel): string {
     case "timestamptz":
       return "DateTimeFilter";
     case "smallint":
+      return "SmallIntFilter";
     case "integer":
       return "IntFilter";
-    case "float":
+    case "real":
       return "FloatFilter";
+    case "double":
+      return "DoubleFilter";
+    case "citext":
+      return "InsensitiveStringFilter";
+    case "inet":
+      return "IPFilter";
+    case "cidr":
+      return "CIDRFilter";
+    case "macaddr":
+      return "MACFilter";
     case "bigint":
       return "BigIntFilter";
     case "decimal":
@@ -75,6 +97,15 @@ export function columnGraphqlDescription(col: ColumnModel): string | undefined {
   if (col.comment && hint) return `${col.comment} ${hint}`;
   if (hint) return hint;
   return col.comment || undefined;
+}
+
+/** Indefinite article for GraphQL type names in mutation descriptions. */
+export function indefiniteArticle(typeName: string): "a" | "an" {
+  if (!typeName) return "a";
+  const first = typeName[0].toLowerCase();
+  if (first === "u") return "a";
+  if (first === "a" || first === "e" || first === "i" || first === "o") return "an";
+  return "a";
 }
 
 export function visibleOutputColumns(entity: EntityModel): ColumnModel[] {

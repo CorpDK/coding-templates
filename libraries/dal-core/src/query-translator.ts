@@ -42,7 +42,12 @@ export type ColumnKind =
   | "integer"
   | "bigint"
   | "decimal"
-  | "float"
+  | "real"
+  | "double"
+  | "citext"
+  | "inet"
+  | "cidr"
+  | "macaddr"
   | "date"
   | "timetz"
   | "interval";
@@ -115,8 +120,14 @@ function filterBuilderForKind(kind: ColumnKind) {
     case "smallint":
     case "integer":
       return buildIntFilter;
-    case "float":
+    case "real":
+    case "double":
       return buildFloatFilter;
+    case "citext":
+    case "inet":
+    case "cidr":
+    case "macaddr":
+      return buildStringFilter;
     case "bigint":
       return buildBigIntFilter;
     case "decimal":

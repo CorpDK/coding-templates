@@ -30,12 +30,14 @@ GraphQL field descriptions append `Validation: …` hints. Generated repositorie
 
 Supported in codegen model + filters + repository wire helpers (v1 subset):
 
-- **Int family:** `smallint`, `integer` → GraphQL `Int`, `IntFilter`
-- **Float family:** `real`, `doublePrecision` → `Float`, `FloatFilter`
-- **Wire scalars:** `bigint`, `numeric`/`decimal`, `date`, `timetz`, `interval` → custom scalars and filters per type reference
-- **Hard bans:** plain `timestamp`, plain `time`, `money` fail codegen with explicit errors
+- **Integer family:** `smallint` → `SmallInt`, `SmallIntFilter`; `integer` → `Int`, `IntFilter`
+- **Float family:** `real` → `Float`, `FloatFilter`; `doublePrecision` → `Double`, `DoubleFilter`
+- **Wire scalars:** `bigint`, `numeric`/`decimal`, `date`, `timetz`, `interval`, `citext` → custom scalars and filters per [type reference](dal-pg-type-mapping.md)
+- **Network (opt-in):** `inet`, `cidr`, `macaddr` → `IP`, `CIDR`, `MAC` and matching filters when declared via Drizzle `customType`
+- **GraphQL wire validation:** Yoga registers `dalGraphQLScalar` instances; generated Zod uses `dalScalarZod` — see [custom DAL scalars registry](dal-pg-type-mapping.md#custom-dal-scalars-registry)
+- **Hard bans:** plain `timestamp`, plain `time`, `money`, geometric / PostGIS / `macaddr8` fail codegen or `entity:lint` with explicit errors
 
-Deferred (unchanged): network, geometric, PostGIS opt-in scalars; PG interval ↔ ms conversion at the Drizzle read layer (wire uses `IntervalMs`; DB binding remains dialect-specific).
+PG `interval` ↔ total ms conversion lives in `@corpdk/dal-core` (`serializeIntervalMs`, `intervalMsToPgInterval`, `buildIntervalMsFilter`); generated repositories bind converted values at create/update and filters.
 
 ## Commands
 

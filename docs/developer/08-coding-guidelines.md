@@ -357,6 +357,19 @@ Before committing, verify:
 
 ---
 
+## Repository linting (Trunk)
+
+Markdown, YAML, and formatting checks use [Trunk](https://docs.trunk.io/cli) (see `.trunk/trunk.yaml`). From the repo root after `pnpm install`:
+
+```bash
+pnpm trunk:check    # lint changed files (or pass paths)
+pnpm trunk:fmt      # apply Trunk-managed formatters
+```
+
+The workspace pins `@trunkio/launcher` so `pnpm exec trunk` works without a global Trunk install. Trunk also caches tool binaries under `.trunk/tools/` on first run.
+
+---
+
 ## References
 
 - [React Best Practices](https://react.dev/learn/thinking-in-react)
