@@ -97,7 +97,7 @@ When changing `templates/ds` automation files, refresh the bundled snapshot unde
 
 `package.json`, `LICENSE`, `dal/dal.config.yaml`, `codegen.ts`, `drizzle.config.ts`, `tsconfig.json`, `Dockerfile`, `docker-compose.yml`, `docker/otel-collector-config.yaml`, `docker-entrypoint.sh`, `.gitignore`, `.env.example`, `src/schema.ts`, `src/index.ts`, `src/db/index.ts`, `src/health.ts`, `src/validation/parse-input.ts`, `src/observability/**`
 
-Copy from `templates/ds` (omit `src/db/schema/**`, `drizzle/**`, and generated output). Keep **`engines/create-ds/starter/`** in sync when changing the minimal default schema.
+Copy from `templates/ds` (omit `src/db/schema/**`, `drizzle/**`, and generated output). When refreshing **`engines/create-ds/canonical/.gitignore`**, keep the **`drizzle/migrations/`** ignore line — the monorepo **`templates/ds`** template tracks demo baseline migrations in git; scaffolded DS packages treat migration SQL as team-owned and gitignored. Keep **`engines/create-ds/starter/`** in sync when changing the minimal default schema.
 
 Release **`@corpdk/create-ds`** on the same train as **`@corpdk/dal-codegen`** when upgrade deltas matter.
 
