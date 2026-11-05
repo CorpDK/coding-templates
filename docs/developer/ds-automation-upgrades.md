@@ -95,7 +95,7 @@ pnpm dal:codegen
 
 When changing `templates/ds` automation files, refresh the bundled snapshot under **`engines/create-ds/canonical/`** (paths merged on upgrade):
 
-`package.json`, `LICENSE`, `dal/dal.config.yaml`, `codegen.ts`, `drizzle.config.ts`, `tsconfig.json`, `Dockerfile`, `docker-compose.yml`, `docker/otel-collector-config.yaml`, `docker-entrypoint.sh`, `.gitignore`, `.env.example`, `src/schema.ts`, `src/index.ts`, `src/db/index.ts`, `src/health.ts`, `src/validation/parse-input.ts`, `src/observability/**`
+`package.json`, `LICENSE`, `dal/dal.config.yaml`, `codegen.ts`, `drizzle.config.ts`, `tsconfig.json`, `Dockerfile`, `docker-compose.yml`, `docker/otel-collector-config.yaml`, `docker/postgres-init/**`, `docker-entrypoint.sh`, `.gitignore`, `.env.example`, `src/schema.ts`, `src/index.ts`, `src/db/index.ts`, `src/health.ts`, `src/validation/parse-input.ts`, `src/observability/**`
 
 Copy from `templates/ds` (omit `src/db/schema/**`, `drizzle/**`, and generated output). When refreshing **`engines/create-ds/canonical/.gitignore`**, keep the **`drizzle/migrations/`** ignore line — the monorepo **`templates/ds`** template tracks demo baseline migrations in git; scaffolded DS packages treat migration SQL as team-owned and gitignored. Keep **`engines/create-ds/starter/`** in sync when changing the minimal default schema.
 
