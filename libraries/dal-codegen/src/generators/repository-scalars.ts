@@ -96,11 +96,7 @@ function parseWrapper(col: ColumnModel, ref: string, nullable: boolean): string 
   const fn = PARSE_BY_KIND[col.kind];
   if (!fn) return ref;
   if (nullable) {
-    const parsed = `${ref} === null || ${ref} === undefined ? ${ref} : ${fn}(${ref})`;
-    if (col.kind === "bigint") {
-      return `${ref} === null || ${ref} === undefined ? ${ref} : BigInt(${fn}(${ref}))`;
-    }
-    return parsed;
+    return `${ref} === null || ${ref} === undefined ? ${ref} : ${dbValueFromParse(col, `${fn}(${ref})`)}`;
   }
   return dbValueFromParse(col, `${fn}(${ref})`);
 }
@@ -120,21 +116,14 @@ export function assignCreateValue(col: ColumnModel): string {
 export function assignUpdateValue(col: ColumnModel): string {
   if (PARSE_BY_KIND[col.kind]) {
     const fn = PARSE_BY_KIND[col.kind]!;
+    const parsed = dbValueFromParse(col, `${fn}(input.${col.graphqlName})`);
     if (col.notNull) {
-      const assign =
-        col.kind === "bigint"
-          ? `BigInt(${fn}(input.${col.graphqlName}))`
-          : `${fn}(input.${col.graphqlName})`;
       return `    if (input.${col.graphqlName} !== undefined && input.${col.graphqlName} !== null) {
-      set.${col.drizzleKey} = ${assign};
+      set.${col.drizzleKey} = ${parsed};
     }`;
     }
-    const nullableAssign =
-      col.kind === "bigint"
-        ? `input.${col.graphqlName} === null ? null : BigInt(${fn}(input.${col.graphqlName}))`
-        : `input.${col.graphqlName} === null ? null : ${fn}(input.${col.graphqlName})`;
     return `    if (input.${col.graphqlName} !== undefined) {
-      set.${col.drizzleKey} = ${nullableAssign};
+      set.${col.drizzleKey} = input.${col.graphqlName} === null ? null : ${parsed};
     }`;
   }
   if (col.kind === "enum") {
@@ -262,6 +251,10 @@ export function cursorDeserializeBody(entity: EntityModel, sortCols: ColumnModel
       if (c.kind === "timestamptz") {
         return `      case "${c.drizzleKey}":
         return new Date(value as string);`;
+      }
+      if (c.kind === "interval") {
+        return `      case "${c.drizzleKey}":
+        return intervalMsToPgInterval(value as string);`;
       }
       return `      case "${c.drizzleKey}":
         return value;`;

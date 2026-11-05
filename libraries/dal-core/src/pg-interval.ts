@@ -1,6 +1,7 @@
 import { PG_INT64_MAX, PG_INT64_MIN } from "./pg-bounds.js";
 
 const MS_PER_SECOND = 1000n;
+const MS_PER_MILLISECOND = 1n;
 const MS_PER_MINUTE = 60n * MS_PER_SECOND;
 const MS_PER_HOUR = 60n * MS_PER_MINUTE;
 const MS_PER_DAY = 24n * MS_PER_HOUR;
@@ -25,9 +26,9 @@ const VERBOSE_UNIT_MS: Record<string, bigint> = {
   microsecond: 1n,
   microseconds: 1n,
   us: 1n,
-  millisecond: 1000n,
-  milliseconds: 1000n,
-  ms: 1000n,
+  millisecond: MS_PER_MILLISECOND,
+  milliseconds: MS_PER_MILLISECOND,
+  ms: MS_PER_MILLISECOND,
   second: MS_PER_SECOND,
   seconds: MS_PER_SECOND,
   sec: MS_PER_SECOND,
@@ -57,10 +58,6 @@ const VERBOSE_UNIT_MS: Record<string, bigint> = {
 
 function fractionToMs(fraction: string): bigint {
   return BigInt((fraction + "000").slice(0, 3));
-}
-
-function fractionMicrosToMs(fraction: string): bigint {
-  return BigInt((fraction + "000000").slice(0, 6)) / 1000n;
 }
 
 function parseBackendInterval(text: string): bigint | null {
@@ -124,8 +121,12 @@ function parseAmountToMs(amount: string, unitMs: bigint): bigint {
     const wholeMs = BigInt(whole || "0") * MS_PER_SECOND;
     return sign * (wholeMs + fractionToMs(frac));
   }
-  if (unitMs === 1000n && unsigned.includes(".")) {
-    return sign * fractionMicrosToMs(unsigned.split(".")[1] ?? "");
+  if (unitMs === MS_PER_MILLISECOND && unsigned.includes(".")) {
+    const [whole, frac = ""] = unsigned.split(".");
+    const wholeMs = BigInt(whole || "0");
+    if (!frac) return sign * wholeMs;
+    const fracMs = BigInt(frac) / 10n ** BigInt(frac.length);
+    return sign * (wholeMs + fracMs);
   }
   const numeric = BigInt(unsigned.split(".")[0] || "0");
   return sign * numeric * unitMs;
