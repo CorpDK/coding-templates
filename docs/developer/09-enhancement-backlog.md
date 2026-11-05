@@ -40,7 +40,7 @@ Investigate `@corpdk/ui-core/styles` (or equivalent) once Turbopack supports the
 
 ### 5. GitHub Actions CI (monorepo)
 
-**Status:** Partial — [dal.yml](../../.github/workflows/dal.yml) builds/tests DAL libraries and runs `@corpdk/ds` (`templates/ds`) Turbo build plus `entity:lint`; [sonar.yml](../../.github/workflows/sonar.yml) runs DAL coverage + SonarCloud; [publish-ds-automation.yml](../../.github/workflows/publish-ds-automation.yml) dry-runs the npm five-pack on relevant PRs. **Gap:** no repo-wide workflow for UI packages — lint, typecheck, and `pnpm build` (or targeted Turbo filters) on every PR.
+**Status:** Partial — [dal.yml](../../.github/workflows/dal.yml) builds/tests DAL libraries and runs `@corpdk/ds` (`templates/ds`) Turbo build plus `entity:lint`; [sonar.yml](../../.github/workflows/sonar.yml) runs DAL coverage + SonarCloud; [publish-ds-automation.yml](../../.github/workflows/publish-ds-automation.yml) dry-runs the npm five-pack on relevant PRs. DAL and Sonar workflows use **`pull_request`** on feature branches and **`push` to `main` only** so a PR branch push does not fire both events. **Gap:** no repo-wide workflow for UI packages — lint, typecheck, and `pnpm build` (or targeted Turbo filters) on every PR.
 
 Add `.github/workflows/ci.yml` (or extend an existing workflow) for shared packages and UI templates. Optional: Turbo remote cache (e.g. Vercel) for speed.
 

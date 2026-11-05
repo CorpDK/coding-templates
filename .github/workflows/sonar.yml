@@ -3,9 +3,11 @@ name: SonarQube Analysis
 # Runs DAL unit tests with coverage, then SonarCloud scan. Repo-specific
 # config (paths, exclusions, project key, lcov paths) lives in sonar-project.properties.
 
+# pull_request for PR branches; push only on main (avoids duplicate runs per commit).
 on:
   push:
-    branches: ["**"]
+    branches:
+      - main
   pull_request:
     types: [opened, synchronize, reopened]
 
