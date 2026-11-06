@@ -1,8 +1,6 @@
 # `@corpdk/ds` subscription transport (SSE)
 
-GraphQL Yoga v5 delivers subscriptions over **Server-Sent Events (SSE)** on the same HTTP route as queries and mutations. The primary DS template (`templates/ds`) no longer starts a WebSocket server or depends on `graphql-ws` / `ws`.
-
-Other DS variants (`ds-no-sql`, `ds-cdb`, etc.) may still use WebSocket until they are migrated the same way.
+GraphQL Yoga v5 delivers subscriptions over **Server-Sent Events (SSE)** on the same HTTP route as queries and mutations. All DS templates (`templates/ds`, `ds-no-sql`, `ds-cdb`, `ds-mongo`, `ds-ddb`, `ds-file`) use Yoga’s built-in SSE transport and do not start a WebSocket server or depend on `graphql-ws` / `ws` at runtime.
 
 ---
 
@@ -14,7 +12,7 @@ Other DS variants (`ds-no-sql`, `ds-cdb`, etc.) may still use WebSocket until th
 | Mutations      | same                        | same                                       |
 | Subscriptions  | same                        | Must include `Accept: text/event-stream`   |
 
-Configure the listen port with `DS_PORT` (see `templates/ds/.env.example`). There is no separate subscription port or `DS_WS_*` variable for this template.
+Configure the listen port with the variant’s `*_PORT` env var (see each template’s `.env.example`). There is no separate subscription port or DS WebSocket listener.
 
 ---
 

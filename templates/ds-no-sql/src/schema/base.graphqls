@@ -4,5 +4,5 @@ type Query
 """Entry points for data mutations that trigger side effects."""
 type Mutation
 
-"""Real-time event streams delivered over WebSocket."""
+"""Real-time event streams delivered over SSE on the same HTTP /graphql route."""
 type Subscription

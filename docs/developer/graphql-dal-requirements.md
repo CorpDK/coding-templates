@@ -67,7 +67,7 @@ All query translation, filtering, pagination, and aggregation logic assumes Driz
 
 This document defines a **generic, entity-agnostic GraphQL Data Access Layer (DAL)** that provides:
 
-- **GraphQL-only application access** — the generated GraphQL API over HTTP (queries/mutations; subscriptions via SSE on `@corpdk/ds` or WebSocket on other DS variants until migrated) is the sole application-facing data surface — see [11-ds-subscription-sse.md](11-ds-subscription-sse.md)
+- **GraphQL-only application access** — the generated GraphQL API over HTTP (queries/mutations; subscriptions via SSE on all DS templates) is the sole application-facing data surface — see [11-ds-subscription-sse.md](11-ds-subscription-sse.md)
 - Fully abstracted database access via a **server-internal** repository boundary
 - Strong typing (no arbitrary JSON inputs/outputs)
 - Advanced filtering, pagination, sorting, and aggregation
@@ -258,11 +258,11 @@ GraphQL introspection, GraphiQL, and Altair display descriptions sourced from DB
 
 ### 2.12 Application access boundary (GraphQL-only)
 
-The generated GraphQL API is the **only** application-facing access surface for persisted data. All application clients — UI, BFF, external services — read and write data exclusively through GraphQL HTTP (queries/mutations and subscription streams). On **`@corpdk/ds`**, subscriptions use **SSE** on the same `/graphql` route; other DS variants may still use WebSocket until migrated ([11-ds-subscription-sse.md](11-ds-subscription-sse.md)).
+The generated GraphQL API is the **only** application-facing access surface for persisted data. All application clients — UI, BFF, external services — read and write data exclusively through GraphQL HTTP (queries/mutations and subscription streams). All DS templates deliver subscriptions over **SSE** on the same `/graphql` route ([11-ds-subscription-sse.md](11-ds-subscription-sse.md)).
 
 ```text
 Application client (UI, BFF, worker)
-  → GraphQL HTTP (SSE subscriptions on @corpdk/ds; WebSocket elsewhere as applicable)
+  → GraphQL HTTP (SSE subscriptions on all DS templates)
     → GraphQL Yoga resolvers
       → Generated repository (server-internal)
         → QueryEngine / Drizzle

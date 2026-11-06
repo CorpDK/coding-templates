@@ -43,8 +43,7 @@ Browser → /api/graphql → Next.js rewrite → DS_HTTP_URL (server-side)
 
 | DS | Server transport | Typical UI (today) |
 | --- | --- | --- |
-| `@corpdk/ds` | SSE on the same `/graphql` HTTP route (`Accept: text/event-stream`) | UI templates still use graphql-ws + `NEXT_PUBLIC_DS_WS_URL` until migrated — see [DS subscription transport (SSE)](../developer/11-ds-subscription-sse.md) |
-| Other DS variants | Yoga SSE and/or graphql-ws on the HTTP server | Browser WebSocket via `NEXT_PUBLIC_DS_WS_URL` (Next.js cannot proxy WS) |
+| `@corpdk/ds` and all DS variants | SSE on the same `/graphql` HTTP route (`Accept: text/event-stream`) | UI templates still use graphql-ws + `NEXT_PUBLIC_DS_WS_URL` until migrated — see [DS subscription transport (SSE)](../developer/11-ds-subscription-sse.md) |
 
 **Why split HTTP proxy vs direct WS (legacy UI path)?**
 
@@ -80,7 +79,7 @@ Turbo `@corpdk/ds#dev` declares `dependsOn: ["^build", "codegen", "dal:codegen:i
 
 ## Real-Time Subscriptions
 
-Every mutation publishes a PubSub event. Subscribed clients receive updates over SSE (`@corpdk/ds`) or WebSocket (other DS variants and current UI templates) — no polling required.
+Every mutation publishes a PubSub event. Subscribed clients receive updates over SSE on the DS (all templates) or WebSocket (current UI templates only) — no polling required.
 
 The PubSub transport is selected at startup by `@corpdk/pub-sub`:
 

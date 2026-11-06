@@ -634,18 +634,12 @@ importers:
       graphql:
         specifier: ^16.13.2
         version: 16.13.2
-      graphql-ws:
-        specifier: ^6.0.8
-        version: 6.0.8(graphql@16.13.2)(ws@8.20.0)
       graphql-yoga:
         specifier: ^5.18.1
         version: 5.18.1(graphql@16.13.2)
       ioredis:
         specifier: ^5.10.1
         version: 5.10.1
-      ws:
-        specifier: ^8.20.0
-        version: 8.20.0
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -668,9 +662,6 @@ importers:
       '@types/node':
         specifier: ^24.0.0
         version: 24.19.1
-      '@types/ws':
-        specifier: ^8.18.1
-        version: 8.18.1
       tsx:
         specifier: ^4.21.0
         version: 4.21.0
@@ -691,9 +682,6 @@ importers:
       graphql:
         specifier: ^16.13.2
         version: 16.13.2
-      graphql-ws:
-        specifier: ^6.0.8
-        version: 6.0.8(graphql@16.13.2)(ws@8.20.0)
       graphql-yoga:
         specifier: ^5.18.1
         version: 5.18.1(graphql@16.13.2)
@@ -703,9 +691,6 @@ importers:
       mongodb:
         specifier: ^7.1.1
         version: 7.1.1
-      ws:
-        specifier: ^8.20.0
-        version: 8.20.0
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -728,9 +713,6 @@ importers:
       '@types/node':
         specifier: ^24.0.0
         version: 24.19.1
-      '@types/ws':
-        specifier: ^8.18.1
-        version: 8.18.1
       tsx:
         specifier: ^4.21.0
         version: 4.21.0
@@ -749,9 +731,6 @@ importers:
       graphql:
         specifier: ^16.13.2
         version: 16.13.2
-      graphql-ws:
-        specifier: ^6.0.8
-        version: 6.0.8(graphql@16.13.2)(ws@8.20.0)
       graphql-yoga:
         specifier: ^5.18.1
         version: 5.18.1(graphql@16.13.2)
@@ -761,9 +740,6 @@ importers:
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.1
-      ws:
-        specifier: ^8.20.0
-        version: 8.20.0
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -789,9 +765,6 @@ importers:
       '@types/node':
         specifier: ^24.0.0
         version: 24.19.1
-      '@types/ws':
-        specifier: ^8.18.1
-        version: 8.18.1
       tsx:
         specifier: ^4.21.0
         version: 4.21.0
@@ -810,9 +783,6 @@ importers:
       graphql:
         specifier: ^16.13.2
         version: 16.13.2
-      graphql-ws:
-        specifier: ^6.0.8
-        version: 6.0.8(graphql@16.13.2)(ws@8.20.0)
       graphql-yoga:
         specifier: ^5.18.1
         version: 5.18.1(graphql@16.13.2)
@@ -822,9 +792,6 @@ importers:
       mongodb:
         specifier: ^7.1.1
         version: 7.1.1
-      ws:
-        specifier: ^8.20.0
-        version: 8.20.0
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -847,9 +814,6 @@ importers:
       '@types/node':
         specifier: ^24.0.0
         version: 24.19.1
-      '@types/ws':
-        specifier: ^8.18.1
-        version: 8.18.1
       tsx:
         specifier: ^4.21.0
         version: 4.21.0
@@ -877,18 +841,12 @@ importers:
       graphql:
         specifier: ^16.13.2
         version: 16.13.2
-      graphql-ws:
-        specifier: ^6.0.8
-        version: 6.0.8(graphql@16.13.2)(ws@8.20.0)
       graphql-yoga:
         specifier: ^5.18.1
         version: 5.18.1(graphql@16.13.2)
       ioredis:
         specifier: ^5.10.1
         version: 5.10.1
-      ws:
-        specifier: ^8.20.0
-        version: 8.20.0
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -911,9 +869,6 @@ importers:
       '@types/node':
         specifier: ^24.0.0
         version: 24.19.1
-      '@types/ws':
-        specifier: ^8.18.1
-        version: 8.18.1
       prisma:
         specifier: ^7.6.0
         version: 7.6.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.2)

@@ -33,7 +33,7 @@ GraphQL Yoga v5 is pure ESM and requires an ESM runtime. Next.js manages its own
 
 ### HTTP via Next.js proxy; subscriptions vary by DS
 
-HTTP queries and mutations are proxied through Next.js `rewrites()` to hide the DS origin and avoid CORS. **`templates/ds`** serves subscriptions over **SSE on the same HTTP `/graphql` route** (no graphql-ws listener). UI templates still use graphql-ws and `NEXT_PUBLIC_DS_WS_URL` until migrated; other DS variants may expose WebSocket. See [DS subscription transport (SSE)](../developer/11-ds-subscription-sse.md).
+HTTP queries and mutations are proxied through Next.js `rewrites()` to hide the DS origin and avoid CORS. **All DS templates** serve subscriptions over **SSE on the same HTTP `/graphql` route** (no graphql-ws listener on the DS). UI templates still use graphql-ws and `NEXT_PUBLIC_DS_WS_URL` until migrated. See [DS subscription transport (SSE)](../developer/11-ds-subscription-sse.md).
 
 ### SDK as workspace dependency
 
