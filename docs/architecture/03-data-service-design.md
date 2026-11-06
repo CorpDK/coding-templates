@@ -120,7 +120,8 @@ my-app items                                 # query — prints JSON
 my-app create-item --name "Widget"           # mutation — prints JSON
 echo '{"name":"Widget"}' | my-app create-item  # mutation — variables from stdin
 my-app create-item --input vars.json         # mutation — variables from file
-my-app item-created --count 3               # subscription — streams 3 NDJSON events then exits
+# Subscriptions: curl or GraphiQL against DS_HTTP_URL (Accept: text/event-stream).
+# Generated subscription subcommands still use DS_WS_URL until ds-cli SSE lands.
 ```
 
 Variable merging order: `--input <file>` → piped stdin → explicit flags (flags win).

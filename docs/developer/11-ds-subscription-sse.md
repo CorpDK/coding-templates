@@ -53,9 +53,9 @@ When updating the UI:
 
 1. Route subscriptions through the **same GraphQL HTTP URL** as queries (Next.js `rewrites()` can proxy SSE; no direct browser WebSocket to the DS is required).
 2. Use a client that supports Yoga’s SSE subscription protocol (e.g. Apollo Client 3.10+ with appropriate link configuration, urql with an SSE exchange, or `fetch` + `EventSource`-compatible parsing).
-3. Remove dependency on `NEXT_PUBLIC_DS_WS_URL` for projects scaffolded from `@corpdk/ds` only.
+3. Remove dependency on `NEXT_PUBLIC_DS_WS_URL` for any DS-backed full-stack project.
 
-Until then, local full-stack dev with the stock UI templates against `@corpdk/ds` will not receive live subscription updates unless the UI is updated or you use GraphiQL/curl against the DS directly.
+Until then, local full-stack dev with the stock UI templates against **any DS template** will not receive live subscription updates unless the UI is updated or you use GraphiQL/curl against the DS directly.
 
 ---
 
