@@ -25,7 +25,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "lint": "eslint src/",
+    "lint": "tsc --noEmit --types node",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "clean": "rm -rf dist node_modules .turbo *.tsbuildinfo"

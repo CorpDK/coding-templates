@@ -11,7 +11,7 @@
     "build": "tsc && cp -r src/schema dist/",
     "codegen": "graphql-codegen",
     "start": "node dist/index.js",
-    "lint": "eslint src/",
+    "lint": "prisma generate && tsc --noEmit --types node",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "clean": "rm -rf dist node_modules .turbo *.tsbuildinfo"
