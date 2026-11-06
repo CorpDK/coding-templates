@@ -31,13 +31,13 @@ Dependencies used across multiple workspace packages.
 
 ### GraphQL Stack
 
-| Package                          | Version  | Used by                                                                            |
-| -------------------------------- | -------- | ---------------------------------------------------------------------------------- |
-| graphql                          | ^16.13.2 | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file, ui, ui-hprt, ds-sdk, codegen-cli |
-| graphql-yoga                     | ^5.18.1  | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file, pub-sub                          |
-| graphql-ws                       | ^6.0.8   | transitive (`@apollo/client` optional peer; generated ds-cli)                         |
-| graphql-sse                      | ^2.6.3   | ui, ui-hprt                                                                         |
-| @graphql-yoga/redis-event-target | ^3.0.0   | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file, pub-sub                          |
+| Package                          | Version  | Used by                                                                               |
+| -------------------------------- | -------- | ------------------------------------------------------------------------------------- |
+| graphql                          | ^16.13.2 | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file, ui, ui-hprt, ds-sdk, codegen-cli    |
+| graphql-yoga                     | ^5.18.1  | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file, pub-sub                             |
+| graphql-ws                       | ^6.0.8   | transitive (generated ds-cli; `@apollo/client` may still pull it as an optional peer) |
+| graphql-sse                      | ^2.6.3   | ui, ui-hprt                                                                           |
+| @graphql-yoga/redis-event-target | ^3.0.0   | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file, pub-sub                             |
 
 ### UI Framework
 

@@ -12,9 +12,7 @@ import { createClient as createSseClient } from "graphql-sse";
 import type { RequestParams } from "graphql-sse";
 import type { ReactNode } from "react";
 
-function headersRecord(
-  input: HeadersInit | undefined,
-): Record<string, string> {
+function headersRecord(input: HeadersInit | undefined): Record<string, string> {
   if (!input) {
     return {};
   }
@@ -36,12 +34,12 @@ async function mergedHeadersFromOperation(
 ): Promise<Record<string, string>> {
   const ctx = op.context;
   const rawFetchOpts =
-    typeof ctx.fetchOptions === "function" ? ctx.fetchOptions() : ctx.fetchOptions;
+    typeof ctx.fetchOptions === "function"
+      ? ctx.fetchOptions()
+      : ctx.fetchOptions;
   const fetchOpts = await Promise.resolve(rawFetchOpts);
   const fromFetch = headersRecord(fetchOpts?.headers);
-  const ctxHeaders = headersRecord(
-    (ctx as { headers?: HeadersInit }).headers,
-  );
+  const ctxHeaders = headersRecord((ctx as { headers?: HeadersInit }).headers);
   return { ...ctxHeaders, ...fromFetch };
 }
 

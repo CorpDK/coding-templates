@@ -17,9 +17,7 @@ import type { ReactNode } from "react";
 
 const httpLink = new HttpLink({ uri: "/api/graphql" });
 
-function headersRecord(
-  input: HeadersInit | undefined,
-): Record<string, string> {
+function headersRecord(input: HeadersInit | undefined): Record<string, string> {
   if (!input) {
     return {};
   }
@@ -64,7 +62,9 @@ class SseSubscriptionLink extends ApolloLink {
       url: "/api/graphql",
       headers: async () => {
         const ctxHeaders = withoutAcceptHeader(
-          headersRecord(operation.getContext().headers as HeadersInit | undefined),
+          headersRecord(
+            operation.getContext().headers as HeadersInit | undefined,
+          ),
         );
         return { ...ctxHeaders, Accept: "text/event-stream" };
       },

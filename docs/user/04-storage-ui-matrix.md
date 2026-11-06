@@ -19,12 +19,12 @@ Stock UI templates stream subscriptions over **SSE** on the same `/api/graphql` 
 
 ## UI Variant Differences
 
-|                    | `standard` (Apollo Client) | `hprt` (urql + Graphcache)          |
-| ------------------ | -------------------------- | ----------------------------------- |
-| **GraphQL client** | Apollo Client 3            | urql 5                              |
-| **Cache strategy** | Normalised in-memory       | Graphcache (normalised, optimistic) |
-| **Subscriptions**  | SSE (`graphql-sse`) via split link  | SSE (`graphql-sse` + `subscriptionExchange`) |
-| **Best for**       | Standard CRUD UIs          | High-frequency real-time data       |
+|                    | `standard` (Apollo Client)         | `hprt` (urql + Graphcache)                   |
+| ------------------ | ---------------------------------- | -------------------------------------------- |
+| **GraphQL client** | Apollo Client 4                    | urql 5                                       |
+| **Cache strategy** | Normalised in-memory               | Graphcache (normalised, optimistic)          |
+| **Subscriptions**  | SSE (`graphql-sse`) via split link | SSE (`graphql-sse` + `subscriptionExchange`) |
+| **Best for**       | Standard CRUD UIs                  | High-frequency real-time data                |
 
 ---
 

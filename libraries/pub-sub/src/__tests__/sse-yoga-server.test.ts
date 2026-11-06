@@ -1,9 +1,6 @@
 import { createSchema } from "graphql-yoga";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import {
-  createSseYogaHttpServer,
-  listenSseYogaHttpServer,
-} from "../index.js";
+import { createSseYogaHttpServer, listenSseYogaHttpServer } from "../index.js";
 
 const schema = createSchema({
   typeDefs: /* GraphQL */ `
@@ -18,7 +15,9 @@ const schema = createSchema({
   },
 });
 
-function listen(server: ReturnType<typeof createSseYogaHttpServer>): Promise<number> {
+function listen(
+  server: ReturnType<typeof createSseYogaHttpServer>,
+): Promise<number> {
   return new Promise((resolve, reject) => {
     server.listen(0, () => {
       const address = server.address();
@@ -31,7 +30,9 @@ function listen(server: ReturnType<typeof createSseYogaHttpServer>): Promise<num
   });
 }
 
-function close(server: ReturnType<typeof createSseYogaHttpServer>): Promise<void> {
+function close(
+  server: ReturnType<typeof createSseYogaHttpServer>,
+): Promise<void> {
   return new Promise((resolve, reject) => {
     server.close((error) => (error ? reject(error) : resolve()));
   });

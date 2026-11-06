@@ -40,13 +40,13 @@ The system has two independently deployable layers: a **Data Service (DS)** and 
 Browser → /api/graphql → Next.js rewrite → DS_HTTP_URL (server-side)
 ```
 
-**Subscription transport**
+### Subscription transport
 
-| DS                               | Server transport                                                    | Typical UI (stock templates)                                                                                                                                 |
-| -------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| DS                               | Server transport                                                    | Typical UI (stock templates)                                                                                                                |
+| -------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
 | `@corpdk/ds` and all DS variants | SSE on the same `/graphql` HTTP route (`Accept: text/event-stream`) | SSE on `/api/graphql` via Next.js rewrites to `DS_HTTP_URL` — see [DS subscription transport (SSE)](../developer/11-ds-subscription-sse.md) |
 
-**Why one HTTP proxy for everything**
+### Why one HTTP proxy for everything
 
 - HTTP proxying via Next.js rewrites keeps the DS origin hidden from the browser (no CORS configuration needed) and avoids exposing internal service URLs.
 - Subscriptions use the same rewrite as queries and mutations, with streaming over SSE instead of a separate WebSocket to the DS.

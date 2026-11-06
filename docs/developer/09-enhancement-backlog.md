@@ -74,7 +74,7 @@ Add `@corpdk/eslint-config` (base preset only — NodeNext ESM, not `./next`) an
 
 Explore durable delivery for the DS side: checkpoint/resume after disconnect (e.g. Drizzle-backed event log or Redis Streams via `@corpdk/pub-sub`).
 
-**Why it still matters:** SSE clients need a defined recovery story once UIs migrate off WebSocket transport.
+**Why it still matters:** SSE clients need a defined recovery story after disconnects and network gaps (stock UI templates already use SSE to the DS).
 
 ### 4. Multiple mutation batching in a single transaction
 

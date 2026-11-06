@@ -13,11 +13,11 @@ For implementation status, see [06-ui-status.md](06-ui-status.md).
 
 The monorepo contains three UI application templates and six shared packages:
 
-| Package                 | Scope                 | GraphQL Client    | Real-time                           | Purpose                                                                         |
-| ----------------------- | --------------------- | ----------------- | ----------------------------------- | ------------------------------------------------------------------------------- |
-| `templates/ui`          | `@corpdk/ui`          | Apollo Client     | SSE via `graphql-sse` (split link)   | Standard CRUD template                                                          |
+| Package                 | Scope                 | GraphQL Client    | Real-time                                      | Purpose                                                                         |
+| ----------------------- | --------------------- | ----------------- | ---------------------------------------------- | ------------------------------------------------------------------------------- |
+| `templates/ui`          | `@corpdk/ui`          | Apollo Client     | SSE via `graphql-sse` (split link)             | Standard CRUD template                                                          |
 | `templates/ui-hprt`     | `@corpdk/ui-hprt`     | urql + Graphcache | SSE via `subscriptionExchange` + `graphql-sse` | High-frequency real-time template                                               |
-| `templates/ui-showcase` | `@corpdk/ui-showcase` | —                 | —                                   | Storybook showcase — visual testing for all 6 shared packages; `pnpm storybook` |
+| `templates/ui-showcase` | `@corpdk/ui-showcase` | —                 | —                                              | Storybook showcase — visual testing for all 6 shared packages; `pnpm storybook` |
 
 Both runnable templates consume shared capabilities from `packages/ui-*` as workspace dependencies. The Storybook showcase (`ui-showcase`) imports from all six packages and is used during development to verify the shared package API visually.
 
@@ -37,10 +37,10 @@ These concerns belong to each individual app (`templates/ui`, `templates/ui-hprt
 
 ### GraphQL Client
 
-| App       | Client          | Cache                   | Subscriptions                     |
-| --------- | --------------- | ----------------------- | --------------------------------- |
+| App       | Client          | Cache                   | Subscriptions                         |
+| --------- | --------------- | ----------------------- | ------------------------------------- |
 | `ui`      | Apollo Client 4 | InMemoryCache           | Custom SSE link + split (graphql-sse) |
-| `ui-hprt` | urql 5          | Graphcache (normalized) | subscriptionExchange + graphql-sse |
+| `ui-hprt` | urql 5          | Graphcache (normalized) | subscriptionExchange + graphql-sse    |
 
 ### Authentication
 

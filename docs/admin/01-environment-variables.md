@@ -95,9 +95,9 @@ Codegen-only (unusual outside CI): `DAL_SCHEMA_PATH`, `DAL_OUTPUT_DIR`, `DAL_CON
 
 ### `ui` and `ui-hprt`
 
-| Variable                | Description                                                                                                                                           |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DS_HTTP_URL`           | Full URL of the DS HTTP endpoint (e.g. `http://localhost:4000`) — base used by Next.js `rewrites()` so `/api/graphql` proxies queries, mutations, and SSE subscriptions |
+| Variable      | Description                                                                                                                                                             |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DS_HTTP_URL` | Full URL of the DS HTTP endpoint (e.g. `http://localhost:4000`) — base used by Next.js `rewrites()` so `/api/graphql` proxies queries, mutations, and SSE subscriptions |
 
 `DS_HTTP_URL` is a server-side variable (no `NEXT_PUBLIC_` prefix). It is proxied by Next.js rewrites so the browser never sees the backend origin. Subscriptions use the same rewrite with `Accept: text/event-stream` — see [DS subscription transport (SSE)](../developer/11-ds-subscription-sse.md).
 

@@ -1,9 +1,7 @@
 import { createServer, type Server } from "node:http";
 import { createYoga } from "graphql-yoga";
 
-type SseYogaSchema = NonNullable<
-  Parameters<typeof createYoga>[0]["schema"]
->;
+type SseYogaSchema = NonNullable<Parameters<typeof createYoga>[0]["schema"]>;
 
 export function createSseYogaServer(schema: SseYogaSchema) {
   return createYoga({
@@ -25,8 +23,7 @@ export function listenSseYogaHttpServer(
 ): void {
   server.listen(port, () => {
     const addr = server.address();
-    const boundPort =
-      addr && typeof addr === "object" ? addr.port : port;
+    const boundPort = addr && typeof addr === "object" ? addr.port : port;
     const base = `http://localhost:${boundPort}/graphql`;
     console.log(`${packageLabel}  HTTP  ${base}`);
     for (const line of extraStartupLines) {

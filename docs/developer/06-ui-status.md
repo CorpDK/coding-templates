@@ -31,10 +31,10 @@ Capabilities that live in each app (`templates/ui`, `templates/ui-hprt`) rather 
 
 ### GraphQL Client
 
-| Capability            | Technology          | `ui` | `ui-hprt` | Notes                    |
-| --------------------- | ------------------- | ---- | --------- | ------------------------ |
-| GraphQL client        | Apollo Client 3     | ✅   | —         | Standard apps            |
-| GraphQL client (HPRT) | urql 5 + Graphcache | —    | ✅        | High-frequency real-time |
+| Capability            | Technology          | `ui` | `ui-hprt` | Notes                            |
+| --------------------- | ------------------- | ---- | --------- | -------------------------------- |
+| GraphQL client        | Apollo Client 4     | ✅   | —         | Standard apps                    |
+| GraphQL client (HPRT) | urql 5 + Graphcache | —    | ✅        | High-frequency real-time         |
 | Subscriptions         | graphql-sse + SSE   | ✅   | ✅        | Same `/api/graphql` proxy as Q/M |
 
 ### REST Caching
@@ -187,7 +187,7 @@ Capabilities that live in each app (`templates/ui`, `templates/ui-hprt`) rather 
 | Data grid          | TanStack Table v8                       | AG-Grid Community, MUI DataGrid, Glide Data Grid      | Headless = full styling control; no license cost                                                         | Pre-template |
 | Virtualization     | @tanstack/react-virtual                 | react-window, react-virtuoso                          | Same TanStack ecosystem; minimal API surface                                                             | Pre-template |
 | REST caching       | TanStack Query                          | SWR, Apollo REST link                                 | Richer feature set; DevTools; consistent with TanStack family                                            | Pre-template |
-| GraphQL (standard) | Apollo Client 3                         | urql (standard), URQL                                 | Largest ecosystem; mature DevTools; production-proven                                                    | Pre-template |
+| GraphQL (standard) | Apollo Client 4                         | urql (standard), URQL                                 | Largest ecosystem; mature DevTools; production-proven                                                    | Pre-template |
 | GraphQL (HPRT)     | urql + Graphcache                       | Apollo Client                                         | Graphcache handles high-frequency normalized updates without over-rendering                              | Pre-template |
 | Charts             | D3                                      | Recharts, Nivo, ECharts, Victory                      | Low-level control; `useD3` hook abstracts attach/cleanup; bundles only what's used                       | 2026-03      |
 | Auth               | Auth.js v5 (BFF)                        | Clerk, custom JWT                                     | OIDC/OAuth2 SSO; BFF keeps tokens server-side; Next.js-native                                            | 2026-03      |
