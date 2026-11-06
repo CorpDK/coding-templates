@@ -31,7 +31,7 @@ The repo combines templates, shared UI packages, engines, and libraries that evo
 
 GraphQL Yoga v5 is pure ESM and requires an ESM runtime. Next.js manages its own compilation pipeline, so UI packages don't need `"type": "module"` at the package level. Applying it only to DS packages minimises the surface area of ESM configuration.
 
-### HTTP via Next.js proxy; subscriptions vary by DS
+### HTTP via Next.js proxy; DS subscriptions via SSE
 
 HTTP queries and mutations are proxied through Next.js `rewrites()` to hide the DS origin and avoid CORS. **All DS templates** serve subscriptions over **SSE on the same HTTP `/graphql` route** (no graphql-ws listener on the DS). UI templates still use graphql-ws and `NEXT_PUBLIC_DS_WS_URL` until migrated. See [DS subscription transport (SSE)](../developer/11-ds-subscription-sse.md).
 

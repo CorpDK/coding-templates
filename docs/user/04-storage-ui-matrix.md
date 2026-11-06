@@ -31,11 +31,11 @@ Not every DS variant is compatible with every UI variant. This table shows valid
 | DS package | Storage                                   | ORM / Driver        | Real-time optimised     |
 | ---------- | ----------------------------------------- | ------------------- | ----------------------- |
 | `ds`       | PostgreSQL / MySQL / SQLite / CockroachDB | Drizzle             | Yes (SSE on HTTP `/graphql`; see [DS subscription SSE](../developer/11-ds-subscription-sse.md)) |
-| `ds-no-sql`| PostgreSQL / MySQL / SQLite / CockroachDB / MongoDB / DocumentDB | Prisma | No       |
-| `ds-cdb`   | Couchbase Capella / self-hosted           | Native SDK + Zod    | Yes                     |
-| `ds-mongo` | MongoDB Atlas / self-hosted               | Native driver + Zod | Yes                     |
-| `ds-ddb`   | DocumentDB (documentdb.io)                | Native driver + Zod | Yes                     |
-| `ds-file`  | JSON or YAML file on disk                 | fs/promises + Zod   | Yes (in-memory pub/sub) |
+| `ds-no-sql`| PostgreSQL / MySQL / SQLite / CockroachDB / MongoDB / DocumentDB | Prisma | No (SSE on HTTP `/graphql`; see [DS subscription SSE](../developer/11-ds-subscription-sse.md)) |
+| `ds-cdb`   | Couchbase Capella / self-hosted           | Native SDK + Zod    | Yes (SSE on HTTP `/graphql`; see [DS subscription SSE](../developer/11-ds-subscription-sse.md)) |
+| `ds-mongo` | MongoDB Atlas / self-hosted               | Native driver + Zod | Yes (SSE on HTTP `/graphql`; see [DS subscription SSE](../developer/11-ds-subscription-sse.md)) |
+| `ds-ddb`   | DocumentDB (documentdb.io)                | Native driver + Zod | Yes (SSE on HTTP `/graphql`; see [DS subscription SSE](../developer/11-ds-subscription-sse.md)) |
+| `ds-file`  | JSON or YAML file on disk                 | fs/promises + Zod   | Yes (SSE on HTTP `/graphql`; in-memory pub/sub; see [DS subscription SSE](../developer/11-ds-subscription-sse.md)) |
 
 ---
 
