@@ -59,7 +59,7 @@ Subscription resolvers and `@corpdk/pub-sub` usage are unchanged. Only the **wir
 
 ## Generated CLI (`ds-cli`)
 
-The CLI preset still documents `DS_WS_URL` for subscription subcommands (WebSocket-based generator output). Point automation at the DS with `DS_HTTP_URL` for queries/mutations; subscription CLI streaming will be updated in a follow-up to use SSE.
+Subscription subcommands use the same `DS_HTTP_URL` as queries and mutations: they issue an HTTP `POST` with `Accept: text/event-stream` and print each GraphQL execution result as a line of JSON (NDJSON), matching GraphQL Yoga’s SSE framing (`event: next` / `data:`).
 
 ---
 

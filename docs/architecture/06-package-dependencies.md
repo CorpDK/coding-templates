@@ -35,7 +35,7 @@ Dependencies used across multiple workspace packages.
 | -------------------------------- | -------- | ------------------------------------------------------------------------------------- |
 | graphql                          | ^16.13.2 | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file, ui, ui-hprt, ds-sdk, codegen-cli    |
 | graphql-yoga                     | ^5.18.1  | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file, pub-sub                             |
-| graphql-ws                       | ^6.0.8   | transitive (generated ds-cli; `@apollo/client` may still pull it as an optional peer) |
+| graphql-ws (stub override)       | `workspace:*` | Optional-peer shim only — empty package; subscriptions use SSE, not WebSockets |
 | graphql-sse                      | ^2.6.3   | ui, ui-hprt                                                                           |
 | @graphql-yoga/redis-event-target | ^3.0.0   | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file, pub-sub                             |
 
@@ -274,7 +274,7 @@ Tracked here until applied. Remove entries as they are completed.
 | 2026-03-29 | @graphql-codegen/typescript            | ^4.1.5   | ^5.0.9   | Major bump, coordinated                                                                                |
 | 2026-03-29 | @graphql-codegen/typescript-resolvers  | ^4.5.1   | ^5.1.7   | Major bump, coordinated                                                                                |
 | 2026-03-29 | @graphql-codegen/plugin-helpers        | ^5.0.0   | ^6.2.0   | Major bump, coordinated                                                                                |
-| 2026-03-29 | graphql-ws                             | ^5.16.0  | ^6.0.8   | Major bump; import path changed from graphql-ws/lib/use/ws to graphql-ws/use/ws                        |
+| 2026-11-06 | graphql-ws                             | ^6.0.8   | workspace stub | Replaced with empty workspace package via root `pnpm.overrides` (SSE-only; no WebSocket client)         |
 | 2026-03-29 | mongodb                                | ^6.16.0  | ^7.1.1   | Major bump; no source changes needed (async/await API unchanged)                                       |
 | 2026-03-29 | @clack/prompts                         | ^0.9.1   | ^1.1.0   | Major bump (0.x→1.x); no source changes needed                                                         |
 | 2026-03-29 | @apollo/client                         | ^3.13.8  | ^4.1.6   | Major bump; ApolloProvider moved to @apollo/client/react; split() replaced by ApolloLink.split()       |

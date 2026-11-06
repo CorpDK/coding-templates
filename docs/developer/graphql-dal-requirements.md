@@ -2437,12 +2437,12 @@ This system provides:
 
 ## Appendix A — ds-cli Conventions
 
-The auto-generated **`ds-cli`** is an **ops/automation GraphQL client** — not an alternate data-access layer. Every command executes a GraphQL operation (query, mutation, or subscription) against the same HTTP GraphQL endpoint as application clients (§2.12). DS servers accept subscriptions only via SSE on `/graphql` ([11-ds-subscription-sse.md](11-ds-subscription-sse.md)); generated subscription subcommands still use a WebSocket client (`DS_WS_URL`) until CLI SSE lands. Production UI and service code should call GraphQL directly; ds-cli is for scripts, CI, and LLM automation workflows.
+The auto-generated **`ds-cli`** is an **ops/automation GraphQL client** — not an alternate data-access layer. Every command executes a GraphQL operation (query, mutation, or subscription) against the same HTTP GraphQL endpoint as application clients (§2.12). DS servers accept subscriptions only via SSE on `/graphql` ([11-ds-subscription-sse.md](11-ds-subscription-sse.md)); subscription subcommands stream results over the same `DS_HTTP_URL` with `Accept: text/event-stream`. Production UI and service code should call GraphQL directly; ds-cli is for scripts, CI, and LLM automation workflows.
 
 | Concern                      | Convention                                                                                                                                                 |
 | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Purpose**                  | Ops, automation, and scripting — **not** primary application runtime data access                                                                           |
-| **Transport**                | GraphQL HTTP on `DS_HTTP_URL` (POST for queries/mutations; DS subscriptions via SSE). Subscription subcommands pending CLI SSE migration                   |
+| **Transport**                | GraphQL HTTP on `DS_HTTP_URL` (POST; subscriptions use `Accept: text/event-stream` on the same URL)                                                        |
 | **Nested / complex inputs**  | **`--input-file <path>`** (JSON file) or **`--input-json '<json>'`**                                                                                       |
 | **Union or complex outputs** | Raw JSON stdout — no automatic field selection                                                                                                             |
 | **Complex filters**          | LLM/automation clients may prefer the **TypedDocumentNode SDK** (`@corpdk/ds-sdk` pattern) over shell escaping; both SDK and ds-cli remain GraphQL clients |

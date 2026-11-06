@@ -105,7 +105,7 @@ Every DS variant runs `graphql-codegen` with the `@corpdk/codegen-cli` preset al
 
 | File               | Purpose                                                                   |
 | ------------------ | ------------------------------------------------------------------------- |
-| `index.js`         | Executable CLI — zero runtime dependencies (native `fetch` + `WebSocket`) |
+| `index.js`         | Executable CLI — zero runtime dependencies (native `fetch` + streams for SSE subscriptions) |
 | `man/ds-cli.1`     | groff man page — `man ./src/generated/man/ds-cli.1`                       |
 | `info/ds-cli.texi` | Texinfo source — compile with `makeinfo`                                  |
 
@@ -120,18 +120,16 @@ my-app items                                 # query — prints JSON
 my-app create-item --name "Widget"           # mutation — prints JSON
 echo '{"name":"Widget"}' | my-app create-item  # mutation — variables from stdin
 my-app create-item --input vars.json         # mutation — variables from file
-# Subscriptions: curl or GraphiQL against DS_HTTP_URL (Accept: text/event-stream).
-# Generated subscription subcommands still use DS_WS_URL until ds-cli SSE lands.
+# Subscription subcommands stream NDJSON over SSE on DS_HTTP_URL (Accept: text/event-stream).
 ```
 
 Variable merging order: `--input <file>` → piped stdin → explicit flags (flags win).
 
 ### Environment
 
-| Variable      | Default | Description                                                                                                                                                                                               |
-| ------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DS_HTTP_URL` | —       | HTTP endpoint for queries and mutations                                                                                                                                                                   |
-| `DS_WS_URL`   | —       | WebSocket endpoint for subscription subcommands in generated CLI only (DS servers use SSE on `DS_HTTP_URL`; see [11-ds-subscription-sse.md](../developer/11-ds-subscription-sse.md#generated-cli-ds-cli)) |
+| Variable      | Default | Description                                                                                                                                                                              |
+| ------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DS_HTTP_URL` | —       | HTTP endpoint for queries, mutations, and subscriptions (subscriptions use `Accept: text/event-stream` on the same URL — [11-ds-subscription-sse.md](../developer/11-ds-subscription-sse.md)) |
 
 ### How it's wired
 
@@ -142,7 +140,6 @@ Variable merging order: `--input <file>` → piped stdin → explicit flags (fla
   preset: "@corpdk/codegen-cli",
   presetConfig: {
     httpUrlEnvVar: "DS_HTTP_URL",
-    wsUrlEnvVar: "DS_WS_URL",
   },
 },
 ```

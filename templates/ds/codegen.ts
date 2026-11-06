@@ -26,7 +26,6 @@ const config: CodegenConfig = {
       preset: "@corpdk/codegen-cli",
       presetConfig: {
         httpUrlEnvVar: "DS_HTTP_URL",
-        wsUrlEnvVar: "DS_WS_URL",
       },
     },
   },

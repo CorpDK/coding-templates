@@ -65,7 +65,7 @@ pnpm build      # runs codegen → build for all packages
 
 ## Using the CLI _(full-stack / DS only)_
 
-After codegen, the project CLI is available at `packages/ds-cli/src/generated/index.js`. All DS templates serve subscriptions over **SSE on the same HTTP `/graphql` route** as queries and mutations (no WebSocket listener). Set `DS_HTTP_URL` for queries and mutations:
+After codegen, the project CLI is available at `packages/ds-cli/src/generated/index.js`. All DS templates serve subscriptions over **SSE on the same HTTP `/graphql` route** as queries and mutations (no WebSocket listener). Set `DS_HTTP_URL` for all operations, including subscription subcommands:
 
 ```bash
 export DS_HTTP_URL=http://localhost:<ds-port>/graphql
@@ -73,7 +73,7 @@ export DS_HTTP_URL=http://localhost:<ds-port>/graphql
 node packages/ds-cli/src/generated/index.js --help
 ```
 
-Generated subscription subcommands still read `DS_WS_URL` (WebSocket-based CLI output). That path does not match current DS servers until CLI SSE support lands — see [DS subscription transport (SSE)](../developer/11-ds-subscription-sse.md#generated-cli-ds-cli). Use curl or GraphiQL against `DS_HTTP_URL` with `Accept: text/event-stream` for subscriptions today.
+See [DS subscription transport (SSE)](../developer/11-ds-subscription-sse.md#generated-cli-ds-cli) for the SSE wire format; you can also use curl or GraphiQL with `Accept: text/event-stream`.
 
 Or install it globally / link it via pnpm so the binary (`<projectName>`) is on your PATH.
 
@@ -92,7 +92,7 @@ my-app create-item --input vars.json
 # Mutation (piped JSON)
 echo '{"name":"Widget"}' | my-app create-item
 
-# Subscription (SSE on DS_HTTP_URL; my-app subscription subcommands need DS_WS_URL until ds-cli SSE lands)
+# Subscription (SSE on DS_HTTP_URL; same URL as subscription subcommands)
 curl -N -H "Accept: text/event-stream" \
   -H "Content-Type: application/json" \
   -d '{"query":"subscription { itemCreated { id name } }"}' \
