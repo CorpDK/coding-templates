@@ -35,7 +35,7 @@ Capabilities that live in each app (`templates/ui`, `templates/ui-hprt`) rather 
 | --------------------- | ------------------- | ---- | --------- | ------------------------ |
 | GraphQL client        | Apollo Client 3     | ✅   | —         | Standard apps            |
 | GraphQL client (HPRT) | urql 5 + Graphcache | —    | ✅        | High-frequency real-time |
-| Subscriptions         | graphql-ws 5        | ✅   | ✅        | Both use graphql-ws      |
+| Subscriptions         | graphql-sse + SSE   | ✅   | ✅        | Same `/api/graphql` proxy as Q/M |
 
 ### REST Caching
 

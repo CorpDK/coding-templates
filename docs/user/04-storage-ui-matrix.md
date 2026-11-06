@@ -13,7 +13,7 @@ Not every DS variant is compatible with every UI variant. This table shows valid
 | `filebased`                                  | —          | `@corpdk/ds-file`   | `standard` or `hprt`           |
 | _(UI only)_                                  | —          | —                   | `standard` or `hprt` + `--sdk` |
 
-Stock UI templates use graphql-ws for subscriptions (`NEXT_PUBLIC_DS_WS_URL`). Every DS package in the table serves subscriptions only over SSE on HTTP `/graphql`. Queries and mutations work for each pairing; **`hprt` with document or file DS** is a common real-time choice but stock `ui-hprt` will not receive live subscription events until the UI migrates to SSE — see [DS subscription transport (SSE)](../developer/11-ds-subscription-sse.md).
+Stock UI templates stream subscriptions over **SSE** on the same `/api/graphql` proxy as queries and mutations. Every DS package in the table matches that transport on HTTP `/graphql` — see [DS subscription transport (SSE)](../developer/11-ds-subscription-sse.md).
 
 ---
 
@@ -23,7 +23,7 @@ Stock UI templates use graphql-ws for subscriptions (`NEXT_PUBLIC_DS_WS_URL`). E
 | ------------------ | -------------------------- | ----------------------------------- |
 | **GraphQL client** | Apollo Client 3            | urql 5                              |
 | **Cache strategy** | Normalised in-memory       | Graphcache (normalised, optimistic) |
-| **Subscriptions**  | graphql-ws via split link  | graphql-ws via subscriptionExchange |
+| **Subscriptions**  | SSE (`graphql-sse`) via split link  | SSE (`graphql-sse` + `subscriptionExchange`) |
 | **Best for**       | Standard CRUD UIs          | High-frequency real-time data       |
 
 ---

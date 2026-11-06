@@ -5,23 +5,56 @@ import {
   ApolloLink,
   HttpLink,
   InMemoryCache,
+  Observable,
 } from "@apollo/client";
+import type { FetchResult, Operation } from "@apollo/client";
 import { ApolloProvider } from "@apollo/client/react";
-import { GraphQLWsLink } from "@apollo/client/link/subscriptions";
 import { getMainDefinition } from "@apollo/client/utilities";
-import { createClient } from "graphql-ws";
+import { print } from "graphql";
+import { createClient } from "graphql-sse";
+import type { RequestParams } from "graphql-sse";
 import type { ReactNode } from "react";
 
 const httpLink = new HttpLink({ uri: "/api/graphql" });
 
-const wsLink = new GraphQLWsLink(
-  createClient({ url: process.env.NEXT_PUBLIC_DS_WS_URL! }),
-);
+/** Per-request headers from Apollo context (e.g. auth) merged into SSE transport. */
+const operationsByRequest = new WeakMap<RequestParams, Operation>();
+
+const sseClient = createClient({
+  url: "/api/graphql",
+  headers: async (request) => {
+    const op = operationsByRequest.get(request);
+    const ctxHeaders =
+      (op?.getContext().headers as Record<string, string> | undefined) ?? {};
+    return { Accept: "text/event-stream", ...ctxHeaders };
+  },
+});
 
 /**
- * Split link: subscriptions go over WebSocket, queries/mutations over HTTP.
- * The same TypedDocumentNode operations from @corpdk/ds-sdk work with both.
+ * Subscriptions over HTTP SSE (`Accept: text/event-stream`) via the same Next.js
+ * `/api/graphql` proxy as queries and mutations. Matches GraphQL Yoga on DS templates.
  */
+class SseSubscriptionLink extends ApolloLink {
+  public override request(operation: Operation): Observable<FetchResult> {
+    const request: RequestParams = {
+      operationName: operation.operationName ?? undefined,
+      query: print(operation.query),
+      variables: operation.variables ?? undefined,
+      extensions: operation.extensions ?? undefined,
+    };
+    operationsByRequest.set(request, operation);
+    return new Observable((sink) =>
+      sseClient.subscribe(request, {
+        next: sink.next.bind(sink),
+        complete: sink.complete.bind(sink),
+        error: sink.error.bind(sink),
+      }),
+    );
+  }
+}
+
+const sseLink = new SseSubscriptionLink();
+
 const splitLink = ApolloLink.split(
   ({ query }) => {
     const def = getMainDefinition(query);
@@ -29,7 +62,7 @@ const splitLink = ApolloLink.split(
       def.kind === "OperationDefinition" && def.operation === "subscription"
     );
   },
-  wsLink,
+  sseLink,
   httpLink,
 );
 

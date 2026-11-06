@@ -15,8 +15,8 @@ The monorepo contains three UI application templates and six shared packages:
 
 | Package                 | Scope                 | GraphQL Client    | Real-time                           | Purpose                                                                         |
 | ----------------------- | --------------------- | ----------------- | ----------------------------------- | ------------------------------------------------------------------------------- |
-| `templates/ui`          | `@corpdk/ui`          | Apollo Client     | graphql-ws via split link           | Standard CRUD template                                                          |
-| `templates/ui-hprt`     | `@corpdk/ui-hprt`     | urql + Graphcache | graphql-ws via subscriptionExchange | High-frequency real-time template                                               |
+| `templates/ui`          | `@corpdk/ui`          | Apollo Client     | SSE via `graphql-sse` (split link)   | Standard CRUD template                                                          |
+| `templates/ui-hprt`     | `@corpdk/ui-hprt`     | urql + Graphcache | SSE via `subscriptionExchange` + `graphql-sse` | High-frequency real-time template                                               |
 | `templates/ui-showcase` | `@corpdk/ui-showcase` | —                 | —                                   | Storybook showcase — visual testing for all 6 shared packages; `pnpm storybook` |
 
 Both runnable templates consume shared capabilities from `packages/ui-*` as workspace dependencies. The Storybook showcase (`ui-showcase`) imports from all six packages and is used during development to verify the shared package API visually.
@@ -32,16 +32,15 @@ These concerns belong to each individual app (`templates/ui`, `templates/ui-hprt
 ### Next.js & Routing
 
 - App Router — all routes under `app/`
-- `next.config.ts` proxies `/api/graphql/*` to `DS_HTTP_URL` (avoids CORS, hides backend origin)
-- WebSocket connects directly via `NEXT_PUBLIC_DS_WS_URL` (Next.js cannot proxy WS). Pairing with **any DS template** requires a future SSE client migration — DS servers no longer listen on WebSocket ([11-ds-subscription-sse.md](11-ds-subscription-sse.md)).
+- `next.config.ts` proxies `/api/graphql/*` to `DS_HTTP_URL` (avoids CORS, hides backend origin). Subscriptions use the same path with **SSE** (`Accept: text/event-stream`) — [11-ds-subscription-sse.md](11-ds-subscription-sse.md).
 - `output: 'standalone'` required for Docker — bundles the Next.js server into `server.js`
 
 ### GraphQL Client
 
 | App       | Client          | Cache                   | Subscriptions                     |
 | --------- | --------------- | ----------------------- | --------------------------------- |
-| `ui`      | Apollo Client 3 | InMemoryCache           | GraphQLWsLink (split link)        |
-| `ui-hprt` | urql 5          | Graphcache (normalized) | subscriptionExchange + graphql-ws |
+| `ui`      | Apollo Client 4 | InMemoryCache           | Custom SSE link + split (graphql-sse) |
+| `ui-hprt` | urql 5          | Graphcache (normalized) | subscriptionExchange + graphql-sse |
 
 ### Authentication
 

@@ -11,7 +11,7 @@
               │  @corpdk/ui          @corpdk/ui-hprt          │
               │  Apollo Client       urql + Graphcache        │
               └──────┬───────────────────┬────────────────────┘
-                     │ HTTP Q/M · WS sub │ HTTP Q/M · WS sub
+                     │ HTTP Q/M + SSE sub │ HTTP Q/M + SSE sub
               ┌──────▼──────┐    ┌───────▼───────────┐
               │ @corpdk/ds  │    │ @corpdk/ds-no-sql  │
               │ Yoga+Drizzle│    │ Yoga+Prisma        │
@@ -40,16 +40,16 @@ The system has two independently deployable layers: a **Data Service (DS)** and 
 Browser → /api/graphql → Next.js rewrite → DS_HTTP_URL (server-side)
 ```
 
-**Subscription transport (DS server vs UI client today)**:
+**Subscription transport**
 
-| DS                               | Server transport                                                    | Typical UI (today)                                                                                                                                         |
-| -------------------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `@corpdk/ds` and all DS variants | SSE on the same `/graphql` HTTP route (`Accept: text/event-stream`) | UI templates still use graphql-ws + `NEXT_PUBLIC_DS_WS_URL` until migrated — see [DS subscription transport (SSE)](../developer/11-ds-subscription-sse.md) |
+| DS                               | Server transport                                                    | Typical UI (stock templates)                                                                                                                                 |
+| -------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@corpdk/ds` and all DS variants | SSE on the same `/graphql` HTTP route (`Accept: text/event-stream`) | SSE on `/api/graphql` via Next.js rewrites to `DS_HTTP_URL` — see [DS subscription transport (SSE)](../developer/11-ds-subscription-sse.md) |
 
-**Why split HTTP proxy vs direct WS (legacy UI path)?**
+**Why one HTTP proxy for everything**
 
 - HTTP proxying via Next.js rewrites keeps the DS origin hidden from the browser (no CORS configuration needed) and avoids exposing internal service URLs.
-- Next.js cannot proxy WebSocket connections, so the DS WebSocket URL is exposed as a public `NEXT_PUBLIC_` variable when the client uses graphql-ws. SSE subscriptions can use the same proxied HTTP URL as queries.
+- Subscriptions use the same rewrite as queries and mutations, with streaming over SSE instead of a separate WebSocket to the DS.
 
 ---
 
@@ -80,7 +80,7 @@ Turbo `@corpdk/ds#dev` declares `dependsOn: ["^build", "codegen", "dal:codegen:i
 
 ## Real-Time Subscriptions
 
-Every mutation publishes a PubSub event. Subscribed clients receive updates over SSE on the DS (all templates) or WebSocket (current UI templates only) — no polling required.
+Every mutation publishes a PubSub event. Subscribed clients receive updates over SSE on the DS and in stock UI templates — no polling required.
 
 The PubSub transport is selected at startup by `@corpdk/pub-sub`:
 

@@ -70,7 +70,7 @@ Add `@corpdk/eslint-config` (base preset only — NodeNext ESM, not `./next`) an
 
 ### 3. Subscription resume (SSE)
 
-**Status:** Not started — all DS templates publish via `@corpdk/pub-sub` (memory or Redis) over **SSE** ([11-ds-subscription-sse.md](11-ds-subscription-sse.md)); reconnecting clients can miss events during gaps. Stock UI templates still use **graphql-ws** and are out of scope until they consume DS SSE.
+**Status:** Not started — all DS templates publish via `@corpdk/pub-sub` (memory or Redis) over **SSE** ([11-ds-subscription-sse.md](11-ds-subscription-sse.md)); reconnecting clients can miss events during gaps. Stock UI templates also stream over **SSE** to the same proxied `/api/graphql` endpoint.
 
 Explore durable delivery for the DS side: checkpoint/resume after disconnect (e.g. Drizzle-backed event log or Redis Streams via `@corpdk/pub-sub`).
 

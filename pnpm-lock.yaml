@@ -929,9 +929,9 @@ importers:
       graphql:
         specifier: ^16.13.2
         version: 16.13.2
-      graphql-ws:
-        specifier: ^6.0.8
-        version: 6.0.8(graphql@16.13.2)(ws@8.20.0)
+      graphql-sse:
+        specifier: ^2.6.3
+        version: 2.6.3(graphql@16.13.2)
       next:
         specifier: 16.2.4
         version: 16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(sass@1.99.0)
@@ -1005,9 +1005,9 @@ importers:
       graphql:
         specifier: ^16.13.2
         version: 16.13.2
-      graphql-ws:
-        specifier: ^6.0.8
-        version: 6.0.8(graphql@16.13.2)(ws@8.20.0)
+      graphql-sse:
+        specifier: ^2.6.3
+        version: 2.6.3(graphql@16.13.2)
       next:
         specifier: 16.2.4
         version: 16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(sass@1.99.0)
@@ -6113,6 +6113,12 @@ packages:
     engines: {node: '>=10'}
     peerDependencies:
       graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
+
+  graphql-sse@2.6.3:
+    resolution: {integrity: sha512-UCSx3a+IklDOqJt8gpxGwDhnmWiZLJ5wNPMJ7TLGOQ68PhiKIDxLJBB2i+nKEGyWYLtiSLpTJ5fFEG5kkAxppA==}
+    engines: {node: '>=12'}
+    peerDependencies:
+      graphql: '>=0.11 <=17'
 
   graphql-tag@2.12.6:
     resolution: {integrity: sha512-FdSNcu2QQcWnM2VNvSCCDCVS5PpPqpzgFT8+GXzqJuoDd0CBncxCY278u4mhRO7tMgo2JjgJA5aZ+nWSQ/Z+xg==}
@@ -13971,6 +13977,10 @@ snapshots:
     dependencies:
       graphql: 16.13.2
       tslib: 2.8.1
+
+  graphql-sse@2.6.3(graphql@16.13.2):
+    dependencies:
+      graphql: 16.13.2
 
   graphql-tag@2.12.6(graphql@16.13.2):
     dependencies:

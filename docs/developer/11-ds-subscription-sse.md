@@ -45,17 +45,9 @@ curl -N -H "Accept: text/event-stream" \
 
 ---
 
-## UI migration (deferred)
+## UI templates (`templates/ui`, `templates/ui-hprt`)
 
-Template UI packages (`templates/ui`, `templates/ui-hprt`) still use **graphql-ws** and `NEXT_PUBLIC_DS_WS_URL`. They are **out of scope** for the DS-only SSE migration.
-
-When updating the UI:
-
-1. Route subscriptions through the **same GraphQL HTTP URL** as queries (Next.js `rewrites()` can proxy SSE; no direct browser WebSocket to the DS is required).
-2. Use a client that supports Yoga’s SSE subscription protocol (e.g. Apollo Client 3.10+ with appropriate link configuration, urql with an SSE exchange, or `fetch` + `EventSource`-compatible parsing).
-3. Remove dependency on `NEXT_PUBLIC_DS_WS_URL` for any DS-backed full-stack project.
-
-Until then, local full-stack dev with the stock UI templates against **any DS template** will not receive live subscription updates unless the UI is updated or you use GraphiQL/curl against the DS directly.
+Stock UI apps route **queries, mutations, and subscriptions** through the same Next.js `/api/graphql` rewrite as other GraphQL operations. Subscription operations send `Accept: text/event-stream` and stream results over **SSE** (`graphql-sse` with Apollo Client or urql’s `subscriptionExchange`). No browser WebSocket and no `NEXT_PUBLIC_DS_WS_URL` are required.
 
 ---
 

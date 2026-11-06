@@ -22,7 +22,7 @@
     "@corpdk/ui-forms": "workspace:*",
     "@tanstack/react-query": "^5.95.2",
     "graphql": "^16.13.2",
-    "graphql-ws": "^6.0.8",
+    "graphql-sse": "^2.6.3",
     "next": "16.2.4",
     "react": "19.2.4",
     "react-dom": "19.2.4"

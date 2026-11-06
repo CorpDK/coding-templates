@@ -1,12 +1,19 @@
 "use client";
 
-import { createClient, fetchExchange, subscriptionExchange, Provider } from "urql";
+import {
+  createClient,
+  fetchExchange,
+  subscriptionExchange,
+  Provider,
+} from "urql";
 import { cacheExchange } from "@urql/exchange-graphcache";
-import { createClient as createWSClient } from "graphql-ws";
-import type { SubscribePayload } from "graphql-ws";
+import { createClient as createSseClient } from "graphql-sse";
 import type { ReactNode } from "react";
 
-const wsClient = createWSClient({ url: process.env.NEXT_PUBLIC_DS_WS_URL! });
+const sseClient = createSseClient({
+  url: "/api/graphql",
+  headers: () => ({ Accept: "text/event-stream" }),
+});
 
 const urqlClient = createClient({
   url: "/api/graphql",
@@ -16,12 +23,22 @@ const urqlClient = createClient({
     }),
     fetchExchange,
     subscriptionExchange({
-      forwardSubscription: (operation) => ({
-        subscribe: (sink) => ({
-          // Cast: urql v5 FetchBody has query?: string; graphql-ws requires query: string
-          unsubscribe: wsClient.subscribe(operation as SubscribePayload, sink),
-        }),
-      }),
+      forwardSubscription(request) {
+        return {
+          subscribe: (sink) => {
+            const dispose = sseClient.subscribe(
+              {
+                query: request.query!,
+                variables: request.variables ?? undefined,
+                operationName: request.operationName ?? undefined,
+                extensions: request.extensions ?? undefined,
+              },
+              sink,
+            );
+            return { unsubscribe: dispose };
+          },
+        };
+      },
     }),
   ],
 });
