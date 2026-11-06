@@ -65,7 +65,7 @@ describe("listenSseYogaHttpServer", () => {
     vi.restoreAllMocks();
   });
 
-  it("logs HTTP, optional extra lines, and SSE subscription hints on listen", async () => {
+  it("listens on an ephemeral port, logs extra startup lines, and serves GraphQL", async () => {
     const server = createSseYogaHttpServer(schema);
     const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
     await new Promise<void>((resolve, reject) => {
@@ -77,14 +77,16 @@ describe("listenSseYogaHttpServer", () => {
       const address = server.address();
       const boundPort =
         address && typeof address === "object" ? address.port : 0;
-      const base = `http://localhost:${boundPort}/graphql`;
-      expect(log).toHaveBeenCalledWith(
-        `@corpdk/test-ds  HTTP  ${base}`,
-      );
+      expect(boundPort).not.toBe(0);
+      const response = await fetch(`http://127.0.0.1:${boundPort}/graphql`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ query: "{ ping }" }),
+      });
+      expect(response.ok).toBe(true);
+      const body = (await response.json()) as { data?: { ping?: string } };
+      expect(body.data?.ping).toBe("pong");
       expect(log).toHaveBeenCalledWith("  DB    connected");
-      expect(log).toHaveBeenCalledWith(
-        `@corpdk/test-ds  SSE   ${base}  (subscriptions: Accept: text/event-stream)`,
-      );
     } finally {
       await close(server);
     }
