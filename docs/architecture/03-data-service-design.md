@@ -91,7 +91,7 @@ See [Repository Pattern](../developer/03-repository-pattern.md) for the full imp
 
 ---
 
-## Subscription transport (`@corpdk/ds`)
+## Subscription transport (all DS templates)
 
 All DS templates (`templates/ds` and manual variants) serve subscriptions over **SSE on the same `/graphql` HTTP route** as queries and mutations (GraphQL Yoga v5 default). None expose a WebSocket listener.
 
@@ -130,7 +130,7 @@ Variable merging order: `--input <file>` → piped stdin → explicit flags (fla
 | Variable      | Default | Description                                                                                |
 | ------------- | ------- | ------------------------------------------------------------------------------------------ |
 | `DS_HTTP_URL` | —       | HTTP endpoint for queries and mutations                                                    |
-| `DS_WS_URL`   | —       | WebSocket endpoint for subscriptions (generated CLI; `@corpdk/ds` server uses SSE instead) |
+| `DS_WS_URL`   | —       | WebSocket endpoint for subscription subcommands in generated CLI only (DS servers use SSE on `DS_HTTP_URL`; see [11-ds-subscription-sse.md](../developer/11-ds-subscription-sse.md#generated-cli-ds-cli)) |
 
 ### How it's wired
 

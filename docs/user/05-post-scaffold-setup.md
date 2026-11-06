@@ -65,14 +65,15 @@ pnpm build      # runs codegen → build for all packages
 
 ## Using the CLI _(full-stack / DS only)_
 
-After codegen, the project CLI is available at `packages/ds-cli/src/generated/index.js`. Set the environment variables and run:
+After codegen, the project CLI is available at `packages/ds-cli/src/generated/index.js`. All DS templates serve subscriptions over **SSE on the same HTTP `/graphql` route** as queries and mutations (no WebSocket listener). Set `DS_HTTP_URL` for queries and mutations:
 
 ```bash
 export DS_HTTP_URL=http://localhost:<ds-port>/graphql
-export DS_WS_URL=ws://localhost:<ds-port>/graphql
 
 node packages/ds-cli/src/generated/index.js --help
 ```
+
+Generated subscription subcommands still read `DS_WS_URL` (WebSocket-based CLI output). That path does not match current DS servers until CLI SSE support lands — see [DS subscription transport (SSE)](../developer/11-ds-subscription-sse.md#generated-cli-ds-cli). Use curl or GraphiQL against `DS_HTTP_URL` with `Accept: text/event-stream` for subscriptions today.
 
 Or install it globally / link it via pnpm so the binary (`<projectName>`) is on your PATH.
 

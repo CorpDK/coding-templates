@@ -60,7 +60,6 @@ Dependencies used across multiple workspace packages.
 | Package | Version | Used by                                                   |
 | ------- | ------- | --------------------------------------------------------- |
 | ioredis | ^5.10.1 | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file, pub-sub |
-| ws      | ^8.20.0 | ds, ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file          |
 
 ---
 
@@ -211,7 +210,6 @@ Common dev dependencies used across most workspace packages.
 | @types/react          | ^19.2.14     | All UI packages             |
 | @types/react-dom      | ^19.2.3      | All UI packages             |
 | tsx                   | ^4.21.0      | All DS templates            |
-| @types/ws             | ^8.18.1      | All DS templates            |
 
 ### GraphQL Codegen (DS templates devDeps)
 

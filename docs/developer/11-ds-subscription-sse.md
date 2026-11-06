@@ -1,4 +1,4 @@
-# `@corpdk/ds` subscription transport (SSE)
+# DS subscription transport (SSE, all templates)
 
 GraphQL Yoga v5 delivers subscriptions over **Server-Sent Events (SSE)** on the same HTTP route as queries and mutations. All DS templates (`templates/ds`, `ds-no-sql`, `ds-cdb`, `ds-mongo`, `ds-ddb`, `ds-file`) use Yoga’s built-in SSE transport and do not start a WebSocket server or depend on `graphql-ws` / `ws` at runtime.
 
