@@ -12,60 +12,6 @@ import { createClient as createSseClient } from "graphql-sse";
 import type { RequestParams } from "graphql-sse";
 import type { ReactNode } from "react";
 
-const activeOperationsBySubscriptionKey = new Map<string, Set<Operation>>();
-
-function addActiveSubscriptionOperation(key: string, operation: Operation): void {
-  let bucket = activeOperationsBySubscriptionKey.get(key);
-  if (!bucket) {
-    bucket = new Set();
-    activeOperationsBySubscriptionKey.set(key, bucket);
-  }
-  bucket.add(operation);
-}
-
-function removeActiveSubscriptionOperation(
-  key: string,
-  operation: Operation,
-): void {
-  const bucket = activeOperationsBySubscriptionKey.get(key);
-  if (!bucket) {
-    return;
-  }
-  bucket.delete(operation);
-  if (bucket.size === 0) {
-    activeOperationsBySubscriptionKey.delete(key);
-  }
-}
-
-function stableStringify(value: unknown): string {
-  if (value === undefined) {
-    return "";
-  }
-  if (value === null) {
-    return "null";
-  }
-  if (typeof value !== "object") {
-    return JSON.stringify(value);
-  }
-  if (Array.isArray(value)) {
-    return `[${value.map(stableStringify).join(",")}]`;
-  }
-  const record = value as Record<string, unknown>;
-  const keys = Object.keys(record).sort();
-  return `{${keys.map((k) => `${JSON.stringify(k)}:${stableStringify(record[k])}`).join(",")}}`;
-}
-
-function subscriptionKeyFromParams(params: {
-  operationName?: string | null;
-  query?: string | null;
-  variables?: unknown;
-  extensions?: unknown;
-}): string {
-  const name = params.operationName ?? "";
-  const query = params.query ?? "";
-  return `${name}\0${query}\0${stableStringify(params.variables)}\0${stableStringify(params.extensions)}`;
-}
-
 function headersRecord(
   input: HeadersInit | undefined,
 ): Record<string, string> {
@@ -99,21 +45,6 @@ async function mergedHeadersFromOperation(
   return { ...ctxHeaders, ...fromFetch };
 }
 
-const sseClient = createSseClient({
-  url: "/api/graphql",
-  headers: async (request) => {
-    if (!request) {
-      return { Accept: "text/event-stream" };
-    }
-    const bucket = activeOperationsBySubscriptionKey.get(
-      subscriptionKeyFromParams(request),
-    );
-    const op = bucket?.values().next().value;
-    const merged = op ? await mergedHeadersFromOperation(op) : {};
-    return { ...merged, Accept: "text/event-stream" };
-  },
-});
-
 const urqlClient = createClient({
   url: "/api/graphql",
   exchanges: [
@@ -129,15 +60,20 @@ const urqlClient = createClient({
           operationName: request.operationName ?? undefined,
           extensions: request.extensions ?? undefined,
         };
-        const key = subscriptionKeyFromParams(params);
-        addActiveSubscriptionOperation(key, operation);
+        const sseClient = createSseClient({
+          url: "/api/graphql",
+          headers: async () => {
+            const merged = await mergedHeadersFromOperation(operation);
+            return { ...merged, Accept: "text/event-stream" };
+          },
+        });
         return {
           subscribe: (sink) => {
             const dispose = sseClient.subscribe(params, sink);
             return {
               unsubscribe: () => {
-                removeActiveSubscriptionOperation(key, operation);
                 dispose();
+                sseClient.dispose();
               },
             };
           },

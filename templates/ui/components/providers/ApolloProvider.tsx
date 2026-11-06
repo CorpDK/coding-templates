@@ -48,75 +48,6 @@ function withoutAcceptHeader(
   return out;
 }
 
-/** Per-request headers from Apollo context (e.g. auth) merged into SSE transport. */
-const activeOperationsBySubscriptionKey = new Map<string, Set<Operation>>();
-
-function addActiveSubscriptionOperation(key: string, operation: Operation): void {
-  let bucket = activeOperationsBySubscriptionKey.get(key);
-  if (!bucket) {
-    bucket = new Set();
-    activeOperationsBySubscriptionKey.set(key, bucket);
-  }
-  bucket.add(operation);
-}
-
-function removeActiveSubscriptionOperation(
-  key: string,
-  operation: Operation,
-): void {
-  const bucket = activeOperationsBySubscriptionKey.get(key);
-  if (!bucket) {
-    return;
-  }
-  bucket.delete(operation);
-  if (bucket.size === 0) {
-    activeOperationsBySubscriptionKey.delete(key);
-  }
-}
-
-function stableStringify(value: unknown): string {
-  if (value === undefined) {
-    return "";
-  }
-  if (value === null) {
-    return "null";
-  }
-  if (typeof value !== "object") {
-    return JSON.stringify(value);
-  }
-  if (Array.isArray(value)) {
-    return `[${value.map(stableStringify).join(",")}]`;
-  }
-  const record = value as Record<string, unknown>;
-  const keys = Object.keys(record).sort();
-  return `{${keys.map((k) => `${JSON.stringify(k)}:${stableStringify(record[k])}`).join(",")}}`;
-}
-
-function subscriptionKeyFromParams(params: {
-  operationName?: string | null;
-  query?: string | null;
-  variables?: unknown;
-  extensions?: unknown;
-}): string {
-  const name = params.operationName ?? "";
-  const query = params.query ?? "";
-  return `${name}\0${query}\0${stableStringify(params.variables)}\0${stableStringify(params.extensions)}`;
-}
-
-const sseClient = createClient({
-  url: "/api/graphql",
-  headers: async (request) => {
-    const bucket = activeOperationsBySubscriptionKey.get(
-      subscriptionKeyFromParams(request),
-    );
-    const op = bucket?.values().next().value as Operation | undefined;
-    const ctxHeaders = withoutAcceptHeader(
-      headersRecord(op?.getContext().headers as HeadersInit | undefined),
-    );
-    return { ...ctxHeaders, Accept: "text/event-stream" };
-  },
-});
-
 /**
  * Subscriptions over HTTP SSE (`Accept: text/event-stream`) via the same Next.js
  * `/api/graphql` proxy as queries and mutations. Matches GraphQL Yoga on DS templates.
@@ -129,8 +60,15 @@ class SseSubscriptionLink extends ApolloLink {
       variables: operation.variables ?? undefined,
       extensions: operation.extensions ?? undefined,
     };
-    const key = subscriptionKeyFromParams(request);
-    addActiveSubscriptionOperation(key, operation);
+    const sseClient = createClient({
+      url: "/api/graphql",
+      headers: async () => {
+        const ctxHeaders = withoutAcceptHeader(
+          headersRecord(operation.getContext().headers as HeadersInit | undefined),
+        );
+        return { ...ctxHeaders, Accept: "text/event-stream" };
+      },
+    });
     return new Observable((sink) => {
       const dispose = sseClient.subscribe(request, {
         next: sink.next.bind(sink),
@@ -138,8 +76,8 @@ class SseSubscriptionLink extends ApolloLink {
         error: sink.error.bind(sink),
       });
       return () => {
-        removeActiveSubscriptionOperation(key, operation);
         dispose();
+        sseClient.dispose();
       };
     });
   }
