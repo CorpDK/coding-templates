@@ -42,8 +42,8 @@ Browser → /api/graphql → Next.js rewrite → DS_HTTP_URL (server-side)
 
 **Subscription transport (DS server vs UI client today)**:
 
-| DS | Server transport | Typical UI (today) |
-| --- | --- | --- |
+| DS                               | Server transport                                                    | Typical UI (today)                                                                                                                                         |
+| -------------------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `@corpdk/ds` and all DS variants | SSE on the same `/graphql` HTTP route (`Accept: text/event-stream`) | UI templates still use graphql-ws + `NEXT_PUBLIC_DS_WS_URL` until migrated — see [DS subscription transport (SSE)](../developer/11-ds-subscription-sse.md) |
 
 **Why split HTTP proxy vs direct WS (legacy UI path)?**
@@ -102,17 +102,17 @@ dal:codegen:schema → codegen → dal:codegen:impl → build → dev / start
 (dal:codegen meta-task = all three DAL/codegen steps)
 ```
 
-| Task                   | Depends on                                              | Cache |
-| ---------------------- | ------------------------------------------------------- | ----- |
-| `dal:codegen:schema`   | `@corpdk/dal-core#build`, `@corpdk/dal-codegen#build`   | Yes   |
-| `codegen`              | `dal:codegen:schema`, `@corpdk/codegen-cli#build`       | Yes   |
-| `dal:codegen:impl`     | `codegen`, `@corpdk/dal-core#build`, `@corpdk/dal-codegen#build` | Yes |
-| `dal:codegen`          | `dal:codegen:schema`, `codegen`, `dal:codegen:impl`     | Yes   |
-| `@corpdk/ds#build`     | `^build`, `dal:codegen:impl`                            | Yes   |
-| `build`                | `^build` (upstream packages first)                      | Yes   |
-| `dev`                  | `^build`                                                | No    |
-| `@corpdk/ds#dev`       | `^build`, `codegen`, `dal:codegen:impl`                 | No    |
-| `start`                | `build`                                                 | No    |
+| Task                 | Depends on                                                       | Cache |
+| -------------------- | ---------------------------------------------------------------- | ----- |
+| `dal:codegen:schema` | `@corpdk/dal-core#build`, `@corpdk/dal-codegen#build`            | Yes   |
+| `codegen`            | `dal:codegen:schema`, `@corpdk/codegen-cli#build`                | Yes   |
+| `dal:codegen:impl`   | `codegen`, `@corpdk/dal-core#build`, `@corpdk/dal-codegen#build` | Yes   |
+| `dal:codegen`        | `dal:codegen:schema`, `codegen`, `dal:codegen:impl`              | Yes   |
+| `@corpdk/ds#build`   | `^build`, `dal:codegen:impl`                                     | Yes   |
+| `build`              | `^build` (upstream packages first)                               | Yes   |
+| `dev`                | `^build`                                                         | No    |
+| `@corpdk/ds#dev`     | `^build`, `codegen`, `dal:codegen:impl`                          | No    |
+| `start`              | `build`                                                          | No    |
 
 Only **`@corpdk/ds`** defines the `dal:codegen:*` tasks. `@corpdk/ds#dev` waits on **`codegen`** and **`dal:codegen:impl`** so resolver types and repositories exist before the Yoga server starts.
 
@@ -122,12 +122,12 @@ Only **`@corpdk/ds`** defines the `dal:codegen:*` tasks. `@corpdk/ds#dev` waits 
 
 Each package category has a different module system, driven by its runtime environment:
 
-| Package type                      | `module` setting     | Import extension | Reason                                            |
-| --------------------------------- | -------------------- | ---------------- | ------------------------------------------------- |
-| DS server (`ds`, `ds-no-sql`, etc.) | `NodeNext`         | Must use `.js`   | Node.js ESM runtime; explicit extensions required |
-| `ds-sdk`                          | `ESNext` / `bundler` | Must omit `.js`  | Consumed by Next.js bundler, not Node.js directly |
-| UI apps (`ui`, `ui-hprt`)         | Next.js managed      | N/A              | Next.js controls compilation                      |
-| Shared packages (`packages/ui-*`) | `ESNext` / `bundler` | Must omit `.js`  | Consumed by Next.js bundler                       |
+| Package type                        | `module` setting     | Import extension | Reason                                            |
+| ----------------------------------- | -------------------- | ---------------- | ------------------------------------------------- |
+| DS server (`ds`, `ds-no-sql`, etc.) | `NodeNext`           | Must use `.js`   | Node.js ESM runtime; explicit extensions required |
+| `ds-sdk`                            | `ESNext` / `bundler` | Must omit `.js`  | Consumed by Next.js bundler, not Node.js directly |
+| UI apps (`ui`, `ui-hprt`)           | Next.js managed      | N/A              | Next.js controls compilation                      |
+| Shared packages (`packages/ui-*`)   | `ESNext` / `bundler` | Must omit `.js`  | Consumed by Next.js bundler                       |
 
 The DS packages use `"type": "module"` because GraphQL Yoga v5 is pure ESM. Next.js manages its own module system for UI packages, so they don't require `"type": "module"` at the package level.
 

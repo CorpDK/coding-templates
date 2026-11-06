@@ -128,9 +128,9 @@ Variable merging order: `--input <file>` → piped stdin → explicit flags (fla
 
 ### Environment
 
-| Variable      | Default | Description                                                                                |
-| ------------- | ------- | ------------------------------------------------------------------------------------------ |
-| `DS_HTTP_URL` | —       | HTTP endpoint for queries and mutations                                                    |
+| Variable      | Default | Description                                                                                                                                                                                               |
+| ------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DS_HTTP_URL` | —       | HTTP endpoint for queries and mutations                                                                                                                                                                   |
 | `DS_WS_URL`   | —       | WebSocket endpoint for subscription subcommands in generated CLI only (DS servers use SSE on `DS_HTTP_URL`; see [11-ds-subscription-sse.md](../developer/11-ds-subscription-sse.md#generated-cli-ds-cli)) |
 
 ### How it's wired

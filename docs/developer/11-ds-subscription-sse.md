@@ -6,11 +6,11 @@ GraphQL Yoga v5 delivers subscriptions over **Server-Sent Events (SSE)** on the 
 
 ## Server endpoint
 
-| Use            | URL                         | Notes                                      |
-| -------------- | --------------------------- | ------------------------------------------ |
-| Queries        | `http://<host>:<port>/graphql` | `POST`, `Content-Type: application/json` |
-| Mutations      | same                        | same                                       |
-| Subscriptions  | same                        | Must include `Accept: text/event-stream`   |
+| Use           | URL                            | Notes                                    |
+| ------------- | ------------------------------ | ---------------------------------------- |
+| Queries       | `http://<host>:<port>/graphql` | `POST`, `Content-Type: application/json` |
+| Mutations     | same                           | same                                     |
+| Subscriptions | same                           | Must include `Accept: text/event-stream` |
 
 Configure the listen port with the variant’s `*_PORT` env var (see each template’s `.env.example`). There is no separate subscription port or DS WebSocket listener.
 

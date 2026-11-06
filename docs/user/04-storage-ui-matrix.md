@@ -2,16 +2,16 @@
 
 Not every DS variant is compatible with every UI variant. This table shows valid combinations.
 
-| Storage                                      | ORM / SDK  | DS package         | Compatible UI variants         |
-| -------------------------------------------- | ---------- | ------------------ | ------------------------------ |
-| `relational` + `prisma`                      | Prisma     | `@corpdk/ds-no-sql`| `standard` only                |
-| `relational` + `drizzle`                     | Drizzle    | `@corpdk/ds`       | `hprt` only                    |
-| `document` + Couchbase                       | Native SDK | `@corpdk/ds-cdb`   | `standard` or `hprt`           |
-| `document` + MongoDB + `hprt`                | Native SDK | `@corpdk/ds-mongo` | `standard` or `hprt`           |
-| `document` + DocumentDB + `hprt`             | Native SDK | `@corpdk/ds-ddb`   | `standard` or `hprt`           |
-| `document` + MongoDB/DocumentDB + `standard` | Prisma     | `@corpdk/ds-no-sql`| `standard` only                |
-| `filebased`                                  | —          | `@corpdk/ds-file`  | `standard` or `hprt`           |
-| _(UI only)_                                  | —          | —                  | `standard` or `hprt` + `--sdk` |
+| Storage                                      | ORM / SDK  | DS package          | Compatible UI variants         |
+| -------------------------------------------- | ---------- | ------------------- | ------------------------------ |
+| `relational` + `prisma`                      | Prisma     | `@corpdk/ds-no-sql` | `standard` only                |
+| `relational` + `drizzle`                     | Drizzle    | `@corpdk/ds`        | `hprt` only                    |
+| `document` + Couchbase                       | Native SDK | `@corpdk/ds-cdb`    | `standard` or `hprt`           |
+| `document` + MongoDB + `hprt`                | Native SDK | `@corpdk/ds-mongo`  | `standard` or `hprt`           |
+| `document` + DocumentDB + `hprt`             | Native SDK | `@corpdk/ds-ddb`    | `standard` or `hprt`           |
+| `document` + MongoDB/DocumentDB + `standard` | Prisma     | `@corpdk/ds-no-sql` | `standard` only                |
+| `filebased`                                  | —          | `@corpdk/ds-file`   | `standard` or `hprt`           |
+| _(UI only)_                                  | —          | —                   | `standard` or `hprt` + `--sdk` |
 
 Stock UI templates use graphql-ws for subscriptions (`NEXT_PUBLIC_DS_WS_URL`). Every DS package in the table serves subscriptions only over SSE on HTTP `/graphql`. Queries and mutations work for each pairing; **`hprt` with document or file DS** is a common real-time choice but stock `ui-hprt` will not receive live subscription events until the UI migrates to SSE — see [DS subscription transport (SSE)](../developer/11-ds-subscription-sse.md).
 
@@ -30,14 +30,14 @@ Stock UI templates use graphql-ws for subscriptions (`NEXT_PUBLIC_DS_WS_URL`). E
 
 ## DS Variant Differences
 
-| DS package | Storage                                   | ORM / Driver        | Real-time optimised     |
-| ---------- | ----------------------------------------- | ------------------- | ----------------------- |
-| `ds`       | PostgreSQL / MySQL / SQLite / CockroachDB | Drizzle             | Yes (SSE on HTTP `/graphql`; see [DS subscription SSE](../developer/11-ds-subscription-sse.md)) |
-| `ds-no-sql`| PostgreSQL / MySQL / SQLite / CockroachDB / MongoDB / DocumentDB | Prisma | No (SSE on HTTP `/graphql`; see [DS subscription SSE](../developer/11-ds-subscription-sse.md)) |
-| `ds-cdb`   | Couchbase Capella / self-hosted           | Native SDK + Zod    | Yes (SSE on HTTP `/graphql`; see [DS subscription SSE](../developer/11-ds-subscription-sse.md)) |
-| `ds-mongo` | MongoDB Atlas / self-hosted               | Native driver + Zod | Yes (SSE on HTTP `/graphql`; see [DS subscription SSE](../developer/11-ds-subscription-sse.md)) |
-| `ds-ddb`   | DocumentDB (documentdb.io)                | Native driver + Zod | Yes (SSE on HTTP `/graphql`; see [DS subscription SSE](../developer/11-ds-subscription-sse.md)) |
-| `ds-file`  | JSON or YAML file on disk                 | fs/promises + Zod   | Yes (SSE on HTTP `/graphql`; in-memory pub/sub; see [DS subscription SSE](../developer/11-ds-subscription-sse.md)) |
+| DS package  | Storage                                                          | ORM / Driver        | Real-time optimised                                                                                                |
+| ----------- | ---------------------------------------------------------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `ds`        | PostgreSQL / MySQL / SQLite / CockroachDB                        | Drizzle             | Yes (SSE on HTTP `/graphql`; see [DS subscription SSE](../developer/11-ds-subscription-sse.md))                    |
+| `ds-no-sql` | PostgreSQL / MySQL / SQLite / CockroachDB / MongoDB / DocumentDB | Prisma              | No (SSE on HTTP `/graphql`; see [DS subscription SSE](../developer/11-ds-subscription-sse.md))                     |
+| `ds-cdb`    | Couchbase Capella / self-hosted                                  | Native SDK + Zod    | Yes (SSE on HTTP `/graphql`; see [DS subscription SSE](../developer/11-ds-subscription-sse.md))                    |
+| `ds-mongo`  | MongoDB Atlas / self-hosted                                      | Native driver + Zod | Yes (SSE on HTTP `/graphql`; see [DS subscription SSE](../developer/11-ds-subscription-sse.md))                    |
+| `ds-ddb`    | DocumentDB (documentdb.io)                                       | Native driver + Zod | Yes (SSE on HTTP `/graphql`; see [DS subscription SSE](../developer/11-ds-subscription-sse.md))                    |
+| `ds-file`   | JSON or YAML file on disk                                        | fs/promises + Zod   | Yes (SSE on HTTP `/graphql`; in-memory pub/sub; see [DS subscription SSE](../developer/11-ds-subscription-sse.md)) |
 
 ---
 
