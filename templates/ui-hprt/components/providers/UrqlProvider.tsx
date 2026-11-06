@@ -33,10 +33,13 @@ function headersRecord(
   return { ...(input as Record<string, string>) };
 }
 
-function mergedHeadersFromOperation(op: Operation): Record<string, string> {
+async function mergedHeadersFromOperation(
+  op: Operation,
+): Promise<Record<string, string>> {
   const ctx = op.context;
-  const fetchOpts =
+  const rawFetchOpts =
     typeof ctx.fetchOptions === "function" ? ctx.fetchOptions() : ctx.fetchOptions;
+  const fetchOpts = await Promise.resolve(rawFetchOpts);
   const fromFetch = headersRecord(fetchOpts?.headers);
   const ctxHeaders = headersRecord(
     (ctx as { headers?: HeadersInit }).headers,
@@ -51,7 +54,7 @@ const sseClient = createSseClient({
       return { Accept: "text/event-stream" };
     }
     const op = operationsByRequest.get(request);
-    const merged = op ? mergedHeadersFromOperation(op) : {};
+    const merged = op ? await mergedHeadersFromOperation(op) : {};
     return { ...merged, Accept: "text/event-stream" };
   },
 });
