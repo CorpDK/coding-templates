@@ -68,10 +68,11 @@ describe("listenSseYogaHttpServer", () => {
   it("listens on an ephemeral port, logs extra startup lines, and serves GraphQL", async () => {
     const server = createSseYogaHttpServer(schema);
     const log = vi.spyOn(console, "log").mockImplementation(() => undefined);
+    const extraStartupLines = ["extra-line-a", "extra-line-b"];
     await new Promise<void>((resolve, reject) => {
       server.once("listening", () => resolve());
       server.once("error", reject);
-      listenSseYogaHttpServer(server, 0, "@corpdk/test-ds", ["  DB    connected"]);
+      listenSseYogaHttpServer(server, 0, "@corpdk/test-ds", extraStartupLines);
     });
     try {
       const address = server.address();
@@ -86,7 +87,10 @@ describe("listenSseYogaHttpServer", () => {
       expect(response.ok).toBe(true);
       const body = (await response.json()) as { data?: { ping?: string } };
       expect(body.data?.ping).toBe("pong");
-      expect(log).toHaveBeenCalledWith("  DB    connected");
+      const logged = log.mock.calls.map((call) => call[0]);
+      for (const line of extraStartupLines) {
+        expect(logged).toContain(line);
+      }
     } finally {
       await close(server);
     }
