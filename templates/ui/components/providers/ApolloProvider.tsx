@@ -49,7 +49,30 @@ function withoutAcceptHeader(
 }
 
 /** Per-request headers from Apollo context (e.g. auth) merged into SSE transport. */
-const operationsBySubscriptionKey = new Map<string, Operation>();
+const activeOperationsBySubscriptionKey = new Map<string, Set<Operation>>();
+
+function addActiveSubscriptionOperation(key: string, operation: Operation): void {
+  let bucket = activeOperationsBySubscriptionKey.get(key);
+  if (!bucket) {
+    bucket = new Set();
+    activeOperationsBySubscriptionKey.set(key, bucket);
+  }
+  bucket.add(operation);
+}
+
+function removeActiveSubscriptionOperation(
+  key: string,
+  operation: Operation,
+): void {
+  const bucket = activeOperationsBySubscriptionKey.get(key);
+  if (!bucket) {
+    return;
+  }
+  bucket.delete(operation);
+  if (bucket.size === 0) {
+    activeOperationsBySubscriptionKey.delete(key);
+  }
+}
 
 function stableStringify(value: unknown): string {
   if (value === undefined) {
@@ -83,7 +106,10 @@ function subscriptionKeyFromParams(params: {
 const sseClient = createClient({
   url: "/api/graphql",
   headers: async (request) => {
-    const op = operationsBySubscriptionKey.get(subscriptionKeyFromParams(request));
+    const bucket = activeOperationsBySubscriptionKey.get(
+      subscriptionKeyFromParams(request),
+    );
+    const op = bucket?.values().next().value as Operation | undefined;
     const ctxHeaders = withoutAcceptHeader(
       headersRecord(op?.getContext().headers as HeadersInit | undefined),
     );
@@ -104,7 +130,7 @@ class SseSubscriptionLink extends ApolloLink {
       extensions: operation.extensions ?? undefined,
     };
     const key = subscriptionKeyFromParams(request);
-    operationsBySubscriptionKey.set(key, operation);
+    addActiveSubscriptionOperation(key, operation);
     return new Observable((sink) => {
       const dispose = sseClient.subscribe(request, {
         next: sink.next.bind(sink),
@@ -112,7 +138,7 @@ class SseSubscriptionLink extends ApolloLink {
         error: sink.error.bind(sink),
       });
       return () => {
-        operationsBySubscriptionKey.delete(key);
+        removeActiveSubscriptionOperation(key, operation);
         dispose();
       };
     });

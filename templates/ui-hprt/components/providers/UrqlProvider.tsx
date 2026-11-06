@@ -12,7 +12,30 @@ import { createClient as createSseClient } from "graphql-sse";
 import type { RequestParams } from "graphql-sse";
 import type { ReactNode } from "react";
 
-const operationsBySubscriptionKey = new Map<string, Operation>();
+const activeOperationsBySubscriptionKey = new Map<string, Set<Operation>>();
+
+function addActiveSubscriptionOperation(key: string, operation: Operation): void {
+  let bucket = activeOperationsBySubscriptionKey.get(key);
+  if (!bucket) {
+    bucket = new Set();
+    activeOperationsBySubscriptionKey.set(key, bucket);
+  }
+  bucket.add(operation);
+}
+
+function removeActiveSubscriptionOperation(
+  key: string,
+  operation: Operation,
+): void {
+  const bucket = activeOperationsBySubscriptionKey.get(key);
+  if (!bucket) {
+    return;
+  }
+  bucket.delete(operation);
+  if (bucket.size === 0) {
+    activeOperationsBySubscriptionKey.delete(key);
+  }
+}
 
 function stableStringify(value: unknown): string {
   if (value === undefined) {
@@ -82,7 +105,10 @@ const sseClient = createSseClient({
     if (!request) {
       return { Accept: "text/event-stream" };
     }
-    const op = operationsBySubscriptionKey.get(subscriptionKeyFromParams(request));
+    const bucket = activeOperationsBySubscriptionKey.get(
+      subscriptionKeyFromParams(request),
+    );
+    const op = bucket?.values().next().value;
     const merged = op ? await mergedHeadersFromOperation(op) : {};
     return { ...merged, Accept: "text/event-stream" };
   },
@@ -104,13 +130,13 @@ const urqlClient = createClient({
           extensions: request.extensions ?? undefined,
         };
         const key = subscriptionKeyFromParams(params);
-        operationsBySubscriptionKey.set(key, operation);
+        addActiveSubscriptionOperation(key, operation);
         return {
           subscribe: (sink) => {
             const dispose = sseClient.subscribe(params, sink);
             return {
               unsubscribe: () => {
-                operationsBySubscriptionKey.delete(key);
+                removeActiveSubscriptionOperation(key, operation);
                 dispose();
               },
             };
