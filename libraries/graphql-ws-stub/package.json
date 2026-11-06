@@ -1,0 +1,14 @@
+{
+  "name": "graphql-ws",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Empty stub: this monorepo uses GraphQL over SSE only; graphql-ws is overridden to satisfy optional peers without installing the real package.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./index.js"
+    }
+  },
+  "files": ["index.js", "index.d.ts", "package.json"]
+}

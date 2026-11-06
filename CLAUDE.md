@@ -78,7 +78,7 @@ coding-templates/
 ### Key Design Decisions
 
 - **`"type": "module"` on all packages except Next.js template apps and `ui-showcase`** — DS packages, libraries, engines, and shared `packages/*` are pure ESM. The two Next.js templates (`ui`, `ui-hprt`) and the Storybook-only `ui-showcase` omit it
-- **HTTP via Next.js proxy; subscriptions** — `rewrites()` handles queries/mutations; **`templates/ds`** subscriptions use SSE on the same HTTP `/graphql` route; UI templates still use graphql-ws via `NEXT_PUBLIC_DS_WS_URL` until migrated (see `docs/developer/11-ds-subscription-sse.md`)
+- **HTTP via Next.js proxy; subscriptions** — `rewrites()` handle queries, mutations, and SSE subscriptions on `/api/graphql` to `DS_HTTP_URL`; DS and stock UI templates both use SSE (see `docs/developer/11-ds-subscription-sse.md`)
 - **SDK as workspace dependency** — `ui` depends on `@corpdk/ds-sdk: "workspace:*"`; Turbo ensures codegen runs before build
 - **All ports from env, no defaults** — prevents port collision surprises; each package has `.env.example`
 - **`.js` extension on imports in DS server packages** — all DS packages (`ds`, `ds-no-sql`, `ds-cdb`, `ds-mongo`, `ds-ddb`, `ds-file`) use `module: NodeNext` (pure ESM Node.js runtime); explicit `.js` is required even for `.ts` source files. `ds-sdk` uses `module: ESNext / moduleResolution: bundler` (consumed by Next.js bundler) and must omit the `.js` extension.

@@ -56,7 +56,7 @@ All query translation, filtering, pagination, and aggregation logic assumes Driz
 | **AssociationField**    | GraphQL output navigation field for a Drizzle relation; resolved via per-request DataLoader, never via ColumnProjection                                                                                                                  |
 | **ColumnProjection**    | Column set derived from the GraphQL selection set that limits which scalar columns QueryEngine fetches from SQL                                                                                                                          |
 | **EntityChangeEvent**   | Unified subscription payload for create, update, and delete operations                                                                                                                                                                   |
-| **Application client**  | Any code outside the DS server that consumes data — UI, BFF, background workers calling the GraphQL API. Must use GraphQL HTTP/WS only                                                                                                   |
+| **Application client**  | Any code outside the DS server that consumes data — UI, BFF, background workers calling the GraphQL API. Must use GraphQL over HTTP only (DS subscriptions via SSE on `/graphql`)                                                        |
 | **Non-app table**       | Database object outside the codegen-scanned Drizzle schema — migration metadata, DBA-only, ETL staging, **auth session tables**. Never accessed as business data by application clients                                                  |
 | **Application cache**   | Ephemeral or TTL-backed cache state in **Redis**, **CDN**, or **client InMemory** — **never** database tables, PersistedEntities, or GraphQL                                                                                             |
 | **Auth session store**  | Server-side session persistence in a database (Postgres, MySQL, SQLite, or other supported DS backend) — e.g. Auth.js adapter tables — **auth infrastructure**, not business PersistedEntity unless admin GraphQL is explicitly required |
@@ -67,7 +67,7 @@ All query translation, filtering, pagination, and aggregation logic assumes Driz
 
 This document defines a **generic, entity-agnostic GraphQL Data Access Layer (DAL)** that provides:
 
-- **GraphQL-only application access** — the generated GraphQL API over HTTP (queries/mutations; subscriptions via SSE on `@corpdk/ds` or WebSocket on other DS variants until migrated) is the sole application-facing data surface — see [11-ds-subscription-sse.md](11-ds-subscription-sse.md)
+- **GraphQL-only application access** — the generated GraphQL API over HTTP (queries/mutations; subscriptions via SSE on all DS templates) is the sole application-facing data surface — see [11-ds-subscription-sse.md](11-ds-subscription-sse.md)
 - Fully abstracted database access via a **server-internal** repository boundary
 - Strong typing (no arbitrary JSON inputs/outputs)
 - Advanced filtering, pagination, sorting, and aggregation
@@ -258,25 +258,25 @@ GraphQL introspection, GraphiQL, and Altair display descriptions sourced from DB
 
 ### 2.12 Application access boundary (GraphQL-only)
 
-The generated GraphQL API is the **only** application-facing access surface for persisted data. All application clients — UI, BFF, external services — read and write data exclusively through GraphQL HTTP (queries/mutations and subscription streams). On **`@corpdk/ds`**, subscriptions use **SSE** on the same `/graphql` route; other DS variants may still use WebSocket until migrated ([11-ds-subscription-sse.md](11-ds-subscription-sse.md)).
+The generated GraphQL API is the **only** application-facing access surface for persisted data. All application clients — UI, BFF, external services — read and write data exclusively through GraphQL HTTP (queries/mutations and subscription streams). All DS templates deliver subscriptions over **SSE** on the same `/graphql` route ([11-ds-subscription-sse.md](11-ds-subscription-sse.md)).
 
 ```text
 Application client (UI, BFF, worker)
-  → GraphQL HTTP (SSE subscriptions on @corpdk/ds; WebSocket elsewhere as applicable)
+  → GraphQL HTTP (SSE subscriptions on all DS templates)
     → GraphQL Yoga resolvers
       → Generated repository (server-internal)
         → QueryEngine / Drizzle
           → SQL database
 ```
 
-| Actor                                       | Allowed access                                                                                                 | Forbidden                                                           |
-| ------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| **Application runtime** (UI, BFF, services) | GraphQL HTTP/WS directly (Apollo, urql, `fetch`, etc.)                                                         | Raw SQL, Drizzle imports, repository imports, direct DB connections |
-| **Ops / automation**                        | `@corpdk/ds-sdk` (TypedDocumentNode) or **ds-cli** — both are **GraphQL clients** that POST/WS to the same API | Treating SDK or CLI as a bypass around GraphQL                      |
-| **DS server resolvers**                     | Generated repository methods only (§6.2)                                                                       | Direct Drizzle or FilterAST from resolver code                      |
-| **Non-app infrastructure**                  | Separate schemas/tools (migration runners, ETL, DBA scripts)                                                   | Placing non-app tables in the codegen-scanned Drizzle path          |
+| Actor                                       | Allowed access                                                                                          | Forbidden                                                           |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| **Application runtime** (UI, BFF, services) | GraphQL HTTP directly (Apollo, urql, `fetch`, etc.; SSE for subscriptions on all DS templates)          | Raw SQL, Drizzle imports, repository imports, direct DB connections |
+| **Ops / automation**                        | `@corpdk/ds-sdk` (TypedDocumentNode) or **ds-cli** — both are **GraphQL clients** against `DS_HTTP_URL` | Treating SDK or CLI as a bypass around GraphQL                      |
+| **DS server resolvers**                     | Generated repository methods only (§6.2)                                                                | Direct Drizzle or FilterAST from resolver code                      |
+| **Non-app infrastructure**                  | Separate schemas/tools (migration runners, ETL, DBA scripts)                                            | Placing non-app tables in the codegen-scanned Drizzle path          |
 
-**SDK and ds-cli positioning:** `@corpdk/ds-sdk` and **ds-cli** execute GraphQL operations against the same endpoint as application clients. They are optional conveniences for scripts, CI, and LLM automation — not alternate data-access layers. Production application code should prefer GraphQL HTTP/WS directly; SDK and CLI are for ops/automation workflows (see [Appendix A](#appendix-a--ds-cli-conventions)).
+**SDK and ds-cli positioning:** `@corpdk/ds-sdk` and **ds-cli** execute GraphQL operations against the same endpoint as application clients. They are optional conveniences for scripts, CI, and LLM automation — not alternate data-access layers. Production application code should prefer GraphQL HTTP directly; SDK and CLI are for ops/automation workflows (see [Appendix A](#appendix-a--ds-cli-conventions)).
 
 **Cache and session storage** — distinct from business PersistedEntity rules. See also [DAL Entity Design Guidelines § Cache storage](dal-entity-design.md#cache-storage-schema-anti-pattern) and [§ Session storage](dal-entity-design.md#session-storage-schema-placement).
 
@@ -1694,7 +1694,7 @@ Index join-table **owner columns** (`course_id`, `student_id`) for filter perfor
 
 ##### Example 7 — ds-cli `--input-json` (complex filter)
 
-**Intent:** Same filter as Example 5 — **ops/automation** path only. ds-cli and `@corpdk/ds-sdk` execute this as a GraphQL query against the same API (§2.12); production UI code should call GraphQL HTTP/WS directly. ds-cli accepts the full filter tree via JSON (Appendix A).
+**Intent:** Same filter as Example 5 — **ops/automation** path only. ds-cli and `@corpdk/ds-sdk` execute this as a GraphQL query against the same API (§2.12); production UI code should call GraphQL HTTP directly. ds-cli accepts the full filter tree via JSON (Appendix A).
 
 ```bash
 ds-cli orders --input-json '{
@@ -2437,19 +2437,19 @@ This system provides:
 
 ## Appendix A — ds-cli Conventions
 
-The auto-generated **`ds-cli`** is an **ops/automation GraphQL client** — not an alternate data-access layer. Every command executes a GraphQL operation (query, mutation, or subscription) against the same HTTP/WS endpoint as application clients (§2.12). Production UI and service code should call GraphQL directly; ds-cli is for scripts, CI, and LLM automation workflows.
+The auto-generated **`ds-cli`** is an **ops/automation GraphQL client** — not an alternate data-access layer. Every command executes a GraphQL operation (query, mutation, or subscription) against the same HTTP GraphQL endpoint as application clients (§2.12). DS servers accept subscriptions only via SSE on `/graphql` ([11-ds-subscription-sse.md](11-ds-subscription-sse.md)); subscription subcommands stream results over the same `DS_HTTP_URL` with `Accept: text/event-stream`. Production UI and service code should call GraphQL directly; ds-cli is for scripts, CI, and LLM automation workflows.
 
 | Concern                      | Convention                                                                                                                                                 |
 | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Purpose**                  | Ops, automation, and scripting — **not** primary application runtime data access                                                                           |
-| **Transport**                | GraphQL HTTP (and WS for subscriptions) — same API surface as Apollo/urql clients                                                                          |
+| **Transport**                | GraphQL HTTP on `DS_HTTP_URL` (POST; subscriptions use `Accept: text/event-stream` on the same URL)                                                        |
 | **Nested / complex inputs**  | **`--input-file <path>`** (JSON file) or **`--input-json '<json>'`**                                                                                       |
 | **Union or complex outputs** | Raw JSON stdout — no automatic field selection                                                                                                             |
 | **Complex filters**          | LLM/automation clients may prefer the **TypedDocumentNode SDK** (`@corpdk/ds-sdk` pattern) over shell escaping; both SDK and ds-cli remain GraphQL clients |
 
 ds-cli does not attempt to flatten recursive filter inputs into flat CLI flags. For bulk mutations returning per-entity unions (§9), CLI output is the raw GraphQL response JSON.
 
-**`@corpdk/ds-sdk`** follows the same rule: TypedDocumentNode helpers compile to GraphQL operations executed against the API. SDK is a type-safe GraphQL client convenience for automation — application runtime code uses GraphQL HTTP/WS directly.
+**`@corpdk/ds-sdk`** follows the same rule: TypedDocumentNode helpers compile to GraphQL operations executed against the API. SDK is a type-safe GraphQL client convenience for automation — application runtime code uses GraphQL HTTP directly.
 
 ### Scalar serialization via `--input-json`
 

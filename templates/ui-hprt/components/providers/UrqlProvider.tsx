@@ -1,12 +1,31 @@
 "use client";
 
-import { createClient, fetchExchange, subscriptionExchange, Provider } from "urql";
+import {
+  createClient,
+  fetchExchange,
+  subscriptionExchange,
+  Provider,
+  type Operation,
+} from "urql";
 import { cacheExchange } from "@urql/exchange-graphcache";
-import { createClient as createWSClient } from "graphql-ws";
-import type { SubscribePayload } from "graphql-ws";
+import { headersRecord } from "@corpdk/ui-core";
+import { createClient as createSseClient } from "graphql-sse";
+import type { RequestParams } from "graphql-sse";
 import type { ReactNode } from "react";
 
-const wsClient = createWSClient({ url: process.env.NEXT_PUBLIC_DS_WS_URL! });
+async function mergedHeadersFromOperation(
+  op: Operation,
+): Promise<Record<string, string>> {
+  const ctx = op.context;
+  const rawFetchOpts =
+    typeof ctx.fetchOptions === "function"
+      ? ctx.fetchOptions()
+      : ctx.fetchOptions;
+  const fetchOpts = await Promise.resolve(rawFetchOpts);
+  const fromFetch = headersRecord(fetchOpts?.headers);
+  const ctxHeaders = headersRecord((ctx as { headers?: HeadersInit }).headers);
+  return { ...ctxHeaders, ...fromFetch };
+}
 
 const urqlClient = createClient({
   url: "/api/graphql",
@@ -16,12 +35,32 @@ const urqlClient = createClient({
     }),
     fetchExchange,
     subscriptionExchange({
-      forwardSubscription: (operation) => ({
-        subscribe: (sink) => ({
-          // Cast: urql v5 FetchBody has query?: string; graphql-ws requires query: string
-          unsubscribe: wsClient.subscribe(operation as SubscribePayload, sink),
-        }),
-      }),
+      forwardSubscription(request, operation) {
+        const params: RequestParams = {
+          query: request.query ?? "",
+          variables: request.variables ?? undefined,
+          operationName: request.operationName ?? undefined,
+          extensions: request.extensions ?? undefined,
+        };
+        const sseClient = createSseClient({
+          url: "/api/graphql",
+          headers: async () => {
+            const merged = await mergedHeadersFromOperation(operation);
+            return { ...merged, Accept: "text/event-stream" };
+          },
+        });
+        return {
+          subscribe: (sink) => {
+            const dispose = sseClient.subscribe(params, sink);
+            return {
+              unsubscribe: () => {
+                dispose();
+                sseClient.dispose();
+              },
+            };
+          },
+        };
+      },
     }),
   ],
 });

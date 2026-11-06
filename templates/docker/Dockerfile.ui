@@ -24,12 +24,6 @@ WORKDIR /app
 
 COPY packages/UI_DIR ./packages/UI_DIR
 
-# Public env vars must be available at build time
-ARG NEXT_PUBLIC_DS_URL
-ARG NEXT_PUBLIC_DS_WS_URL
-ENV NEXT_PUBLIC_DS_URL=$NEXT_PUBLIC_DS_URL
-ENV NEXT_PUBLIC_DS_WS_URL=$NEXT_PUBLIC_DS_WS_URL
-
 RUN pnpm --filter @corpdk/UI_DIR build
 
 # ── Runtime ───────────────────────────────────────────────────────────────────

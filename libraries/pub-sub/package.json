@@ -25,7 +25,9 @@
   },
   "scripts": {
     "build": "tsc",
-    "lint": "eslint src/",
+    "lint": "tsc --noEmit --types node",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "clean": "rm -rf dist node_modules .turbo *.tsbuildinfo"
   },
   "dependencies": {
@@ -35,7 +37,9 @@
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
-    "typescript": "^6.0.2"
+    "@vitest/coverage-v8": "4.1.2",
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.2"
   },
   "license": "MIT",
   "engines": {

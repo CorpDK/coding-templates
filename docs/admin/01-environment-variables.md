@@ -16,11 +16,11 @@ Each package reads from its own `.env` file. Copy `.env.example` to `.env` in ea
 
 Optional OpenTelemetry (see [DS observability](../developer/12-ds-observability.md)):
 
-| Variable                       | Description                                                                 |
-| ------------------------------ | --------------------------------------------------------------------------- |
-| `OTEL_EXPORTER_OTLP_ENDPOINT`  | OTLP HTTP base URL (e.g. `http://localhost:4318`; exporter appends `/v1/traces`); enables export when set |
-| `DS_OTEL_ENABLED`              | `true` enables tracing without relying on endpoint presence; `false` disables tracing even when `OTEL_EXPORTER_OTLP_ENDPOINT` is set; unset → on when endpoint is set |
-| `OTEL_SERVICE_NAME`            | Trace service name (default `@corpdk/ds`)                                   |
+| Variable                      | Description                                                                                                                                                           |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | OTLP HTTP base URL (e.g. `http://localhost:4318`; exporter appends `/v1/traces`); enables export when set                                                             |
+| `DS_OTEL_ENABLED`             | `true` enables tracing without relying on endpoint presence; `false` disables tracing even when `OTEL_EXPORTER_OTLP_ENDPOINT` is set; unset → on when endpoint is set |
+| `OTEL_SERVICE_NAME`           | Trace service name (default `@corpdk/ds`)                                                                                                                             |
 
 Optional DAL runtime overrides (see [GraphQL DAL Requirements](../developer/graphql-dal-requirements.md)):
 
@@ -29,7 +29,7 @@ Optional DAL runtime overrides (see [GraphQL DAL Requirements](../developer/grap
 | `DAL_CURSOR_SECRET`    | HMAC-SHA256 signing secret for pagination cursors; unset = unsigned cursors |
 | `DAL_FILTER_MAX_DEPTH` | Override default filter AST depth cap (`2`)                                 |
 | `DAL_FILTER_MAX_NODES` | Override default filter AST node cap (`50`)                                 |
-| `DAL_BULK_FILTER_MAX`  | Max rows matched by filter-based bulk mutations (default `1000`)          |
+| `DAL_BULK_FILTER_MAX`  | Max rows matched by filter-based bulk mutations (default `1000`)            |
 
 Codegen-only (unusual outside CI): `DAL_SCHEMA_PATH`, `DAL_OUTPUT_DIR`, `DAL_CONFIG_PATH` — defaults match `templates/ds` layout.
 
@@ -37,11 +37,11 @@ Codegen-only (unusual outside CI): `DAL_SCHEMA_PATH`, `DAL_OUTPUT_DIR`, `DAL_CON
 
 ### `ds-no-sql` (GraphQL Yoga + Prisma)
 
-| Variable         | Description                                                             |
-| ---------------- | ----------------------------------------------------------------------- |
-| `DS_NO_SQL_PORT` | Port the GraphQL Yoga server listens on                                 |
+| Variable         | Description                                                                |
+| ---------------- | -------------------------------------------------------------------------- |
+| `DS_NO_SQL_PORT` | Port the GraphQL Yoga server listens on                                    |
 | `DATABASE_URL`   | Prisma connection string (PostgreSQL, MySQL, SQLite, CockroachDB, MongoDB) |
-| `REDIS_URL`      | _(optional)_ Redis/Valkey URL — enables Redis pub/sub for subscriptions |
+| `REDIS_URL`      | _(optional)_ Redis/Valkey URL — enables Redis pub/sub for subscriptions    |
 
 ---
 
@@ -95,14 +95,11 @@ Codegen-only (unusual outside CI): `DAL_SCHEMA_PATH`, `DAL_OUTPUT_DIR`, `DAL_CON
 
 ### `ui` and `ui-hprt`
 
-| Variable                | Description                                                                                                        |
-| ----------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `DS_HTTP_URL`           | Full URL of the DS HTTP endpoint (e.g. `http://localhost:4000/graphql`) — used by Next.js server-side rewrites     |
-| `NEXT_PUBLIC_DS_WS_URL` | Full WebSocket URL of the DS endpoint (e.g. `ws://localhost:4000/graphql`) — used by the browser for subscriptions when the UI client uses graphql-ws |
+| Variable      | Description                                                                                                                                                             |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DS_HTTP_URL` | Full URL of the DS HTTP endpoint (e.g. `http://localhost:4000`) — base used by Next.js `rewrites()` so `/api/graphql` proxies queries, mutations, and SSE subscriptions |
 
-`DS_HTTP_URL` is a server-side variable (no `NEXT_PUBLIC_` prefix). It is proxied by Next.js rewrites so the browser never sees the backend origin.
-
-`NEXT_PUBLIC_DS_WS_URL` is exposed to the browser because Next.js cannot proxy WebSocket connections. When the backend is **`@corpdk/ds`**, the server delivers subscriptions over **SSE on the same HTTP `/graphql` URL** instead of WebSocket; UI templates still expect `NEXT_PUBLIC_DS_WS_URL` until migrated — see [DS subscription transport (SSE)](../developer/11-ds-subscription-sse.md).
+`DS_HTTP_URL` is a server-side variable (no `NEXT_PUBLIC_` prefix). It is proxied by Next.js rewrites so the browser never sees the backend origin. Subscriptions use the same rewrite with `Accept: text/event-stream` — see [DS subscription transport (SSE)](../developer/11-ds-subscription-sse.md).
 
 ---
 

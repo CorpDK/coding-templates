@@ -9,8 +9,6 @@ import { generateInfo } from "./gen-info.js";
 export interface Config {
   /** Name of the env var that holds the HTTP endpoint. Default: DS_HTTP_URL */
   httpUrlEnvVar?: string;
-  /** Name of the env var that holds the WebSocket endpoint. Default: DS_WS_URL */
-  wsUrlEnvVar?: string;
 }
 
 export const preset: Types.OutputPreset<Config> = {

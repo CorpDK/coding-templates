@@ -65,14 +65,15 @@ pnpm build      # runs codegen → build for all packages
 
 ## Using the CLI _(full-stack / DS only)_
 
-After codegen, the project CLI is available at `packages/ds-cli/src/generated/index.js`. Set the environment variables and run:
+After codegen, the project CLI is available at `packages/ds-cli/src/generated/index.js`. All DS templates serve subscriptions over **SSE on the same HTTP `/graphql` route** as queries and mutations (no WebSocket listener). Set `DS_HTTP_URL` for all operations, including subscription subcommands:
 
 ```bash
 export DS_HTTP_URL=http://localhost:<ds-port>/graphql
-export DS_WS_URL=ws://localhost:<ds-port>/graphql
 
 node packages/ds-cli/src/generated/index.js --help
 ```
+
+See [DS subscription transport (SSE)](../developer/11-ds-subscription-sse.md#generated-cli-ds-cli) for the SSE wire format; you can also use curl or GraphiQL with `Accept: text/event-stream`.
 
 Or install it globally / link it via pnpm so the binary (`<projectName>`) is on your PATH.
 
@@ -91,11 +92,11 @@ my-app create-item --input vars.json
 # Mutation (piped JSON)
 echo '{"name":"Widget"}' | my-app create-item
 
-# Subscription — stream 3 events then exit
-my-app item-created --count 3
-
-# Subscription — stream for 5 seconds
-my-app item-created --timeout 5000
+# Subscription (SSE on DS_HTTP_URL; same URL as subscription subcommands)
+curl -N -H "Accept: text/event-stream" \
+  -H "Content-Type: application/json" \
+  -d '{"query":"subscription { itemCreated { id name } }"}' \
+  "$DS_HTTP_URL"
 ```
 
 All output is newline-delimited JSON (NDJSON) on stdout. Errors go to stderr with a non-zero exit code.

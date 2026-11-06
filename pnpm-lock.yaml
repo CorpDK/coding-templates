@@ -5,6 +5,7 @@ settings:
   excludeLinksFromLockfile: false
 
 overrides:
+  graphql-ws: workspace:*
   next: 16.2.4
   vite: ^8.0.10
   hono: ^4.12.15
@@ -147,6 +148,8 @@ importers:
         specifier: ^4.1.2
         version: 4.1.2(@opentelemetry/api@1.9.1)(@types/node@24.19.1)(@vitest/browser-playwright@4.1.2)(msw@2.12.14(@types/node@24.19.1)(typescript@6.0.2))(vite@8.0.10(@types/node@24.19.1)(esbuild@0.27.4)(jiti@2.6.1)(sass@1.99.0)(tsx@4.21.0)(yaml@2.8.3))
 
+  libraries/graphql-ws-stub: {}
+
   libraries/pub-sub:
     dependencies:
       '@graphql-yoga/redis-event-target':
@@ -162,9 +165,15 @@ importers:
       '@types/node':
         specifier: ^24.0.0
         version: 24.19.1
+      '@vitest/coverage-v8':
+        specifier: 4.1.2
+        version: 4.1.2(@vitest/browser@4.1.2(msw@2.12.14(@types/node@24.19.1)(typescript@6.0.2))(vite@8.0.10(@types/node@24.19.1)(esbuild@0.27.4)(jiti@2.6.1)(sass@1.99.0)(tsx@4.21.0)(yaml@2.8.3))(vitest@4.1.2))(vitest@4.1.2)
       typescript:
         specifier: ^6.0.2
         version: 6.0.2
+      vitest:
+        specifier: ^4.1.2
+        version: 4.1.2(@opentelemetry/api@1.9.1)(@types/node@24.19.1)(@vitest/browser-playwright@4.1.2)(msw@2.12.14(@types/node@24.19.1)(typescript@6.0.2))(vite@8.0.10(@types/node@24.19.1)(esbuild@0.27.4)(jiti@2.6.1)(sass@1.99.0)(tsx@4.21.0)(yaml@2.8.3))
 
   packages/eslint-config:
     dependencies:
@@ -634,18 +643,12 @@ importers:
       graphql:
         specifier: ^16.13.2
         version: 16.13.2
-      graphql-ws:
-        specifier: ^6.0.8
-        version: 6.0.8(graphql@16.13.2)(ws@8.20.0)
       graphql-yoga:
         specifier: ^5.18.1
         version: 5.18.1(graphql@16.13.2)
       ioredis:
         specifier: ^5.10.1
         version: 5.10.1
-      ws:
-        specifier: ^8.20.0
-        version: 8.20.0
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -668,9 +671,6 @@ importers:
       '@types/node':
         specifier: ^24.0.0
         version: 24.19.1
-      '@types/ws':
-        specifier: ^8.18.1
-        version: 8.18.1
       tsx:
         specifier: ^4.21.0
         version: 4.21.0
@@ -691,9 +691,6 @@ importers:
       graphql:
         specifier: ^16.13.2
         version: 16.13.2
-      graphql-ws:
-        specifier: ^6.0.8
-        version: 6.0.8(graphql@16.13.2)(ws@8.20.0)
       graphql-yoga:
         specifier: ^5.18.1
         version: 5.18.1(graphql@16.13.2)
@@ -703,9 +700,6 @@ importers:
       mongodb:
         specifier: ^7.1.1
         version: 7.1.1
-      ws:
-        specifier: ^8.20.0
-        version: 8.20.0
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -728,9 +722,6 @@ importers:
       '@types/node':
         specifier: ^24.0.0
         version: 24.19.1
-      '@types/ws':
-        specifier: ^8.18.1
-        version: 8.18.1
       tsx:
         specifier: ^4.21.0
         version: 4.21.0
@@ -749,9 +740,6 @@ importers:
       graphql:
         specifier: ^16.13.2
         version: 16.13.2
-      graphql-ws:
-        specifier: ^6.0.8
-        version: 6.0.8(graphql@16.13.2)(ws@8.20.0)
       graphql-yoga:
         specifier: ^5.18.1
         version: 5.18.1(graphql@16.13.2)
@@ -761,9 +749,6 @@ importers:
       js-yaml:
         specifier: ^4.1.0
         version: 4.1.1
-      ws:
-        specifier: ^8.20.0
-        version: 8.20.0
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -789,9 +774,6 @@ importers:
       '@types/node':
         specifier: ^24.0.0
         version: 24.19.1
-      '@types/ws':
-        specifier: ^8.18.1
-        version: 8.18.1
       tsx:
         specifier: ^4.21.0
         version: 4.21.0
@@ -810,9 +792,6 @@ importers:
       graphql:
         specifier: ^16.13.2
         version: 16.13.2
-      graphql-ws:
-        specifier: ^6.0.8
-        version: 6.0.8(graphql@16.13.2)(ws@8.20.0)
       graphql-yoga:
         specifier: ^5.18.1
         version: 5.18.1(graphql@16.13.2)
@@ -822,9 +801,6 @@ importers:
       mongodb:
         specifier: ^7.1.1
         version: 7.1.1
-      ws:
-        specifier: ^8.20.0
-        version: 8.20.0
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -847,9 +823,6 @@ importers:
       '@types/node':
         specifier: ^24.0.0
         version: 24.19.1
-      '@types/ws':
-        specifier: ^8.18.1
-        version: 8.18.1
       tsx:
         specifier: ^4.21.0
         version: 4.21.0
@@ -877,18 +850,12 @@ importers:
       graphql:
         specifier: ^16.13.2
         version: 16.13.2
-      graphql-ws:
-        specifier: ^6.0.8
-        version: 6.0.8(graphql@16.13.2)(ws@8.20.0)
       graphql-yoga:
         specifier: ^5.18.1
         version: 5.18.1(graphql@16.13.2)
       ioredis:
         specifier: ^5.10.1
         version: 5.10.1
-      ws:
-        specifier: ^8.20.0
-        version: 8.20.0
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -911,9 +878,6 @@ importers:
       '@types/node':
         specifier: ^24.0.0
         version: 24.19.1
-      '@types/ws':
-        specifier: ^8.18.1
-        version: 8.18.1
       prisma:
         specifier: ^7.6.0
         version: 7.6.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.2)
@@ -940,7 +904,7 @@ importers:
     dependencies:
       '@apollo/client':
         specifier: ^4.1.6
-        version: 4.1.6(graphql-ws@6.0.8(graphql@16.13.2)(ws@8.20.0))(graphql@16.13.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(rxjs@7.8.2)
+        version: 4.1.6(graphql@16.13.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(rxjs@7.8.2)
       '@corpdk/ds-sdk':
         specifier: workspace:*
         version: link:../ds-sdk
@@ -968,9 +932,9 @@ importers:
       graphql:
         specifier: ^16.13.2
         version: 16.13.2
-      graphql-ws:
-        specifier: ^6.0.8
-        version: 6.0.8(graphql@16.13.2)(ws@8.20.0)
+      graphql-sse:
+        specifier: ^2.6.3
+        version: 2.6.3(graphql@16.13.2)
       next:
         specifier: 16.2.4
         version: 16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(sass@1.99.0)
@@ -1044,9 +1008,9 @@ importers:
       graphql:
         specifier: ^16.13.2
         version: 16.13.2
-      graphql-ws:
-        specifier: ^6.0.8
-        version: 6.0.8(graphql@16.13.2)(ws@8.20.0)
+      graphql-sse:
+        specifier: ^2.6.3
+        version: 2.6.3(graphql@16.13.2)
       next:
         specifier: 16.2.4
         version: 16.2.4(@babel/core@7.29.0)(@opentelemetry/api@1.9.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(sass@1.99.0)
@@ -1206,7 +1170,7 @@ packages:
     resolution: {integrity: sha512-ak8uzqmKeX3u9BziGf83RRyODAJKFkPG72hTNvEj4WjMWFmuKW2gGN1i3OfajKT6yuGjvo+n23ES2zqWDKFCZg==}
     peerDependencies:
       graphql: ^16.0.0
-      graphql-ws: ^5.5.5 || ^6.0.3
+      graphql-ws: workspace:*
       react: ^17.0.0 || ^18.0.0 || >=19.0.0-rc
       react-dom: ^17.0.0 || ^18.0.0 || >=19.0.0-rc
       rxjs: ^7.3.0
@@ -6153,27 +6117,17 @@ packages:
     peerDependencies:
       graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0 || ^17.0.0
 
+  graphql-sse@2.6.3:
+    resolution: {integrity: sha512-UCSx3a+IklDOqJt8gpxGwDhnmWiZLJ5wNPMJ7TLGOQ68PhiKIDxLJBB2i+nKEGyWYLtiSLpTJ5fFEG5kkAxppA==}
+    engines: {node: '>=12'}
+    peerDependencies:
+      graphql: '>=0.11 <=17'
+
   graphql-tag@2.12.6:
     resolution: {integrity: sha512-FdSNcu2QQcWnM2VNvSCCDCVS5PpPqpzgFT8+GXzqJuoDd0CBncxCY278u4mhRO7tMgo2JjgJA5aZ+nWSQ/Z+xg==}
     engines: {node: '>=10'}
     peerDependencies:
       graphql: ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
-
-  graphql-ws@6.0.8:
-    resolution: {integrity: sha512-m3EOaNsUBXwAnkBWbzPfe0Nq8pXUfxsWnolC54sru3FzHvhTZL0Ouf/BoQsaGAXqM+YPerXOJ47BUnmgmoupCw==}
-    engines: {node: '>=20'}
-    peerDependencies:
-      '@fastify/websocket': ^10 || ^11
-      crossws: ~0.3
-      graphql: ^15.10.1 || ^16
-      ws: ^8
-    peerDependenciesMeta:
-      '@fastify/websocket':
-        optional: true
-      crossws:
-        optional: true
-      ws:
-        optional: true
 
   graphql-yoga@5.18.1:
     resolution: {integrity: sha512-GiDSlvibfY/vyurbkBOKMO+adF6bTCzKr80FYWta59s1Lx87oVo8T6Nu/0hrxrGv0SrAUkqUpcpr4Ee7XlYmBw==}
@@ -8725,7 +8679,7 @@ snapshots:
 
   '@alloc/quick-lru@5.2.0': {}
 
-  '@apollo/client@4.1.6(graphql-ws@6.0.8(graphql@16.13.2)(ws@8.20.0))(graphql@16.13.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(rxjs@7.8.2)':
+  '@apollo/client@4.1.6(graphql@16.13.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(rxjs@7.8.2)':
     dependencies:
       '@graphql-typed-document-node/core': 3.2.0(graphql@16.13.2)
       '@wry/caches': 1.0.1
@@ -8737,7 +8691,6 @@ snapshots:
       rxjs: 7.8.2
       tslib: 2.8.1
     optionalDependencies:
-      graphql-ws: 6.0.8(graphql@16.13.2)(ws@8.20.0)
       react: 19.2.4
       react-dom: 19.2.4(react@19.2.4)
 
@@ -9400,11 +9353,9 @@ snapshots:
     optionalDependencies:
       '@parcel/watcher': 2.5.6
     transitivePeerDependencies:
-      - '@fastify/websocket'
       - '@types/node'
       - bufferutil
       - cosmiconfig-toml-loader
-      - crossws
       - graphql-sock
       - supports-color
       - typescript
@@ -9571,14 +9522,12 @@ snapshots:
       '@graphql-tools/utils': 11.0.0(graphql@16.13.2)
       '@whatwg-node/disposablestack': 0.0.6
       graphql: 16.13.2
-      graphql-ws: 6.0.8(graphql@16.13.2)(ws@8.20.0)
+      graphql-ws: link:libraries/graphql-ws-stub
       isows: 1.0.7(ws@8.20.0)
       tslib: 2.8.1
       ws: 8.20.0
     transitivePeerDependencies:
-      - '@fastify/websocket'
       - bufferutil
-      - crossws
       - utf-8-validate
 
   '@graphql-tools/executor-http@3.1.0(@types/node@24.19.1)(graphql@16.13.2)':
@@ -9730,10 +9679,8 @@ snapshots:
       tslib: 2.8.1
       ws: 8.20.0
     transitivePeerDependencies:
-      - '@fastify/websocket'
       - '@types/node'
       - bufferutil
-      - crossws
       - utf-8-validate
 
   '@graphql-tools/utils@10.11.0(graphql@16.13.2)':
@@ -13999,10 +13946,8 @@ snapshots:
       string-env-interpolation: 1.0.1
       tslib: 2.8.1
     transitivePeerDependencies:
-      - '@fastify/websocket'
       - '@types/node'
       - bufferutil
-      - crossws
       - typescript
       - utf-8-validate
 
@@ -14011,16 +13956,14 @@ snapshots:
       graphql: 16.13.2
       tslib: 2.8.1
 
+  graphql-sse@2.6.3(graphql@16.13.2):
+    dependencies:
+      graphql: 16.13.2
+
   graphql-tag@2.12.6(graphql@16.13.2):
     dependencies:
       graphql: 16.13.2
       tslib: 2.8.1
-
-  graphql-ws@6.0.8(graphql@16.13.2)(ws@8.20.0):
-    dependencies:
-      graphql: 16.13.2
-    optionalDependencies:
-      ws: 8.20.0
 
   graphql-yoga@5.18.1(graphql@16.13.2):
     dependencies:

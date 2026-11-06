@@ -1,4 +1,5 @@
 // lib
+export { headersRecord } from "./lib/http-headers";
 export { cn } from "./lib/utils";
 export { formatTimestamp } from "./lib/formatting";
 export { fuzzyMatch } from "./lib/search";
