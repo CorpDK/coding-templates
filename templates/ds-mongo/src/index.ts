@@ -1,5 +1,7 @@
-import { createServer } from "node:http";
-import { createYoga } from "graphql-yoga";
+import {
+  createSseYogaHttpServer,
+  listenSseYogaHttpServer,
+} from "@corpdk/pub-sub";
 import { schema } from "./schema.js";
 import { connectDb } from "./db/index.js";
 
@@ -20,18 +22,5 @@ try {
   process.exit(1);
 }
 
-const yoga = createYoga({
-  schema,
-  graphiql: process.env.NODE_ENV !== "production",
-  logging: true,
-});
-
-const server = createServer(yoga);
-
-server.listen(PORT, () => {
-  const base = `http://localhost:${PORT}/graphql`;
-  console.log(`@corpdk/ds-mongo  HTTP  ${base}`);
-  console.log(
-    `@corpdk/ds-mongo  SSE   ${base}  (subscriptions: Accept: text/event-stream)`,
-  );
-});
+const server = createSseYogaHttpServer(schema);
+listenSseYogaHttpServer(server, PORT, "@corpdk/ds-mongo");
