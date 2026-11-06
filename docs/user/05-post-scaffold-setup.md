@@ -92,11 +92,11 @@ my-app create-item --input vars.json
 # Mutation (piped JSON)
 echo '{"name":"Widget"}' | my-app create-item
 
-# Subscription — stream 3 events then exit
-my-app item-created --count 3
-
-# Subscription — stream for 5 seconds
-my-app item-created --timeout 5000
+# Subscription (SSE on DS_HTTP_URL; my-app subscription subcommands need DS_WS_URL until ds-cli SSE lands)
+curl -N -H "Accept: text/event-stream" \
+  -H "Content-Type: application/json" \
+  -d '{"query":"subscription { itemCreated { id name } }"}' \
+  "$DS_HTTP_URL"
 ```
 
 All output is newline-delimited JSON (NDJSON) on stdout. Errors go to stderr with a non-zero exit code.
