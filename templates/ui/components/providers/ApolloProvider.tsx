@@ -17,6 +17,25 @@ import type { ReactNode } from "react";
 
 const httpLink = new HttpLink({ uri: "/api/graphql" });
 
+function headersRecord(
+  input: HeadersInit | undefined,
+): Record<string, string> {
+  if (!input) {
+    return {};
+  }
+  if (typeof Headers !== "undefined" && input instanceof Headers) {
+    const out: Record<string, string> = {};
+    input.forEach((value, key) => {
+      out[key] = value;
+    });
+    return out;
+  }
+  if (Array.isArray(input)) {
+    return Object.fromEntries(input);
+  }
+  return { ...(input as Record<string, string>) };
+}
+
 /** Per-request headers from Apollo context (e.g. auth) merged into SSE transport. */
 const operationsByRequest = new WeakMap<RequestParams, Operation>();
 
@@ -24,8 +43,9 @@ const sseClient = createClient({
   url: "/api/graphql",
   headers: async (request) => {
     const op = operationsByRequest.get(request);
-    const ctxHeaders =
-      (op?.getContext().headers as Record<string, string> | undefined) ?? {};
+    const ctxHeaders = headersRecord(
+      op?.getContext().headers as HeadersInit | undefined,
+    );
     return { Accept: "text/event-stream", ...ctxHeaders };
   },
 });

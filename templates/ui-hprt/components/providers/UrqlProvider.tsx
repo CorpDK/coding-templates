@@ -38,8 +38,9 @@ function mergedHeadersFromOperation(op: Operation): Record<string, string> {
   const fetchOpts =
     typeof ctx.fetchOptions === "function" ? ctx.fetchOptions() : ctx.fetchOptions;
   const fromFetch = headersRecord(fetchOpts?.headers);
-  const ctxHeaders =
-    (ctx as { headers?: Record<string, string> }).headers ?? {};
+  const ctxHeaders = headersRecord(
+    (ctx as { headers?: HeadersInit }).headers,
+  );
   return { ...ctxHeaders, ...fromFetch };
 }
 

@@ -24,7 +24,10 @@ export function listenSseYogaHttpServer(
   extraStartupLines: readonly string[] = [],
 ): void {
   server.listen(port, () => {
-    const base = `http://localhost:${port}/graphql`;
+    const addr = server.address();
+    const boundPort =
+      addr && typeof addr === "object" ? addr.port : port;
+    const base = `http://localhost:${boundPort}/graphql`;
     console.log(`${packageLabel}  HTTP  ${base}`);
     for (const line of extraStartupLines) {
       console.log(line);

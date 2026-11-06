@@ -74,12 +74,16 @@ describe("listenSseYogaHttpServer", () => {
       listenSseYogaHttpServer(server, 0, "@corpdk/test-ds", ["  DB    connected"]);
     });
     try {
+      const address = server.address();
+      const boundPort =
+        address && typeof address === "object" ? address.port : 0;
+      const base = `http://localhost:${boundPort}/graphql`;
       expect(log).toHaveBeenCalledWith(
-        "@corpdk/test-ds  HTTP  http://localhost:0/graphql",
+        `@corpdk/test-ds  HTTP  ${base}`,
       );
       expect(log).toHaveBeenCalledWith("  DB    connected");
       expect(log).toHaveBeenCalledWith(
-        "@corpdk/test-ds  SSE   http://localhost:0/graphql  (subscriptions: Accept: text/event-stream)",
+        `@corpdk/test-ds  SSE   ${base}  (subscriptions: Accept: text/event-stream)`,
       );
     } finally {
       await close(server);
