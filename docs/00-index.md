@@ -28,7 +28,7 @@ Welcome to the coding-templates documentation! This monorepo provides production
 - [GraphQL Schema](developer/02-graphql-schema.md) — SDL layout, docstring rules, entity patterns
 - [Repository Pattern](developer/03-repository-pattern.md) — IRepository interface, adding new entities
 - [PubSub Internals](developer/04-pubsub-internals.md) — factory pattern, topic wiring, resolver integration
-- [DS subscription transport (SSE)](developer/11-ds-subscription-sse.md) — all DS templates SSE on `/graphql`; UI WS migration deferred
+- [DS subscription transport (SSE)](developer/11-ds-subscription-sse.md) — all DS templates SSE on `/graphql`; stock UI uses the same `/api/graphql` proxy with `graphql-sse`
 - [DS observability](developer/12-ds-observability.md) — `@corpdk/ds` health probe, optional OTLP tracing, generated input Zod
 - [UI Architecture](developer/05-ui-architecture.md) — UI template state and app-level config
 - [UI Status Dashboard](developer/06-ui-status.md) — living capability matrix across all UI packages

@@ -95,7 +95,7 @@ See [Repository Pattern](../developer/03-repository-pattern.md) for the full imp
 
 All DS templates (`templates/ds` and manual variants) serve subscriptions over **SSE on the same `/graphql` HTTP route** as queries and mutations (GraphQL Yoga v5 default). None expose a WebSocket listener.
 
-See [DS subscription transport (SSE)](../developer/11-ds-subscription-sse.md) for client headers, curl examples, and deferred UI migration notes.
+See [DS subscription transport (SSE)](../developer/11-ds-subscription-sse.md) for client headers, curl examples, and stock Next.js UI proxy behavior.
 
 ---
 
