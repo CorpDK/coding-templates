@@ -132,7 +132,7 @@ Use `npm login` or `//registry.npmjs.org/:_authToken=${NPM_TOKEN}` in `~/.npmrc`
 
 ### First-time bootstrap (packages not on npm yet)
 
-[npm trusted publishers](https://docs.npmjs.com/trusted-publishers) require **each package to already exist on the registry** before you can add a GitHub Actions trusted publisher. The five DS automation packages may never have been published; do this **once** from a maintainer machine, then configure trusted publishing and use CI for every later release.
+[npm trusted publishers](https://docs.npmjs.com/trusted-publishers) require **each package to already exist on the registry** before you can add a GitHub Actions trusted publisher. The five DS automation packages may never have been published; do this **once** from a maintainer machine, then complete [After bootstrap](#after-bootstrap) (publish workflow on `main`, then trusted publishing per package), and use CI for every later release.
 
 #### Prerequisites
 
@@ -316,4 +316,4 @@ Ensure the `@corpdk` npm org grants **publish** on the five packages above. `"ac
 - [Monorepo Design — Versioning & publishing](../architecture/02-monorepo-design.md#publishing-strategy)
 - [DS automation upgrades (`create-ds`)](../developer/ds-automation-upgrades.md)
 
-**Last updated**: October 7, 2026
+**Last updated**: November 6, 2026
