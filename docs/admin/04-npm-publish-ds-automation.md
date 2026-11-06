@@ -108,9 +108,10 @@ Requires npm login with publish access on each package.
 1. On a branch: bump **all five** `package.json` `version` fields to the same CalVer, update package READMEs as needed, and update [Package Dependencies](../architecture/06-package-dependencies.md) upgrade log if you track releases there.
 2. Open a PR to `main` — the workflow runs **dry-run** (build, tests, **`dist/` declaration check**, packaging) on the PR.
 3. **First release only:** if any of the five packages are missing on npmjs, complete [First-time bootstrap](#first-time-bootstrap-packages-not-on-npm-yet) (local `npm login` / `NPM_TOKEN`, not OIDC) **before** merge or use break-glass dispatch after bootstrap.
-4. Confirm [trusted publishing](#configure-trusted-publishing-on-npmjs) is configured on npm for all five packages (one-time per package; only after each package exists on the registry).
-5. **Merge to `main`.** CI detects the CalVer bump in `libraries/dal-core`, live-publishes all five packages, creates tag `ds-automation/v<CalVer>`, and opens the GitHub Release. Maintainers do **not** push release tags manually for normal releases.
-6. Confirm **Publish DS automation (npm)** succeeded on the merge commit, that the **GitHub Release** for `ds-automation/v<CalVer>` exists, and that `npm view @corpdk/create-ds dist-tags` shows **`latest`** at that CalVer (see [Dist-tags](#dist-tags-latest-vs-prerelease) if not). Optionally `npm pack @corpdk/dal-core@<CalVer> -q && tar -tzf corpdk-dal-core-*.tgz | grep index.d.ts` on a maintainer machine.
+4. **First release only:** merge [`publish-ds-automation.yml`](../../.github/workflows/publish-ds-automation.yml) to `main` if it is not already there — trusted publishing cannot be configured until the workflow exists on the default branch ([After bootstrap](#after-bootstrap) step 2; [E400 troubleshooting](#troubleshooting-e400-trust-setup) rank 2).
+5. Confirm [trusted publishing](#configure-trusted-publishing-on-npmjs) is configured on npm for all five packages (one-time per package; only after each package exists on the registry and, on first release, step 4 is satisfied).
+6. **Merge to `main`.** CI detects the CalVer bump in `libraries/dal-core`, live-publishes all five packages, creates tag `ds-automation/v<CalVer>`, and opens the GitHub Release. Maintainers do **not** push release tags manually for normal releases.
+7. Confirm **Publish DS automation (npm)** succeeded on the merge commit, that the **GitHub Release** for `ds-automation/v<CalVer>` exists, and that `npm view @corpdk/create-ds dist-tags` shows **`latest`** at that CalVer (see [Dist-tags](#dist-tags-latest-vs-prerelease) if not). Optionally `npm pack @corpdk/dal-core@<CalVer> -q && tar -tzf corpdk-dal-core-*.tgz | grep index.d.ts` on a maintainer machine.
 
 **Break-glass:** On `main`, **workflow_dispatch** with `dry_run: false` repeats live publish + tag + release (skips if tag/release already exist). Use only if merge publish failed; do not use from feature branches.
 
@@ -131,7 +132,7 @@ Use `npm login` or `//registry.npmjs.org/:_authToken=${NPM_TOKEN}` in `~/.npmrc`
 
 ### First-time bootstrap (packages not on npm yet)
 
-[npm trusted publishers](https://docs.npmjs.com/trusted-publishers) require **each package to already exist on the registry** before you can add a GitHub Actions trusted publisher. The five DS automation packages may never have been published; do this **once** from a maintainer machine, then configure trusted publishing and use CI for every later release.
+[npm trusted publishers](https://docs.npmjs.com/trusted-publishers) require **each package to already exist on the registry** before you can add a GitHub Actions trusted publisher. The five DS automation packages may never have been published; do this **once** from a maintainer machine, then complete [After bootstrap](#after-bootstrap) (publish workflow on `main`, then trusted publishing per package), and use CI for every later release.
 
 #### Prerequisites
 
@@ -202,8 +203,9 @@ done
 #### After bootstrap
 
 1. Confirm all five packages appear on npm at the expected version (e.g. `https://www.npmjs.com/package/@corpdk/dal-core`).
-2. Configure [trusted publishing](#configure-trusted-publishing-on-npmjs) on **each** package (UI or `npm github` / `npm trust github` loop below).
-3. Merge the publish workflow to `main` if it is not already there, then ship CalVer bumps via PR → merge — live CI publishes use OIDC + `--provenance`, not `NPM_TOKEN`.
+2. Merge the publish workflow to `main` if it is not already there — trust setup requires the workflow on the default branch (see [Troubleshooting: E400 trust setup](#troubleshooting-e400-trust-setup)).
+3. Configure [trusted publishing](#configure-trusted-publishing-on-npmjs) on **each** package (npmjs UI or the [CLI equivalent](#cli-equivalent) — run **one package at a time** with **`--allow-publish`**; see [E400 troubleshooting](#troubleshooting-e400-trust-setup)).
+4. Ship CalVer bumps via PR → merge — live CI publishes use OIDC + `--provenance`, not `NPM_TOKEN`.
 
 Subsequent version bumps still require the same lockstep CalVer edit across all five packages; only the **first** upload must be local/token auth.
 
@@ -247,18 +249,23 @@ For **each** of the five packages below, an npm org owner or package maintainer 
 | `@corpdk/dal-codegen` |
 | `@corpdk/create-ds`   |
 
-**CLI equivalent** (logged-in maintainer, package must already exist on the registry). Omit `--environment` when the workflow has no GitHub `environment:` (true for [`publish-ds-automation.yml`](../../.github/workflows/publish-ds-automation.yml)). Run `npm github --help` or `npm trust --help` on your machine — npm **11.12.x** exposes this as `npm trust github` (no `--allow-publish` flag); npm **≥11.15** adds optional `--allow-publish` / `--allow-stage-publish` for staged publish. **CI live publish** still requires npm CLI **≥11.15** in the workflow; older npm is fine for this one-time trust setup.
+#### CLI equivalent
+
+Logged-in maintainer; package must already exist on the registry. Omit `--environment` when the workflow has no GitHub `environment:` (true for [`publish-ds-automation.yml`](../../.github/workflows/publish-ds-automation.yml)). Use npm CLI **≥ 11.15** locally and pass **`--allow-publish`** — older CLIs (e.g. 11.12.x) may get **E400** from the registry without explaining the missing permission ([troubleshooting](#troubleshooting-e400-trust-setup)). **CI live publish** also requires npm **≥ 11.15** in the workflow.
+
+Ensure [`publish-ds-automation.yml`](../../.github/workflows/publish-ds-automation.yml) is on the repository **default branch** (`main`) before trust setup — not only on a feature branch.
 
 ```bash
-for pkg in @corpdk/dal-core @corpdk/pub-sub @corpdk/codegen-cli @corpdk/dal-codegen @corpdk/create-ds; do
-  npm github "$pkg" \
-    --file publish-ds-automation.yml \
-    --repository CorpDK/coding-templates \
-    -y
-done
+npm trust github @corpdk/dal-core \
+  --file publish-ds-automation.yml \
+  --repository CorpDK/coding-templates \
+  --allow-publish \
+  -y
+# Complete browser 2FA when prompted; then:
+npm trust list @corpdk/dal-core
 ```
 
-If your npm reports `Unknown command: "github"`, use the same flags with `npm trust github` instead of `npm github`.
+If your npm reports `Unknown command: "github"`, use `npm trust github` as above. Repeat for the other four packages (step 5 table) only after browser 2FA completes and the previous `npm trust list` shows a configuration.
 
 **Verify trust configuration** (repeat for each package, or spot-check one):
 
@@ -269,6 +276,22 @@ npm trust list @corpdk/dal-core
 Expect a GitHub Actions trusted publisher for workflow `publish-ds-automation.yml` on `CorpDK/coding-templates`. Use `--json` for machine-readable output.
 
 **Verification (CI):** After configuration, merging a CalVer bump to `main` (or a manual `dry_run: false` dispatch on `main`) should publish without `secrets.NPM_TOKEN`. If publish fails with auth errors, confirm the workflow filename matches exactly (including `.yml`), the repo is `CorpDK/coding-templates`, and `id-token: write` is present on the workflow.
+
+#### Troubleshooting: E400 trust setup
+
+Symptoms: `npm trust github` (or `npm github`) returns **`E400 Bad Request`** on `POST .../-/package/@corpdk%2f<name>/trust`, npm opens **browser 2FA** URLs, and **`npm trust list`** shows **no configurations** for any of the five packages. Debug logs often show **401 → web auth 200 → 400** with no response body.
+
+| Rank | Likely cause                                                                                                                                                                                                                                                                             | What to do                                                                                                                                                                                                                              |
+| ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1    | **Missing allowed-action flags** — npm CLI **&lt; 11.15** sends a trust payload **without** `allow-publish` / `allow-stage-publish`; the registry rejects it with **400** and no helpful body ([npm trust docs](https://docs.npmjs.com/cli/v11/commands/npm-trust/)).                    | Upgrade locally: `npm install -g npm@^11.15`. Re-run **one package** with **`--allow-publish`** using the [CLI equivalent](#cli-equivalent). npm **≥ 11.15** may refuse the command client-side if the flag is omitted.                 |
+| 2    | **Workflow not on the default branch** — npm/npmjs resolves the workflow file from **`main`**. If [`publish-ds-automation.yml`](../../.github/workflows/publish-ds-automation.yml) is missing there, trust setup or OIDC publish can fail even when the file exists on a feature branch. | Confirm the workflow is on **`main`** before configuring trusted publishing. Verify: `curl -sI 'https://raw.githubusercontent.com/CorpDK/coding-templates/main/.github/workflows/publish-ds-automation.yml'` returns **200** (not 404). |
+| 3    | **2FA web auth not finished before the next command** — batch loops fire multiple trust POSTs; only the first gets a clean browser approval.                                                                                                                                             | Run **one package at a time**. Wait until browser 2FA completes and the CLI exits **successfully** before starting the next package. Do not loop all five until the first `npm trust list` shows a configuration.                       |
+| 4    | **Package not on the registry yet**                                                                                                                                                                                                                                                      | Complete [First-time bootstrap](#first-time-bootstrap-packages-not-on-npm-yet) so each package exists on npmjs before trust setup.                                                                                                      |
+| 5    | **Wrong workflow filename or repo**                                                                                                                                                                                                                                                      | Filename must be exactly `publish-ds-automation.yml` (not a path). Repository must be `CorpDK/coding-templates` (case-sensitive).                                                                                                       |
+
+**If CLI keeps failing:** use the [npmjs.com UI](#configure-trusted-publishing-on-npmjs) (same field values; enable **npm publish** under allowed actions). npm does not validate the GitHub workflow at save time — a **404 workflow on `main`** still breaks OIDC publish later even if UI save appears to work.
+
+**Order for this monorepo:** (1) confirm the publish workflow is on **`main`**, (2) bootstrap packages if needed, (3) configure trust **per package** with **`--allow-publish`** and completed 2FA, (4) merge a CalVer bump to `main` or run `workflow_dispatch` with `dry_run: false`.
 
 ### Legacy optional: `NPM_TOKEN` (local or emergency)
 
@@ -293,4 +316,4 @@ Ensure the `@corpdk` npm org grants **publish** on the five packages above. `"ac
 - [Monorepo Design — Versioning & publishing](../architecture/02-monorepo-design.md#publishing-strategy)
 - [DS automation upgrades (`create-ds`)](../developer/ds-automation-upgrades.md)
 
-**Last updated**: October 7, 2026
+**Last updated**: November 6, 2026
