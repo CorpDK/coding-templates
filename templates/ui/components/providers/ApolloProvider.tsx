@@ -36,6 +36,18 @@ function headersRecord(
   return { ...(input as Record<string, string>) };
 }
 
+function withoutAcceptHeader(
+  headers: Record<string, string>,
+): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [key, value] of Object.entries(headers)) {
+    if (key.toLowerCase() !== "accept") {
+      out[key] = value;
+    }
+  }
+  return out;
+}
+
 /** Per-request headers from Apollo context (e.g. auth) merged into SSE transport. */
 const operationsByRequest = new WeakMap<RequestParams, Operation>();
 
@@ -43,10 +55,10 @@ const sseClient = createClient({
   url: "/api/graphql",
   headers: async (request) => {
     const op = operationsByRequest.get(request);
-    const ctxHeaders = headersRecord(
-      op?.getContext().headers as HeadersInit | undefined,
+    const ctxHeaders = withoutAcceptHeader(
+      headersRecord(op?.getContext().headers as HeadersInit | undefined),
     );
-    return { Accept: "text/event-stream", ...ctxHeaders };
+    return { ...ctxHeaders, Accept: "text/event-stream" };
   },
 });
 
