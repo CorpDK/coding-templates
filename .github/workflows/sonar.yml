@@ -39,8 +39,10 @@ jobs:
 
       - run: pnpm --filter @corpdk/dal-core build
       - run: pnpm --filter @corpdk/dal-codegen build
+      - run: pnpm --filter @corpdk/pub-sub build
       - run: pnpm --filter @corpdk/dal-core test:coverage
       - run: pnpm --filter @corpdk/dal-codegen test:coverage
+      - run: pnpm --filter @corpdk/pub-sub test:coverage
 
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v6
