@@ -8,26 +8,10 @@ import {
   type Operation,
 } from "urql";
 import { cacheExchange } from "@urql/exchange-graphcache";
+import { headersRecord } from "@corpdk/ui-core";
 import { createClient as createSseClient } from "graphql-sse";
 import type { RequestParams } from "graphql-sse";
 import type { ReactNode } from "react";
-
-function headersRecord(input: HeadersInit | undefined): Record<string, string> {
-  if (!input) {
-    return {};
-  }
-  if (typeof Headers !== "undefined" && input instanceof Headers) {
-    const out: Record<string, string> = {};
-    input.forEach((value, key) => {
-      out[key] = value;
-    });
-    return out;
-  }
-  if (Array.isArray(input)) {
-    return Object.fromEntries(input);
-  }
-  return { ...(input as Record<string, string>) };
-}
 
 async function mergedHeadersFromOperation(
   op: Operation,
