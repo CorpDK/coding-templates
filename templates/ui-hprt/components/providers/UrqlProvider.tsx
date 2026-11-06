@@ -12,7 +12,36 @@ import { createClient as createSseClient } from "graphql-sse";
 import type { RequestParams } from "graphql-sse";
 import type { ReactNode } from "react";
 
-const operationsByRequest = new WeakMap<RequestParams, Operation>();
+const operationsBySubscriptionKey = new Map<string, Operation>();
+
+function stableStringify(value: unknown): string {
+  if (value === undefined) {
+    return "";
+  }
+  if (value === null) {
+    return "null";
+  }
+  if (typeof value !== "object") {
+    return JSON.stringify(value);
+  }
+  if (Array.isArray(value)) {
+    return `[${value.map(stableStringify).join(",")}]`;
+  }
+  const record = value as Record<string, unknown>;
+  const keys = Object.keys(record).sort();
+  return `{${keys.map((k) => `${JSON.stringify(k)}:${stableStringify(record[k])}`).join(",")}}`;
+}
+
+function subscriptionKeyFromParams(params: {
+  operationName?: string | null;
+  query?: string | null;
+  variables?: unknown;
+  extensions?: unknown;
+}): string {
+  const name = params.operationName ?? "";
+  const query = params.query ?? "";
+  return `${name}\0${query}\0${stableStringify(params.variables)}\0${stableStringify(params.extensions)}`;
+}
 
 function headersRecord(
   input: HeadersInit | undefined,
@@ -53,7 +82,7 @@ const sseClient = createSseClient({
     if (!request) {
       return { Accept: "text/event-stream" };
     }
-    const op = operationsByRequest.get(request);
+    const op = operationsBySubscriptionKey.get(subscriptionKeyFromParams(request));
     const merged = op ? await mergedHeadersFromOperation(op) : {};
     return { ...merged, Accept: "text/event-stream" };
   },
@@ -74,13 +103,14 @@ const urqlClient = createClient({
           operationName: request.operationName ?? undefined,
           extensions: request.extensions ?? undefined,
         };
-        operationsByRequest.set(params, operation);
+        const key = subscriptionKeyFromParams(params);
+        operationsBySubscriptionKey.set(key, operation);
         return {
           subscribe: (sink) => {
             const dispose = sseClient.subscribe(params, sink);
             return {
               unsubscribe: () => {
-                operationsByRequest.delete(params);
+                operationsBySubscriptionKey.delete(key);
                 dispose();
               },
             };

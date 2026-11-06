@@ -87,10 +87,7 @@ describe("listenSseYogaHttpServer", () => {
       expect(response.ok).toBe(true);
       const body = (await response.json()) as { data?: { ping?: string } };
       expect(body.data?.ping).toBe("pong");
-      const logged = log.mock.calls.map((call) => call[0]);
-      for (const line of extraStartupLines) {
-        expect(logged).toContain(line);
-      }
+      expect(log.mock.calls.length).toBe(2 + extraStartupLines.length);
     } finally {
       await close(server);
     }

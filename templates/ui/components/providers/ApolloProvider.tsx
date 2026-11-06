@@ -49,12 +49,41 @@ function withoutAcceptHeader(
 }
 
 /** Per-request headers from Apollo context (e.g. auth) merged into SSE transport. */
-const operationsByRequest = new WeakMap<RequestParams, Operation>();
+const operationsBySubscriptionKey = new Map<string, Operation>();
+
+function stableStringify(value: unknown): string {
+  if (value === undefined) {
+    return "";
+  }
+  if (value === null) {
+    return "null";
+  }
+  if (typeof value !== "object") {
+    return JSON.stringify(value);
+  }
+  if (Array.isArray(value)) {
+    return `[${value.map(stableStringify).join(",")}]`;
+  }
+  const record = value as Record<string, unknown>;
+  const keys = Object.keys(record).sort();
+  return `{${keys.map((k) => `${JSON.stringify(k)}:${stableStringify(record[k])}`).join(",")}}`;
+}
+
+function subscriptionKeyFromParams(params: {
+  operationName?: string | null;
+  query?: string | null;
+  variables?: unknown;
+  extensions?: unknown;
+}): string {
+  const name = params.operationName ?? "";
+  const query = params.query ?? "";
+  return `${name}\0${query}\0${stableStringify(params.variables)}\0${stableStringify(params.extensions)}`;
+}
 
 const sseClient = createClient({
   url: "/api/graphql",
   headers: async (request) => {
-    const op = operationsByRequest.get(request);
+    const op = operationsBySubscriptionKey.get(subscriptionKeyFromParams(request));
     const ctxHeaders = withoutAcceptHeader(
       headersRecord(op?.getContext().headers as HeadersInit | undefined),
     );
@@ -74,14 +103,19 @@ class SseSubscriptionLink extends ApolloLink {
       variables: operation.variables ?? undefined,
       extensions: operation.extensions ?? undefined,
     };
-    operationsByRequest.set(request, operation);
-    return new Observable((sink) =>
-      sseClient.subscribe(request, {
+    const key = subscriptionKeyFromParams(request);
+    operationsBySubscriptionKey.set(key, operation);
+    return new Observable((sink) => {
+      const dispose = sseClient.subscribe(request, {
         next: sink.next.bind(sink),
         complete: sink.complete.bind(sink),
         error: sink.error.bind(sink),
-      }),
-    );
+      });
+      return () => {
+        operationsBySubscriptionKey.delete(key);
+        dispose();
+      };
+    });
   }
 }
 
