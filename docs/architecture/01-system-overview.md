@@ -40,7 +40,7 @@ The system has two independently deployable layers: a **Data Service (DS)** and 
 Browser → /api/graphql → Next.js rewrite → DS_HTTP_URL (server-side)
 ```
 
-**Subscriptions** depend on the DS template:
+**Subscription transport (DS server vs UI client today)**:
 
 | DS | Server transport | Typical UI (today) |
 | --- | --- | --- |

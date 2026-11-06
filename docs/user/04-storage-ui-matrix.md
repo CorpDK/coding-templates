@@ -13,6 +13,8 @@ Not every DS variant is compatible with every UI variant. This table shows valid
 | `filebased`                                  | —          | `@corpdk/ds-file`  | `standard` or `hprt`           |
 | _(UI only)_                                  | —          | —                  | `standard` or `hprt` + `--sdk` |
 
+Stock UI templates use graphql-ws for subscriptions (`NEXT_PUBLIC_DS_WS_URL`). Every DS package in the table serves subscriptions only over SSE on HTTP `/graphql`. Queries and mutations work for each pairing; **`hprt` with document or file DS** is a common real-time choice but stock `ui-hprt` will not receive live subscription events until the UI migrates to SSE — see [DS subscription transport (SSE)](../developer/11-ds-subscription-sse.md).
+
 ---
 
 ## UI Variant Differences
