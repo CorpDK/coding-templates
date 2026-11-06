@@ -11,10 +11,11 @@
               │  @corpdk/ui          @corpdk/ui-hprt          │
               │  Apollo Client       urql + Graphcache        │
               └──────┬───────────────────┬────────────────────┘
-                     │ HTTP (+ SSE sub)  │ HTTP (+ SSE sub)
+                     │ HTTP Q/M · WS sub │ HTTP Q/M · WS sub
               ┌──────▼──────┐    ┌───────▼───────────┐
               │ @corpdk/ds  │    │ @corpdk/ds-no-sql  │
               │ Yoga+Drizzle│    │ Yoga+Prisma        │
+              │ SSE sub     │    │ SSE sub            │
               └──────┬──────┘    └───────┬────────────┘
                      └─────────┬─────────┘
               ┌────────────────▼────────────────────────────┐
