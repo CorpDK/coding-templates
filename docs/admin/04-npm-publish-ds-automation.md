@@ -252,17 +252,16 @@ For **each** of the five packages below, an npm org owner or package maintainer 
 Ensure [`publish-ds-automation.yml`](../../.github/workflows/publish-ds-automation.yml) is on the repository **default branch** (`main`) before trust setup — not only on a feature branch.
 
 ```bash
-for pkg in @corpdk/dal-core @corpdk/pub-sub @corpdk/codegen-cli @corpdk/dal-codegen @corpdk/create-ds; do
-  npm trust github "$pkg" \
-    --file publish-ds-automation.yml \
-    --repository CorpDK/coding-templates \
-    --allow-publish \
-    -y
-  npm trust list "$pkg"
-done
+npm trust github @corpdk/dal-core \
+  --file publish-ds-automation.yml \
+  --repository CorpDK/coding-templates \
+  --allow-publish \
+  -y
+# Complete browser 2FA when prompted; then:
+npm trust list @corpdk/dal-core
 ```
 
-If your npm reports `Unknown command: "github"`, use `npm trust github` as above. Prefer running **one package per invocation** (not a tight loop) so browser 2FA can finish between packages.
+If your npm reports `Unknown command: "github"`, use `npm trust github` as above. Repeat for the other four packages (step 5 table) only after browser 2FA completes and the previous `npm trust list` shows a configuration.
 
 **Verify trust configuration** (repeat for each package, or spot-check one):
 
