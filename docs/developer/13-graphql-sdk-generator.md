@@ -96,6 +96,8 @@ export {
   type InputZodSchemaName,
   safeParseGraphqlInput,
   safeParseOptionalGraphqlInput,
+  safeParseGraphqlInputList,
+  safeParseOptionalGraphqlInputList,
   parseGraphqlInput,
 } from "./validation/parse-input.js";
 export type { TypedDocumentNode } from "@graphql-typed-document-node/core";
@@ -171,7 +173,7 @@ The monorepo already standardizes on **Zod v4** ([06-package-dependencies.md](..
 
 - Imports generated schemas.
 - Builds **`inputZodSchemas`** registry keyed by GraphQL input type name (same ergonomics as DS server).
-- Exposes **`safeParseGraphqlInput`**, **`safeParseOptionalGraphqlInput`**, **`parseGraphqlInput`** with **client-neutral** errors (`ZodIssue[]` or `{ field, message }[]`) — **no** `GraphQLError`, **no** `MutationUserError` / `@corpdk/dal-core`.
+- Exposes **`safeParseGraphqlInput`**, **`safeParseOptionalGraphqlInput`**, **`safeParseGraphqlInputList`**, **`safeParseOptionalGraphqlInputList`**, **`parseGraphqlInput`** with **client-neutral** errors (`ZodIssue[]` or `{ field, message }[]`) — **no** `GraphQLError`, **no** `MutationUserError` / `@corpdk/dal-core`. **`@corpdk/create-graphql-cli`** imports these for pre-flight variable validation ([CLI design §3.5](14-graphql-cli-generator.md#35-variable-validation-via-sdk-4-required)).
 
 DS server code **keeps** generated `src/generated/dal/input-zod.ts`; it does **not** import from `@corpdk/ds-sdk` for validation (avoids circular workspace coupling and keeps column-aware create/update on the server).
 

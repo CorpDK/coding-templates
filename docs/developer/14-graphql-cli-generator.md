@@ -13,7 +13,7 @@ Design specification for a **publishable GraphQL automation CLI** that **wraps a
 | Goals | Non-goals |
 | ----- | --------- |
 | Scaffold/regenerate a **CLI npm package** from **the same schema** as its SDK | GraphQL server, DAL, resolvers, `typescript-resolvers` |
-| **Depend on the publishable SDK** for operation documents and types (wrap, don’t duplicate schema codegen) | Re-implement SDK §2/§3 inside the CLI generator |
+| **Depend on the publishable SDK** for operation documents, types, and **§4 input validation** (wrap, don’t duplicate schema codegen) | Re-implement SDK §2/§3/§4 inside the CLI generator or ship CLI-owned Zod |
 | **Non-interactive** mode: kebab-case subcommands, flags, `--input` JSON, stdin merge (today’s `ds-cli` ergonomics) | Browser/runtime Apollo or urql |
 | **Interactive** mode: guided command + argument entry (`@clack/prompts`) | WebSocket subscriptions |
 | Generic **any GraphQL API** (SDL or `typeDefs` → SDK → CLI) | **`DS_HTTP_URL`** and other DS-specific env names (use **`GRAPHQL_HTTP_URL`** only) |
@@ -40,8 +40,8 @@ Design specification for a **publishable GraphQL automation CLI** that **wraps a
 
 | Package | Generator | Contains transport? |
 | ------- | --------- | ------------------- |
-| **SDK** | `create-graphql-sdk` | **No** |
-| **CLI** | `create-graphql-cli` | **Yes** (minimal `fetch` + SSE parser—same idea as today’s generated `ds-cli` runtime) |
+| **SDK** | `create-graphql-sdk` | **No** (includes transport-free **`inputZodSchemas`** + parse helpers — [§4](13-graphql-sdk-generator.md#4-input-validation--§4-zod-research--design)) |
+| **CLI** | `create-graphql-cli` | **Yes** (`fetch` + SSE + **SDK-backed variable validation** before every request) |
 
 ### 2.2 Monorepo dogfood output: `templates/ds-cli`
 
@@ -49,7 +49,7 @@ Design specification for a **publishable GraphQL automation CLI** that **wraps a
 | ----- | ------ |
 | **Implementation start** | Retire today’s **`templates/ds-cli`** + [`@corpdk/codegen-cli`](../../libraries/codegen-cli) wiring in DS `codegen.ts` (move to `ds-cli-legacy` or delete generated `index.js`) |
 | **Steady state** | `@corpdk/ds-cli` workspace package refreshed by **`create-graphql-cli generate templates/ds-cli`** with SDK path **`templates/ds-sdk`** |
-| **Prerequisite** | SDK must exist first (`create-graphql-sdk generate templates/ds-sdk`) |
+| **Prerequisite** | SDK must exist first (`create-graphql-sdk generate templates/ds-sdk`) with **§4 validators** built (`inputZodSchemas` export) |
 
 ### 2.3 Dogfood testing schema: `templates/ds`
 
@@ -177,6 +177,7 @@ templates/ds-cli/
       transport-http.ts        # POST JSON query/mutation
       transport-sse.ts         # subscription stream (GraphQL-over-SSE)
       args.ts                  # parseArgs, coerce, --input / stdin merge
+      validate-variables.ts    # SDK §4 Zod — before HTTP/SSE (§3.5)
       interactive.ts           # @clack/prompts flow
       registry.ts              # dispatches command → operation
     generated/                 # overwritten on each generate
@@ -208,15 +209,27 @@ export const helloMeta = {
   operationType: "query" as const,
   commandName: "hello",
   fieldName: "hello",
-  args: [/* ArgDescriptor[] for CLI parsing */],
+  args: [
+    /* ArgDescriptor[] — see §3.5; scalar args have no inputZodSchemaName */
+    { name: "name", graphqlType: "String!", parseType: "string", required: true },
+  ],
 };
+
+// create-item style mutation:
+// { name: "input", graphqlType: "ItemCreateInput!", inputZodSchemaName: "ItemCreateInput", ... }
 ```
 
-At runtime the registry resolves **`commandName` → `{ document: HelloDocument, meta }`**, then:
+At runtime the registry resolves **`commandName` → `{ document, meta }`**, then:
 
 ```ts
 import { print } from "graphql";
-await executeHttp(print(HelloDocument), variables);
+const variables = buildVariablesFromArgv(meta, process.argv); // args.ts
+const validated = validateOperationVariables(meta, variables); // §3.5 → SDK
+if (!validated.ok) {
+  writeValidationErrorsToStderr(validated);
+  process.exit(1);
+}
+await executeHttp(print(document), validated.variables);
 ```
 
 The package **must depend on the SDK from day one** (see §3.4 if the first generator milestone emits bridge documents instead of full builder source).
@@ -331,6 +344,65 @@ This is **not** the same table as implementation phases in §9 (engine `P0`–`P
 
 **Summary:** v1 = “strings in TS files, types from SDK”; v2 = “source code is SDK `query()` / `mutation()` / `subscription()`”. Both are **live-transport** CLIs; the difference is **regeneration output**, not caching or env vars.
 
+### 3.5 Variable validation via SDK §4 (required)
+
+The CLI **must not** generate or maintain its own Zod modules. All **GraphQL input object** values pass through the sibling SDK’s **`inputZodSchemas`** registry and parse helpers ([SDK §4](13-graphql-sdk-generator.md#42-target-validators-in-the-publishable-sdk)) **before** any HTTP POST or SSE stream (§4.4 — validation is local, network still live per request).
+
+```text
+argv / stdin / --input  →  args.ts (merge, JSON parse)
+                        →  validate-variables.ts (SDK safeParse*)
+                        →  transport (only if ok)
+```
+
+#### 3.5.1 Generated metadata (`graphql-cli-core`)
+
+Extend **`ArgDescriptor`** (emitted into each `*Meta` / `commands.ts`) with an optional link to the SDK registry:
+
+| Field | When set | Purpose |
+| ----- | -------- | ------- |
+| `graphqlType` | Always | Wire type string, e.g. `ItemCreateInput!`, `[OrderLineFilter!]` |
+| `inputZodSchemaName` | Named type is a GraphQL **input object** present in `inputZodSchemas` | Key for `safeParseGraphqlInput` / list variant |
+| `parseType` | Scalar CLI flags (`string` \| `boolean`) | Legacy flag parsing for **scalar** operation args only |
+
+Emitter rule: walk each operation field arg; unwrap `!` / `[]`; if `isInputObjectType`, set `inputZodSchemaName` to the input type’s GraphQL name (must match SDK codegen).
+
+#### 3.5.2 Runtime (`validate-variables.ts`)
+
+Stable canonical module; imports **only** from the configured SDK package:
+
+```ts
+import {
+  safeParseGraphqlInput,
+  safeParseOptionalGraphqlInput,
+  safeParseGraphqlInputList,
+  type InputZodSchemaName,
+} from "@corpdk/ds-sdk";
+```
+
+| Variable shape | SDK call |
+| -------------- | -------- |
+| Required input object (`input: FooInput!`) | `safeParseGraphqlInput("FooInput", value)` |
+| Optional input object | `safeParseOptionalGraphqlInput` |
+| List of input objects (`[FooInput!]!` or optional list) | `safeParseGraphqlInputList` (or optional list helper from SDK) |
+| Scalar / enum args (`ID!`, `String!`, `Int!`) | **No Zod** in v1 — `args.ts` **coerce** only (same as legacy `coerceArg`); SDL shape is already narrow |
+
+On failure: write **`stderr`** as JSON array of `{ path, message }` (from Zod issues), exit **1** — **do not** call `GRAPHQL_HTTP_URL`. Success replaces unknown `variables` fields with **parsed** values (coerced enums, scalar wire forms).
+
+#### 3.5.3 `--input` / stdin / interactive
+
+| Source | Validation |
+| ------ | ------------ |
+| **`--input path.json`** | Parse JSON, then per-arg §3.5.2 for input-object variables |
+| **Stdin merge** (non-TTY) | Same after merge into variables bag |
+| **Interactive** JSON text areas | `safeParseGraphqlInput` **before** confirm; show field errors in the prompt loop when possible (v1.1) |
+
+**CorpDK DAL:** server `input-zod.ts` may be **stricter** on create/update than SDK §4 SDL validators; CLI failures are still useful to catch malformed automation payloads early. Server wins on conflicts.
+
+#### 3.5.4 CLI package dependencies
+
+- **`zod` is not a direct dependency** of the CLI package — only **`@corpdk/ds-sdk`** (which ships §4 + `zod`).
+- **`create-graphql-cli init` / `generate`** fail fast if the SDK package does not export **`inputZodSchemas`** (SDK generated without §4).
+
 ---
 
 ## 4. Execution modes
@@ -348,7 +420,9 @@ ds-cli item-changed --count 5 --timeout 30000
 | -------- | ------ |
 | Command names | **kebab-case** from schema field names (`auditEvent` → `audit-event`) |
 | Variables | Flags → merge with `--input` file → merge with **stdin JSON** (non-TTY) |
+| Pre-flight validation | **SDK §4** Zod on input-object variables (§3.5); scalar args coerced only |
 | Query/mutation output | Single JSON object on **stdout**; errors on **stderr**, exit **1** |
+| Validation errors | **stderr** + exit **1** before HTTP when Zod rejects variables |
 | Subscription output | **NDJSON** stream on stdout until `--count`, `--timeout`, or SIGINT |
 | Help | `<bin>`, `<bin> <cmd> -h` |
 
@@ -366,8 +440,9 @@ Flow (`src/runtime/interactive.ts`):
 
 1. **Searchable command list** (grouped Query / Mutation / Subscription) via `@clack/prompts`.
 2. Per-argument prompts (type-aware: boolean select, string text, JSON text area for input objects with optional “open editor”).
-3. Confirm → execute using the same transport helpers as non-interactive.
-4. Optional “run again” loop.
+3. Run **`validateOperationVariables`** (§3.5) on the assembled bag; block confirm on failure.
+4. Confirm → execute using the same transport helpers as non-interactive.
+5. Optional “run again” loop.
 
 **Dependency:** `@clack/prompts` is a **runtime dependency of the CLI package only**, not the SDK.
 
@@ -505,7 +580,12 @@ include:
 man:
   enabled: true
   section: "User Commands"
+
+validation:
+  source: sdk # fixed v1 — always sibling SDK §4; no CLI-local Zod codegen
 ```
+
+**Order of regeneration:** SDK **`create-graphql-sdk generate`** (must include §4) **before** **`create-graphql-cli generate`** so `inputZodSchemaName` entries match the registry.
 
 Empty `include.*` means **all root fields of that operation type** (with a **warning** when count exceeds a threshold, e.g. 50).
 
@@ -533,7 +613,7 @@ Empty `include.*` means **all root fields of that operation type** (with a **war
 
 | Dependency | Role |
 | ---------- | ---- |
-| **`@corpdk/ds-sdk`** (or generic `@acme/graphql-sdk`) | Builders + types for operations |
+| **`@corpdk/ds-sdk`** (or generic `@acme/graphql-sdk`) | Builders, types, **`inputZodSchemas`**, parse helpers (§3.5) |
 | **`graphql`** | `print(TypedDocumentNode)` |
 | **`@clack/prompts`** | Interactive mode only |
 
@@ -553,6 +633,7 @@ No Apollo, urql, or `graphql-sse` **required** if SSE is implemented with **`fet
 | HTTP env | `DS_HTTP_URL` in generated runtime | **`GRAPHQL_HTTP_URL` only** |
 | Data freshness | Always hits HTTP/SSE (legacy also live) | **No cache** — explicit non-goal to add caching |
 | Selection | depth 6 auto-expand | **`relation-ids`** on edges; root scalars; **`include` / `exclude`** |
+| Input validation | `coerceArg` only | **SDK §4** `inputZodSchemas` for input objects (§3.5) |
 | man/texi | Yes | **Optional** (port generators) |
 
 ---
@@ -563,7 +644,7 @@ No Apollo, urql, or `graphql-sse` **required** if SSE is implemented with **`fet
 | ----- | ----------- |
 | **P0** | This design spec |
 | **P1** | **`@corpdk/graphql-cli-core`** — port modules (§2.5); implement **§3.3 relation-ids** selection emitter |
-| **P2** | `engines/create-graphql-cli` + `canonical/` runtime (HTTP + SSE + interactive) |
+| **P2** | `engines/create-graphql-cli` + `canonical/` runtime (HTTP + SSE + interactive + **`validate-variables.ts`**) |
 | **P3** | `generate templates/ds-cli` dogfood; remove `codegen-cli` from `templates/ds/codegen.ts` |
 | **P4** | Operation **emit v2**: builder-based `operations/*.ts`; drop emit v1 bridge strings if shipped in P3 |
 | **P5** | Publish `@corpdk/create-graphql-cli`; document in user/admin guides |
@@ -578,6 +659,8 @@ No Apollo, urql, or `graphql-sse` **required** if SSE is implemented with **`fet
 - [ ] `ds-cli` with no args launches interactive flow and runs a selected query.
 - [ ] `ds-cli <subscription-cmd>` streams NDJSON over **SSE** only; no WebSocket code or env vars.
 - [ ] Regenerated CLI **depends on `@corpdk/ds-sdk`**; removing the SDK package breaks the build (proves coupling).
+- [ ] Invalid **`--input`** for a mutation (e.g. bad `ItemCreateInput`) exits **1** with Zod errors on **stderr** and **no** HTTP request.
+- [ ] `inputZodSchemaName` on generated meta matches SDK `inputZodSchemas` keys for DAL dogfood create/filter operations.
 - [ ] Generated documents on DAL dogfood schema use **`relation-ids`** (nested objects = `id` only; root scalars present)—no depth-6 expansion.
 - [ ] `include` / `exclude` limit which root operations are generated; spot-check document size stays bounded on full DAL schema.
 - [ ] Dogfood uses **`templates/ds/src/generated/generated-schema.ts`** (same as SDK generator §2.2).
@@ -595,6 +678,7 @@ No Apollo, urql, or `graphql-sse` **required** if SSE is implemented with **`fet
 | HTTP endpoint env | **`GRAPHQL_HTTP_URL` only** in generated CLI (no `DS_HTTP_URL`) |
 | Nested selection | **`relation-ids`** default (§3.3): 1:1 / M:1 → `{ id }`; 1:M / M:N → `[{ id }]`; full rows via separate CLI fetches |
 | Operation emit timeline | **Emit v1** (bridge strings + SDK types) for **implementation P3** dogfood; **emit v2** (full builders) in **P4** — see §3.4 |
+| Variable validation | **Required** — SDK §4 only (§3.5); no CLI Zod codegen |
 | `@corpdk/codegen-cli` on npm | **Deprecated after P3**; logic lives in **`@corpdk/graphql-cli-core`** (§2.5). Preset not re-exported from `create-graphql-cli` |
 
 ---
