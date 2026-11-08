@@ -1,6 +1,6 @@
 # GraphQL client SDK generator (`@corpdk/create-graphql-sdk`)
 
-Design specification for a **publishable GraphQL client SDK** produced from a **complete schema** (SDL on disk or a TypeScript `typeDefs` module). This initiative covers **only** the SDK package and the **scaffolding/regeneration CLI**—not the GraphQL server, not `ds-cli`, and not HTTP transport (Apollo, `graphql-request`, `graphql-sse`, and similar stay in consumer apps).
+Design specification for a **publishable GraphQL client SDK** produced from a **complete schema** (SDL on disk or a TypeScript `typeDefs` module). This initiative covers **only** the SDK package and the **scaffolding/regeneration CLI**—not the GraphQL server, not the **automation CLI** ([14-graphql-cli-generator.md](14-graphql-cli-generator.md)), and not HTTP transport (Apollo, `graphql-request`, `graphql-sse`, and similar stay in consumer apps).
 
 **Status:** Design (pre-implementation).
 
