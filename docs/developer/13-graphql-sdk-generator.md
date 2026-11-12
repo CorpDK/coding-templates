@@ -17,7 +17,7 @@ Design specification for a **publishable GraphQL client SDK** produced from a **
 | 3 | 2026-11-12 | Multi-file SDL merge (§4); dependency audit; `gql.tada` replaced `buildgql` |
 | 4 | 2026-11-12 | Builder DSL is a hard requirement; `genql` (vendored output) replaced `gql.tada` |
 | 5 | 2026-11-12 | **`genql` forked into the owned `@corpdk/graphql-dsl`**, which adds aliases, `@include`/`@skip`, named variables, and native ESM. The DSL computes its result types from the SDK's own `Types.*` (L1) instead of generating a second set of interfaces. |
-| 6 | 2026-11-12 | **`templates/ds-sdk` is a test proof and sample, never published** (§9.1). New libraries join the npmjs publish pipeline (§13). All remaining work is collected in the §17 register. |
+| 6 | 2026-11-12 | **`templates/ds-sdk` is a test proof and sample, never published** (§9.1). New libraries join the npmjs publish pipeline (§13). All remaining work is collected in the §17 register. Later on rev 6: `graphql-dsl` stays in this monorepo with its own version line and move-out triggers (§16.2.1). The §5 diagram's `z.ZodType<Types.X>` label is escaped (Mermaid stripped it as HTML). |
 
 **Related:** [02-graphql-schema.md](02-graphql-schema.md) · [11-ds-subscription-sse.md](11-ds-subscription-sse.md) · [ds-automation-upgrades.md](ds-automation-upgrades.md) (pattern reference for `create-ds`) · [dal-pg-type-mapping.md](dal-pg-type-mapping.md) · [02-monorepo-design.md](../architecture/02-monorepo-design.md)
 
@@ -305,7 +305,7 @@ flowchart TD
   DSL["@corpdk/graphql-dsl/codegen"]
   L2["src/generated/dsl/** (selections typed with L1 *Args, type map, bound builders)"]
   IZ["@corpdk/graphql-input-zod"]
-  L3["src/generated/input-schemas.ts + input-registry.ts (z.ZodType<Types.X>)"]
+  L3["src/generated/input-schemas.ts + input-registry.ts (z.ZodType#lt;Types.X#gt;)"]
   TSC["tsc (NodeNext) → dist/"]
 
   S1 --> SYNC
@@ -313,10 +313,10 @@ flowchart TD
   SYNC --> SNAP
   SNAP --> GC --> L1
   SNAP --> DSL
-  L1 -. "type imports" .-> DSL
+  L1 -. type imports .-> DSL
   DSL --> L2
   SNAP --> IZ
-  L1 -. "type imports" .-> IZ
+  L1 -. type imports .-> IZ
   IZ --> L3
   L1 --> TSC
   L2 --> TSC
@@ -652,7 +652,7 @@ P2 type tests confirm that Apollo and urql infer `data` and check `variables` wi
 | **P1c** | `engines/create-graphql-sdk` | `engines/create-graphql-sdk/README.md`; `CLAUDE.md` |
 | **P2** | Replace `templates/ds-sdk` with `init` output, marked `private: true` with no `publishConfig` (§9.1); first `sync` from `templates/ds`; Turbo; DAL scalars; client compatibility tests; type-check baseline | `CLAUDE.md` (ds-sdk → NodeNext; "single shared SDK" rule; ds-sdk private exception); `docs/architecture/02-monorepo-design.md` (publishing table); `docs/architecture/06-package-dependencies.md`; `docs/admin/04-npm-publish-ds-automation.md` (ds-sdk is no longer "Artifactory-only") |
 | **P3** | Decouple all six DS `codegen.ts` + `create-ds` canonical; drop `client-preset`; Docker | `docs/admin/02-docker-deployment.md`, `docs/developer/ds-automation-upgrades.md`, `docs/developer/graphql-dal-requirements.md`, `docs/architecture/01-system-overview.md`, `libraries/codegen-cli/README.md` |
-| **P4** | `create-app` uses the engine canonical. Publish `@corpdk/graphql-input-zod`, `@corpdk/graphql-dsl`, and `@corpdk/create-graphql-sdk` to npmjs through the lockstep CalVer pipeline (`.github/scripts/publish-ds-automation.sh` `PUBLISH_ORDER`, its build/test filters, and the workflow `paths`). `graphql-input-zod` must publish **before** `dal-codegen`, which depends on it from P1a; from P1a on, `dal-codegen` cannot ship without it. `templates/ds-sdk` is not published. | `docs/user/01-introduction.md`, `02-interactive-mode.md`, `03-cli-reference.md`, `05-post-scaffold-setup.md`; `docs/admin/04-npm-publish-ds-automation.md` |
+| **P4** | `create-app` uses the engine canonical. Publish `@corpdk/graphql-input-zod` and `@corpdk/create-graphql-sdk` to npmjs through the lockstep CalVer pipeline (`.github/scripts/publish-ds-automation.sh` `PUBLISH_ORDER`, its build/test filters, and the workflow `paths`). Publish `@corpdk/graphql-dsl` through its own workflow and CalVer line (§16.2.1), before `create-graphql-sdk`, which depends on it. `graphql-input-zod` must publish **before** `dal-codegen`, which depends on it from P1a; from P1a on, `dal-codegen` cannot ship without it. `templates/ds-sdk` is not published. | `docs/user/01-introduction.md`, `02-interactive-mode.md`, `03-cli-reference.md`, `05-post-scaffold-setup.md`; `docs/admin/04-npm-publish-ds-automation.md` |
 | **P5** | First SDK usage in `templates/ui` and `templates/ui-hprt`; `Dockerfile.ui` | `docs/developer/05-ui-architecture.md`, `docs/developer/06-ui-status.md` |
 
 **Out of scope, raised by the audit:** `create-app`, `create-ds`, and `codegen-cli` still build with tsup (unmaintained). Moving them is a separate task.
@@ -691,7 +691,8 @@ P2 type tests confirm that Apollo and urql infer `data` and check `variables` wi
 | Breaking-change detection | graphql-js (`findSchemaChanges` when present); `@graphql-inspector/core` as fallback |
 | `templates/ds-sdk` publishing | **Never published.** Test proof and sample: `private: true`, no `publishConfig` (§9.1) |
 | Generated SDK publishing (outside this repo) | The SDK owner's choice; the canonical sets no registry (§3.7) |
-| New package publishing | `graphql-input-zod`, `graphql-dsl`, `create-graphql-sdk` → npmjs, lockstep CalVer with the DS automation stack (§13 P4) |
+| New package publishing | `graphql-input-zod` and `create-graphql-sdk` → npmjs, lockstep CalVer with the DS automation stack. `graphql-dsl` → npmjs on its **own** CalVer line and workflow (§16.2.1). |
+| Where `graphql-dsl` lives | **This monorepo** (`libraries/graphql-dsl`), kept self-contained, with explicit triggers for moving to its own repo (§16.2.1) |
 | **Open (P1b spike):** compile-time check of named-variable types against argument types | Runtime check in v1 for sure; compile-time if the spike shows it stays readable and fast |
 
 ---
@@ -719,6 +720,36 @@ When no package meets §16.1, the code may be **forked into the repo** if all of
 - each fork has a named owner, recorded in §17.
 
 Owned forks today: `@corpdk/graphql-dsl` (from `genql`). `@corpdk/graphql-input-zod` is in-house code, not a fork.
+
+#### 16.2.1 Where the fork lives (decided 2026-11-12)
+
+**Decision: `@corpdk/graphql-dsl` stays in this monorepo** under `libraries/graphql-dsl`. It is not moved to its own repository for now.
+
+**Why:**
+
+- **Size is not a reason to split.** About 1,480 lines are kept from upstream, plus about 600 lines of ported tests and the new features. That is smaller than `libraries/dal-codegen` (about 5,500 lines), which already lives here.
+- **The coupling is highest during P1b–P2.** Alias, directive, and named-variable typing, and result typing over L1, change the DSL, the engine's codegen, and the `templates/ds-sdk` type tests together. One repo keeps that to one PR and one end-to-end CI run against the DAL schema.
+- **It matches existing practice.** Published libraries (`dal-core`, `dal-codegen`, `pub-sub`, `codegen-cli`) already live under `libraries/`.
+- **A second repo costs real overhead** for a single owner: CI, Sonar, publishing, npm trusted publishing, Renovate, branch protection, and GitHub account mapping.
+- **Keeping upstream's git history adds little.** The fork removes more than half of upstream and restructures the rest, so upstream commits rarely apply cleanly, and upstream changes slowly.
+
+**Rules that keep a later move cheap:**
+
+| Rule | Detail |
+| ---- | ------ |
+| Own version line | `graphql-dsl` has its **own CalVer** and its own publish workflow (`.github/workflows/publish-graphql-dsl.yml`, triggered by its `package.json` version). It is not in the lockstep DS automation set, because `publish-ds-automation.sh` checks one expected version for every package. Consumers (`create-graphql-sdk`, generated SDKs) use a caret range. |
+| Self-contained package | No imports from other workspace packages. Its own `LICENSE` (with genql's MIT notice), `UPSTREAM.md`, README, tests, and fixture schemas, so it builds and tests in isolation (`pnpm --filter @corpdk/graphql-dsl test`). |
+| Clean import, no upstream history | Import a clean copy of the kept files. `UPSTREAM.md` records the base commit (`15f27b9`) and each divergence; upstream history is not merged in. |
+| Sonar scope | The import PR excludes the inherited upstream files from SonarCloud's new-code coverage and duplication conditions (via `sonar.coverage.exclusions` / `sonar.cpd.exclusions` for that path, listed in `UPSTREAM.md`). The exclusions are removed file by file as each file is rewritten or brought under the fork's tests. Code added by the fork is gated normally. |
+
+**Move it to its own repository when any of these happens:**
+
+- a consumer outside CorpDK templates adopts it and needs its own issue tracker and release notes;
+- we decide to send features (aliases, directives) back to upstream `genql` as PRs, which a GitHub fork is the natural vehicle for;
+- its API settles after P2 and its release cadence clearly separates from the SDK engine's;
+- maintaining it here starts to slow monorepo CI or reviews in a measurable way.
+
+Because of the rules above, moving out is a directory extraction (`git subtree split --prefix=libraries/graphql-dsl`) plus a new workflow, with no code changes. The host organization is decided at that point.
 
 ### 16.3 Re-audit
 
@@ -776,7 +807,9 @@ Everything this design has not yet proven, built, or decided. Each item closes o
 | -- | ---- | ----- | --------- | ------ |
 | R-18 | `templates/ds-sdk/package.json`: `private: true`, drop Artifactory `publishConfig`, version `0.0.0-sample` | P2 | CI guard (§11) green | Open |
 | R-19 | Docs reflect "ds-sdk is a sample, never published": `CLAUDE.md`, `docs/architecture/02-monorepo-design.md`, `docs/admin/04-npm-publish-ds-automation.md` | P2 | No doc says `templates/ds-sdk` is published or Artifactory-bound | Open |
-| R-20 | Publish pipeline: add `graphql-input-zod` (before `dal-codegen`), `graphql-dsl`, `create-graphql-sdk` to `PUBLISH_ORDER`, build/test filters, and workflow `paths` | P1a for `graphql-input-zod` (`dal-codegen` depends on it from then); P4 for the rest | CI publish-order guard green; dry-run publish lists all packages in order | Open |
+| R-20 | Publish pipeline: add `graphql-input-zod` (before `dal-codegen`) and `create-graphql-sdk` to `PUBLISH_ORDER`, build/test filters, and workflow `paths`. Create `publish-graphql-dsl.yml` for `graphql-dsl`'s own CalVer line, with npm trusted publishing configured for it. | P1a for `graphql-input-zod` (`dal-codegen` depends on it from then); P1b for the `graphql-dsl` workflow; P4 for `create-graphql-sdk` | CI publish-order guard green; dry-run publish of both workflows lists the expected packages | Open |
+| R-30 | `graphql-dsl` self-containment and Sonar scope (§16.2.1): no workspace imports; isolated build and test; Sonar exclusions for inherited files listed in `UPSTREAM.md` | P1b | CI check fails on any `@corpdk/*` import in `libraries/graphql-dsl/src`; Sonar gate passes on the import PR with only fork-added code gated | Open |
+| R-31 | Review the §16.2.1 move-out triggers | Quarterly, with R-29 | Outcome recorded in `UPSTREAM.md` | Open |
 | R-21 | Decouple six DS `codegen.ts` + `create-ds` canonical; drop `client-preset`; Turbo `codegen.outputs`; Dockerfiles | P3 | §14 criteria for DS packages green | Open |
 | R-22 | `create-app` scaffolds `ds-sdk` from the engine canonical with per-DS `schema.sources` | P4 | Scaffold test for `ds` and one manual variant generates and builds | Open |
 | R-23 | `CLAUDE.md` / architecture docs: ds-sdk module format (NodeNext), drop the "single shared SDK, all variants codegen into it" rule, add the three new packages | P1–P2 | Docs Update Rule satisfied per phase (§13) | Open |
