@@ -2,11 +2,11 @@
 
 Design for the changes the **DS generator** (`@corpdk/create-ds`) needs, so it scaffolds and upgrades data services together with the new SDK and CLI packages. It also specifies the **generator engine family**: `create-ds`, `create-graphql-sdk`, and `create-graphql-cli` share one command shape and one implementation library, `@corpdk/engine-kit` (§11).
 
-**Status:** Design (pre-implementation). Revision 5, 2026-11-13.
+**Status:** Design (pre-implementation). Revision 6, 2026-11-14.
 
 **Depends on:**
 
-- [13-graphql-sdk-generator.md](13-graphql-sdk-generator.md) (SDK design, rev 11)
+- [13-graphql-sdk-generator.md](13-graphql-sdk-generator.md) (SDK design, rev 12)
 - [14-graphql-cli-generator.md](14-graphql-cli-generator.md) (CLI design, rev 6)
 
 **Related:** [ds-automation-upgrades.md](ds-automation-upgrades.md) · [04-npm-publish-ds-automation.md](../admin/04-npm-publish-ds-automation.md)
@@ -20,6 +20,7 @@ Design for the changes the **DS generator** (`@corpdk/create-ds`) needs, so it s
 | 3 | 2026-11-13 | Generator engine family: shared `@corpdk/engine-kit`, common command shape, `create-ds` refactored onto it (§11). Engine names stay `create-graphql-sdk` / `create-graphql-cli`. |
 | 4 | 2026-11-13 | **Second review.** Phases re-planned so no `create-ds` release points at an unpublished engine: `--with-sdk` ships with SDK P2 (which now publishes `create-graphql-sdk`), and `--with-cli` with CLI C-P3 (which now publishes `create-graphql-cli`); DS-P3 merged. Next steps fixed (`dal:codegen`, `sdk:sync`, dependency-aware builds). DAL scalar preset. Preflight, dry run, idempotent `--with-*`. Legacy detection from `codegen.ts` and `package.json` instead of gitignored files. `engine-kit` helpers parameterized (caller root, excludes, merge rules, deep YAML merge). Refactor exceptions, exit-code mapping, and fixture spec. Canonical publish order (§4.3). Current-state corrections, including a pre-existing `--demo-schema` bug. |
 | 5 | 2026-11-13 | **Package bootstrap phase B0** (§4.4): the first work after the design creates every new publishable package as a placeholder, publishes it to npmjs by hand once, and configures npm trusted publishing, so every later release runs from CI. Per-phase bootstrap steps removed. `graphql-cli-core` now also depends on `graphql-dsl` (CLI rev 6). R-D17. |
+| 6 | 2026-11-14 | `graphql-dsl` joins the lockstep set as order 1 (SDK rev 12); all seven B0 packages trust `publish-ds-automation.yml`; the separate workflow and the version-gate guard rule are dropped. |
 
 ---
 
@@ -161,24 +162,23 @@ pnpm --filter "<cli-name>..." build            # cli:codegen + tsc, after the SD
 
 | Order | Package | Channel | First release |
 | ----- | ------- | ------- | ------------- |
-| — | `@corpdk/graphql-dsl` | Own workflow and version line; the lockstep script checks that the version `create-graphql-sdk` and `graphql-cli-core` need exists on npm before publishing (SDK §16.2.1) | SDK P1b |
-| 1 | `@corpdk/scalar-zod` | Lockstep | SDK P1a |
-| 2 | `@corpdk/dal-core` | Lockstep | today (depends on 1 from SDK P1a) |
-| 3 | `@corpdk/pub-sub` | Lockstep | today |
-| 4 | `@corpdk/graphql-input-zod` | Lockstep | SDK P1a |
-| 5 | `@corpdk/dal-codegen` | Lockstep | today (depends on 4 from SDK P1a) |
-| 6 | `@corpdk/engine-kit` | Lockstep | DS-P0b |
-| 7 | `@corpdk/graphql-cli-core` | Lockstep | CLI C-P2 (depends on 4 and `graphql-dsl`) |
-| 8 | `@corpdk/create-graphql-sdk` | Lockstep | SDK P2 (depends on `graphql-dsl`, 4, 6) |
-| 9 | `@corpdk/create-graphql-cli` | Lockstep | CLI C-P3 (depends on 6, 7) |
-| 10 | `@corpdk/codegen-cli` | Lockstep | today, until its deprecation release after CLI C-P3 |
-| 11 | `@corpdk/create-ds` | Lockstep | today (depends on 6, 8, 9) |
+| 1 | `@corpdk/graphql-dsl` | Lockstep | SDK P1b (no `@corpdk/*` dependencies) |
+| 2 | `@corpdk/scalar-zod` | Lockstep | SDK P1a |
+| 3 | `@corpdk/dal-core` | Lockstep | today (depends on 2 from SDK P1a) |
+| 4 | `@corpdk/pub-sub` | Lockstep | today |
+| 5 | `@corpdk/graphql-input-zod` | Lockstep | SDK P1a |
+| 6 | `@corpdk/dal-codegen` | Lockstep | today (depends on 5 from SDK P1a) |
+| 7 | `@corpdk/engine-kit` | Lockstep | DS-P0b |
+| 8 | `@corpdk/graphql-cli-core` | Lockstep | CLI C-P2 (depends on 1 and 5) |
+| 9 | `@corpdk/create-graphql-sdk` | Lockstep | SDK P2 (depends on 1, 5, 7) |
+| 10 | `@corpdk/create-graphql-cli` | Lockstep | CLI C-P3 (depends on 7, 8) |
+| 11 | `@corpdk/codegen-cli` | Lockstep | today, until its deprecation release after CLI C-P3 |
+| 12 | `@corpdk/create-ds` | Lockstep | today (depends on 7, 9, 10) |
 
 **Publish-order guard** (CI, used by SDK R-20, CLI R-C11, R-D05, R-D10):
 
 - the script derives a topological order from each listed package's `dependencies` on other `@corpdk/*` packages;
 - it fails if `PUBLISH_ORDER` disagrees with that order;
-- it fails if the `graphql-dsl` version check fails;
 - it fails if any listed package has no trusted-publisher entry.
 
 "First release" is the first real (CalVer) release. Every new package already exists on npm as a placeholder from phase B0 (§4.4), with trusted publishing configured, so these releases all run from CI.
@@ -193,7 +193,7 @@ npm trusted publishing can only be configured for a package that already exists 
 | ------- | ---- | -------------------------- |
 | `@corpdk/scalar-zod` | `libraries/scalar-zod` | `publish-ds-automation.yml` |
 | `@corpdk/graphql-input-zod` | `libraries/graphql-input-zod` | `publish-ds-automation.yml` |
-| `@corpdk/graphql-dsl` | `libraries/graphql-dsl` | `publish-graphql-dsl.yml` |
+| `@corpdk/graphql-dsl` | `libraries/graphql-dsl` | `publish-ds-automation.yml` |
 | `@corpdk/engine-kit` | `libraries/engine-kit` | `publish-ds-automation.yml` |
 | `@corpdk/graphql-cli-core` | `libraries/graphql-cli-core` | `publish-ds-automation.yml` |
 | `@corpdk/create-graphql-sdk` | `engines/create-graphql-sdk` | `publish-ds-automation.yml` |
@@ -208,7 +208,7 @@ npm trusted publishing can only be configured for a package that already exists 
    - `README.md`: "Placeholder that reserves the name for npm trusted publishing; no code yet", with a link to its design doc;
    - `LICENSE` (MIT). `graphql-dsl` gets genql's notice in P1b, when upstream code arrives.
 
-   The same PR adds `.github/workflows/publish-graphql-dsl.yml`, because trust setup needs it on `main`. It publishes only when `libraries/graphql-dsl/package.json` has a version that is not on npm and is not a `-bootstrap` prerelease, with `id-token: write`, npm ≥ 11.15, and `--provenance`, like `publish-ds-automation.yml`. None of the placeholders is added to `PUBLISH_ORDER`; each one joins in its implementation phase.
+   All seven trust the existing `publish-ds-automation.yml`, which is already on `main`, so no workflow change is needed. None of the placeholders is added to `PUBLISH_ORDER`; each one joins in its implementation phase.
 2. **Merge** to `main`.
 3. **Manual publish, once per package,** from a maintainer machine with an npm login that can publish to the `@corpdk` scope (2FA): `npm publish --access public --tag bootstrap` in each package directory.
 4. **Deprecate each placeholder version:** `npm deprecate <pkg>@0.0.0-bootstrap.0 "Placeholder with no code; use a CalVer release"`. On a first publish the registry may still point `latest` at the placeholder until the first real release; the deprecation warns anyone who installs it.
@@ -288,7 +288,7 @@ The canonical `Dockerfile` is **monorepo-only** (it copies `templates/*` and `li
 | Phase | Timing | Deliverable | Docs updated in the same PR |
 | ----- | ------ | ----------- | --------------------------- |
 | **DS-P0** | n/a | This design | `docs/00-index.md`, `docs/developer/README.md` |
-| **B0** | **First work after the design merges**, before DS-P0b, SDK P1a, and CLI C-P1 | Package bootstrap for all seven new packages (§4.4): placeholders, `publish-graphql-dsl.yml`, one manual publish each, deprecation, trusted publishing | `docs/admin/04-npm-publish-ds-automation.md` (new packages, trust table, B0 procedure); `CLAUDE.md` (package table lists the placeholders) |
+| **B0** | **First work after the design merges**, before DS-P0b, SDK P1a, and CLI C-P1 | Package bootstrap for all seven new packages (§4.4): placeholders, one manual publish each, deprecation, trusted publishing | `docs/admin/04-npm-publish-ds-automation.md` (new packages, trust table, B0 procedure); `CLAUDE.md` (package table lists the placeholders) |
 | **DS-P0b** | **Before** SDK P1c and CLI C-P2 (both need it) | `libraries/engine-kit` (§11.3); `create-ds` refactored onto it (§11.5); `syncCanonical` / `checkCanonical` for `templates/ds`; `engine-kit` added to `PUBLISH_ORDER` (trust already configured in B0); publish-order guard (§4.3) | `libraries/engine-kit/README.md`; `engines/create-ds/README.md`; `docs/developer/ds-automation-upgrades.md` (exit codes, version file, new flags `--dry-run` / `--no-install` / `--version`); `docs/admin/04-npm-publish-ds-automation.md`; `CLAUDE.md` |
 | **DS-P1** | Ships with SDK P2 (which publishes `create-graphql-sdk`) | Canonical without the `../ds-sdk` target, `client-preset`, or `ds-sdk` Docker steps; `REMOVED_DEPS` + `client-preset`; `--with-sdk` on `init` and `upgrade` with preflight and DAL scalar preset; legacy-SDK detection; tests | `docs/developer/ds-automation-upgrades.md` ("Monorepo layout", `upgrade`, `--with-sdk`, migration steps); `engines/create-ds/README.md`; release notes |
 | **DS-P2** | Ships with CLI C-P3 (which publishes `create-graphql-cli`) | Canonical without the `../ds-cli` target, `codegen-cli`, or sibling Docker steps; `REMOVED_DEPS` + `codegen-cli`; `--with-cli`; legacy-CLI detection; tests | same files; `docs/admin/02-docker-deployment.md` |
@@ -456,7 +456,7 @@ This is a refactor that preserves outputs. The changes **intended** to be visibl
 | R-D14 | Resolve the `templates/ds/.gitignore` vs `engines/create-ds/canonical/.gitignore` difference | DS-P0b | `checkCanonical` green | Open |
 | R-D15 | Published `--demo-schema` ships no demo schema or seed (pre-existing): decide whether the canonical includes them; `copyDir` `requireSource` makes the failure visible either way | DS-P0b | Published `init --demo-schema` produces the demo schema, or fails clearly | Open |
 | R-D16 | DAL scalar preset (`scalarPreset: "dal"`) in the SDK engine, written as `{ from, name }` references to `@corpdk/scalar-zod` (SDK §7.7), shared with `templates/ds-sdk` (SDK R-14) | SDK P1c / P2 | Starter `DateTime` field syncs and builds in the §9 init test | Open |
-| R-D17 | Phase B0 (§4.4) for the seven new packages, including `publish-graphql-dsl.yml` on `main` | B0 | `npm view <pkg> versions` shows the deprecated `0.0.0-bootstrap.0` for all seven; `npm trust list <pkg>` shows the right workflow for each; admin trust table updated | Open |
+| R-D17 | Phase B0 (§4.4) for the seven new packages | B0 | `npm view <pkg> versions` shows the deprecated `0.0.0-bootstrap.0` for all seven; `npm trust list <pkg>` shows the right workflow for each; admin trust table updated | Open |
 
 ---
 
