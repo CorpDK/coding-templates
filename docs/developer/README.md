@@ -15,7 +15,7 @@ Implementation guides, coding patterns, and standards for contributors to the co
 | [11-ds-subscription-sse.md](11-ds-subscription-sse.md)          | DS and stock UI subscriptions over SSE (`graphql-sse` via `/api/graphql`)                             |
 | [12-ds-observability.md](12-ds-observability.md)                | `@corpdk/ds` health probe, optional OTLP tracing, generated input Zod                                 |
 | [13-graphql-sdk-generator.md](13-graphql-sdk-generator.md)      | Design: `@corpdk/create-graphql-sdk` — publishable client SDK from SDL or `typeDefs` (L1 types, L2 builder DSL via owned genql fork `@corpdk/graphql-dsl`, L3 input Zod; multi-file SDL merge) |
-| [14-graphql-cli-generator.md](14-graphql-cli-generator.md)      | Design: `@corpdk/create-graphql-cli` — publishable CLI wrapping the SDK (interactive + non-interactive; supersedes DS→`codegen-cli` preset wiring) |
+| [14-graphql-cli-generator.md](14-graphql-cli-generator.md)      | Design: `@corpdk/create-graphql-cli` — automation CLI wrapping the SDK (relation-ids selections, SDK L3 validation, exit codes, LLM command catalog, replaces the `codegen-cli` preset) |
 | [05-ui-architecture.md](05-ui-architecture.md)                  | UI template state and app-level configuration                                                         |
 | [06-ui-status.md](06-ui-status.md)                              | Living capability status matrix across all UI packages                                                |
 | [07-git-conventions.md](07-git-conventions.md)                  | Conventional Commits format and examples                                                              |

@@ -2,7 +2,7 @@
 
 Design specification for a **publishable GraphQL client SDK** produced from a **complete schema** (one or many SDL files, or a TypeScript `typeDefs` module), and for the **CLI** that scaffolds, regenerates, and upgrades it. This initiative covers the SDK package, the CLI, and two in-house libraries the SDK is built from. It does not cover the GraphQL server, the automation CLI ([14-graphql-cli-generator.md](14-graphql-cli-generator.md)), or HTTP transport. Apollo, urql, `graphql-sse`, and similar clients stay in consumer apps.
 
-**Status:** Design (pre-implementation). Revision 6. Open work is tracked in the §17 register.
+**Status:** Design (pre-implementation). Revision 7. Open work is tracked in the §17 register.
 
 - Appendix A: gap review of revision 1.
 - Appendix B: dependency maintenance audit.
@@ -18,6 +18,7 @@ Design specification for a **publishable GraphQL client SDK** produced from a **
 | 4 | 2026-11-12 | Builder DSL is a hard requirement; `genql` (vendored output) replaced `gql.tada` |
 | 5 | 2026-11-12 | **`genql` forked into the owned `@corpdk/graphql-dsl`**, which adds aliases, `@include`/`@skip`, named variables, and native ESM. The DSL computes its result types from the SDK's own `Types.*` (L1) instead of generating a second set of interfaces. |
 | 6 | 2026-11-12 | **`templates/ds-sdk` is a test proof and sample, never published** (§9.1). New libraries join the npmjs publish pipeline (§13). All remaining work is collected in the §17 register. Later on rev 6: `graphql-dsl` stays in this monorepo with its own version line and move-out triggers (§16.2.1). The §5 diagram's `z.ZodType<Types.X>` label is escaped (Mermaid stripped it as HTML). |
+| 7 | 2026-11-12 | **Shared runtime over copied code:** parse helpers move into `@corpdk/graphql-input-zod` (runtime entry `.`; emitter at `./codegen`), and each SDK's `src/validation.ts` becomes a binding. **Scalar validators:** generated `scalarZodSchemas` registry + `safeParseGraphqlScalar`, used by input fields and by the CLI for top-level scalar arguments. Register items R-32, R-33. |
 
 **Related:** [02-graphql-schema.md](02-graphql-schema.md) · [11-ds-subscription-sse.md](11-ds-subscription-sse.md) · [ds-automation-upgrades.md](ds-automation-upgrades.md) (pattern reference for `create-ds`) · [dal-pg-type-mapping.md](dal-pg-type-mapping.md) · [02-monorepo-design.md](../architecture/02-monorepo-design.md)
 
@@ -164,10 +165,29 @@ export * from "./extensions/index.js";
 ```
 
 ```ts
-// src/validation.ts (canonical) → "@corpdk/ds-sdk/validation"
-export * from "./generated/input-schemas.js";
-export * from "./validation/parse-input.js";
+// src/validation.ts (canonical binding) → "@corpdk/ds-sdk/validation"
+import { createInputParsers, createScalarParsers } from "@corpdk/graphql-input-zod";
+import { inputZodSchemas } from "./generated/input-registry.js";
+import { scalarZodSchemas } from "./generated/scalar-registry.js";
+
+export * from "./generated/input-schemas.js";            // ItemCreateInputSchema, …
+export { inputZodSchemas, scalarZodSchemas };
+export type { InputZodSchemaName } from "./generated/input-registry.js";
+export type { ScalarZodSchemaName } from "./generated/scalar-registry.js";
+export {
+  GraphqlInputValidationError,
+  type GraphqlInputIssue, type GraphqlInputParseResult,
+} from "@corpdk/graphql-input-zod";
+
+export const {
+  safeParseGraphqlInput, safeParseOptionalGraphqlInput,
+  safeParseGraphqlInputList, safeParseOptionalGraphqlInputList,
+  parseGraphqlInput, parseOptionalGraphqlInput,
+} = createInputParsers(inputZodSchemas);
+export const { safeParseGraphqlScalar, parseGraphqlScalar } = createScalarParsers(scalarZodSchemas);
 ```
+
+The helper logic lives once, in `@corpdk/graphql-input-zod` (§7.4). Each SDK binds it to its generated registries in this one file, so fixes ship as a dependency update instead of a regenerate or `upgrade`.
 
 `build*` and `define*` return `BuiltOperation<R, V>`, which bundles four things:
 
@@ -187,8 +207,7 @@ export * from "./validation/parse-input.js";
   tsconfig.json                    NodeNext build            canonical
   README.md                        consumer guide            canonical outside <!-- user --> blocks
   src/index.ts                     root entry                canonical
-  src/validation.ts                ./validation entry        canonical
-  src/validation/parse-input.ts    parse helpers             canonical
+  src/validation.ts                ./validation entry        canonical (binding only, §3.5)
   src/extensions/index.ts          shared selections / ops   user-owned (never overwritten)
   src/generated/**                 L1 + L2 + L3              generated, gitignored
 ```
@@ -221,7 +240,7 @@ The SDK builds with **`tsconfig.node.json` (NodeNext)**. The fork's generator em
 
 | Kind | Packages | Reason |
 | ---- | -------- | ------ |
-| **dependencies** | `@corpdk/graphql-dsl` (runtime), `@graphql-typed-document-node/core` ^3 | The runtime is owned, so it is a normal dependency. DSL fixes reach SDKs through a dependency update without regenerating. The typed-document package is types-only (§16.1 exemption). |
+| **dependencies** | `@corpdk/graphql-dsl` (runtime), `@corpdk/graphql-input-zod` (runtime entry), `@graphql-typed-document-node/core` ^3 | Both runtimes are owned, so they are normal dependencies. DSL and validation-helper fixes reach SDKs through a dependency update without regenerating. The typed-document package is types-only (§16.1 exemption). |
 | **peerDependencies** | `graphql` ^16 \|\| ^17; `zod` ^4 (optional) | `graphql` for `parse` in the runtime. Zod is shared with the app and optional for consumers that never import `./validation`. |
 | **devDependencies** | `@corpdk/create-graphql-sdk`, `@graphql-codegen/cli`, `@graphql-codegen/typescript`, `typescript` | Build time only |
 | **Forbidden** | `@genql/*`, Apollo, urql, `graphql-request`, `graphql-sse`, `graphql-ws`, `typescript-resolvers`, `@corpdk/dal-core` | No upstream DSL packages; the SDK stays transport-free |
@@ -305,7 +324,7 @@ flowchart TD
   DSL["@corpdk/graphql-dsl/codegen"]
   L2["src/generated/dsl/** (selections typed with L1 *Args, type map, bound builders)"]
   IZ["@corpdk/graphql-input-zod"]
-  L3["src/generated/input-schemas.ts + input-registry.ts (z.ZodType#lt;Types.X#gt;)"]
+  L3["src/generated/input-schemas.ts + input-registry.ts + scalar-registry.ts (z.ZodType#lt;Types.X#gt;)"]
   TSC["tsc (NodeNext) → dist/"]
 
   S1 --> SYNC
@@ -378,19 +397,31 @@ validation:
 
 `graphql-codegen-typescript-validation-schema` fails §16.1 (Appendix B.2). The repo already owns an SDL-walk emitter: `emitGraphqlInputZodBlocks` in `libraries/dal-codegen/src/generators/input-zod-graphql.ts`, about 200 lines. It orders inputs topologically, uses `z.lazy` for cycles, and emits enums as `z.enum([...])`. v1 extracts it into `libraries/graphql-input-zod`:
 
+The library has **two entry points**, the same split as `@corpdk/graphql-dsl`:
+
+| Entry | Used by | Contents | Peer |
+| ----- | ------- | -------- | ---- |
+| `@corpdk/graphql-input-zod/codegen` | `dal-codegen`, `create-graphql-sdk` | The emitter (below) | `graphql` ^16 \|\| ^17 |
+| `@corpdk/graphql-input-zod` | Every generated SDK at runtime (§3.5) | `createInputParsers`, `createScalarParsers`, `GraphqlInputValidationError`, issue types (§7.4) | `zod` ^4 |
+
 ```ts
+// @corpdk/graphql-input-zod/codegen
 export interface EmitInputZodOptions {
-  scalars: Record<string, string>;
+  scalars: Record<string, string>;      // scalar name → Zod expression source
   skipTypeNames?: ReadonlySet<string>;
-  typesImport?: string; // "./schema-types.js" → z.ZodType<Types.X> annotations
+  typesImport?: string;                 // "./schema-types.js" → z.ZodType<Types.X> annotations
   strictObjects?: boolean;
 }
 export function emitInputZodModule(schema: GraphQLSchema, options: EmitInputZodOptions): {
-  source: string; registrySource: string; registryNames: string[];
+  source: string;          // input-schemas.ts
+  registrySource: string;  // input-registry.ts
+  scalarSource: string;    // scalar-registry.ts — one schema per custom scalar
+  registryNames: string[];
 };
 ```
 
-`dal-codegen` calls it with DAL scalars and its create/update skip set, and its output is unchanged. The SDK calls it with the snapshot and `sdk.config.yaml` scalars.
+- **Scalars defined once.** Each custom scalar's Zod expression is emitted once, into `scalar-registry.ts`. Input-object fields reference it (`createdAt: scalarZodSchemas.DateTime`) instead of repeating the expression. That registry also validates top-level scalar arguments outside an input object, which the CLI uses (§7.4).
+- `dal-codegen` calls the emitter with DAL scalars and its create/update skip set; its output is unchanged. The SDK calls it with the snapshot and `sdk.config.yaml` scalars.
 
 ### 7.3 Scope
 
@@ -398,30 +429,55 @@ All `input` object types in the snapshot. Output types, whole variable bags, and
 
 ### 7.4 Parse helpers
 
+Generated per SDK (data only):
+
 ```ts
+// src/generated/scalar-registry.ts (generated from sdk.config.yaml scalars.*.zod)
+export const scalarZodSchemas = { DateTime: z.string(), BigInt: z.union([z.string(), z.number().int()]), /* … */ } as const;
+export type ScalarZodSchemaName = keyof typeof scalarZodSchemas;
+
 // src/generated/input-registry.ts (generated)
 export const inputZodSchemas = { ItemCreateInput: ItemCreateInputSchema, /* … */ } as const;
 export type InputZodSchemaName = keyof typeof inputZodSchemas;
+```
 
-// src/validation/parse-input.ts (canonical) — contract
-export type InputOf<N extends InputZodSchemaName> = z.output<(typeof inputZodSchemas)[N]>;
+Shared once, in `@corpdk/graphql-input-zod` (runtime entry), and bound per SDK in `src/validation.ts` (§3.5):
+
+```ts
 export interface GraphqlInputIssue { path: (string | number)[]; message: string; code: string }
 export type GraphqlInputParseResult<T> =
   | { ok: true; data: T }
   | { ok: false; issues: GraphqlInputIssue[] };
 export class GraphqlInputValidationError extends Error { readonly issues: GraphqlInputIssue[] }
 
-safeParseGraphqlInput(name, value): GraphqlInputParseResult<InputOf<N>>
-safeParseOptionalGraphqlInput(name, value): GraphqlInputParseResult<InputOf<N> | undefined>
-safeParseGraphqlInputList(name, value): GraphqlInputParseResult<InputOf<N>[]>
-safeParseOptionalGraphqlInputList(name, value): GraphqlInputParseResult<InputOf<N>[] | undefined>
-parseGraphqlInput(name, value): InputOf<N>                 // throws GraphqlInputValidationError
-parseOptionalGraphqlInput(name, value): InputOf<N> | undefined
+export function createInputParsers<R extends Record<string, ZodType>>(registry: R): {
+  safeParseGraphqlInput<N extends keyof R>(name: N, value: unknown): GraphqlInputParseResult<z.output<R[N]>>;
+  safeParseOptionalGraphqlInput<N extends keyof R>(name: N, value: unknown): GraphqlInputParseResult<z.output<R[N]> | undefined>;
+  safeParseGraphqlInputList<N extends keyof R>(name: N, value: unknown): GraphqlInputParseResult<z.output<R[N]>[]>;
+  safeParseOptionalGraphqlInputList<N extends keyof R>(name: N, value: unknown): GraphqlInputParseResult<z.output<R[N]>[] | undefined>;
+  parseGraphqlInput<N extends keyof R>(name: N, value: unknown): z.output<R[N]>;            // throws GraphqlInputValidationError
+  parseOptionalGraphqlInput<N extends keyof R>(name: N, value: unknown): z.output<R[N]> | undefined;
+};
+
+export function createScalarParsers<R extends Record<string, ZodType>>(registry: R): {
+  safeParseGraphqlScalar<N extends keyof R>(name: N, value: unknown): GraphqlInputParseResult<z.output<R[N]>>;
+  parseGraphqlScalar<N extends keyof R>(name: N, value: unknown): z.output<R[N]>;           // throws GraphqlInputValidationError
+};
 ```
+
+`InputOf<N>` stays available as `z.output<(typeof inputZodSchemas)[N]>`. The function signatures are generic over the registry, so destructuring them in `src/validation.ts` keeps full name and result typing.
+
+**Who reuses what:**
+
+| Code | Written once in | Reused by |
+| ---- | --------------- | --------- |
+| Input and scalar parse helpers, issue shape, error class | `@corpdk/graphql-input-zod` | Every generated SDK; the CLI runtime (through the SDK); optionally `dal-codegen`'s server output (R-33) |
+| Scalar wire-format rules | `sdk.config.yaml` `scalars.*.zod` → `scalar-registry.ts` | Input-object fields, top-level CLI scalar arguments, forms |
+| Input-object schemas | `input-schemas.ts` (generated) | Forms (`ui-forms`), CLI pre-flight, scripts |
 
 Because `InputOf<"ItemFilter">` and the DSL's `__args.filter` are both `Types.ItemFilter`, a parsed value goes straight into a selection or a named variable without a cast.
 
-**Consumer: `@corpdk/create-graphql-cli`.** The generated automation CLI imports `inputZodSchemas` and these helpers from `@corpdk/ds-sdk/validation`, and validates input-object variables before any HTTP or SSE request ([CLI design §3.5](14-graphql-cli-generator.md#35-variable-validation-via-sdk-4-required)). Zod is an optional peer of the SDK (§3.7), so the CLI package must list `zod` ^4 as its own dependency.
+**Consumer: `@corpdk/create-graphql-cli`.** The generated automation CLI imports `inputZodSchemas`, `scalarZodSchemas`, and these helpers from `@corpdk/ds-sdk/validation`. It validates input-object variables **and top-level custom-scalar arguments** before any HTTP or SSE request ([CLI design §3.5](14-graphql-cli-generator.md#35-variable-validation-via-the-sdk-l3-required)). Zod is an optional peer of the SDK (§3.7), so the CLI package must list `zod` ^4 as its own dependency.
 
 ### 7.5 Client vs server strictness
 
@@ -466,7 +522,7 @@ libraries/graphql-dsl/
 
 ### 8.2 `@corpdk/graphql-input-zod`
 
-See §7.2. It is published to npmjs under CalVer.
+See §7.2. Two entry points: `./codegen` (emitter, `graphql` peer) and `.` (runtime parse helpers, `zod` peer). Published to npmjs in the lockstep CalVer set, ahead of `dal-codegen`.
 
 ### 8.3 `@corpdk/create-graphql-sdk`
 
@@ -517,7 +573,7 @@ create-graphql-sdk <init|sync|codegen|generate|upgrade> [directory] [options]
 
 **`upgrade`:**
 
-- **Overwrite:** `codegen.ts`, `tsconfig.json`, `src/index.ts`, `src/validation.ts`, `src/validation/parse-input.ts`, and the README outside `<!-- user -->` blocks.
+- **Overwrite:** `codegen.ts`, `tsconfig.json`, `src/index.ts`, `src/validation.ts`, and the README outside `<!-- user -->` blocks.
 - **Merge:** `package.json` and `sdk.config.yaml`.
 - **Never touch:** `schema/**`, `src/extensions/**`.
 - Then run `codegen`.
@@ -614,6 +670,8 @@ P2 type tests confirm that Apollo and urql infer `data` and check `variables` wi
 | Every generated operation in the test suite passes `graphql.validate` against its schema | `libraries/graphql-dsl` |
 | Merge unit tests (one per §4.3 row), file-order determinism, source and glob tests, breaking-change report on graphql 16 and 17 | `engines/create-graphql-sdk` |
 | Emitter parity: `dal-codegen` output unchanged; cyclic-input fixture | `libraries/graphql-input-zod`, `libraries/dal-codegen` |
+| Runtime helpers: `createInputParsers` / `createScalarParsers` keep per-name typing after destructuring (type tests); issue shape and `GraphqlInputValidationError` (unit tests) | `libraries/graphql-input-zod` |
+| Scalar registry: each `sdk.config.yaml` scalar appears once in `scalar-registry.ts`; input fields reference it; `safeParseGraphqlScalar` accepts and rejects the documented wire values | `libraries/graphql-input-zod`, `templates/ds-sdk/test/` |
 | Snapshot drift | CI: `pnpm --filter @corpdk/ds-sdk sdk:check` |
 | SDK type tests: DSL results and variables against the DAL schema; `@ts-expect-error` on an unknown field and unknown `__args` key; `Types.ItemFilter` flows from `parseGraphqlInput` into `__args` without a cast | `templates/ds-sdk/test/` |
 | Apollo / urql type compatibility with `BuiltOperation.document` | `templates/ds-sdk/test/` |
@@ -671,7 +729,8 @@ P2 type tests confirm that Apollo and urql infer `data` and check `variables` wi
 - [ ] The SDK exports exactly one interface per schema type (`Types.*`). DSL results, `__args`, and L3 schemas all reference it (no duplicate entity types under `src/generated/dsl/`).
 - [ ] DSL tests pass for selections, args, unions, aliases, `@include`/`@skip`, and named variables. Every test operation validates against its schema.
 - [ ] Apollo and urql accept `BuiltOperation.document` with inferred `data` and checked `variables`.
-- [ ] `dal-codegen`'s `input-zod.ts` output is unchanged after the emitter extraction. `inputZodSchemas` covers the DAL inputs.
+- [ ] `dal-codegen`'s `input-zod.ts` output is unchanged after the emitter extraction. `inputZodSchemas` covers the DAL inputs, and `scalarZodSchemas` covers the 12 DAL custom scalars.
+- [ ] The SDK's `src/validation.ts` is a binding only; no parse-helper logic is copied into any generated SDK.
 - [ ] No DS `codegen.ts` references `../ds-sdk` or `client-preset`. DS Docker images build without `templates/ds-sdk`.
 - [ ] `upgrade` keeps `src/extensions/**` and `sdk.config.yaml` customizations.
 - [ ] On the P4 release date, every third-party dependency passes §16.1.
@@ -687,6 +746,8 @@ P2 type tests confirm that Apollo and urql infer `data` and check `variables` wi
 | Type interfaces | **One set: L1 `Types.*`** (graphql-codegen, `nonOptionalTypename`, `enumsAsTypes`), used by DSL results, `__args`, L3, and consumers |
 | DSL runtime packaging | Normal dependency of the SDK (owned and versioned), not vendored |
 | L3 engine | Owned `@corpdk/graphql-input-zod` (extracted from `dal-codegen`) |
+| Shared runtime over copied code | Parse helpers live in `@corpdk/graphql-input-zod` (runtime entry); each SDK binds them to its generated registries. Generated packages carry data and bindings, not logic. |
+| Scalar validators | `scalarZodSchemas` generated from `sdk.config.yaml` `scalars.*.zod`; used by input fields and by the CLI for top-level scalar arguments |
 | Multiple schema files | Many sources → `mergeTypeDefs` → one committed snapshot |
 | Module format | ESM, NodeNext, `exports` → `dist/` |
 | Engine and library builds | `tsc`, not tsup |
@@ -786,6 +847,8 @@ Everything this design has not yet proven, built, or decided. Each item closes o
 | R-08 | Interfaces (not only unions) through `on_<Type>` over L1 | Prototype tested a union only | P1b | Exact result equality for an interface field with two implementations | Open |
 | R-09 | L3 annotations `z.ZodType<Types.X>` compile against L1's `InputMaybe` / optional fields, including recursive inputs | Not prototyped | P1a | `@corpdk/graphql-input-zod` output type-checks against L1 for the DAL schema and a cyclic fixture | Open |
 | R-10 | `dal-codegen` output unchanged after extracting the emitter | Extraction not done | P1a | Existing `input-zod` tests green; byte-identical `input-zod.ts` for the DAL schema | Open |
+| R-32 | `scalar-registry.ts`: one Zod schema per custom scalar, generated from `sdk.config.yaml`; input-object fields reference it; exported through `./validation` with `safeParseGraphqlScalar` / `parseGraphqlScalar` | Added for the CLI's top-level scalar arguments (CLI R-C10) | P1a | §11 scalar-registry checks green | Open |
+| R-33 | Optional: `dal-codegen`'s server `input-zod.ts` uses `createInputParsers` with a server issue mapper (`userErrors` / `GraphQLError`) instead of emitting its own helper bodies | Further reduces generated code; server output changes shape, so it is not part of the P1a byte-identical extraction | After P1a | Decision recorded; if adopted, server tests green | Open |
 
 ### 17.2 Measurements still owed
 
