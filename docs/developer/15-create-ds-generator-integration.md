@@ -6,7 +6,7 @@ Design for the changes the **DS generator** (`@corpdk/create-ds`) needs, so it s
 
 **Depends on:**
 
-- [13-graphql-sdk-generator.md](13-graphql-sdk-generator.md) (SDK design, rev 9)
+- [13-graphql-sdk-generator.md](13-graphql-sdk-generator.md) (SDK design, rev 10)
 - [14-graphql-cli-generator.md](14-graphql-cli-generator.md) (CLI design, rev 5)
 
 **Related:** [ds-automation-upgrades.md](ds-automation-upgrades.md) · [04-npm-publish-ds-automation.md](../admin/04-npm-publish-ds-automation.md)
@@ -161,16 +161,17 @@ pnpm --filter "<cli-name>..." build            # cli:codegen + tsc, after the SD
 | Order | Package | Channel | First release |
 | ----- | ------- | ------- | ------------- |
 | — | `@corpdk/graphql-dsl` | Own workflow and version line; the lockstep script checks the required version exists on npm before publishing (SDK §16.2.1) | SDK P1b |
-| 1 | `@corpdk/dal-core` | Lockstep | today |
-| 2 | `@corpdk/pub-sub` | Lockstep | today |
-| 3 | `@corpdk/graphql-input-zod` | Lockstep | SDK P1a |
-| 4 | `@corpdk/dal-codegen` | Lockstep | today (depends on 3 from SDK P1a) |
-| 5 | `@corpdk/engine-kit` | Lockstep | DS-P0b |
-| 6 | `@corpdk/graphql-cli-core` | Lockstep | CLI C-P2 (depends on 3) |
-| 7 | `@corpdk/create-graphql-sdk` | Lockstep | SDK P2 (depends on `graphql-dsl`, 3, 5) |
-| 8 | `@corpdk/create-graphql-cli` | Lockstep | CLI C-P3 (depends on 5, 6) |
-| 9 | `@corpdk/codegen-cli` | Lockstep | today, until its deprecation release after CLI C-P3 |
-| 10 | `@corpdk/create-ds` | Lockstep | today (depends on 5, 7, 8) |
+| 1 | `@corpdk/scalar-zod` | Lockstep | SDK P1a |
+| 2 | `@corpdk/dal-core` | Lockstep | today (depends on 1 from SDK P1a) |
+| 3 | `@corpdk/pub-sub` | Lockstep | today |
+| 4 | `@corpdk/graphql-input-zod` | Lockstep | SDK P1a |
+| 5 | `@corpdk/dal-codegen` | Lockstep | today (depends on 4 from SDK P1a) |
+| 6 | `@corpdk/engine-kit` | Lockstep | DS-P0b |
+| 7 | `@corpdk/graphql-cli-core` | Lockstep | CLI C-P2 (depends on 4) |
+| 8 | `@corpdk/create-graphql-sdk` | Lockstep | SDK P2 (depends on `graphql-dsl`, 4, 6) |
+| 9 | `@corpdk/create-graphql-cli` | Lockstep | CLI C-P3 (depends on 6, 7) |
+| 10 | `@corpdk/codegen-cli` | Lockstep | today, until its deprecation release after CLI C-P3 |
+| 11 | `@corpdk/create-ds` | Lockstep | today (depends on 6, 8, 9) |
 
 **Publish-order guard** (CI, used by SDK R-20, CLI R-C11, R-D05, R-D10):
 
@@ -414,7 +415,7 @@ This is a refactor that preserves outputs. The changes **intended** to be visibl
 | R-D13 | Canonical drift checks (§11.4) in CI | DS-P0b / SDK P2 / CLI C-P3 | CI check fails on an injected difference | Open |
 | R-D14 | Resolve the `templates/ds/.gitignore` vs `engines/create-ds/canonical/.gitignore` difference | DS-P0b | `checkCanonical` green | Open |
 | R-D15 | Published `--demo-schema` ships no demo schema or seed (pre-existing): decide whether the canonical includes them; `copyDir` `requireSource` makes the failure visible either way | DS-P0b | Published `init --demo-schema` produces the demo schema, or fails clearly | Open |
-| R-D16 | DAL scalar preset (`scalarPreset: "dal"`) in the SDK engine, shared with `templates/ds-sdk` (SDK R-14) | SDK P1c / P2 | Starter `DateTime` field syncs and builds in the §9 init test | Open |
+| R-D16 | DAL scalar preset (`scalarPreset: "dal"`) in the SDK engine, written as `{ from, name }` references to `@corpdk/scalar-zod` (SDK §7.7), shared with `templates/ds-sdk` (SDK R-14) | SDK P1c / P2 | Starter `DateTime` field syncs and builds in the §9 init test | Open |
 
 ---
 

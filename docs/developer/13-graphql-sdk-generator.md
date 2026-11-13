@@ -2,7 +2,7 @@
 
 Design specification for a **publishable GraphQL client SDK** produced from a **complete schema** (one or many SDL files, or a TypeScript `typeDefs` module), and for the **CLI** that scaffolds, regenerates, and upgrades it. This initiative covers the SDK package, the CLI, and two in-house libraries the SDK is built from. It does not cover the GraphQL server, the automation CLI ([14-graphql-cli-generator.md](14-graphql-cli-generator.md)), or HTTP transport. Apollo, urql, `graphql-sse`, and similar clients stay in consumer apps.
 
-**Status:** Design (pre-implementation). Revision 9. Open work is tracked in the §17 register.
+**Status:** Design (pre-implementation). Revision 10. Open work is tracked in the §17 register.
 
 - Appendix A: gap review of revision 1.
 - Appendix B: dependency maintenance audit.
@@ -21,6 +21,7 @@ Design specification for a **publishable GraphQL client SDK** produced from a **
 | 7 | 2026-11-12 | **Shared runtime over copied code:** parse helpers move into `@corpdk/graphql-input-zod` (runtime entry `.`; emitter at `./codegen`), and each SDK's `src/validation.ts` becomes a binding. **Scalar validators:** generated `scalarZodSchemas` registry + `safeParseGraphqlScalar`, used by input fields and by the CLI for top-level scalar arguments. Register items R-32, R-33. |
 | 8 | 2026-11-13 | **Final cross-design review** (SDK, CLI, DS generator). Emitter built-in scalars made configurable with spec defaults (DAL overrides keep `dal-codegen` byte-identical; no `@corpdk/dal-core` in SDKs); `scalarReferences` option; `scalarWireFormats`; `validation.enabled: false` defined; optional peers on `graphql-input-zod`. Phase order fixed: the `../ds-sdk` target is removed in P2 with the `templates/ds-sdk` replacement. P1a now updates fixed-order CI/Docker builds; publish bootstrap and trusted-publisher setup recorded; `graphql-dsl` version gate. Script renamed `sdk:codegen`; `init --defer-sync`, `runInit` export, `--schema` path rule. `create-ds` changes moved to [doc 15](15-create-ds-generator-integration.md); `create-app` declared frozen and out of scope (R-22 dropped). Engine built on the shared `@corpdk/engine-kit` with the `create-ds`-style contract (doc 15 §11). Register R-34 to R-36; evidence wording corrected. |
 | 9 | 2026-11-13 | **Second cross-design review.** P3 and P4 merged into P2: the DS Docker steps and the `create-graphql-sdk` publish move to P2, because the DS image breaks and `create-ds` would point users at an unpublished engine otherwise. Two `create-app` Dockerfile rows dropped. R-17 folded into doc 15 R-D02; R-24 rescoped. `graphql-dsl` codegen API and its types-only dependency specified; `GraphqlInputIssue.code` source stated. |
+| 10 | 2026-11-13 | **`@corpdk/scalar-zod`** (§7.7): one package for all scalar rules, extracted from `dal-core`, with Postgres-bounded rules under `/pg`. The DAL preset and built-in overrides reference it instead of copying rules; `dal-core` re-exports. R-37, R-38. |
 
 **Related:** [02-graphql-schema.md](02-graphql-schema.md) · [11-ds-subscription-sse.md](11-ds-subscription-sse.md) · [ds-automation-upgrades.md](ds-automation-upgrades.md) (pattern reference for `create-ds`) · [dal-pg-type-mapping.md](dal-pg-type-mapping.md) · [02-monorepo-design.md](../architecture/02-monorepo-design.md)
 
@@ -388,7 +389,15 @@ validation:
 
 `validation.enabled: false` turns L3 off: no `input-schemas.ts`, `input-registry.ts`, or `scalar-registry.ts`, and the `./validation` export is omitted from `package.json`. Consumers that need L3, such as the CLI generator, check for the export and fail clearly when it is missing.
 
-**DAL scalar entries.** The custom scalars are `DateTime`, `Date`, `TimeTz`, `BigInt`, `Decimal`, `IntervalMs`, `SmallInt`, `Double`, `InsensitiveString`, `IP`, `CIDR`, `MAC` (`DAL_SCALAR_ZOD_BY_NAME` in `libraries/dal-codegen/src/generators/input-zod-scalars.ts`). Their entries encode the wire format from [dal-pg-type-mapping.md](dal-pg-type-mapping.md) and `libraries/dal-core/src/scalar-zod.ts`, without importing `@corpdk/dal-core`. The server stays authoritative where its rules are stricter.
+**DAL scalar entries.** The custom scalars are `DateTime`, `Date`, `TimeTz`, `BigInt`, `Decimal`, `IntervalMs`, `SmallInt`, `Double`, `InsensitiveString`, `IP`, `CIDR`, `MAC`. Their entries **reference** `@corpdk/scalar-zod` (§7.7) instead of repeating the rules as expression strings, so SDK and server validate with the same code:
+
+```yaml
+scalars:
+  DateTime:  { type: string, zod: { from: "@corpdk/scalar-zod", name: "DateTime" } }
+  SmallInt:  { type: number, zod: { from: "@corpdk/scalar-zod/pg", name: "SmallInt" } }
+```
+
+`zod` accepts either an expression string (`z.string()`) or an `{ from, name }` reference. The emitter turns references into imports in `scalar-registry.ts`. The `dal` preset (`--scalar-preset dal`) writes the 12 references.
 
 **Custom scalars typed as objects** (for example `JSON: Record<string, unknown>`) need care. The result-typing scalar check is `string | number | Date | boolean | null | undefined`, so an object-typed scalar would be treated as a selectable object. The fork adds a generated scalar-name list to the type map so `FieldsSelection` treats those fields as leaves. P1b adds a regression test.
 
@@ -446,8 +455,8 @@ Today's emitter hard-codes DAL rules for built-in scalars (`libraries/dal-codege
 | -------- | ---------------------- | ---------------------------- |
 | `ID` | `z.string()` | `z.string().uuid()` |
 | `String` | `z.string()` | unchanged |
-| `Int` | `z.number().int().min(-2147483648).max(2147483647)` | `zPgInt32` (from `@corpdk/dal-core`, via `preamble`) |
-| `Float` | `z.number().finite()` | `zPgReal` (from `@corpdk/dal-core`, via `preamble`) |
+| `Int` | `z.number().int().min(-2147483648).max(2147483647)` | `Int` from `@corpdk/scalar-zod/pg` (today `zPgInt32` in `@corpdk/dal-core`), imported via `preamble` |
+| `Float` | `z.number().finite()` | `Real` from `@corpdk/scalar-zod/pg` (today `zPgReal` in `@corpdk/dal-core`), imported via `preamble` |
 | `Boolean` | `z.boolean()` | unchanged |
 
 An SDK may also override built-ins in `sdk.config.yaml` (`validation.builtinScalars`, for example `ID: z.string().uuid()` for a UUID-only API).
@@ -521,6 +530,20 @@ The server does not import the SDK and wins at runtime (`userErrors` / `BAD_USER
 ### 7.6 Consumer: `@corpdk/ui-forms`
 
 `useZodForm(ItemCreateInputSchema)` works directly. Zod resolves to one instance (peer of the SDK, dependency of `ui-forms`, both ^4). L3 does not coerce HTML string values.
+
+### 7.7 `@corpdk/scalar-zod`: one package for all scalar rules
+
+`libraries/scalar-zod` (`@corpdk/scalar-zod`, npmjs, lockstep) holds every scalar validation rule, client- and server-safe. It is extracted from `@corpdk/dal-core` (`scalar-zod.ts`, `scalars.ts`, `guild-scalars.ts`, `pg-bounds.ts`, `pg-interval.ts`), whose imports are only `zod`, `graphql-scalars`, and each other.
+
+| Entry | Exports (named, tree-shakeable) |
+| ----- | ------------------------------- |
+| `@corpdk/scalar-zod` | Generic GraphQL wire scalars: `DateTime`, `Date`, `TimeTz`, `Decimal`, `InsensitiveString`, `IP`, `CIDR`, `MAC`, `BigInt` (unbounded), plus their `parse*` functions |
+| `@corpdk/scalar-zod/pg` | Postgres-bounded rules, **not** exported from the root: `BigInt` (int64 range), `IntervalMs`, `SmallInt`, `Double`, `Int` (int32, today `zPgInt32`), `Real` (today `zPgReal`), and the `PG_*` bound constants |
+
+- **Package shape:** `"sideEffects": false`, ESM, one module per scalar, so an SDK that uses `DateTime` loads only `DateTime`'s code.
+- **`dal-core`:** depends on `@corpdk/scalar-zod` and keeps exporting `dalScalarZod` (built from both entries) and `zPgInt32` / `zPgReal` as re-exports. Server code and `dal-codegen` output stay unchanged (R-10).
+- **SDKs:** the `dal` preset references it (§6), so DAL SDKs depend on `@corpdk/scalar-zod`. Non-DAL SDKs with their own scalars keep expression strings and don't install it. Like the other owned runtimes, rule fixes reach every SDK through a dependency update.
+- **Dependencies:** `zod` ^4 (peer), `graphql-scalars` (needs a dependency-policy audit row, R-38).
 
 ---
 
@@ -916,6 +939,8 @@ Everything this design has not yet proven, built, or decided. Each item closes o
 | R-34 | DSL `build*` / `define*` accept `__args` on scalar-root fields (`hello(name: String): String!`) and emit no selection set | The CLI relies on it for scalar-returning commands (CLI R-C04) | P1b | §11 scalar-root test green | Open |
 | R-35 | Extracted emitter: configurable built-in scalars (spec defaults, DAL overrides), `preamble`, `scalarReferences` (§7.2.1) | Found in the final review: today's emitter hard-codes DAL rules (`ID` → UUID, `Int`/`Float` from `@corpdk/dal-core`) | P1a | §11 built-in scalar and emitter-parity rows green | Open |
 | R-36 | Which description wins when two files describe the same type in a merge | Not exercised by the prototype (Appendix C.1) | P1c | Merge test asserts the behavior; §4.3 row updated | Open |
+| R-37 | `libraries/scalar-zod` extracted from `dal-core` (§7.7), root and `/pg` entries; `dal-core` re-exports unchanged; `dal` preset and emitter `{ from, name }` references | Shared scalar rules for server, SDK, CLI, forms | P1a | `dal-core` and `dal-codegen` tests unchanged; SDK built-in and scalar tests green; per-scalar tree-shaking check (bundle of a `DateTime`-only consumer contains no `/pg` code) | Open |
+| R-38 | Dependency-policy audit row for `graphql-scalars` (now a dependency of every DAL SDK) | Required by §16.1 | P1a | Appendix B updated; passes §16.1 or replaced | Open |
 
 ### 17.2 Measurements still owed
 
