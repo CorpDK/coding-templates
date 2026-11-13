@@ -2,7 +2,7 @@
 
 Design specification for a **GraphQL automation CLI** that **wraps a sibling SDK package** produced by [`@corpdk/create-graphql-sdk`](13-graphql-sdk-generator.md), and for the engine that scaffolds, regenerates, and upgrades it. The CLI is for **ops, scripts, CI, and LLM agents**, not for application UI runtimes. It runs queries and mutations over HTTP and streams subscriptions over **SSE only** (`graphql-ws` is sunset).
 
-**Status:** Design (pre-implementation). Revision 3.
+**Status:** Design (pre-implementation). Revision 5.
 
 - Appendix A: gap review of revision 1.
 - Appendix B: prototype evidence.
@@ -15,8 +15,10 @@ Design specification for a **GraphQL automation CLI** that **wraps a sibling SDK
 | 1 | 2026-11-08 | Initial proposal (built on SDK design rev 1) |
 | 2 | 2026-11-12 | Gap review (Appendix A). Aligned to SDK design rev 6 (L1/L2/L3, genql-fork DSL, `./validation` entry, Zod as an optional peer, private `templates/ds-sdk`). Selection policy redesigned for wrapper types and proven on the full DAL schema. Added: flag and argument spec, exit codes, auth, LLM command catalog, destructive-operation guard, full monorepo migration, testing, and a remaining-work register. |
 | 3 | 2026-11-12 | **Shared runtime over copied code:** the CLI runtime moves from per-package `canonical/src/runtime/*` copies into `@corpdk/graphql-cli-core` (entry `.`; generator at `./codegen`). A generated CLI is now a `cli.ts` binding + generated catalog + user extensions. **Top-level custom-scalar arguments** are validated with the SDK's `scalarZodSchemas` (SDK rev 7). Owners assigned. |
+| 4 | 2026-11-13 | **Final cross-design review.** No joint PR: the SDK removes `../ds-sdk` in SDK P2, the CLI removes `../ds-cli` in C-P3. C-P2 also needs SDK P1c; R-C03/04/05 close against a fixture SDK in C-P2 and E2E in C-P3. `scalarZodSchemaName` / `scalarWire` on `ArgDescriptor`; scalar-registry stale check; JSON scalars from SDK `scalarWireFormats`. `graphql-cli-core` depends on `graphql-input-zod` (types); engine adds `graphql`. Scripts renamed `cli:codegen` / `cli:check`; `init --defer-generate`, `runInit` export. Publish bootstrap; `create-ds` work moved to [doc 15](15-create-ds-generator-integration.md); `create-app` declared frozen and out of scope (R-C13 dropped). Engine built on the shared `@corpdk/engine-kit` with the `create-ds`-style contract (doc 15 §11). |
+| 5 | 2026-11-13 | **Second review.** `create-graphql-cli` publishes in C-P3 (with `create-ds --with-cli`, doc 15 DS-P2); C-P1 needs SDK P1a; selection files named by command; `graphql-cli-core` codegen API; `--version`; stale comments fixed. |
 
-**Related:** [13-graphql-sdk-generator.md](13-graphql-sdk-generator.md) (SDK design, rev 6) · [11-ds-subscription-sse.md](11-ds-subscription-sse.md) · [ds-automation-upgrades.md](ds-automation-upgrades.md) · [graphql-dal-requirements.md](graphql-dal-requirements.md) · legacy [`@corpdk/codegen-cli`](../../libraries/codegen-cli)
+**Related:** [13-graphql-sdk-generator.md](13-graphql-sdk-generator.md) (SDK design, rev 9) · [11-ds-subscription-sse.md](11-ds-subscription-sse.md) · [ds-automation-upgrades.md](ds-automation-upgrades.md) · [graphql-dal-requirements.md](graphql-dal-requirements.md) · legacy [`@corpdk/codegen-cli`](../../libraries/codegen-cli)
 
 ---
 
@@ -79,7 +81,7 @@ Same source as the SDK: `templates/ds/src/generated/generated-schema.ts`, throug
 
 ```bash
 pnpm --filter @corpdk/ds dal:codegen:schema
-pnpm --filter @corpdk/ds-sdk build            # sdk:sync + codegen + tsc (SDK §9.2)
+pnpm --filter @corpdk/ds-sdk build            # sdk:codegen + tsc (run sdk:sync first outside the monorepo Turbo wiring) (SDK §9.2)
 pnpm --filter @corpdk/ds-cli build            # create-graphql-cli generate . + tsc
 ```
 
@@ -101,7 +103,7 @@ What is superseded is the **integration pattern** "DS `codegen.ts` → preset �
 | Entry | Used by | Contents | Dependencies |
 | ----- | ------- | -------- | ------------ |
 | `@corpdk/graphql-cli-core/codegen` | `create-graphql-cli` | Operation extraction, relation-ids selection emitter (§3.3), naming and collision rules (§3.6), catalog emitter, man/texi emitters | peer `graphql` ^16 \|\| ^17 |
-| `@corpdk/graphql-cli-core` | Every generated CLI at runtime | `runCli()`: dispatch, flag parsing and coercion, variable merge, validation calls, HTTP and SSE transport, output and exit codes, catalog/describe, interactive mode, destructive guard | `@clack/prompts`; peer `zod` ^4 |
+| `@corpdk/graphql-cli-core` | Every generated CLI at runtime | `runCli()`: dispatch, flag parsing and coercion, variable merge, validation calls, HTTP and SSE transport, output and exit codes, catalog/describe, interactive mode, destructive guard | `@clack/prompts`; `@corpdk/graphql-input-zod` (shared parse-result and issue types); peer `zod` ^4 |
 
 The runtime is written once. A generated CLI passes in its SDK's functions (§3.2), so `graphql-cli-core` never imports a specific SDK. Runtime fixes reach every CLI through a dependency update; no regenerate or `upgrade` is needed.
 
@@ -115,7 +117,7 @@ The GraphQL Code Generator preset surface is **not** carried forward.
 | `gen-cli.ts` (runtime + `OPERATIONS` + `fetch` + SSE as strings) | **Do not port** | Replaced by the typed runtime entry `@corpdk/graphql-cli-core` (`runCli`) |
 | `index.ts` (`Types.OutputPreset`) | **Deprecate** | No replacement export |
 
-`graphql-cli-core` has no dependency on any SDK package. Its codegen entry emits selection objects as text; its runtime receives the SDK's `build*` and validation functions from the generated `cli.ts`.
+`graphql-cli-core` has no dependency on any SDK package. Codegen entry: `emitCliModules(schema, { selection, include, exclude, guard, output, man }) → { commands, runtimeConfig, selections: Record<command, source>, man?, texi?, warnings }`, the inputs coming from `cli.config.yaml`. Its codegen entry emits selection objects as text; its runtime receives the SDK's `build*` and validation functions from the generated `cli.ts`.
 
 #### 2.5.1 `@corpdk/codegen-cli` on npm
 
@@ -124,7 +126,7 @@ The GraphQL Code Generator preset surface is **not** carried forward.
 | Milestone | Action |
 | --------- | ------ |
 | C-P1 | `graphql-cli-core` created; codegen-cli unchanged |
-| C-P3 (with SDK P3) | Remove the preset from all six DS `codegen.ts` + `create-ds` canonical; drop `@corpdk/codegen-cli` from DS `package.json` files |
+| C-P3 | Remove the preset from all six DS `codegen.ts` + `create-ds` canonical; drop `@corpdk/codegen-cli` from DS `package.json` files (the SDK's `../ds-sdk` target is already gone in SDK P2) |
 | Release after C-P3 | Publish a final `@corpdk/codegen-cli` with a README deprecation notice, then `npm deprecate @corpdk/codegen-cli "Replaced by @corpdk/create-graphql-cli"`. Remove it from `PUBLISH_ORDER`. |
 | One quarter later | Delete `libraries/codegen-cli` from the monorepo if no in-repo callers remain (CI-checked) |
 
@@ -146,7 +148,7 @@ templates/ds-cli/
     generated/               overwritten on every generate; gitignored
       commands.ts            command catalog (§3.4)
       runtime-config.ts      transport / guard / output settings from cli.config.yaml
-      selections/<field>.ts  one selection object per operation (§3.2)
+      selections/<command>.ts  one selection object per operation, named by its collision-resolved command (§3.6)
       man/<bin>.1, info/<bin>.texi   when man.enabled
 ```
 
@@ -291,6 +293,8 @@ export interface ArgDescriptor {
   defaultValue?: unknown;
   enumValues?: string[];
   inputZodSchemaName?: string;     // set when kind === "input"; key of SDK inputZodSchemas
+  scalarZodSchemaName?: string;    // set for custom scalars; key of SDK scalarZodSchemas
+  scalarWire?: "string" | "json"; // custom scalars: from SDK scalarWireFormats (§4.2)
   description?: string;
 }
 ```
@@ -333,7 +337,7 @@ The DAL server's column-aware rules may be stricter; the server wins at runtime 
 
 - The CLI lists `zod` ^4 as its own dependency, because Zod is an optional peer of the SDK ([SDK §7.4](13-graphql-sdk-generator.md#74-parse-helpers)).
 - `create-graphql-cli init` and `generate` fail (exit 1) if the SDK has no `./validation` entry (`validation.enabled: false`). The message names the SDK config key to change.
-- `inputZodSchemaName` values are checked against the SDK's generated `input-registry.ts` at generate time. A mismatch means the SDK is stale: exit 1 with "rebuild the SDK first".
+- `inputZodSchemaName` and `scalarZodSchemaName` values are checked against the SDK's generated `input-registry.ts` and `scalar-registry.ts` at generate time. A mismatch means the SDK is stale: exit 1 with "rebuild the SDK first".
 
 ### 3.6 Command set: include, exclude, naming
 
@@ -390,7 +394,7 @@ commands:
 | `Float` | `--price 9.5` | Finite number |
 | `Boolean` | `--include-deleted`, `--include-deleted=false`, `--no-include-deleted` | Boolean |
 | Enum | `--status ACTIVE` | Must be a schema value; otherwise exit 2 listing the allowed values |
-| Custom scalar | `--since 2026-01-01T00:00:00Z` | Passed as a string; scalars typed as JSON in `sdk.config.yaml` (`type` not `string`) take JSON. Then validated with the SDK's `safeParseGraphqlScalar` (§3.5); failure exits 3 before any request. |
+| Custom scalar | `--since 2026-01-01T00:00:00Z` | Passed as a string, or parsed as JSON when the SDK's `scalarWireFormats` marks the scalar `json` (SDK §6; recorded in `ArgDescriptor.scalarWire` at generate time). Then validated with the SDK's `safeParseGraphqlScalar` (§3.5); failure exits 3 before any request. |
 | List | `--ids a --ids b` or `--ids '["a","b"]'` | Repeatable flag, or one JSON array. Each element is coerced as above. |
 | Input object | `--filter '{"name":"x"}'` or `--filter @filter.json` | JSON, or `@<path>` to read a file; then L3 validation (§3.5) |
 | Explicit `null` | Only through `--vars-file` or stdin JSON | Flags never produce `null`, which avoids ambiguity with the string `"null"` |
@@ -444,7 +448,7 @@ transport:
 - **Auth is v1, not v1.1.** Real APIs require it, and legacy had none.
 - **Secrets come only from env.** No `--token` flag, so tokens don't land in shell history.
 - **Never logged:** header values are not printed, and transport errors redact `Authorization`.
-- **Extension point:** `src/extensions/headers.ts` can export an async header provider (for example, an OIDC token refresher). The runtime calls it before each request.
+- **Extension point:** `src/extensions/index.ts` can export an async header provider (`headers`) (for example, an OIDC token refresher). The runtime calls it before each request.
 
 ### 4.8 Command catalog for agents
 
@@ -484,17 +488,26 @@ One HTTP POST per query or mutation, and one SSE stream per subscription. No cac
 engines/create-graphql-cli/
   src/          index, args, init, generate, upgrade, sdk-resolve, emit
   canonical/    CLI package template (cli.ts binding, extensions/, config, tsconfig); no runtime logic
-  package.json  bin: create-graphql-cli; deps: @corpdk/graphql-cli-core (./codegen), yaml, @clack/prompts; build: tsc
+  package.json  bin: create-graphql-cli; deps: @corpdk/engine-kit, @corpdk/graphql-cli-core (./codegen), graphql; build: tsc
 libraries/graphql-cli-core/   @corpdk/graphql-cli-core (§2.5)
 ```
 
 The engine and `graphql-cli-core` publish to npmjs in the **lockstep CalVer set** with the DS automation stack. Both build with `tsc`, not tsup (SDK Appendix B.4).
 
+**Engine family.** The engine is built on `@corpdk/engine-kit` and follows the shared contract in [doc 15 §11](15-create-ds-generator-integration.md#11-generator-engine-family-and-corpdkengine-kit), like `create-ds`:
+
+- the same command shape, help, and "Next steps" output;
+- exit codes 0/1/2/3 (§6.4);
+- `runInit` / `runUpgrade` exports;
+- the overwrite / merge / never-touch upgrade model;
+- a `.create-graphql-cli-version` record;
+- a root script, `"create-graphql-cli": "node engines/create-graphql-cli/dist/index.js"`.
+
 ### 6.2 Commands and flags
 
 | Command | Does | Touches |
 | ------- | ---- | ------- |
-| `init [dir]` | Copy `canonical/`, write `cli.config.yaml` and `package.json`, then `generate` | Whole package (empty target only) |
+| `init [dir]` | Copy `canonical/`, write `cli.config.yaml` and `package.json`, then `generate` (skipped with `--defer-generate`). Also exported as `runInit(options)` for `create-ds`. | Whole package (empty target only) |
 | `generate [dir]` | Read the SDK snapshot → extract operations → selections + catalog (+ man/texi) | `src/generated/**` |
 | `upgrade [dir]` | Overwrite `cli.ts`, `tsconfig.json`, `.env.example`; merge `package.json` (including the `@corpdk/graphql-cli-core` range) and `cli.config.yaml` | Canonical files only; never `src/extensions/**`. Runtime fixes do not need `upgrade`; they arrive with a `graphql-cli-core` version bump. |
 
@@ -506,7 +519,10 @@ create-graphql-cli <init|generate|upgrade> [directory] [options]
   --bin <name>          executable name (init; default: last segment of --name)
   --check               generate: compare only; exit 1 if src/generated would change
   --no-install          init: skip pnpm install
+  --defer-generate      init: write config and binding only; skip install and generate (the SDK has not
+                        synced yet, e.g. when create-ds scaffolds DS + SDK + CLI together)
   --dry-run             init/upgrade: print planned writes
+  --version             print the engine version
   -h, --help
 ```
 
@@ -518,7 +534,7 @@ Revision 1 defaulted `--name` to `@corpdk/graphql-cli` and `--sdk` to `../ds-sdk
 
 - `<sdk>/schema/schema.graphqls`, the committed snapshot;
 - `<sdk>/package.json`, for its name and version, checked against the CLI's dependency range;
-- `<sdk>/src/generated/input-registry.ts`, or the built `./validation` export, for the `inputZodSchemas` keys.
+- `<sdk>/src/generated/input-registry.ts` and `scalar-registry.ts`, or the built `./validation` export, for the `inputZodSchemas` and `scalarZodSchemas` keys and `scalarWireFormats`.
 
 It writes a header in `src/generated/commands.ts` recording the snapshot's SHA-256. `generate --check` fails when the SDK snapshot has changed since the last generate, which catches a CLI left behind its SDK.
 
@@ -527,7 +543,7 @@ It writes a header in `src/generated/commands.ts` recording the snapshot's SHA-2
 | Code | Meaning |
 | ---- | ------- |
 | 0 | Success |
-| 1 | SDK missing or stale (no snapshot, no `./validation`, registry mismatch), invalid config, or drift under `--check` |
+| 1 | SDK missing or stale (no snapshot, no `./validation`, input- or scalar-registry mismatch), invalid config, or drift under `--check` |
 | 2 | Usage error |
 | 3 | Tool failure (install, `tsc` in `init`) |
 
@@ -598,9 +614,9 @@ man:
   },
   "devDependencies": { "@corpdk/create-graphql-cli": "workspace:*", "typescript": "^6.0.2" },
   "scripts": {
-    "codegen": "create-graphql-cli generate .",
-    "codegen:check": "create-graphql-cli generate . --check",
-    "build": "pnpm codegen && tsc -p tsconfig.json"
+    "cli:codegen": "create-graphql-cli generate .",
+    "cli:check": "create-graphql-cli generate . --check",
+    "build": "pnpm cli:codegen && tsc -p tsconfig.json"
   }
 }
 ```
@@ -622,13 +638,15 @@ man:
 
 | Area | Change | Phase |
 | ---- | ------ | ----- |
-| `templates/{ds,ds-no-sql,ds-cdb,ds-mongo,ds-ddb,ds-file}/codegen.ts` + `engines/create-ds/canonical/codegen.ts` | Remove the `../ds-cli/src/generated/` preset target (together with the SDK's `../ds-sdk` removal, SDK §9.1: **one joint PR**) | C-P3 = SDK P3 |
+| `templates/{ds,ds-no-sql,ds-cdb,ds-mongo,ds-ddb,ds-file}/codegen.ts` + `engines/create-ds/canonical/codegen.ts` | Remove the `../ds-cli/src/generated/` preset target. The SDK's `../ds-sdk` target is removed earlier, in SDK P2 (SDK §9.1). After both, only the resolver-types target remains. | C-P3 |
 | Those seven `package.json` files | Drop `@corpdk/codegen-cli` | C-P3 |
 | `turbo.json` | `codegen.dependsOn`: drop `@corpdk/codegen-cli#build`. `codegen.outputs`: drop `../ds-cli/src/generated/**`. Add `@corpdk/ds-cli#build` → `dependsOn: ["^build"]`; the SDK is a workspace dependency. | C-P3 |
 | `templates/ds/Dockerfile`, `engines/create-ds/canonical/Dockerfile` | Remove the `libraries/codegen-cli` and `templates/ds-cli` `COPY` lines and the `codegen-cli` build step | C-P3 |
 | `templates/ds-cli` | Replace with `init` output; `private: true`; drop the Artifactory `publishConfig` (§2.2) | C-P3 |
-| `engines/create-app` | Every DS auto-selects `ds-cli` today. Produce it from `engines/create-graphql-cli/canonical` with `sdk.path: ../ds-sdk`, after the SDK is scaffolded. | C-P4 |
-| `.github/scripts/publish-ds-automation.sh` | Add `@corpdk/graphql-cli-core` and `@corpdk/create-graphql-cli` to `PUBLISH_ORDER`, build and test filters, and workflow `paths`. Remove `@corpdk/codegen-cli` after its deprecation release (§2.5.1). | C-P1 / C-P4 / after C-P3 |
+| `engines/create-ds` | `--with-cli` on `init`; `upgrade` drops `@corpdk/codegen-cli` and guides migration ([doc 15](15-create-ds-generator-integration.md)) | C-P3 (upgrade) / C-P4 (`--with-cli`) |
+| `.github/scripts/publish-ds-automation.sh` | Add `@corpdk/graphql-cli-core` (after `@corpdk/graphql-input-zod`, which it depends on for types) and `@corpdk/create-graphql-cli` to `PUBLISH_ORDER`, build and test filters, and workflow `paths`. Remove `@corpdk/codegen-cli` after its deprecation release (§2.5.1). | C-P1 / C-P4 / after C-P3 |
+
+`create-app` is **out of scope**: it is frozen and outdated, and this design makes no changes to it.
 
 ---
 
@@ -638,11 +656,11 @@ The CLI phases are prefixed **C-** and depend on the SDK phases ([SDK §13](13-g
 
 | Phase | Deliverable | Needs | Docs updated in the same PR |
 | ----- | ----------- | ----- | --------------------------- |
-| **C-P0** | This design (rev 2) | n/a | `docs/00-index.md`, `docs/developer/README.md` |
-| **C-P1** | `libraries/graphql-cli-core/codegen`: extraction, relation-ids emitter (§3.3), naming and collisions (§3.6), catalog emitter, man/texi port, unit tests on the DAL schema. Added to the lockstep publish set. | none | `libraries/graphql-cli-core/README.md`; `CLAUDE.md`; `docs/developer/01-monorepo-overview.md`; `docs/admin/04-npm-publish-ds-automation.md` |
-| **C-P2** | `@corpdk/graphql-cli-core` runtime entry (`runCli`, §4, §5) + `engines/create-graphql-cli` with the binding-only canonical | SDK P1a (L3), P1b (DSL `build*`) | `engines/create-graphql-cli/README.md`; `CLAUDE.md` |
-| **C-P3** | Dogfood `templates/ds-cli` from `templates/ds-sdk`; joint decoupling PR with SDK P3 (§9); Docker; Turbo | SDK P2, P3 | `CLAUDE.md` (ds-cli row, `codegen-cli` row, Docker notes, "private sample" exception); `docs/admin/02-docker-deployment.md`; `docs/developer/ds-automation-upgrades.md` (migration note); `libraries/codegen-cli/README.md` (deprecation) |
-| **C-P4** | `create-app` integration; publish `graphql-cli-core` and `create-graphql-cli`; deprecate `@corpdk/codegen-cli` on npm | SDK P4 | `docs/user/01-introduction.md`, `02-interactive-mode.md`, `03-cli-reference.md`, `05-post-scaffold-setup.md` |
+| **C-P0** | This design (rev 4) | n/a | `docs/00-index.md`, `docs/developer/README.md` |
+| **C-P1** | `libraries/graphql-cli-core/codegen`: extraction, relation-ids emitter (§3.3), naming and collisions (§3.6), catalog emitter, man/texi port, unit tests on the DAL schema. Added to the lockstep publish set. | SDK P1a (`graphql-input-zod`, which `graphql-cli-core` depends on for types) | `libraries/graphql-cli-core/README.md`; `CLAUDE.md`; `docs/developer/01-monorepo-overview.md`; `docs/admin/04-npm-publish-ds-automation.md` |
+| **C-P2** | `@corpdk/graphql-cli-core` runtime entry (`runCli`, §4, §5) + `engines/create-graphql-cli` with the binding-only canonical | SDK P1a (L3), P1b (DSL `build*`), P1c (`create-graphql-sdk`, whose output `generate` reads), DS-P0b (`engine-kit`) | `engines/create-graphql-cli/README.md`; `CLAUDE.md` |
+| **C-P3** | Dogfood `templates/ds-cli` from `templates/ds-sdk`; remove the `../ds-cli` preset target and `@corpdk/codegen-cli` (§9); Docker; Turbo; `create-ds upgrade` removal rules (doc 15 DS-P2); **publish `@corpdk/create-graphql-cli`** (lockstep, after `engine-kit` and `graphql-cli-core`; bootstrap + trusted publishing, R-C11) so the `create-ds --with-cli` release that ships alongside points at a published engine | SDK P2 | `CLAUDE.md` (ds-cli row, `codegen-cli` row, Docker notes, "private sample" exception); `docs/admin/02-docker-deployment.md`; `docs/developer/ds-automation-upgrades.md` (migration note); `libraries/codegen-cli/README.md` (deprecation) |
+| **C-P4** | `create-graphql-cli` already published in C-P3 (rev 5); deprecate `@corpdk/codegen-cli` on npm | SDK P4 | `docs/admin/04-npm-publish-ds-automation.md`; `libraries/codegen-cli/README.md` (deprecation notice) |
 
 Man and info output ship in C-P1/C-P2, not in a separate optional phase as revision 1 had it. The emitters already exist and only need porting.
 
@@ -693,6 +711,7 @@ Man and info output ship in C-P1/C-P2, not in a separate optional phase as revis
 - [ ] All DAL operations generate valid documents under relation-ids. Mutation payloads include full `userErrors`; connections include `nodes` and `pageInfo`; union results include every member.
 - [ ] `ds-cli create-item --input '{"name":"x","categoryId":"…"}'` works, and `--vars-file` supplies variables. No flag collision remains.
 - [ ] Invalid input-object variables exit 3 with JSON issues on stderr, and **no** HTTP request is made.
+- [ ] An invalid top-level custom-scalar argument (for example a malformed `--since` on a DAL `DateTime` argument) exits 3 with no request.
 - [ ] Exit codes 0–5 behave as in §4.4 in the end-to-end suite.
 - [ ] `GRAPHQL_TOKEN` is sent as a Bearer header and never appears in any output.
 - [ ] `ds-cli commands --json` and `ds-cli describe create-item --json` return the catalog and a valid JSON Schema.
@@ -752,18 +771,18 @@ Same conventions as [SDK §17](13-graphql-sdk-generator.md#17-remaining-work-reg
 | -- | ---- | ----- | --------- | ------ |
 | R-C01 | Port the relation-ids prototype (Appendix B) into `graphql-cli-core` with golden tests | C-P1 | §12 emitter checks green on the DAL schema | Open |
 | R-C02 | Port man/texi emitters; remove `DS_HTTP_URL` / `DS_WS_URL` text | C-P1 | Generated man page names the configured env variable only | Open |
-| R-C03 | Selection objects type-check with `satisfies Selections.*` against SDK L2 types, including union fragments (`on_<Type>`) and connection `nodes` | C-P2 | `templates/ds-cli` `tsc` green; depends on SDK R-01 to R-08 | Open |
-| R-C04 | `build*` composition at runtime: `__args` with validated variables + generated selection, including scalar-root fields with arguments (`hello(name)`) | C-P2 | E2E suite green | Open |
-| R-C05 | GraphQL-over-SSE client: `next` / `complete` / error events, abort on SIGINT, `--max-events`, `--timeout-ms` | C-P2 | E2E subscription test green | Open |
+| R-C03 | Selection objects type-check with `satisfies Selections.*` against SDK L2 types, including union fragments (`on_<Type>`) and connection `nodes` | C-P2 (fixture SDK) / C-P3 (`templates/ds-cli`) | Fixture SDK `tsc` green in C-P2; `templates/ds-cli` `tsc` green in C-P3; depends on SDK R-05 to R-08 | Open |
+| R-C04 | `build*` composition at runtime: `__args` with validated variables + generated selection, including scalar-root fields with arguments (`hello(name)`, SDK R-34) | C-P2 (fixture SDK) / C-P3 (E2E) | Runtime tests against a fixture SDK in C-P2; E2E suite green in C-P3 | Open |
+| R-C05 | GraphQL-over-SSE client: `next` / `complete` / error events, abort on SIGINT, `--max-events`, `--timeout-ms` | C-P2 (stub server) / C-P3 (E2E) | Stub-server tests green in C-P2; E2E subscription test green in C-P3 | Open |
 | R-C06 | `z.toJSONSchema()` output for recursive `z.lazy` inputs (DAL filters) | C-P2 | Valid JSON Schema for every DAL input | Open |
 | R-C07 | Header-provider extension hook and token redaction | C-P2 | §12 secrets test green | Open |
-| R-C08 | Joint SDK + CLI decoupling PR (seven `codegen.ts`, seven `package.json`, `turbo.json`, two Dockerfiles) | C-P3 | §13 decoupling criterion green | Open |
+| R-C08 | CLI decoupling PR: `../ds-cli` preset target out of seven `codegen.ts`, `@corpdk/codegen-cli` out of seven `package.json`, `turbo.json` (`codegen` `dependsOn` and outputs), two Dockerfiles | C-P3 | §13 decoupling criterion green | Open |
 | R-C09 | `templates/ds-cli` private sample + CI guard | C-P3 | Guard green | Open |
 | R-C10 | Top-level custom-scalar arguments validated with the SDK's `scalarZodSchemas` / `safeParseGraphqlScalar` (decided rev 3; needs SDK R-32) | C-P2 | Invalid `--since` value exits 3 with no request, in the runtime tests | Open |
-| R-C11 | Publish pipeline: `graphql-cli-core` (C-P1), `create-graphql-cli` (C-P4); remove `codegen-cli` after deprecation | C-P1 / C-P4 | Publish-order guard green | Open |
+| R-C11 | Publish pipeline: `graphql-cli-core` (C-P1, after `graphql-input-zod`), `create-graphql-cli` (C-P3), including the per-package maps in `verify_version` / `verify_dist_types`, test filters, the workflow release-notes table, and `paths`. One-time local bootstrap publish + npm trusted-publisher setup for each new package. Remove `codegen-cli` after deprecation. | C-P1 / C-P3; order per [doc 15 §4.3](15-create-ds-generator-integration.md#43-dependencies-and-publishing-canonical-publish-order) | Publish-order guard green; trusted publishing configured | Open |
 | R-C12 | `npm deprecate @corpdk/codegen-cli` and the final README notice; delete `libraries/codegen-cli` a quarter later | After C-P3 | npm shows the deprecation; no in-repo references | Open |
-| R-C13 | `create-app` scaffolds `ds-cli` from the engine canonical | C-P4 | Scaffold test for `ds` and one manual variant builds | Open |
-| R-C14 | Docs per phase (§10), including `CLAUDE.md`'s `ds-cli` / `codegen-cli` rows and the "only workspace root is private" exception for both samples | C-P1 to C-P4 | Docs Update Rule satisfied | Open |
+| R-C13 | ~~`create-app` scaffolds `ds-cli` from the engine canonical~~ | — | — | Dropped (2026-11-13): `create-app` is frozen and out of scope |
+| R-C14 | Docs per phase (§10), including `CLAUDE.md`'s `ds-cli` / `codegen-cli` rows and the "only workspace root is private" exception for both samples. Also stale: `docs/architecture/03-data-service-design.md` (codegen-cli preset section), `docs/developer/11-ds-subscription-sse.md`, `templates/ds/codegen.ts` header comment | C-P1 to C-P4 | Docs Update Rule satisfied | Open |
 | R-C15 | Assign owners for `graphql-cli-core` and `create-graphql-cli` | Before C-P1 | Owners table filled | Done (2026-11-12) |
 | R-C16 | `runCli` structural `SdkBindings` type: any `create-graphql-sdk` output binds without casts; `@clack/prompts` is loaded only on interactive start | C-P2 | Binding type test green; a non-interactive run does not load `@clack/prompts` (module-load test) | Open |
 
@@ -781,7 +800,7 @@ Revision 1 was checked against the SDK design rev 6, `libraries/codegen-cli/src`
 | 4 | Blocker | `templates/ds-cli` (Artifactory) would depend on the never-published `templates/ds-sdk` | `templates/ds-cli` is a private sample too (§2.2) |
 | 5 | High | Emit v1 (strings) / v2 (builder calls) split adds a throwaway milestone | One emit: selection objects + runtime `build*` (§3.2) |
 | 6 | High | CLI could use its own schema source, diverging from the SDK's types and validators | SDK snapshot only (§2.1) |
-| 7 | High | Migration covered `templates/ds/codegen.ts` only; missed five DS variants, the `create-ds` canonical, seven `package.json` files, `turbo.json` (`codegen` depends on `@corpdk/codegen-cli#build`), two Dockerfiles, `create-app`, and the publish script | §9 table; joint PR with SDK P3 |
+| 7 | High | Migration covered `templates/ds/codegen.ts` only; missed five DS variants, the `create-ds` canonical, seven `package.json` files, `turbo.json` (`codegen` depends on `@corpdk/codegen-cli#build`), two Dockerfiles, `create-app`, and the publish script | §9 table; joint PR with SDK P3 (`create-app` later declared frozen and out of scope, rev 4); the rev 2 "joint PR with SDK P3" was superseded in rev 4 (SDK P2 removes `../ds-sdk`, C-P3 removes `../ds-cli`) |
 | 8 | High | Argument coercion unspecified for lists, enums, input-object flags, nulls, `Int` range; legacy passed lists and objects as strings | §4.2 |
 | 9 | High | No exit-code contract; partial data and DAL `userErrors` unhandled | §4.4 (codes 0–5) |
 | 10 | High | Auth deferred to v1.1; legacy sends no auth headers | Bearer + header JSON + provider hook in v1 (§4.7) |
@@ -821,4 +840,4 @@ Also checked:
 
 ---
 
-**Last updated:** November 12, 2026
+**Last updated:** November 13, 2026
