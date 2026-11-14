@@ -21,7 +21,8 @@ export const COPY_TEMPLATE_EXCLUDE = [
   ".env",
 ] as const;
 
-export const DAL_CODEGEN_CLI = "node ./node_modules/@corpdk/dal-codegen/dist/cli.js";
+export const DAL_CODEGEN_CLI =
+  "node ./node_modules/@corpdk/dal-codegen/dist/cli.js";
 export const DAL_ENTITY_LINT_CLI =
   "node ./node_modules/@corpdk/dal-codegen/dist/lint-cli.js";
 
@@ -66,7 +67,10 @@ export const UPGRADE_RELATIVE_FILES = [
   ...BOOTSTRAP_STATIC_SRC_RELATIVE,
 ] as const;
 
-export const UPGRADE_MERGE_FILES = new Set(["package.json", "dal/dal.config.yaml"]);
+export const UPGRADE_MERGE_FILES = new Set([
+  "package.json",
+  "dal/dal.config.yaml",
+]);
 
 export const CANONICAL_EXCLUDE = [
   "node_modules",

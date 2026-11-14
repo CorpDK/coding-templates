@@ -4,7 +4,10 @@ import path from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import * as engineKit from "@corpdk/engine-kit";
 import { runDalBootstrap } from "./bootstrap.js";
-import { repoRootFromEngine, resolveCanonicalDsTemplateDir } from "./template.js";
+import {
+  repoRootFromEngine,
+  resolveCanonicalDsTemplateDir,
+} from "./template.js";
 
 describe("runDalBootstrap fixture", () => {
   let tmp: string;
@@ -23,7 +26,8 @@ describe("runDalBootstrap fixture", () => {
     await fs.mkdir(path.join(target, "src", "db"), { recursive: true });
     const fakeRepo = path.join(tmp, "no-dal-codegen");
     await fs.mkdir(fakeRepo, { recursive: true });
-    const templateDir = await resolveCanonicalDsTemplateDir(repoRootFromEngine());
+    const templateDir =
+      await resolveCanonicalDsTemplateDir(repoRootFromEngine());
 
     await runDalBootstrap(fakeRepo, target, templateDir);
 
@@ -48,19 +52,21 @@ describe("runDalBootstrap fixture", () => {
       stderr: "",
     } as never);
 
-    pathExistsSpy = vi.spyOn(engineKit, "pathExists").mockImplementation(
-      async (p) => {
+    pathExistsSpy = vi
+      .spyOn(engineKit, "pathExists")
+      .mockImplementation(async (p) => {
         if (p === cliPath) return true;
-        return fs.stat(p).then(() => true).catch(() => false);
-      },
-    );
+        return fs
+          .stat(p)
+          .then(() => true)
+          .catch(() => false);
+      });
 
     await runDalBootstrap(repoRoot, target, templateDir);
 
     expect(execSpy).toHaveBeenCalledOnce();
-    expect(execSpy).toHaveBeenCalledWith(
-      `node "${cliPath}" --mode=bootstrap`,
-      { cwd: target },
-    );
+    expect(execSpy).toHaveBeenCalledWith(`node "${cliPath}" --mode=bootstrap`, {
+      cwd: target,
+    });
   });
 });

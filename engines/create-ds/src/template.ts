@@ -36,4 +36,7 @@ export async function readCreateDsReleaseVersion(): Promise<string> {
   return readEngineRelease(CREATE_DS_ENGINE_ROOT);
 }
 
-export { BOOTSTRAP_STATIC_SRC_RELATIVE, UPGRADE_RELATIVE_FILES } from "./constants.js";
+export {
+  BOOTSTRAP_STATIC_SRC_RELATIVE,
+  UPGRADE_RELATIVE_FILES,
+} from "./constants.js";

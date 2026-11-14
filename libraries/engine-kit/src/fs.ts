@@ -36,10 +36,7 @@ function matchExcludePattern(pattern: string, name: string): boolean {
   return name === pattern;
 }
 
-function segmentExcluded(
-  relPath: string,
-  exclude: Set<string>,
-): boolean {
+function segmentExcluded(relPath: string, exclude: Set<string>): boolean {
   const segments = relPath.split(path.sep);
   for (const seg of segments) {
     if (exclude.has(seg)) return true;
@@ -105,9 +102,7 @@ async function copyDirRecursive(
     } else if (entry.isFile()) {
       if (options.skipIfExists && (await pathExists(destPath))) continue;
       const raw = await fs.readFile(srcPath, "utf8");
-      const content = options.transform
-        ? options.transform(raw, relPath)
-        : raw;
+      const content = options.transform ? options.transform(raw, relPath) : raw;
       await fs.mkdir(path.dirname(destPath), { recursive: true });
       await fs.writeFile(destPath, content, "utf8");
     }

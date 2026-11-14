@@ -78,7 +78,9 @@ describe("runInit fixture", () => {
     await expect(
       fs.stat(path.join(target, "src/db/schema/items.ts")),
     ).resolves.toBeDefined();
-    await expect(fs.stat(path.join(target, "src/db/seed.ts"))).resolves.toBeDefined();
+    await expect(
+      fs.stat(path.join(target, "src/db/seed.ts")),
+    ).resolves.toBeDefined();
   });
 
   it("stamps initial CalVer from UTC clock", async () => {
@@ -93,14 +95,17 @@ describe("runInit fixture", () => {
       repoRoot: repoRootFromEngine(),
     });
     expect(result.exitCode).toBe(0);
-    const pkg = await readJson<{ version: string }>(path.join(target, "package.json"));
+    const pkg = await readJson<{ version: string }>(
+      path.join(target, "package.json"),
+    );
     expect(pkg.version).toBe(expected);
   });
 
   it("keeps workspace:* deps in monorepo mode", async () => {
     tmp = await fs.mkdtemp(path.join(os.tmpdir(), "create-ds-init-"));
     const target = path.join(tmp, "mono");
-    const templateDir = await resolveCanonicalDsTemplateDir(repoRootFromEngine());
+    const templateDir =
+      await resolveCanonicalDsTemplateDir(repoRootFromEngine());
     expect(isBundledCanonicalTemplate(templateDir)).toBe(false);
 
     const result = await runInit({
@@ -241,5 +246,4 @@ describe("runInit fixture", () => {
     );
     expect(pkg.publishConfig).toBeUndefined();
   });
-
 });

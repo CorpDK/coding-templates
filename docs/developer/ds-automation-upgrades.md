@@ -25,12 +25,12 @@ pnpm dlx @corpdk/create-ds upgrade ./packages/my-ds
 
 ### Exit codes and flags (§11.2)
 
-| Code | Meaning |
-| ---- | ------- |
-| `0` | Success; `--help` / `--version` |
-| `2` | Usage (unknown command, unknown flag, missing `dal/dal.config.yaml` on upgrade, non-empty init target) |
-| `1` | Invalid consumer `package.json` or `dal.config.yaml` (unparseable) |
-| `3` | Tool failure (`entity:lint`, DAL bootstrap exec) |
+| Code | Meaning                                                                                                |
+| ---- | ------------------------------------------------------------------------------------------------------ |
+| `0`  | Success; `--help` / `--version`                                                                        |
+| `2`  | Usage (unknown command, unknown flag, missing `dal/dal.config.yaml` on upgrade, non-empty init target) |
+| `1`  | Invalid consumer `package.json` or `dal.config.yaml` (unparseable)                                     |
+| `3`  | Tool failure (`entity:lint`, DAL bootstrap exec)                                                       |
 
 Global / shared: **`--dry-run`**, **`--no-install`** (init only; CLI never runs install — printed next steps omit `pnpm install` when this flag is set, including **`--dry-run`** previews), **`--version`**, **`-h` / `--help`**.
 

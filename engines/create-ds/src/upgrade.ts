@@ -41,7 +41,8 @@ async function mergeUpgradePackageJson(
   destPath: string,
   releaseVersion: string | undefined,
 ): Promise<void> {
-  const consumer = await readJson<Parameters<typeof mergePackageJson>[0]>(destPath);
+  const consumer =
+    await readJson<Parameters<typeof mergePackageJson>[0]>(destPath);
   const template =
     await readJson<Parameters<typeof mergePackageJson>[1]>(templatePath);
   await writeJson(
@@ -106,7 +107,9 @@ async function runEntityLintIfAvailable(
   }
 }
 
-export async function runUpgrade(options: UpgradeOptions): Promise<EngineResult> {
+export async function runUpgrade(
+  options: UpgradeOptions,
+): Promise<EngineResult> {
   const repoRoot =
     options.repoRoot ?? path.resolve(CREATE_DS_ENGINE_ROOT, "..", "..");
   const packageDir = path.resolve(options.dir);

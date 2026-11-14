@@ -68,7 +68,8 @@ async function main(): Promise<number> {
     console.error(result.message);
   }
   if (result.exitCode === 0) {
-    const steps = result.nextSteps?.join("\n  ") ?? "pnpm install\n  pnpm dal:codegen";
+    const steps =
+      result.nextSteps?.join("\n  ") ?? "pnpm install\n  pnpm dal:codegen";
     outro(`Upgrade complete for:\n  ${parsed.dir}\n\nNext steps:\n  ${steps}`);
   }
 
