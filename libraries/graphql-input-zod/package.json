@@ -1,6 +1,6 @@
 {
   "name": "@corpdk/graphql-input-zod",
-  "version": "0.0.0-bootstrap.0",
+  "version": "2026.10.0-alpha.14",
   "description": "GraphQL input-object Zod codegen and parse helpers (SDK L3)",
   "type": "module",
   "license": "MIT",
@@ -13,7 +13,10 @@
     "url": "git+https://github.com/CorpDK/coding-templates.git",
     "directory": "libraries/graphql-input-zod"
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
@@ -34,10 +37,11 @@
     "graphql": "^16.13.2",
     "zod": "^4.3.6"
   },
-
   "devDependencies": {
     "@types/node": "^24.0.0",
     "typescript": "^6.0.2"
   },
-  "engines": { "node": ">=24.0.0" }
+  "engines": {
+    "node": ">=24.0.0"
+  }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@corpdk/engine-kit",
-  "version": "0.0.0-bootstrap.0",
+  "version": "2026.10.0-alpha.14",
   "description": "Shared init/upgrade engine kit for create-* CLIs",
   "type": "module",
   "license": "MIT",
@@ -13,7 +13,10 @@
     "url": "git+https://github.com/CorpDK/coding-templates.git",
     "directory": "libraries/engine-kit"
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
@@ -30,10 +33,11 @@
     "@clack/prompts": "^1.1.0",
     "yaml": "^2.8.3"
   },
-
   "devDependencies": {
     "@types/node": "^24.0.0",
     "typescript": "^6.0.2"
   },
-  "engines": { "node": ">=24.0.0" }
+  "engines": {
+    "node": ">=24.0.0"
+  }
 }

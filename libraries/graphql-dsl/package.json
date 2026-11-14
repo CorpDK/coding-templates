@@ -1,6 +1,6 @@
 {
   "name": "@corpdk/graphql-dsl",
-  "version": "0.0.0-bootstrap.0",
+  "version": "2026.10.0-alpha.14",
   "description": "Typed GraphQL selection DSL (owned genql fork)",
   "type": "module",
   "license": "MIT",
@@ -13,7 +13,10 @@
     "url": "git+https://github.com/CorpDK/coding-templates.git",
     "directory": "libraries/graphql-dsl"
   },
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
@@ -33,10 +36,11 @@
   "dependencies": {
     "graphql": "^16.13.2"
   },
-
   "devDependencies": {
     "@types/node": "^24.0.0",
     "typescript": "^6.0.2"
   },
-  "engines": { "node": ">=24.0.0" }
+  "engines": {
+    "node": ">=24.0.0"
+  }
 }

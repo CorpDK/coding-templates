@@ -1,6 +1,6 @@
 {
   "name": "@corpdk/create-graphql-sdk",
-  "version": "0.0.0-bootstrap.0",
+  "version": "2026.10.0-alpha.14",
   "description": "Scaffold and upgrade graphql-sdk packages",
   "type": "module",
   "license": "MIT",
@@ -13,7 +13,11 @@
     "url": "git+https://github.com/CorpDK/coding-templates.git",
     "directory": "engines/create-graphql-sdk"
   },
-  "files": ["dist", "canonical", "README.md"],
+  "files": [
+    "dist",
+    "canonical",
+    "README.md"
+  ],
   "types": "./dist/types-entry.d.ts",
   "exports": {
     ".": {
@@ -21,7 +25,9 @@
       "import": "./dist/types-entry.js"
     }
   },
-  "bin": { "create-graphql-sdk": "./dist/index.js" },
+  "bin": {
+    "create-graphql-sdk": "./dist/index.js"
+  },
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
@@ -31,5 +37,7 @@
     "@types/node": "^24.0.0",
     "typescript": "^6.0.2"
   },
-  "engines": { "node": ">=24.0.0" }
+  "engines": {
+    "node": ">=24.0.0"
+  }
 }

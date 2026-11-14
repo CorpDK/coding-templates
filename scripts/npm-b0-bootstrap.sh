@@ -8,20 +8,20 @@
 # publish-ds-automation.yml must exist on GitHub default branch (main) before trust.
 #
 # Usage:
-#   ./.github/scripts/b0-npm-bootstrap.sh              # all steps (npm handles 2FA per command)
-#   ./.github/scripts/b0-npm-bootstrap.sh --pause      # extra Enter prompt before each step
-#   ./.github/scripts/b0-npm-bootstrap.sh --publish-only
-#   ./.github/scripts/b0-npm-bootstrap.sh --post-publish   # deprecate + trust (after publish)
-#   ./.github/scripts/b0-npm-bootstrap.sh --trust-only       # trust only (no deprecate)
-#   ./.github/scripts/b0-npm-bootstrap.sh --verify-only
-#   ./.github/scripts/b0-npm-bootstrap.sh --from @corpdk/graphql-dsl
+#   ./scripts/npm-b0-bootstrap.sh              # all steps (npm handles 2FA per command)
+#   ./scripts/npm-b0-bootstrap.sh --pause      # extra Enter prompt before each step
+#   ./scripts/npm-b0-bootstrap.sh --publish-only
+#   ./scripts/npm-b0-bootstrap.sh --post-publish   # deprecate + trust (after publish)
+#   ./scripts/npm-b0-bootstrap.sh --trust-only       # trust only (no deprecate)
+#   ./scripts/npm-b0-bootstrap.sh --verify-only
+#   ./scripts/npm-b0-bootstrap.sh --from @corpdk/graphql-dsl
 #
 # Optional: export NPM_OTP=123456 before running to pass --otp on every npm command
 # (you still may need a fresh code per command if npm asks again).
 
 set -euo pipefail
 
-ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 DEPRECATE_MSG='Placeholder with no code; use a CalVer release'
