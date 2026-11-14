@@ -4,9 +4,9 @@
  */
 export class WebSocket {
   readyState = 0;
-  /** @param {string} [_url] Unused — stub never opens a socket. */
-  constructor(_url) {
-    // Intentional no-op: satisfies `new WebSocket(url)` in transitive imports.
+  /** @param {string} [url] Recorded for API parity; stub never opens a socket. */
+  constructor(url) {
+    this._url = url ?? undefined;
   }
 }
 export default WebSocket;
