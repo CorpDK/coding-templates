@@ -1,4 +1,11 @@
-import { index, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import {
+  index,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
 import { items } from "./items.js";
 import { tags } from "./tags.js";
 
@@ -20,11 +27,17 @@ export const itemTags = pgTable(
       .notNull()
       .references(() => tags.id),
     /** UTC instant when this tag was assigned to the item (enriched junction field). */
-    assignedAt: timestamp("assigned_at", { withTimezone: true }).notNull().defaultNow(),
+    assignedAt: timestamp("assigned_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
     /** Row creation time (UTC). */
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
     /** Last update time (UTC). */
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
     /** Actor ID from request context; never client-supplied. */
     createdBy: text("created_by").notNull(),
     /** Actor ID from request context on last update. */
