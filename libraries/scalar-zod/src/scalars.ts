@@ -10,6 +10,7 @@ import {
   isDigitsOnly,
   isHexString,
   isSignedIntegerString,
+  isTimeTzWire,
 } from "./parse-helpers.js";
 import {
   PG_INT64_MAX,
@@ -72,48 +73,6 @@ export function parseDate(value: unknown): string {
     throw new TypeError("Invalid Date");
   }
   return value;
-}
-
-function isTimeTzWire(value: string): boolean {
-  let offsetStart = -1;
-  if (value.endsWith("Z")) {
-    offsetStart = value.length - 1;
-  } else {
-    const plus = value.lastIndexOf("+");
-    const minus = value.lastIndexOf("-");
-    const candidate = Math.max(plus, minus);
-    if (candidate > 0) offsetStart = candidate;
-  }
-  if (offsetStart < 0) return false;
-  const timePart = value.slice(0, offsetStart);
-  const offsetPart = value.slice(offsetStart);
-  if (offsetPart !== "Z" && (offsetPart.length !== 6 || offsetPart[3] !== ":")) {
-    return false;
-  }
-  if (offsetPart !== "Z") {
-    const offH = offsetPart.slice(1, 3);
-    const offM = offsetPart.slice(4, 6);
-    if (!isAsciiDigit(offH[0]!) || !isAsciiDigit(offH[1]!)) return false;
-    if (!isAsciiDigit(offM[0]!) || !isAsciiDigit(offM[1]!)) return false;
-  }
-  const segments = timePart.split(":");
-  if (segments.length < 2 || segments.length > 3) return false;
-  for (const seg of segments) {
-    if (seg.length !== 2 || !isAsciiDigit(seg[0]!) || !isAsciiDigit(seg[1]!)) {
-      return false;
-    }
-  }
-  if (segments.length === 3) {
-    const sec = segments[2]!;
-    const dot = sec.indexOf(".");
-    if (dot >= 0) {
-      const whole = sec.slice(0, dot);
-      const frac = sec.slice(dot + 1);
-      if (whole.length !== 2 || frac.length === 0 || frac.length > 3) return false;
-      if (!isDigitsOnly(frac)) return false;
-    }
-  }
-  return true;
 }
 
 export function serializeTimeTz(

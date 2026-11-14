@@ -82,8 +82,8 @@ function parseHmsSegment(segment: string): HmsTime | null {
 
   let sign: string | undefined;
   let body = trimmed;
-  if (body[0] === "+" || body[0] === "-") {
-    sign = body[0];
+  if (body.startsWith("+") || body.startsWith("-")) {
+    sign = body.slice(0, 1);
     body = body.slice(1);
   }
 
