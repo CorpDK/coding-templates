@@ -24,14 +24,24 @@
       "import": "./dist/index.js"
     }
   },
+  "bin": {
+    "check-ds-publish-order": "./dist/bin/check-publish-order.js"
+  },
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "check:publish-order": "node ./dist/bin/check-publish-order.js",
     "clean": "rm -rf dist node_modules .turbo *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@clack/prompts": "^1.1.0",
+    "yaml": "^2.8.3"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
-    "typescript": "^6.0.2"
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.2"
   },
   "engines": {
     "node": ">=24.0.0"
