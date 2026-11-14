@@ -177,7 +177,7 @@ Use `npm login` or `//registry.npmjs.org/:_authToken=${NPM_TOKEN}` in `~/.npmrc`
 
 ### First-time bootstrap (packages not on npm yet)
 
-[npm trusted publishers](https://docs.npmjs.com/trusted-publishers) require **each package to already exist on the registry** before you can add a GitHub Actions trusted publisher. The five DS automation packages may never have been published; do this **once** from a maintainer machine, then complete [After bootstrap](#after-bootstrap) (publish workflow on `main`, then trusted publishing per package), and use CI for every later release.
+[npm trusted publishers](https://docs.npmjs.com/trusted-publishers) require **each package to already exist on the registry** before you can add a GitHub Actions trusted publisher. The twelve lockstep packages may never have been published (legacy five were first; seven generator packages used B0 bootstrap); do this **once** from a maintainer machine, then complete [After bootstrap](#after-bootstrap) (publish workflow on `main`, then trusted publishing per package), and use CI for every later release.
 
 #### Prerequisites
 
