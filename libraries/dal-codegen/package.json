@@ -36,6 +36,7 @@
   },
   "dependencies": {
     "@corpdk/dal-core": "workspace:*",
+    "@corpdk/graphql-input-zod": "workspace:*",
     "drizzle-orm": "^0.45.2",
     "graphql": "^16.13.2",
     "tsx": "^4.21.0",

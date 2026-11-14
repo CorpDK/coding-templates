@@ -1,2 +1,13 @@
-/** Root entry: generic GraphQL wire scalars. Implementation: SDK P1a (doc 13 §7.7). */
-export const SCALAR_ZOD_PHASE = "P1a" as const;
+export * from "./scalars.js";
+export * from "./guild-scalars.js";
+export {
+  zBigInt,
+  zCidr,
+  zDate,
+  zDateTime,
+  zDecimal,
+  zInsensitiveString,
+  zIP,
+  zMAC,
+  zTimeTz,
+} from "./wire-zod.js";

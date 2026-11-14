@@ -2,6 +2,8 @@
 
 GraphQL Yoga v5 delivers subscriptions over **Server-Sent Events (SSE)** on the same HTTP route as queries and mutations. All DS templates (`templates/ds`, `ds-no-sql`, `ds-cdb`, `ds-mongo`, `ds-ddb`, `ds-file`) use Yoga’s built-in SSE transport and do not start a WebSocket server or depend on `graphql-ws` / `ws` at runtime.
 
+The root `pnpm.overrides` map `graphql-ws` and `ws` to workspace stubs (`libraries/graphql-ws-stub`, `libraries/ws-stub`) so GraphQL Codegen and `@graphql-tools/*` can load optional WebSocket modules without installing real socket stacks. DS Dockerfiles copy both stubs into the `deps` stage before `pnpm install`.
+
 ---
 
 ## Server endpoint

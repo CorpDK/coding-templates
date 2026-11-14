@@ -24,6 +24,7 @@
   "pnpm": {
     "overrides": {
       "graphql-ws": "workspace:*",
+      "ws": "workspace:*",
       "next": "16.2.4",
       "vite": "^8.0.10",
       "hono": "^4.12.15",

@@ -15,10 +15,18 @@ COPY package.json pnpm-workspace.yaml pnpm-lock.yaml tsconfig.base.json tsconfig
 COPY templates/ds/package.json ./templates/ds/package.json
 COPY templates/ds-sdk/package.json ./templates/ds-sdk/package.json
 COPY templates/ds-cli/package.json ./templates/ds-cli/package.json
+COPY libraries/scalar-zod/package.json ./libraries/scalar-zod/package.json
 COPY libraries/dal-core/package.json ./libraries/dal-core/package.json
+COPY libraries/graphql-input-zod/package.json ./libraries/graphql-input-zod/package.json
 COPY libraries/dal-codegen/package.json ./libraries/dal-codegen/package.json
 COPY libraries/pub-sub/package.json ./libraries/pub-sub/package.json
 COPY libraries/codegen-cli/package.json ./libraries/codegen-cli/package.json
+COPY libraries/graphql-ws-stub/package.json ./libraries/graphql-ws-stub/package.json
+COPY libraries/graphql-ws-stub/index.js ./libraries/graphql-ws-stub/index.js
+COPY libraries/graphql-ws-stub/index.d.ts ./libraries/graphql-ws-stub/index.d.ts
+COPY libraries/ws-stub/package.json ./libraries/ws-stub/package.json
+COPY libraries/ws-stub/index.js ./libraries/ws-stub/index.js
+COPY libraries/ws-stub/index.d.ts ./libraries/ws-stub/index.d.ts
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile
@@ -27,7 +35,9 @@ RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
 FROM deps AS build
 WORKDIR /app
 
+COPY libraries/scalar-zod ./libraries/scalar-zod
 COPY libraries/dal-core ./libraries/dal-core
+COPY libraries/graphql-input-zod ./libraries/graphql-input-zod
 COPY libraries/dal-codegen ./libraries/dal-codegen
 COPY libraries/pub-sub ./libraries/pub-sub
 COPY libraries/codegen-cli ./libraries/codegen-cli
@@ -35,7 +45,9 @@ COPY templates/ds-sdk ./templates/ds-sdk
 COPY templates/ds-cli ./templates/ds-cli
 COPY templates/ds ./templates/ds
 
-RUN pnpm --filter @corpdk/dal-core build && \
+RUN pnpm --filter @corpdk/scalar-zod build && \
+    pnpm --filter @corpdk/dal-core build && \
+    pnpm --filter @corpdk/graphql-input-zod build && \
     pnpm --filter @corpdk/dal-codegen build && \
     pnpm --filter @corpdk/pub-sub build && \
     pnpm --filter @corpdk/codegen-cli build && \
