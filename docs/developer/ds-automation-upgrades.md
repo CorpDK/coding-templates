@@ -23,10 +23,23 @@ pnpm dlx @corpdk/create-ds init ./packages/my-ds --name @myorg/my-ds
 pnpm dlx @corpdk/create-ds upgrade ./packages/my-ds
 ```
 
+### Exit codes and flags (§11.2)
+
+| Code | Meaning                                                                                                |
+| ---- | ------------------------------------------------------------------------------------------------------ |
+| `0`  | Success; `--help` / `--version`                                                                        |
+| `2`  | Usage (unknown command, unknown flag, missing `dal/dal.config.yaml` on upgrade, non-empty init target) |
+| `1`  | Invalid consumer `package.json` or `dal.config.yaml` (unparseable)                                     |
+| `3`  | Tool failure (`entity:lint`, DAL bootstrap exec, missing canonical overwrite on upgrade)               |
+
+Global / shared: **`--dry-run`**, **`--no-install`** (init only; CLI never runs install — printed next steps omit `pnpm install` when this flag is set, including **`--dry-run`** previews), **`--version`**, **`-h` / `--help`**.
+
+`upgrade` writes **`.create-ds-version`** with the engine release used for the merge.
+
 ### `init` options
 
 - **`--name <pkg>`** — npm package name (default `@corpdk/ds`)
-- **`--demo-schema`** — copy the full commerce demo schema and `seed.ts` from `templates/ds` instead of the minimal starter under `engines/create-ds/starter/`
+- **`--demo-schema`** — copy the full commerce demo schema and `seed.ts` from the canonical template (monorepo `templates/ds` or bundled `canonical/` after `syncCanonical`)
 
 `init` writes:
 
@@ -34,7 +47,7 @@ pnpm dlx @corpdk/create-ds upgrade ./packages/my-ds
 - `dal/dal.config.yaml`
 - `package.json` at an initial **CalVer** **`YYYY.MM.0`** (UTC year and month when `init` runs, `MICRO` starts at `0`), **`license`: `MIT`**, scripts/deps aligned with the canonical template (`workspace:*` when resolving `templates/ds`; **`^@corpdk/create-ds` release version** for `@corpdk/*` when using the bundled canonical snapshot, e.g. `pnpm dlx`). Deployable DS packages follow Limitless **CalVer** (`YYYY.MM.MICRO`), not semver `0.1.0`; see [Monorepo design — CalVer](../architecture/02-monorepo-design.md#calver-format-rules).
 - Root **`LICENSE`** (MIT, CorpDK) copied from the canonical template
-- Does **not** copy template **`publishConfig`** (avoids inheriting monorepo Artifactory registry settings)
+- **`publishConfig`**: init does **not** inherit registry settings from the canonical template (`mergePackageJson` omits template `publishConfig` when the consumer has none). Add `publishConfig` on the scaffolded package when publishing outside the monorepo. Upgrade preserves an existing consumer `publishConfig` via `preserveKeys`.
 - `.gitignore` entries for `src/generated/**`
 - Yoga bootstrap via **`dal-codegen --mode=bootstrap`** when the monorepo `dal-codegen` CLI is built; otherwise copies bootstrap files from the canonical template
 
@@ -48,8 +61,9 @@ Scaffolded **`codegen.ts`** targets sibling **`../ds-sdk`** and **`../ds-cli`** 
 2. Merges **`dal/dal.config.yaml`**: template defaults + consumer overrides (consumer keys win).
 3. Overwrites automation files: `codegen.ts`, `drizzle.config.ts`, `tsconfig.json`, Docker assets, `.env.example`, `.gitignore`, bootstrap TypeScript entry files.
 4. **Skips** `src/db/schema/**` entirely.
-5. Runs **`entity:lint`** only when the monorepo `libraries/dal-codegen/dist/lint-cli.js` exists or **`node_modules/.bin/dal-entity-lint`** is present (skipped after a bare merge until `pnpm install` in DS-only repos).
-6. Prints **`pnpm install`** then **`pnpm dal:codegen`** as required follow-up.
+5. **Fails (exit 3)** when any required overwrite file is missing from the canonical template (`MissingOverwriteSourceError`). Paths already processed in `UPGRADE_RELATIVE_FILES` order may be written before the failure; fix canonical/`check-canonical` and re-run **`upgrade`**. Maintainers rely on **`check-canonical`** and **`sync:canonical`** so every listed path is present before release.
+6. Runs **`entity:lint`** only when the monorepo `libraries/dal-codegen/dist/lint-cli.js` exists or **`node_modules/.bin/dal-entity-lint`** is present (skipped after a bare merge until `pnpm install` in DS-only repos).
+7. Prints **`pnpm install`** then **`pnpm dal:codegen`** as required follow-up.
 
 ## Recent codegen output (`2026.10.0-alpha.13`)
 
@@ -98,7 +112,7 @@ When changing `templates/ds` automation files, refresh the bundled snapshot unde
 
 `package.json`, `LICENSE`, `dal/dal.config.yaml`, `codegen.ts`, `drizzle.config.ts`, `tsconfig.json`, `Dockerfile`, `docker-compose.yml`, `docker/otel-collector-config.yaml`, `docker/postgres-init/**`, `docker-entrypoint.sh`, `.gitignore`, `.env.example`, `src/schema.ts`, `src/index.ts`, `src/db/index.ts`, `src/health.ts`, `src/validation/parse-input.ts`, `src/observability/**`
 
-Copy from `templates/ds` (omit `src/db/schema/**`, `drizzle/**`, and generated output). When refreshing **`engines/create-ds/canonical/.gitignore`**, keep the **`drizzle/migrations/`** ignore line — the monorepo **`templates/ds`** template tracks demo baseline migrations in git; scaffolded DS packages treat migration SQL as team-owned and gitignored. Keep **`engines/create-ds/starter/`** in sync when changing the minimal default schema.
+Copy from `templates/ds` (omit `src/db/schema/**`, `drizzle/**`, and generated output). Refresh the bundled tree with **`pnpm --filter @corpdk/create-ds sync:canonical`** (also runs on `prepack`); CI **`check-canonical`** runs from [`.github/scripts/publish-ds-automation.sh`](../../.github/scripts/publish-ds-automation.sh). When refreshing **`engines/create-ds/canonical/.gitignore`**, keep the **`drizzle/migrations/`** ignore line — the monorepo **`templates/ds`** template tracks demo baseline migrations in git; scaffolded DS packages treat migration SQL as team-owned and gitignored. Keep **`engines/create-ds/starter/`** in sync when changing the minimal default schema.
 
 Release **`@corpdk/create-ds`** on the same train as **`@corpdk/dal-codegen`** when upgrade deltas matter.
 
@@ -106,4 +120,4 @@ Release **`@corpdk/create-ds`** on the same train as **`@corpdk/dal-codegen`** w
 
 **Related**: [Monorepo Overview](01-monorepo-overview.md) | [GraphQL DAL Requirements](graphql-dal-requirements.md) | [Monorepo Design — CalVer](../architecture/02-monorepo-design.md#calver-format-rules)
 
-**Last updated**: November 5, 2026
+**Last updated**: November 14, 2026

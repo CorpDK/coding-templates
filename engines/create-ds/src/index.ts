@@ -1,53 +1,80 @@
+#!/usr/bin/env node
+import { readJson } from "@corpdk/engine-kit";
 import { outro } from "@clack/prompts";
-import { parseArgs, printHelp } from "./args.js";
+import path from "node:path";
+import { CREATE_DS_HELP, parseCli, printHelp } from "./args.js";
+import { CREATE_DS_ENGINE_ROOT } from "./constants.js";
 import { runInit } from "./init.js";
 import { runUpgrade } from "./upgrade.js";
 import { repoRootFromEngine } from "./template.js";
 
-async function main(): Promise<void> {
-  const parsed = parseArgs(process.argv);
+async function main(): Promise<number> {
+  const parsed = parseCli(process.argv);
 
-  if (parsed.command === "help" || parsed.command === null) {
+  if (parsed.kind === "help") {
     printHelp();
-    process.exit(parsed.command === "help" ? 0 : 1);
+    return 0;
+  }
+
+  if (parsed.kind === "version") {
+    try {
+      const pkg = await readJson<{ version: string }>(
+        path.join(CREATE_DS_ENGINE_ROOT, "package.json"),
+      );
+      console.log(pkg.version);
+      return 0;
+    } catch (err: unknown) {
+      console.error(err instanceof Error ? err.message : err);
+      return 1;
+    }
+  }
+
+  if (parsed.kind === "usage") {
+    console.error(parsed.message);
+    console.error(CREATE_DS_HELP);
+    return 2;
   }
 
   const repoRoot = repoRootFromEngine();
 
-  if (parsed.command === "init") {
-    await runInit({
-      targetDir: parsed.targetDir,
-      repoRoot,
-      packageName: parsed.packageName,
-      withDemoSchema: parsed.withDemoSchema,
-    });
-
-    outro(
-      `DS package ready at:\n  ${parsed.targetDir}\n\nNext steps:\n` +
-        `  cd ${parsed.targetDir}\n` +
-        `  pnpm install\n` +
-        `  pnpm dal:codegen\n`,
-    );
-    return;
-  }
-
-  if (parsed.command === "upgrade") {
-    await runUpgrade({
-      packageDir: parsed.targetDir,
+  if (parsed.kind === "init") {
+    const result = await runInit({
+      dir: parsed.dir,
+      name: parsed.name,
+      demoSchema: parsed.demoSchema,
+      dryRun: parsed.dryRun,
+      noInstall: parsed.noInstall,
       repoRoot,
     });
-
-    outro(
-      `Upgrade complete for:\n  ${parsed.targetDir}\n\nNext steps:\n` +
-        `  pnpm install\n` +
-        `  pnpm dal:codegen\n`,
-    );
+    if (result.message && result.exitCode !== 0) {
+      console.error(result.message);
+    }
+    if (result.exitCode === 0) {
+      const steps = result.nextSteps?.length
+        ? result.nextSteps.join("\n  ")
+        : `cd ${parsed.dir}\n  pnpm install\n  pnpm dal:codegen`;
+      outro(`DS package ready at:\n  ${parsed.dir}\n\nNext steps:\n  ${steps}`);
+    }
+    return result.exitCode;
   }
+
+  const result = await runUpgrade({
+    dir: parsed.dir,
+    dryRun: parsed.dryRun,
+    repoRoot,
+  });
+
+  if (result.message && result.exitCode !== 0) {
+    console.error(result.message);
+  }
+  if (result.exitCode === 0) {
+    const steps =
+      result.nextSteps?.join("\n  ") ?? "pnpm install\n  pnpm dal:codegen";
+    outro(`Upgrade complete for:\n  ${parsed.dir}\n\nNext steps:\n  ${steps}`);
+  }
+
+  return result.exitCode;
 }
 
-try {
-  await main();
-} catch (err: unknown) {
-  console.error(err instanceof Error ? err.message : err);
-  process.exit(1);
-}
+const code = await main();
+process.exit(code);

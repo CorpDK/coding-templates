@@ -6,7 +6,9 @@ CI workflow and release process for the **lockstep CalVer** DS automation stack 
 
 ## Package set (npmjs)
 
-These **twelve** packages ship together at the same CalVer (e.g. `2026.10.0-alpha.14`). Order matches [`.github/scripts/publish-ds-automation.sh`](../../.github/scripts/publish-ds-automation.sh) and [generator publish order](../developer/15-create-ds-generator-integration.md#43-dependencies-and-publishing-canonical-publish-order):
+These **twelve** packages ship together at the same CalVer (e.g. `2026.10.0-alpha.14`). Order matches [`.github/scripts/publish-ds-automation.sh`](../../.github/scripts/publish-ds-automation.sh) and [generator publish order](../developer/15-create-ds-generator-integration.md#43-dependencies-and-publishing-canonical-publish-order).
+
+Before build/publish, CI runs **`@corpdk/engine-kit`** publish-order guard (`check-ds-publish-order`) and **`create-ds`** canonical drift check (`templates/ds` ⇄ `engines/create-ds/canonical`) via the same shell script.
 
 | Order | Package                      | Path                          | Role                                                 |
 | ----- | ---------------------------- | ----------------------------- | ---------------------------------------------------- |
@@ -16,7 +18,7 @@ These **twelve** packages ship together at the same CalVer (e.g. `2026.10.0-alph
 | 4     | `@corpdk/pub-sub`            | `libraries/pub-sub`           | GraphQL pub/sub factory (DAL DS runtime)             |
 | 5     | `@corpdk/graphql-input-zod`  | `libraries/graphql-input-zod` | Input Zod codegen (SDK L3); scaffold until SDK P1a   |
 | 6     | `@corpdk/dal-codegen`        | `libraries/dal-codegen`       | `dal-codegen` / `dal-entity-lint` CLIs               |
-| 7     | `@corpdk/engine-kit`         | `libraries/engine-kit`        | Shared `create-*` engine kit; scaffold until DS-P0b  |
+| 7     | `@corpdk/engine-kit`         | `libraries/engine-kit`        | Shared `create-*` engine kit (DS-P0b)                |
 | 8     | `@corpdk/graphql-cli-core`   | `libraries/graphql-cli-core`  | CLI runtime + codegen; scaffold until CLI C-P1       |
 | 9     | `@corpdk/create-graphql-sdk` | `engines/create-graphql-sdk`  | SDK scaffold engine; stub until SDK P1c              |
 | 10    | `@corpdk/create-graphql-cli` | `engines/create-graphql-cli`  | CLI scaffold engine; stub until CLI C-P2             |
