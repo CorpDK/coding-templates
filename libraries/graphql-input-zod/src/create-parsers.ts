@@ -6,11 +6,10 @@ import {
   zodErrorToIssues,
 } from "./errors.js";
 
-function safeParseRegistryEntry<R extends InputParserRegistry, N extends keyof R>(
-  registry: R,
-  name: N,
-  value: unknown,
-): GraphqlInputParseResult<output<R[N]>> {
+function safeParseRegistryEntry<
+  R extends InputParserRegistry,
+  N extends keyof R,
+>(registry: R, name: N, value: unknown): GraphqlInputParseResult<output<R[N]>> {
   const result = registry[name].safeParse(value);
   if (result.success) {
     return { ok: true, data: result.data as output<R[N]> };

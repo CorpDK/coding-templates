@@ -76,12 +76,12 @@ const zSmallInt = z
   });
 
 const zDouble = zFiniteNumber().superRefine((val, ctx) => {
-    try {
-      parseDouble(val);
-    } catch (error) {
-      issueFromError(ctx, error);
-    }
-  });
+  try {
+    parseDouble(val);
+  } catch (error) {
+    issueFromError(ctx, error);
+  }
+});
 
 /** Zod for GraphQL built-in Int mapped from PG `integer` (32-bit). */
 export const zPgInt32 = z.number().int().min(PG_INT32_MIN).max(PG_INT32_MAX);
