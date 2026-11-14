@@ -29,9 +29,7 @@ export function engineRootFromImportMeta(metaUrl: string): string {
   return path.resolve(dir, "..");
 }
 
-export async function readEngineRelease(
-  engineRoot: string,
-): Promise<string> {
+export async function readEngineRelease(engineRoot: string): Promise<string> {
   const pkg = await readJson<{ version?: string }>(
     path.join(engineRoot, "package.json"),
   );

@@ -31,4 +31,6 @@ if (!result.ok) {
   process.exit(1);
 }
 
-console.log("Publish order guard OK (topological order matches PUBLISH_ORDER).");
+console.log(
+  "Publish order guard OK (topological order matches PUBLISH_ORDER).",
+);

@@ -36,7 +36,9 @@ describe("mergePackageJson", () => {
     const merged = mergePackageJson(consumer, template, {
       removed: new Set(["@graphql-codegen/client-preset"]),
     });
-    expect(merged.dependencies?.["@graphql-codegen/client-preset"]).toBeUndefined();
+    expect(
+      merged.dependencies?.["@graphql-codegen/client-preset"],
+    ).toBeUndefined();
   });
 
   it("does not copy template publishConfig onto fresh consumer", () => {
@@ -66,7 +68,9 @@ describe("mergePackageJson", () => {
     const template = {
       dependencies: { "@corpdk/dal-core": "workspace:*" },
     };
-    const merged = mergePackageJson({}, template, { releaseVersion: "2026.11.0" });
+    const merged = mergePackageJson({}, template, {
+      releaseVersion: "2026.11.0",
+    });
     expect(merged.dependencies?.["@corpdk/dal-core"]).toBe("^2026.11.0");
   });
 });
@@ -80,7 +84,10 @@ describe("mergeYamlConfig", () => {
     const consumer = {
       dal: { postgres: { port: 5432 }, features: { y: 2 } },
     };
-    const merged = mergeYamlConfig(template, consumer) as Record<string, unknown>;
+    const merged = mergeYamlConfig(template, consumer) as Record<
+      string,
+      unknown
+    >;
     const dal = merged.dal as Record<string, unknown>;
     const postgres = dal.postgres as Record<string, unknown>;
     expect(postgres.host).toBe("localhost");

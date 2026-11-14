@@ -86,7 +86,10 @@ describe("runUpgrade fixture", () => {
     const pkg = await readJson<{
       dependencies?: Record<string, string>;
     }>(pkgPath);
-    pkg.dependencies = { ...pkg.dependencies, "@extra/only-in-consumer": "1.0.0" };
+    pkg.dependencies = {
+      ...pkg.dependencies,
+      "@extra/only-in-consumer": "1.0.0",
+    };
     await fs.writeFile(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf8");
 
     const result = await runUpgrade({

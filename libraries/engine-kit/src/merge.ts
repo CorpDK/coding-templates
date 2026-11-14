@@ -13,7 +13,9 @@ export type MergePackageJsonOptions = {
   owned?: ReadonlySet<string>;
   removed?: ReadonlySet<string>;
   preserveKeys?: readonly string[];
-  scriptsTransform?: (scripts: Record<string, string>) => Record<string, string>;
+  scriptsTransform?: (
+    scripts: Record<string, string>,
+  ) => Record<string, string>;
   releaseVersion?: string;
 };
 
@@ -72,10 +74,7 @@ function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-export function mergeYamlConfig(
-  template: unknown,
-  consumer: unknown,
-): unknown {
+export function mergeYamlConfig(template: unknown, consumer: unknown): unknown {
   if (!isPlainObject(template)) return consumer ?? template;
   if (!isPlainObject(consumer)) return { ...template };
 

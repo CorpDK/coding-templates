@@ -29,7 +29,10 @@ describe("runUpgradePlan dryRun", () => {
     });
 
     expect(result.changedFiles).toEqual(["README.md"]);
-    const content = await fs.readFile(path.join(packageDir, "README.md"), "utf8");
+    const content = await fs.readFile(
+      path.join(packageDir, "README.md"),
+      "utf8",
+    );
     expect(content).toBe("old\n");
   });
 });

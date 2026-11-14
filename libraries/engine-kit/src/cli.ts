@@ -27,7 +27,12 @@ export type DefineEngineCliOptions = {
 export type ParsedEngineCli =
   | { kind: "help"; exitCode: typeof EXIT_SUCCESS }
   | { kind: "usage"; exitCode: typeof EXIT_USAGE; message: string }
-  | { kind: "run"; command: EngineCommandDef; positional: string[]; values: Record<string, string | boolean | undefined> };
+  | {
+      kind: "run";
+      command: EngineCommandDef;
+      positional: string[];
+      values: Record<string, string | boolean | undefined>;
+    };
 
 const GLOBAL_OPTIONS = {
   help: { type: "boolean", short: "h" },
@@ -126,10 +131,15 @@ export async function runEngineCli(
   }
 
   try {
-    const result = await parsed.command.handler(parsed.positional, parsed.values);
+    const result = await parsed.command.handler(
+      parsed.positional,
+      parsed.values,
+    );
     hooks?.onResult?.(result);
     if (result.nextSteps?.length) {
-      console.log("\nNext steps:\n" + result.nextSteps.map((s) => `  ${s}`).join("\n"));
+      console.log(
+        "\nNext steps:\n" + result.nextSteps.map((s) => `  ${s}`).join("\n"),
+      );
     }
     return result.exitCode;
   } catch (err: unknown) {

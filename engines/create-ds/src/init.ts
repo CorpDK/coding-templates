@@ -108,12 +108,19 @@ export async function runInit(options: InitOptions): Promise<EngineResult> {
     if (options.demoSchema) {
       const seedSrc = path.join(templateDir, "src", "db", "seed.ts");
       if (await pathExists(seedSrc)) {
-        await fs.copyFile(seedSrc, path.join(targetDir, "src", "db", "seed.ts"));
+        await fs.copyFile(
+          seedSrc,
+          path.join(targetDir, "src", "db", "seed.ts"),
+        );
       } else {
         throw new Error(`Demo seed missing in canonical: ${seedSrc}`);
       }
     } else {
-      const starterDal = path.join(engineStarterDir(), "dal", "dal.config.yaml");
+      const starterDal = path.join(
+        engineStarterDir(),
+        "dal",
+        "dal.config.yaml",
+      );
       if (await pathExists(starterDal)) {
         await fs.copyFile(
           starterDal,

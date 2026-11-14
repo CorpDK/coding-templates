@@ -19,4 +19,6 @@ if (!result.ok) {
   process.exit(1);
 }
 
-console.log("Canonical drift check OK (templates/ds ⇄ engines/create-ds/canonical).");
+console.log(
+  "Canonical drift check OK (templates/ds ⇄ engines/create-ds/canonical).",
+);

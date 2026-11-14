@@ -22,7 +22,7 @@ create-ds upgrade [directory] [options]
 create-ds --version
 ```
 
-Common flags: `--dry-run`, `--no-install` (init; defers install to printed next steps), `--help` / `-h`.
+Common flags: `--dry-run`, `--no-install` (init; omits `pnpm install` from printed next steps—the CLI never runs install), `--help` / `-h`.
 
 **Exit codes** (shared engine contract): `0` success · `1` validation / stale input · `2` usage · `3` tool failure (`entity:lint`, bootstrap).
 

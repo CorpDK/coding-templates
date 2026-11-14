@@ -18,7 +18,9 @@ const DEFAULT_EXCLUDE = [
   "src/generated",
 ] as const;
 
-export async function syncCanonical(options: CanonicalSyncOptions): Promise<void> {
+export async function syncCanonical(
+  options: CanonicalSyncOptions,
+): Promise<void> {
   const exclude = options.exclude ?? [...DEFAULT_EXCLUDE];
   await fs.rm(options.to, { recursive: true, force: true });
   await copyDir(options.from, options.to, {
