@@ -52,10 +52,7 @@ function isGraphqlDateString(value: string): boolean {
     if (i === 4 || i === 7) continue;
     if (!isAsciiDigit(value[i]!)) return false;
   }
-  const y = Number(value.slice(0, 4));
-  const m = Number(value.slice(5, 7));
-  const d = Number(value.slice(8, 10));
-  return y >= 1 && m >= 1 && m <= 12 && d >= 1 && d <= 31;
+  return true;
 }
 
 export function serializeDate(
