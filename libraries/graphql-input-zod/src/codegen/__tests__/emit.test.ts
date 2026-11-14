@@ -122,5 +122,13 @@ describe("emitGraphqlInputZodBlocks", () => {
     expect(withPreamble.schemaBlocks[0]).toBe(
       'import { zPgInt32 } from "@corpdk/scalar-zod/pg";',
     );
+    const schema = loadExportedSchema(
+      withPreamble.schemaBlocks,
+      "ByBuiltinIdSchema",
+    );
+    expect(schema.safeParse({ id: "not-a-uuid" }).success).toBe(true);
+    expect(
+      schema.safeParse({ id: "550e8400-e29b-41d4-a716-446655440000" }).success,
+    ).toBe(true);
   });
 });

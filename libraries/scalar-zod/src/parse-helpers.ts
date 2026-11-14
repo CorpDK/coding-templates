@@ -31,10 +31,6 @@ export function isDecimalString(s: string): boolean {
   return isDigitsOnly(s.slice(i, dot)) && isDigitsOnly(s.slice(dot + 1));
 }
 
-export function isTwoDigitField(s: string): boolean {
-  return s.length === 2 && isAsciiDigit(s[0]!) && isAsciiDigit(s[1]!);
-}
-
 export function isHexString(s: string): boolean {
   if (s.length === 0) return false;
   for (const ch of s) {
