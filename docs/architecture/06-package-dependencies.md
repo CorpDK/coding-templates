@@ -53,9 +53,9 @@ Dependencies used across multiple workspace packages.
 
 ### Validation & Schema
 
-| Package | Version | Used by                                                |
-| ------- | ------- | ------------------------------------------------------ |
-| zod     | ^4.3.6  | ds-no-sql, ds-cdb, ds-mongo, ds-ddb, ds-file, ui-forms |
+| Package | Version | Used by                                                                                |
+| ------- | ------- | -------------------------------------------------------------------------------------- |
+| zod     | ^4.3.6  | dal-core, scalar-zod, dal-codegen (dev), graphql-input-zod (peer/dev), ds-\*, ui-forms |
 
 ### Infrastructure
 
@@ -163,23 +163,43 @@ Dependencies used across multiple workspace packages.
 | graphql-yoga                     | ^5.18.1 | runtime |
 | ioredis                          | ^5.10.1 | runtime |
 
+### scalar-zod (@corpdk/scalar-zod)
+
+| Package         | Version | Type    |
+| --------------- | ------- | ------- |
+| graphql-scalars | ^1.26.0 | runtime |
+| zod             | ^4.3.6  | runtime |
+
+### graphql-input-zod (@corpdk/graphql-input-zod)
+
+| Package | Version  | Type    |
+| ------- | -------- | ------- |
+| graphql | ^16.13.2 | runtime |
+| zod     | ^4.3.6   | dev     |
+
 ### dal-core (@corpdk/dal-core)
 
-| Package     | Version  | Type    |
-| ----------- | -------- | ------- |
-| drizzle-orm | ^0.45.2  | runtime |
-| graphql     | ^16.13.2 | runtime |
-| vitest      | ^4.1.2   | dev     |
+| Package            | Version      | Type    |
+| ------------------ | ------------ | ------- |
+| @corpdk/scalar-zod | workspace:\* | runtime |
+| drizzle-orm        | ^0.45.2      | runtime |
+| graphql            | ^16.13.2     | runtime |
+| graphql-scalars    | ^1.26.0      | runtime |
+| zod                | ^4.3.6       | runtime |
+| vitest             | ^4.1.2       | dev     |
 
 ### dal-codegen (@corpdk/dal-codegen)
 
-| Package          | Version      | Type    |
-| ---------------- | ------------ | ------- |
-| @corpdk/dal-core | workspace:\* | runtime |
-| drizzle-orm      | ^0.45.2      | runtime |
-| graphql          | ^16.13.2     | runtime |
-| yaml             | ^2.8.3       | runtime |
-| vitest           | ^4.1.2       | dev     |
+| Package                   | Version      | Type    |
+| ------------------------- | ------------ | ------- |
+| @corpdk/dal-core          | workspace:\* | runtime |
+| @corpdk/graphql-input-zod | workspace:\* | runtime |
+| drizzle-orm               | ^0.45.2      | runtime |
+| graphql                   | ^16.13.2     | runtime |
+| tsx                       | ^4.21.0      | runtime |
+| yaml                      | ^2.8.3       | runtime |
+| vitest                    | ^4.1.2       | dev     |
+| zod                       | ^4.3.6       | dev     |
 
 ### create-app (@corpdk/create-app)
 
@@ -231,7 +251,8 @@ Common dev dependencies used across most workspace packages.
 | next               | 16.x       | ui-core, ui-auth, ui-charts, ui-forms, ui-datagrid, ui-feedback |
 | react              | 19.x       | ui-core, ui-auth, ui-charts, ui-forms, ui-datagrid, ui-feedback |
 | react-dom          | 19.x       | ui-core, ui-auth, ui-charts, ui-forms, ui-datagrid, ui-feedback |
-| graphql            | ^16.0.0    | ds-sdk, codegen-cli                                             |
+| graphql            | ^16.0.0    | ds-sdk, codegen-cli, graphql-input-zod (peer; optional)         |
+| zod                | ^4         | graphql-input-zod (peer; optional)                              |
 | eslint             | ^9         | eslint-config                                                   |
 | eslint-config-next | >=16       | eslint-config                                                   |
 
