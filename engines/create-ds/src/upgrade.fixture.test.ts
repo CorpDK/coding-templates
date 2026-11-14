@@ -14,16 +14,25 @@ describe("runUpgrade fixture", () => {
     if (tmp) await fs.rm(tmp, { recursive: true, force: true });
   });
 
-  async function scaffoldConsumer(): Promise<string> {
+  /** Bundled-canonical mode without monorepo dal-codegen lint (no node_modules in temp dir). */
+  async function fakeRepoRoot(): Promise<string> {
+    return fs.mkdtemp(path.join(os.tmpdir(), "create-ds-fake-repo-"));
+  }
+
+  async function scaffoldConsumer(): Promise<{
+    target: string;
+    repoRoot: string;
+  }> {
     tmp = await fs.mkdtemp(path.join(os.tmpdir(), "create-ds-up-"));
     const target = path.join(tmp, "consumer");
+    const repoRoot = await fakeRepoRoot();
     const init = await runInit({
       dir: target,
       name: "@test/consumer",
-      repoRoot: repoRootFromEngine(),
+      repoRoot,
     });
     expect(init.exitCode).toBe(0);
-    return target;
+    return { target, repoRoot };
   }
 
   it("returns usage when dal.config.yaml is missing", async () => {
@@ -39,7 +48,7 @@ describe("runUpgrade fixture", () => {
   });
 
   it("preserves consumer-only dependencies on merge", async () => {
-    const target = await scaffoldConsumer();
+    const { target, repoRoot } = await scaffoldConsumer();
     const pkgPath = path.join(target, "package.json");
     const pkg = await readJson<{
       dependencies?: Record<string, string>;
@@ -49,7 +58,7 @@ describe("runUpgrade fixture", () => {
 
     const result = await runUpgrade({
       dir: target,
-      repoRoot: repoRootFromEngine(),
+      repoRoot,
     });
     expect(result.exitCode).toBe(0);
     const upgraded = await readJson<{ dependencies?: Record<string, string> }>(
@@ -59,10 +68,10 @@ describe("runUpgrade fixture", () => {
   });
 
   it("writes .create-ds-version on success", async () => {
-    const target = await scaffoldConsumer();
+    const { target, repoRoot } = await scaffoldConsumer();
     const result = await runUpgrade({
       dir: target,
-      repoRoot: repoRootFromEngine(),
+      repoRoot,
     });
     expect(result.exitCode).toBe(0);
     const version = await readCreateDsReleaseVersion();
@@ -74,23 +83,55 @@ describe("runUpgrade fixture", () => {
   });
 
   it("maps corrupt package.json to validation exit", async () => {
-    const target = await scaffoldConsumer();
+    const { target, repoRoot } = await scaffoldConsumer();
     await fs.writeFile(path.join(target, "package.json"), "{ not-json", "utf8");
     const result = await runUpgrade({
       dir: target,
-      repoRoot: repoRootFromEngine(),
+      repoRoot,
+    });
+    expect(result.exitCode).toBe(EXIT_VALIDATION);
+  });
+
+  it("deep-merges consumer dal.config.yaml overrides", async () => {
+    const { target, repoRoot } = await scaffoldConsumer();
+    const dalPath = path.join(target, "dal/dal.config.yaml");
+    const raw = await fs.readFile(dalPath, "utf8");
+    await fs.writeFile(
+      dalPath,
+      `${raw.trimEnd()}\nconsumerMarker: true\n`,
+      "utf8",
+    );
+    const result = await runUpgrade({
+      dir: target,
+      repoRoot,
+    });
+    expect(result.exitCode).toBe(0);
+    const merged = await fs.readFile(dalPath, "utf8");
+    expect(merged).toContain("consumerMarker: true");
+  });
+
+  it("maps invalid dal.config.yaml to validation exit", async () => {
+    const { target, repoRoot } = await scaffoldConsumer();
+    await fs.writeFile(
+      path.join(target, "dal/dal.config.yaml"),
+      "not: valid: yaml: [[",
+      "utf8",
+    );
+    const result = await runUpgrade({
+      dir: target,
+      repoRoot,
     });
     expect(result.exitCode).toBe(EXIT_VALIDATION);
   });
 
   it("dry-run lists planned files without writing consumer package.json", async () => {
-    const target = await scaffoldConsumer();
+    const { target, repoRoot } = await scaffoldConsumer();
     const pkgPath = path.join(target, "package.json");
     const before = await fs.readFile(pkgPath, "utf8");
     const result = await runUpgrade({
       dir: target,
       dryRun: true,
-      repoRoot: repoRootFromEngine(),
+      repoRoot,
     });
     expect(result.exitCode).toBe(0);
     expect(result.changedFiles.length).toBeGreaterThan(0);

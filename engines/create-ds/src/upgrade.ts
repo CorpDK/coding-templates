@@ -12,6 +12,7 @@ import {
   writeJson,
   type EngineResult,
   EXIT_SUCCESS,
+  EXIT_TOOL,
   EXIT_USAGE,
 } from "@corpdk/engine-kit";
 import { exitCodeForEngineError } from "./engine-errors.js";
@@ -109,7 +110,17 @@ export async function runUpgrade(options: UpgradeOptions): Promise<EngineResult>
   const repoRoot =
     options.repoRoot ?? path.resolve(CREATE_DS_ENGINE_ROOT, "..", "..");
   const packageDir = path.resolve(options.dir);
-  const templateDir = await resolveCanonicalDsTemplateDir(repoRoot);
+
+  let templateDir: string;
+  try {
+    templateDir = await resolveCanonicalDsTemplateDir(repoRoot);
+  } catch (err: unknown) {
+    return {
+      exitCode: EXIT_TOOL,
+      changedFiles: [],
+      message: err instanceof Error ? err.message : String(err),
+    };
+  }
 
   if (!(await pathExists(path.join(packageDir, "dal/dal.config.yaml")))) {
     return {

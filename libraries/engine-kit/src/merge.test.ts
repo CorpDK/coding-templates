@@ -39,6 +39,29 @@ describe("mergePackageJson", () => {
     expect(merged.dependencies?.["@graphql-codegen/client-preset"]).toBeUndefined();
   });
 
+  it("does not copy template publishConfig onto fresh consumer", () => {
+    const template = {
+      publishConfig: { registry: "https://example.artifactory/" },
+      dependencies: { "@corpdk/dal-core": "1.0.0" },
+    };
+    const consumer = { name: "@acme/ds" };
+    const merged = mergePackageJson(consumer, template);
+    expect(merged.publishConfig).toBeUndefined();
+  });
+
+  it("preserves consumer publishConfig on upgrade merge", () => {
+    const template = {
+      publishConfig: { registry: "https://template.example/" },
+    };
+    const consumer = {
+      publishConfig: { registry: "https://consumer.example/" },
+    };
+    const merged = mergePackageJson(consumer, template);
+    expect(merged.publishConfig).toEqual({
+      registry: "https://consumer.example/",
+    });
+  });
+
   it("rewrites workspace deps when releaseVersion set", () => {
     const template = {
       dependencies: { "@corpdk/dal-core": "workspace:*" },

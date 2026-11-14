@@ -424,7 +424,9 @@ Engine-specific logic stays in each engine:
 
 ### 11.5 Migration of `create-ds` onto `engine-kit` (DS-P0b)
 
-This is a refactor that preserves outputs. The changes **intended** to be visible are:
+This is a refactor that preserves outputs. The **Today** column below is the pre–DS-P0b baseline summarized in [§2](#2-current-state-evidence); **After** is the post-migration contract.
+
+The changes **intended** to be visible are:
 
 | Change                             | Today                                            | After                                                                                                                      |
 | ---------------------------------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |

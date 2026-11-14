@@ -101,8 +101,11 @@ export function mergePackageJson(
   const preserveKeys = options?.preserveKeys ?? DEFAULT_PRESERVE_KEYS;
   const scriptsTransform = options?.scriptsTransform ?? ((s) => s);
 
+  const { publishConfig: _templatePublishConfig, ...templateWithoutPublish } =
+    template;
+
   const merged: PkgJson = {
-    ...template,
+    ...templateWithoutPublish,
     name: consumer.name ?? template.name,
     version: consumer.version ?? template.version,
     description: consumer.description ?? template.description,
@@ -133,9 +136,16 @@ export function mergePackageJson(
   }
 
   for (const key of preserveKeys) {
+    if (key === "publishConfig") continue;
     if (Object.prototype.hasOwnProperty.call(consumer, key)) {
       merged[key] = consumer[key];
     }
+  }
+
+  if (Object.prototype.hasOwnProperty.call(consumer, "publishConfig")) {
+    merged.publishConfig = consumer.publishConfig;
+  } else {
+    delete merged.publishConfig;
   }
 
   return merged;
