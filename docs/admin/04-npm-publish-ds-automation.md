@@ -43,7 +43,7 @@ The [GraphQL SDK](../developer/13-graphql-sdk-generator.md), [CLI](../developer/
 | `@corpdk/create-graphql-sdk` | `engines/create-graphql-sdk`  | Same                                                                                               |
 | `@corpdk/create-graphql-cli` | `engines/create-graphql-cli`  | Same                                                                                               |
 
-Placeholders ship only `README.md` and `LICENSE` (no `main`, `exports`, `bin`, or scripts). **`templates/ds-sdk` and `templates/ds-cli` are not published** and are not part of B0.
+Scaffolds compile with `tsc` to `dist/` and declare `types` / `exports` (engines use `dist/types-entry.d.ts`; stub `bin` on `create-graphql-*`). Tarballs are phase stubs, not full implementations. **`templates/ds-sdk` and `templates/ds-cli` are not published** and are not part of B0.
 
 **After the B0 PR merges**, a maintainer completes registry setup **from a local terminal** (npm publish + trust each trigger org 2FA / OTP; **not** OIDC):
 
@@ -115,7 +115,7 @@ The workflow evaluates the CalVer gate right after checkout, **before** `pnpm` /
 1. Verify every package in the set has the **same** `version` as the release (from input or `libraries/dal-core/package.json`).
 2. `pnpm turbo run build` for all twelve lockstep packages (respects dependency order via Turbo).
 3. `pnpm --filter @corpdk/dal-core test` and `@corpdk/dal-codegen test` (same coverage as [`.github/workflows/dal.yml`](../../.github/workflows/dal.yml) for libraries).
-4. Confirm each package has declaration output after build (publish script enforces **`dist/index.d.ts`** for the four libraries; **`@corpdk/create-ds`** uses **`dist/types-entry.d.ts`** with **`exports["."].import`** → **`./dist/types-entry.js`** while **`bin.create-ds`** stays on **`./dist/index.js`**, so typings and runtime imports are not the CLI side-effect entry). Spot-check packaging: `pnpm --filter @corpdk/dal-core exec npm pack --dry-run` and ensure the tarball lists `.d.ts` files. Library `package.json` must expose types via top-level `"types"` and `exports["."].types` (string-only `exports` breaks TypeScript resolution even when `.d.ts` is in the tarball).
+4. Confirm each package has declaration output after build (publish script [`verify_dist_types`](../../.github/scripts/publish-ds-automation.sh): **`dist/index.d.ts`** for the nine library/engine packages that use the default layout; **`dist/types-entry.d.ts`** for **`@corpdk/create-ds`**, **`@corpdk/create-graphql-sdk`**, and **`@corpdk/create-graphql-cli`** — typings on `exports["."].import` / `types-entry` while `bin.*` may point at **`./dist/index.js`**). Spot-check packaging: `pnpm --filter @corpdk/dal-core exec npm pack --dry-run` and ensure the tarball lists `.d.ts` files. Library `package.json` must expose types via top-level `"types"` and `exports["."].types` (string-only `exports` breaks TypeScript resolution even when `.d.ts` is in the tarball).
 5. `pnpm publish --no-git-checks --tag latest` in dependency order; `--dry-run` when not releasing; live runs add `--provenance`.
 6. On live publish only: ensure git tag `ds-automation/v<CalVer>` on the release commit, then `gh release create` with generated notes (`permissions.contents: write`).
 
@@ -335,7 +335,7 @@ npm trust github @corpdk/dal-core \
 npm trust list @corpdk/dal-core
 ```
 
-If your npm reports `Unknown command: "github"`, use `npm trust github` as above. Repeat for the other four packages (step 5 table) only after browser 2FA completes and the previous `npm trust list` shows a configuration.
+If your npm reports `Unknown command: "github"`, use `npm trust github` as above. Repeat for the **other eleven** packages in the step 5 table only after browser 2FA completes and the previous `npm trust list` shows a configuration.
 
 **Verify trust configuration** (repeat for each package, or spot-check one):
 
