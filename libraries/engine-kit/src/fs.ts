@@ -89,22 +89,28 @@ async function copyDirRecursive(
 ): Promise<void> {
   const entries = await fs.readdir(src, { withFileTypes: true });
 
-  for (const entry of entries) {
-    const relPath = relPrefix ? path.join(relPrefix, entry.name) : entry.name;
-    if (segmentExcluded(relPath, options.excludeSet)) continue;
+  await Promise.all(
+    entries.map(async (entry) => {
+      const relPath = relPrefix
+        ? path.join(relPrefix, entry.name)
+        : entry.name;
+      if (segmentExcluded(relPath, options.excludeSet)) return;
 
-    const srcPath = path.join(src, entry.name);
-    const destPath = path.join(dest, entry.name);
+      const srcPath = path.join(src, entry.name);
+      const destPath = path.join(dest, entry.name);
 
-    if (entry.isDirectory()) {
-      await fs.mkdir(destPath, { recursive: true });
-      await copyDirRecursive(srcPath, destPath, relPath, options);
-    } else if (entry.isFile()) {
-      if (options.skipIfExists && (await pathExists(destPath))) continue;
-      const raw = await fs.readFile(srcPath, "utf8");
-      const content = options.transform ? options.transform(raw, relPath) : raw;
-      await fs.mkdir(path.dirname(destPath), { recursive: true });
-      await fs.writeFile(destPath, content, "utf8");
-    }
-  }
+      if (entry.isDirectory()) {
+        await fs.mkdir(destPath, { recursive: true });
+        await copyDirRecursive(srcPath, destPath, relPath, options);
+      } else if (entry.isFile()) {
+        if (options.skipIfExists && (await pathExists(destPath))) return;
+        const raw = await fs.readFile(srcPath, "utf8");
+        const content = options.transform
+          ? options.transform(raw, relPath)
+          : raw;
+        await fs.mkdir(path.dirname(destPath), { recursive: true });
+        await fs.writeFile(destPath, content, "utf8");
+      }
+    }),
+  );
 }

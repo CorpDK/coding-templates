@@ -1,4 +1,6 @@
-import { engineRootFromImportMeta, initialCalVer } from "@corpdk/engine-kit";
+import { engineRootFromImportMeta } from "@corpdk/engine-kit";
+
+export { initialCalVer as initialScaffoldCalVer } from "@corpdk/engine-kit";
 
 export const CREATE_DS_ENGINE_ROOT = engineRootFromImportMeta(import.meta.url);
 
@@ -36,8 +38,6 @@ export function normalizeDalScripts(
   out["entity:lint"] = DAL_ENTITY_LINT_CLI;
   return out;
 }
-
-export { initialCalVer as initialScaffoldCalVer };
 
 export const BOOTSTRAP_STATIC_SRC_RELATIVE = [
   "src/health.ts",

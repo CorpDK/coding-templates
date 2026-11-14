@@ -18,9 +18,7 @@ export function engineStarterDir(): string {
   return path.join(CREATE_DS_ENGINE_ROOT, "starter");
 }
 
-export async function resolveCanonicalDsTemplateDir(
-  repoRoot: string,
-): Promise<string> {
+export function resolveCanonicalDsTemplateDir(repoRoot: string): Promise<string> {
   return resolveCanonical({
     engineRoot: CREATE_DS_ENGINE_ROOT,
     monorepoPath: path.join(repoRoot, "templates", "ds"),
@@ -32,11 +30,7 @@ export function isBundledCanonicalTemplate(templateDir: string): boolean {
   return isBundledCanonical(templateDir, bundledCanonicalDir());
 }
 
-export async function readCreateDsReleaseVersion(): Promise<string> {
+export function readCreateDsReleaseVersion(): Promise<string> {
   return readEngineRelease(CREATE_DS_ENGINE_ROOT);
 }
 
-export {
-  BOOTSTRAP_STATIC_SRC_RELATIVE,
-  UPGRADE_RELATIVE_FILES,
-} from "./constants.js";

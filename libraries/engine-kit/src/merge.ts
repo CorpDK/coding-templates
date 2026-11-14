@@ -136,12 +136,12 @@ export function mergePackageJson(
 
   for (const key of preserveKeys) {
     if (key === "publishConfig") continue;
-    if (Object.prototype.hasOwnProperty.call(consumer, key)) {
+    if (Object.hasOwn(consumer, key)) {
       merged[key] = consumer[key];
     }
   }
 
-  if (Object.prototype.hasOwnProperty.call(consumer, "publishConfig")) {
+  if (Object.hasOwn(consumer, "publishConfig")) {
     merged.publishConfig = consumer.publishConfig;
   } else {
     delete merged.publishConfig;

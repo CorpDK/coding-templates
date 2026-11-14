@@ -8,13 +8,35 @@ export async function copyBootstrapStaticSrc(
   templateDir: string,
   packageDir: string,
 ): Promise<void> {
-  for (const rel of BOOTSTRAP_STATIC_SRC_RELATIVE) {
-    const templatePath = path.join(templateDir, rel);
-    if (!(await pathExists(templatePath))) continue;
-    const destPath = path.join(packageDir, rel);
-    await fs.mkdir(path.dirname(destPath), { recursive: true });
-    await fs.copyFile(templatePath, destPath);
-  }
+  await Promise.all(
+    BOOTSTRAP_STATIC_SRC_RELATIVE.map(async (rel) => {
+      const templatePath = path.join(templateDir, rel);
+      if (!(await pathExists(templatePath))) return;
+      const destPath = path.join(packageDir, rel);
+      await fs.mkdir(path.dirname(destPath), { recursive: true });
+      await fs.copyFile(templatePath, destPath);
+    }),
+  );
+}
+
+const FALLBACK_BOOTSTRAP_REL = [
+  "src/schema.ts",
+  "src/index.ts",
+  "src/db/index.ts",
+] as const;
+
+async function copyFallbackBootstrapFiles(
+  templateDir: string,
+  targetDir: string,
+): Promise<void> {
+  await Promise.all(
+    FALLBACK_BOOTSTRAP_REL.map((rel) =>
+      fs.copyFile(
+        path.join(templateDir, rel),
+        path.join(targetDir, rel),
+      ),
+    ),
+  );
 }
 
 export async function runDalBootstrap(
@@ -34,7 +56,5 @@ export async function runDalBootstrap(
     return;
   }
 
-  for (const rel of ["src/schema.ts", "src/index.ts", "src/db/index.ts"]) {
-    await fs.copyFile(path.join(templateDir, rel), path.join(targetDir, rel));
-  }
+  await copyFallbackBootstrapFiles(templateDir, targetDir);
 }

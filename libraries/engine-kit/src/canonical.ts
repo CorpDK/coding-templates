@@ -53,21 +53,25 @@ async function walkFiles(
   const abs = relPrefix ? path.join(root, relPrefix) : root;
   if (!(await pathExists(abs))) return [];
   const entries = await fs.readdir(abs, { withFileTypes: true });
-  const files: string[] = [];
+  const childLists = await Promise.all(
+    entries.map(async (entry) => {
+      const rel = relPrefix ? path.join(relPrefix, entry.name) : entry.name;
+      const segments = rel.split(path.sep);
+      if (segments.some((seg) => exclude.has(seg))) {
+        return [] as string[];
+      }
 
-  for (const entry of entries) {
-    const rel = relPrefix ? path.join(relPrefix, entry.name) : entry.name;
-    const segments = rel.split(path.sep);
-    if (segments.some((seg) => exclude.has(seg))) continue;
+      if (entry.isDirectory()) {
+        return walkFiles(root, rel, exclude);
+      }
+      if (entry.isFile()) {
+        return [rel];
+      }
+      return [] as string[];
+    }),
+  );
 
-    if (entry.isDirectory()) {
-      files.push(...(await walkFiles(root, rel, exclude)));
-    } else if (entry.isFile()) {
-      files.push(rel);
-    }
-  }
-
-  return files;
+  return childLists.flat();
 }
 
 export async function checkCanonical(
@@ -80,28 +84,31 @@ export async function checkCanonical(
 
   const mismatches: string[] = [];
 
-  for (const rel of [...allRels].sort((a, b) => a.localeCompare(b))) {
-    const fromPath = path.join(options.from, rel);
-    const toPath = path.join(options.to, rel);
-    const fromOk = await pathExists(fromPath);
-    const toOk = await pathExists(toPath);
+  const sortedRels = [...allRels].sort((a, b) => a.localeCompare(b));
+  const compareResults = await Promise.all(
+    sortedRels.map(async (rel) => {
+      const fromPath = path.join(options.from, rel);
+      const toPath = path.join(options.to, rel);
+      const [fromOk, toOk] = await Promise.all([
+        pathExists(fromPath),
+        pathExists(toPath),
+      ]);
 
-    if (!fromOk) {
-      mismatches.push(`extra in to: ${rel}`);
-      continue;
-    }
-    if (!toOk) {
-      mismatches.push(`missing in to: ${rel}`);
-      continue;
-    }
+      if (!fromOk) return `extra in to: ${rel}`;
+      if (!toOk) return `missing in to: ${rel}`;
 
-    const [fromHash, toHash] = await Promise.all([
-      fileSha256(fromPath),
-      fileSha256(toPath),
-    ]);
-    if (fromHash !== toHash) {
-      mismatches.push(`content differs: ${rel}`);
-    }
+      const [fromHash, toHash] = await Promise.all([
+        fileSha256(fromPath),
+        fileSha256(toPath),
+      ]);
+      if (fromHash !== toHash) {
+        return `content differs: ${rel}`;
+      }
+      return null;
+    }),
+  );
+  for (const row of compareResults) {
+    if (row) mismatches.push(row);
   }
 
   return { ok: mismatches.length === 0, mismatches };

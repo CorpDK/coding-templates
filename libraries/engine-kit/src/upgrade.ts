@@ -46,29 +46,39 @@ export async function runUpgradePlan(
   const requireSources = options.requireOverwriteSources ?? true;
   const mergeSet = new Set(options.merge);
 
-  for (const rel of options.overwrite) {
-    const templatePath = path.join(options.templateDir, rel);
-    const destPath = path.join(options.packageDir, rel);
+  const overwriteRows = await Promise.all(
+    options.overwrite.map(async (rel) => {
+      const templatePath = path.join(options.templateDir, rel);
+      const destPath = path.join(options.packageDir, rel);
+      const exists = await pathExists(templatePath);
+      return { rel, templatePath, destPath, exists };
+    }),
+  );
 
-    if (!(await pathExists(templatePath))) {
+  const toWrite: typeof overwriteRows = [];
+  for (const row of overwriteRows) {
+    if (!row.exists) {
       if (requireSources) {
-        throw new MissingOverwriteSourceError(rel, templatePath);
+        throw new MissingOverwriteSourceError(row.rel, row.templatePath);
       }
       continue;
     }
-
-    changedFiles.push(rel);
-
-    if (dryRun) continue;
-
-    if (mergeSet.has(rel) && options.mergeFile) {
-      await options.mergeFile(rel, templatePath, destPath);
-      continue;
+    changedFiles.push(row.rel);
+    if (!dryRun) {
+      toWrite.push(row);
     }
-
-    await fs.mkdir(path.dirname(destPath), { recursive: true });
-    await fs.copyFile(templatePath, destPath);
   }
+
+  await Promise.all(
+    toWrite.map(async (row) => {
+      if (mergeSet.has(row.rel) && options.mergeFile) {
+        await options.mergeFile(row.rel, row.templatePath, row.destPath);
+        return;
+      }
+      await fs.mkdir(path.dirname(row.destPath), { recursive: true });
+      await fs.copyFile(row.templatePath, row.destPath);
+    }),
+  );
 
   if (!dryRun && options.afterWrite) {
     await options.afterWrite();

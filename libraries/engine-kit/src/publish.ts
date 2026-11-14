@@ -1,5 +1,9 @@
-import path from "node:path";
-import { readJson } from "./fs.js";
+import {
+  firstPublishOrderMismatch,
+  loadOrderedPackages,
+  trustedPackagesErrors,
+  type PkgJson,
+} from "./publish-load.js";
 
 export type PackageRef = {
   name: string;
@@ -13,14 +17,6 @@ export type PublishOrderGuardOptions = {
   trustedPackages?: readonly string[];
   workflowFile?: string;
 };
-
-type PkgJson = {
-  name?: string;
-  dependencies?: Record<string, string>;
-  devDependencies?: Record<string, string>;
-};
-
-let publishOrderSet = new Set<string>();
 
 function depEdges(pkg: PkgJson, orderSet: Set<string>): string[] {
   const deps = { ...pkg.dependencies, ...pkg.devDependencies };
@@ -74,56 +70,34 @@ export type PublishOrderGuardResult = {
 export async function checkPublishOrder(
   options: PublishOrderGuardOptions,
 ): Promise<PublishOrderGuardResult> {
-  const errors: string[] = [];
-  publishOrderSet = new Set(options.publishOrder);
-  const packages = new Map<string, PkgJson>();
-
-  for (const name of options.publishOrder) {
-    const rel = options.packageJsonPath(name);
-    const full = path.join(options.repoRoot, rel);
-    try {
-      const pkg = await readJson<PkgJson>(full);
-      if (pkg.name && pkg.name !== name) {
-        errors.push(`${rel}: name is ${pkg.name}, expected ${name}`);
-      }
-      packages.set(name, pkg);
-    } catch (err: unknown) {
-      errors.push(
-        `Cannot read ${rel}: ${err instanceof Error ? err.message : String(err)}`,
-      );
-    }
-  }
+  const orderSet = new Set(options.publishOrder);
+  const { packages, errors } = await loadOrderedPackages(
+    options.repoRoot,
+    options.publishOrder,
+    options.packageJsonPath,
+  );
 
   let derivedOrder: string[] = [];
   try {
-    derivedOrder = topologicalSort(packages, publishOrderSet);
+    derivedOrder = topologicalSort(packages, orderSet);
   } catch (err: unknown) {
     errors.push(err instanceof Error ? err.message : String(err));
     return { ok: false, errors, derivedOrder: [] };
   }
 
-  const actual = [...options.publishOrder];
-  if (actual.length !== derivedOrder.length) {
-    errors.push("PUBLISH_ORDER length differs from derived topological order");
-  } else {
-    for (let i = 0; i < actual.length; i++) {
-      if (actual[i] !== derivedOrder[i]) {
-        errors.push(
-          `PUBLISH_ORDER mismatch at index ${i}: got ${actual[i]}, expected ${derivedOrder[i]} (dependency order)`,
-        );
-        break;
-      }
-    }
+  const mismatch = firstPublishOrderMismatch(options.publishOrder, derivedOrder);
+  if (mismatch) {
+    errors.push(mismatch);
   }
 
   const workflow = options.workflowFile ?? "publish-ds-automation.yml";
-  for (const name of options.trustedPackages ?? []) {
-    if (!publishOrderSet.has(name)) {
-      errors.push(
-        `Trusted-publisher manifest lists ${name} but it is missing from PUBLISH_ORDER (workflow ${workflow})`,
-      );
-    }
-  }
+  errors.push(
+    ...trustedPackagesErrors(
+      options.trustedPackages,
+      orderSet,
+      workflow,
+    ),
+  );
 
   return { ok: errors.length === 0, errors, derivedOrder };
 }

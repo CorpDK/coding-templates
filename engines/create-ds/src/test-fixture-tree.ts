@@ -1,26 +1,44 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 
+type WalkFrame = { dir: string; prefix: string };
+
+async function expandWalkLevel(
+  level: WalkFrame[],
+  options: { exclude?: (rel: string) => boolean } | undefined,
+  files: string[],
+): Promise<WalkFrame[]> {
+  const next: WalkFrame[] = [];
+
+  await Promise.all(
+    level.map(async (frame) => {
+      const entries = await fs.readdir(frame.dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const rel = frame.prefix ? `${frame.prefix}/${entry.name}` : entry.name;
+        if (options?.exclude?.(rel)) continue;
+        const full = path.join(frame.dir, entry.name);
+        if (entry.isDirectory()) {
+          next.push({ dir: full, prefix: rel });
+        } else if (entry.isFile()) {
+          files.push(rel);
+        }
+      }
+    }),
+  );
+
+  return next;
+}
+
 export async function listRelativeFiles(
   root: string,
   options?: { exclude?: (rel: string) => boolean },
 ): Promise<string[]> {
   const out: string[] = [];
+  let level: WalkFrame[] = [{ dir: root, prefix: "" }];
 
-  async function walk(dir: string, prefix: string): Promise<void> {
-    const entries = await fs.readdir(dir, { withFileTypes: true });
-    for (const entry of entries) {
-      const rel = prefix ? `${prefix}/${entry.name}` : entry.name;
-      if (options?.exclude?.(rel)) continue;
-      const full = path.join(dir, entry.name);
-      if (entry.isDirectory()) {
-        await walk(full, rel);
-      } else if (entry.isFile()) {
-        out.push(rel);
-      }
-    }
+  while (level.length > 0) {
+    level = await expandWalkLevel(level, options, out);
   }
 
-  await walk(root, "");
   return out.sort((a, b) => a.localeCompare(b));
 }

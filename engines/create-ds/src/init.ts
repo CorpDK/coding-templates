@@ -1,11 +1,6 @@
-import fs from "node:fs/promises";
 import path from "node:path";
 import {
-  copyDir,
   pathExists,
-  readJson,
-  writeJson,
-  mergePackageJson,
   type EngineResult,
   EXIT_SUCCESS,
   EXIT_TOOL,
@@ -13,20 +8,16 @@ import {
 } from "@corpdk/engine-kit";
 import { exitCodeForEngineError } from "./engine-errors.js";
 import { spinner } from "@clack/prompts";
-import { copyBootstrapStaticSrc, runDalBootstrap } from "./bootstrap.js";
 import {
-  COPY_TEMPLATE_EXCLUDE,
-  CORP_DK_OWNED,
   CREATE_DS_ENGINE_ROOT,
-  initialScaffoldCalVer,
-  normalizeDalScripts,
 } from "./constants.js";
 import {
-  engineStarterDir,
-  isBundledCanonicalTemplate,
-  readCreateDsReleaseVersion,
   resolveCanonicalDsTemplateDir,
 } from "./template.js";
+import {
+  applyScaffoldLayout,
+  ensureEmptyTarget,
+} from "./init-layout.js";
 
 export interface InitOptions {
   dir: string;
@@ -68,15 +59,13 @@ export async function runInit(options: InitOptions): Promise<EngineResult> {
     };
   }
 
-  if (await pathExists(targetDir)) {
-    const entries = await fs.readdir(targetDir);
-    if (entries.length > 0) {
-      return {
-        exitCode: EXIT_USAGE,
-        changedFiles: [],
-        message: `Init target is not empty: ${targetDir}`,
-      };
-    }
+  const emptyError = await ensureEmptyTarget(targetDir);
+  if (emptyError) {
+    return {
+      exitCode: EXIT_USAGE,
+      changedFiles: [],
+      message: emptyError,
+    };
   }
 
   if (options.dryRun) {
@@ -91,68 +80,7 @@ export async function runInit(options: InitOptions): Promise<EngineResult> {
   s.start("Scaffolding DS package layout");
 
   try {
-    await fs.mkdir(targetDir, { recursive: true });
-
-    await copyDir(templateDir, targetDir, {
-      exclude: [...COPY_TEMPLATE_EXCLUDE],
-    });
-
-    const schemaSrc = options.demoSchema
-      ? path.join(templateDir, "src", "db", "schema")
-      : path.join(engineStarterDir(), "db", "schema");
-
-    await copyDir(schemaSrc, path.join(targetDir, "src", "db", "schema"), {
-      requireSource: Boolean(options.demoSchema),
-    });
-
-    if (options.demoSchema) {
-      const seedSrc = path.join(templateDir, "src", "db", "seed.ts");
-      if (await pathExists(seedSrc)) {
-        await fs.copyFile(
-          seedSrc,
-          path.join(targetDir, "src", "db", "seed.ts"),
-        );
-      } else {
-        throw new Error(`Demo seed missing in canonical: ${seedSrc}`);
-      }
-    } else {
-      const starterDal = path.join(
-        engineStarterDir(),
-        "dal",
-        "dal.config.yaml",
-      );
-      if (await pathExists(starterDal)) {
-        await fs.copyFile(
-          starterDal,
-          path.join(targetDir, "dal", "dal.config.yaml"),
-        );
-      }
-    }
-
-    const templatePkg = await readJson<Record<string, unknown>>(
-      path.join(templateDir, "package.json"),
-    );
-    const releaseVersion = isBundledCanonicalTemplate(templateDir)
-      ? await readCreateDsReleaseVersion()
-      : undefined;
-    const merged = mergePackageJson(
-      {
-        name: options.name,
-        version: initialScaffoldCalVer(),
-        license: "MIT",
-      },
-      templatePkg as Parameters<typeof mergePackageJson>[1],
-      {
-        owned: CORP_DK_OWNED,
-        scriptsTransform: normalizeDalScripts,
-        releaseVersion,
-      },
-    );
-    await writeJson(path.join(targetDir, "package.json"), merged);
-
-    await runDalBootstrap(repoRoot, targetDir, templateDir);
-    await copyBootstrapStaticSrc(templateDir, targetDir);
-
+    await applyScaffoldLayout(options, repoRoot, templateDir, targetDir);
     s.stop("DS package scaffolded");
 
     return {
