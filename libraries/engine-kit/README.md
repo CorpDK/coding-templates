@@ -6,15 +6,15 @@ Design: [doc 15 — Generator engine family](../docs/developer/15-create-ds-gene
 
 ## Modules
 
-| Module | Exports |
-| ------ | ------- |
-| `fs` | `pathExists`, `readJson`, `writeJson`, `copyDir` (caller-provided `exclude`, `requireSource`) |
-| `merge` | `mergePackageJson`, `mergeYamlConfig` (deep map merge) |
-| `template` | `resolveCanonical`, `readEngineRelease`, `initialCalVer`, `engineRootFromImportMeta` |
-| `upgrade` | `runUpgradePlan`, `writeEngineVersion` |
-| `canonical` | `syncCanonical`, `checkCanonical` |
-| `publish` | `checkPublishOrder`, `DS_AUTOMATION_PUBLISH_ORDER` |
-| `cli` | `parseEngineCli`, `runEngineCli` (§11.2 exit codes) |
+| Module      | Exports                                                                                       |
+| ----------- | --------------------------------------------------------------------------------------------- |
+| `fs`        | `pathExists`, `readJson`, `writeJson`, `copyDir` (caller-provided `exclude`, `requireSource`) |
+| `merge`     | `mergePackageJson`, `mergeYamlConfig` (deep map merge)                                        |
+| `template`  | `resolveCanonical`, `readEngineRelease`, `initialCalVer`, `engineRootFromImportMeta`          |
+| `upgrade`   | `runUpgradePlan`, `writeEngineVersion`                                                        |
+| `canonical` | `syncCanonical`, `checkCanonical`                                                             |
+| `publish`   | `checkPublishOrder`, `DS_AUTOMATION_PUBLISH_ORDER`                                            |
+| `cli`       | `parseEngineCli`, `runEngineCli` (§11.2 exit codes)                                           |
 
 ## Scripts
 

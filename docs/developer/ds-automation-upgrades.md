@@ -30,7 +30,7 @@ pnpm dlx @corpdk/create-ds upgrade ./packages/my-ds
 | `0`  | Success; `--help` / `--version`                                                                        |
 | `2`  | Usage (unknown command, unknown flag, missing `dal/dal.config.yaml` on upgrade, non-empty init target) |
 | `1`  | Invalid consumer `package.json` or `dal.config.yaml` (unparseable)                                     |
-| `3`  | Tool failure (`entity:lint`, DAL bootstrap exec, missing canonical overwrite on upgrade)             |
+| `3`  | Tool failure (`entity:lint`, DAL bootstrap exec, missing canonical overwrite on upgrade)               |
 
 Global / shared: **`--dry-run`**, **`--no-install`** (init only; CLI never runs install — printed next steps omit `pnpm install` when this flag is set, including **`--dry-run`** previews), **`--version`**, **`-h` / `--help`**.
 

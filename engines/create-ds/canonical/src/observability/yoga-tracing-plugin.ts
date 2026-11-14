@@ -64,9 +64,14 @@ function sanitizedVariables(
   }
 }
 
-function redactSensitiveLiteralRanges(document: DocumentNode): { start: number; end: number }[] {
+function redactSensitiveLiteralRanges(
+  document: DocumentNode,
+): { start: number; end: number }[] {
   const ranges: { start: number; end: number }[] = [];
-  const pushValueLoc = (fieldName: string, loc: { start: number; end: number } | undefined) => {
+  const pushValueLoc = (
+    fieldName: string,
+    loc: { start: number; end: number } | undefined,
+  ) => {
     if (SENSITIVE_VARIABLE_KEY.test(fieldName) && loc) {
       ranges.push({ start: loc.start, end: loc.end });
     }
@@ -124,7 +129,10 @@ function finishFromResult(
   span: Span,
   result: { errors?: readonly GraphQLError[] } | AsyncIterable<unknown>,
 ): void {
-  if (typeof (result as AsyncIterable<unknown>)[Symbol.asyncIterator] === "function") {
+  if (
+    typeof (result as AsyncIterable<unknown>)[Symbol.asyncIterator] ===
+    "function"
+  ) {
     span.setStatus({ code: SpanStatusCode.OK });
     span.end();
     return;
