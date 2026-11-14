@@ -1,0 +1,167 @@
+name: Monorepo CI
+
+# Orchestrates quality (parallel), Sonar, and npm publish on the same commit SHA.
+# pull_request for PR branches; push only on main (avoids duplicate runs per commit).
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Path filter for the lockstep publish set (same globs as publish-ds-automation).
+  publish-paths:
+    runs-on: ubuntu-latest
+    outputs:
+      matched: ${{ steps.filter.outputs.packages }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            packages:
+              - "libraries/dal-core/**"
+              - "libraries/dal-codegen/**"
+              - "libraries/codegen-cli/**"
+              - "libraries/pub-sub/**"
+              - "libraries/scalar-zod/**"
+              - "libraries/graphql-input-zod/**"
+              - "libraries/graphql-dsl/**"
+              - "libraries/engine-kit/**"
+              - "libraries/graphql-cli-core/**"
+              - "engines/create-ds/**"
+              - "engines/create-graphql-sdk/**"
+              - "engines/create-graphql-cli/**"
+              - ".github/workflows/publish-ds-automation.yml"
+              - ".github/workflows/ci.yml"
+              - ".github/scripts/publish-ds-automation.sh"
+
+  # Parallel quality groups (replaces the former single sequential DAL workflow job).
+  # | group          | Packages / scope |
+  # |----------------|------------------|
+  # | dal-core       | @corpdk/dal-core build + test |
+  # | pub-sub        | @corpdk/pub-sub build + test |
+  # | dal-codegen    | @corpdk/dal-codegen build + test |
+  # | ds-template    | @corpdk/ds turbo build + entity:lint |
+  # | publish-stack  | turbo build for remaining lockstep npm packages |
+  quality:
+    name: Monorepo quality (${{ matrix.group }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - group: dal-core
+          - group: pub-sub
+          - group: dal-codegen
+          - group: ds-template
+          - group: publish-stack
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: dal-core
+        if: matrix.group == 'dal-core'
+        run: |
+          pnpm --filter @corpdk/dal-core build
+          pnpm --filter @corpdk/dal-core test
+
+      - name: pub-sub
+        if: matrix.group == 'pub-sub'
+        run: |
+          pnpm --filter @corpdk/pub-sub build
+          pnpm --filter @corpdk/pub-sub test
+
+      - name: dal-codegen
+        if: matrix.group == 'dal-codegen'
+        run: |
+          pnpm --filter @corpdk/dal-core build
+          pnpm --filter @corpdk/dal-codegen build
+          pnpm --filter @corpdk/dal-codegen test
+
+      - name: ds-template
+        if: matrix.group == 'ds-template'
+        run: |
+          # Turbo @corpdk/ds#build runs dal:codegen:schema → graphql-codegen → dal:codegen:impl → tsc
+          pnpm turbo run build --filter=@corpdk/ds
+          pnpm --filter @corpdk/ds entity:lint
+
+      - name: publish-stack
+        if: matrix.group == 'publish-stack'
+        run: |
+          pnpm turbo run build \
+            --filter=@corpdk/graphql-dsl \
+            --filter=@corpdk/scalar-zod \
+            --filter=@corpdk/graphql-input-zod \
+            --filter=@corpdk/engine-kit \
+            --filter=@corpdk/graphql-cli-core \
+            --filter=@corpdk/create-graphql-sdk \
+            --filter=@corpdk/create-graphql-cli \
+            --filter=@corpdk/codegen-cli \
+            --filter=@corpdk/create-ds
+
+  sonar:
+    name: SonarQube Analysis
+    needs: quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm --filter @corpdk/dal-core build
+      - run: pnpm --filter @corpdk/dal-codegen build
+      - run: pnpm --filter @corpdk/pub-sub build
+      - run: pnpm --filter @corpdk/dal-core test:coverage
+      - run: pnpm --filter @corpdk/dal-codegen test:coverage
+      - run: pnpm --filter @corpdk/pub-sub test:coverage
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v6
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
+
+  publish:
+    name: Publish DS automation (npm)
+    needs: [quality, sonar, publish-paths]
+    if: |
+      needs.quality.result == 'success' &&
+      needs.sonar.result == 'success' &&
+      needs.publish-paths.outputs.matched == 'true' &&
+      (github.event_name == 'push' || github.event_name == 'pull_request')
+    permissions:
+      contents: write
+      id-token: write
+    uses: ./.github/workflows/publish-ds-automation.yml
+    secrets: inherit
+    with:
+      trigger_event: ${{ github.event_name }}

@@ -7,25 +7,15 @@ name: Publish DS automation (npm)
 # CI creates git tag ds-automation/v<CalVer> and GitHub Release after npm publish.
 # PRs and workflow_dispatch (dry-run default) validate build/tests/packaging without upload.
 
+# Live publish on main: invoked only from Monorepo CI after quality + Sonar succeed (same SHA).
+# Manual dry-run / break-glass live: workflow_dispatch on main.
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - "libraries/dal-core/**"
-      - "libraries/dal-codegen/**"
-      - "libraries/codegen-cli/**"
-      - "libraries/pub-sub/**"
-      - "libraries/scalar-zod/**"
-      - "libraries/graphql-input-zod/**"
-      - "libraries/graphql-dsl/**"
-      - "libraries/engine-kit/**"
-      - "libraries/graphql-cli-core/**"
-      - "engines/create-ds/**"
-      - "engines/create-graphql-sdk/**"
-      - "engines/create-graphql-cli/**"
-      - ".github/workflows/publish-ds-automation.yml"
-      - ".github/scripts/publish-ds-automation.sh"
+  workflow_call:
+    inputs:
+      trigger_event:
+        description: Upstream CI event (push or pull_request)
+        required: true
+        type: string
   workflow_dispatch:
     inputs:
       dry_run:
@@ -36,24 +26,6 @@ on:
         description: CalVer to verify (defaults to libraries/dal-core/package.json on checked-out ref)
         required: false
         type: string
-  pull_request:
-    branches:
-      - main
-    paths:
-      - "libraries/dal-core/**"
-      - "libraries/dal-codegen/**"
-      - "libraries/codegen-cli/**"
-      - "libraries/pub-sub/**"
-      - "libraries/scalar-zod/**"
-      - "libraries/graphql-input-zod/**"
-      - "libraries/graphql-dsl/**"
-      - "libraries/engine-kit/**"
-      - "libraries/graphql-cli-core/**"
-      - "engines/create-ds/**"
-      - "engines/create-graphql-sdk/**"
-      - "engines/create-graphql-cli/**"
-      - ".github/workflows/publish-ds-automation.yml"
-      - ".github/scripts/publish-ds-automation.sh"
 
 concurrency:
   group: publish-ds-automation-${{ github.workflow }}-${{ github.ref }}
@@ -79,6 +51,9 @@ jobs:
           run_job="true"
           live="false"
           event="${{ github.event_name }}"
+          if [[ "${event}" == "workflow_call" ]]; then
+            event="${{ inputs.trigger_event }}"
+          fi
           ref="${{ github.ref }}"
 
           if [[ "${event}" == "pull_request" ]]; then
