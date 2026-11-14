@@ -443,7 +443,7 @@ The changes **intended** to be visible are:
 | Situation                                                                                                                           | Exit |
 | ----------------------------------------------------------------------------------------------------------------------------------- | ---- |
 | Non-empty target, missing `dal/dal.config.yaml` on `upgrade`, invalid flags or names                                                | 2    |
-| `entity:lint` failure, bootstrap `exec` failure, install failure, `MissingOverwriteSourceError` (earlier upgrade writes may remain) | 3    |
+| `entity:lint` failure after upgrade writes, bootstrap `exec` failure, install failure, `MissingOverwriteSourceError` | 3    |
 | Invalid consumer files (unparseable `package.json` / YAML)                                                                          | 1    |
 
 **R-D11 fixture comparison:**
