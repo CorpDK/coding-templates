@@ -47,7 +47,7 @@ Global / shared: **`--dry-run`**, **`--no-install`** (init only; CLI never runs 
 - `dal/dal.config.yaml`
 - `package.json` at an initial **CalVer** **`YYYY.MM.0`** (UTC year and month when `init` runs, `MICRO` starts at `0`), **`license`: `MIT`**, scripts/deps aligned with the canonical template (`workspace:*` when resolving `templates/ds`; **`^@corpdk/create-ds` release version** for `@corpdk/*` when using the bundled canonical snapshot, e.g. `pnpm dlx`). Deployable DS packages follow Limitless **CalVer** (`YYYY.MM.MICRO`), not semver `0.1.0`; see [Monorepo design — CalVer](../architecture/02-monorepo-design.md#calver-format-rules).
 - Root **`LICENSE`** (MIT, CorpDK) copied from the canonical template
-- **`publishConfig`**: `mergePackageJson` starts from the canonical template; init supplies only `name`, `version`, and `license`, so template registry settings can appear unless the team clears them after scaffold (upgrade preserves an existing consumer `publishConfig` via `preserveKeys`)
+- **`publishConfig`**: init does **not** inherit registry settings from the canonical template (`mergePackageJson` omits template `publishConfig` when the consumer has none). Add `publishConfig` on the scaffolded package when publishing outside the monorepo. Upgrade preserves an existing consumer `publishConfig` via `preserveKeys`.
 - `.gitignore` entries for `src/generated/**`
 - Yoga bootstrap via **`dal-codegen --mode=bootstrap`** when the monorepo `dal-codegen` CLI is built; otherwise copies bootstrap files from the canonical template
 

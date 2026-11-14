@@ -47,6 +47,39 @@ describe("runUpgrade fixture", () => {
     expect(result.message).toMatch(/dal\/dal\.config\.yaml/);
   });
 
+  it("preserves consumer top-level package.json metadata on merge", async () => {
+    const { target, repoRoot } = await scaffoldConsumer();
+    const pkgPath = path.join(target, "package.json");
+    const pkg = await readJson<Record<string, unknown>>(pkgPath);
+    pkg.private = true;
+    pkg.author = "Fixture Consumer";
+    pkg.repository = {
+      type: "git",
+      url: "https://example.com/consumer.git",
+    };
+    pkg.keywords = ["ds", "fixture"];
+    await fs.writeFile(pkgPath, JSON.stringify(pkg, null, 2) + "\n", "utf8");
+
+    const result = await runUpgrade({
+      dir: target,
+      repoRoot,
+    });
+    expect(result.exitCode).toBe(0);
+    const upgraded = await readJson<{
+      private?: boolean;
+      author?: string;
+      repository?: { type: string; url: string };
+      keywords?: string[];
+    }>(pkgPath);
+    expect(upgraded.private).toBe(true);
+    expect(upgraded.author).toBe("Fixture Consumer");
+    expect(upgraded.repository).toEqual({
+      type: "git",
+      url: "https://example.com/consumer.git",
+    });
+    expect(upgraded.keywords).toEqual(["ds", "fixture"]);
+  });
+
   it("preserves consumer-only dependencies on merge", async () => {
     const { target, repoRoot } = await scaffoldConsumer();
     const pkgPath = path.join(target, "package.json");
