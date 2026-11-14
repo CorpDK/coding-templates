@@ -23,13 +23,9 @@ export const itemDetails = pgTable(
     /** Warranty and support notes for the item. */
     warrantyNotes: text("warranty_notes"),
     /** Row creation time (UTC). */
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     /** Last update time (UTC). */
-    updatedAt: timestamp("updated_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     /** Actor ID from request context; never client-supplied. */
     createdBy: text("created_by").notNull(),
     /** Actor ID from request context on last update. */

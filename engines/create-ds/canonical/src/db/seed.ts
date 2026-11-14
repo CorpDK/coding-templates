@@ -178,8 +178,7 @@ export async function seedDatabase(): Promise<void> {
             id: IDS.items.headphones,
             categoryId: IDS.categories.electronics,
             name: "Wireless Headphones",
-            description:
-              "Noise-cancelling over-ear headphones with 30-hour battery life",
+            description: "Noise-cancelling over-ear headphones with 30-hour battery life",
             isActive: true,
             hasAttachments: false,
             createdAt: SEEDED_AT,
@@ -227,8 +226,7 @@ export async function seedDatabase(): Promise<void> {
             id: IDS.items.graphqlBook,
             categoryId: IDS.categories.books,
             name: "GraphQL in Action",
-            description:
-              "Practical guide to schema design and server implementation",
+            description: "Practical guide to schema design and server implementation",
             isActive: true,
             hasAttachments: false,
             createdAt: SEEDED_AT,
@@ -247,8 +245,7 @@ export async function seedDatabase(): Promise<void> {
             itemId: IDS.items.headphones,
             specifications:
               "Driver: 40mm dynamic; Frequency: 20Hz–20kHz; Bluetooth 5.3; ANC: hybrid feedforward/feedback",
-            warrantyNotes:
-              "2-year limited warranty; battery covered for 1 year",
+            warrantyNotes: "2-year limited warranty; battery covered for 1 year",
             createdAt: SEEDED_AT,
             updatedAt: SEEDED_AT,
             createdBy: ACTOR,
@@ -268,10 +265,8 @@ export async function seedDatabase(): Promise<void> {
           {
             id: IDS.itemDetails.cottonTee,
             itemId: IDS.items.cottonTee,
-            specifications:
-              "Fabric: 100% organic cotton; Weight: 180 gsm; Fit: relaxed unisex",
-            warrantyNotes:
-              "30-day satisfaction guarantee; defects replaced within 90 days",
+            specifications: "Fabric: 100% organic cotton; Weight: 180 gsm; Fit: relaxed unisex",
+            warrantyNotes: "30-day satisfaction guarantee; defects replaced within 90 days",
             createdAt: SEEDED_AT,
             updatedAt: SEEDED_AT,
             createdBy: ACTOR,
@@ -280,8 +275,7 @@ export async function seedDatabase(): Promise<void> {
           {
             id: IDS.itemDetails.woolBeanie,
             itemId: IDS.items.woolBeanie,
-            specifications:
-              "Material: 100% merino wool; Weight: 85 gsm; One size",
+            specifications: "Material: 100% merino wool; Weight: 85 gsm; One size",
             warrantyNotes: "1-year warranty against manufacturing defects",
             createdAt: SEEDED_AT,
             updatedAt: SEEDED_AT,
@@ -291,8 +285,7 @@ export async function seedDatabase(): Promise<void> {
           {
             id: IDS.itemDetails.graphqlBook,
             itemId: IDS.items.graphqlBook,
-            specifications:
-              "Format: paperback; Pages: 384; Publisher: Manning; ISBN: 978-1617294736",
+            specifications: "Format: paperback; Pages: 384; Publisher: Manning; ISBN: 978-1617294736",
             warrantyNotes: "Standard publisher return policy applies",
             createdAt: SEEDED_AT,
             updatedAt: SEEDED_AT,
@@ -524,8 +517,7 @@ export async function seedDatabase(): Promise<void> {
           {
             id: IDS.auditEvents.categoriesCreated,
             action: "SEED_CATEGORY_CREATED",
-            payload:
-              "Inserted 3 sample categories: Electronics, Apparel, Books",
+            payload: "Inserted 3 sample categories: Electronics, Apparel, Books",
             createdAt: SEEDED_AT,
             createdBy: ACTOR,
           },
@@ -560,12 +552,8 @@ export async function seedDatabase(): Promise<void> {
   }
 }
 
-async function seedUsersAndLabelsIfEmpty(
-  db: ReturnType<typeof drizzle<typeof schema>>,
-): Promise<void> {
-  const [row] = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(users);
+async function seedUsersAndLabelsIfEmpty(db: ReturnType<typeof drizzle<typeof schema>>): Promise<void> {
+  const [row] = await db.select({ count: sql<number>`count(*)::int` }).from(users);
   if (row.count > 0) {
     console.log("[seed] Users/labels sample already present — skipping.");
     return;
@@ -641,9 +629,7 @@ async function seedUsersAndLabelsIfEmpty(
       .onConflictDoNothing();
   });
 
-  console.log(
-    "[seed] Loaded users/labels: 2 users, 2 labels, 2 user-label links.",
-  );
+  console.log("[seed] Loaded users/labels: 2 users, 2 labels, 2 user-label links.");
 }
 
 function buildScalarSpecimenRow() {
@@ -651,8 +637,7 @@ function buildScalarSpecimenRow() {
     id: IDS.scalarSpecimens.reference,
     specimenCode: "scalar-reference-v1",
     fixedCode: "REF00001",
-    notes:
-      "Populated optional columns for filter regression; pair with scalar-nulls-v1 for isNull tests.",
+    notes: "Populated optional columns for filter regression; pair with scalar-nulls-v1 for isNull tests.",
     slugInsensitive: "Scalar-Showcase-Slug",
     slugInsensitiveOptional: "optional-slug",
     rankSmall: 42,
@@ -689,8 +674,7 @@ function buildScalarSpecimenNullsRow() {
     id: IDS.scalarSpecimens.nullsFixture,
     specimenCode: "scalar-nulls-v1",
     fixedCode: "NULL0001",
-    notes:
-      "Optional scalar columns left NULL for isNull filter queries (BigInt, Decimal, IntervalMs, enum, network, citext).",
+    notes: "Optional scalar columns left NULL for isNull filter queries (BigInt, Decimal, IntervalMs, enum, network, citext).",
     slugInsensitive: "null-fixture-slug",
     slugInsensitiveOptional: null,
     rankSmall: 0,
@@ -725,9 +709,7 @@ function buildScalarSpecimenNullsRow() {
 async function seedScalarSpecimensIfEmpty(
   db: ReturnType<typeof drizzle<typeof schema>>,
 ): Promise<void> {
-  const [row] = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(scalarSpecimens);
+  const [row] = await db.select({ count: sql<number>`count(*)::int` }).from(scalarSpecimens);
   if (row.count > 0) {
     console.log("[seed] Scalar specimens already present — skipping.");
     return;
@@ -737,14 +719,11 @@ async function seedScalarSpecimensIfEmpty(
     .insert(scalarSpecimens)
     .values([buildScalarSpecimenRow(), buildScalarSpecimenNullsRow()])
     .onConflictDoNothing();
-  console.log(
-    "[seed] Loaded scalar specimens: 2 rows (reference + nulls fixture).",
-  );
+  console.log("[seed] Loaded scalar specimens: 2 rows (reference + nulls fixture).");
 }
 
 const isMainModule =
-  process.argv[1]?.endsWith("/seed.ts") ||
-  process.argv[1]?.endsWith("/seed.js");
+  process.argv[1]?.endsWith("/seed.ts") || process.argv[1]?.endsWith("/seed.js");
 
 if (isMainModule) {
   try {
