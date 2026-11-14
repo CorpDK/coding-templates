@@ -46,6 +46,13 @@ export interface GraphqlInputZodEmit {
   scalarRegistryNames?: string[];
 }
 
+type ScalarFieldEmitOptions = Required<
+  Pick<
+    EmitGraphqlInputZodOptions,
+    "scalars" | "builtinScalars" | "scalarReferences"
+  >
+>;
+
 function collectInputObjectTypes(
   schema: GraphQLSchema,
 ): GraphQLInputObjectType[] {
@@ -142,12 +149,7 @@ function builtinScalarZodExpr(
 
 function scalarZodExpr(
   type: GraphQLScalarType,
-  options: Required<
-    Pick<
-      EmitGraphqlInputZodOptions,
-      "scalars" | "builtinScalars" | "scalarReferences"
-    >
-  >,
+  options: ScalarFieldEmitOptions,
 ): string {
   const builtin = builtinScalarZodExpr(type, options.builtinScalars);
   if (builtin) return builtin;
@@ -164,12 +166,7 @@ function scalarZodExpr(
 function typeToZodExpr(
   type: GraphQLInputType,
   lazyNames: Set<string>,
-  options: Required<
-    Pick<
-      EmitGraphqlInputZodOptions,
-      "scalars" | "builtinScalars" | "scalarReferences"
-    >
-  >,
+  options: ScalarFieldEmitOptions,
 ): string {
   let current: GraphQLInputType = type;
   if (current instanceof GraphQLNonNull) current = current.ofType;
@@ -199,12 +196,7 @@ function typeToZodExpr(
 function fieldZodExpr(
   fieldType: GraphQLInputType,
   lazyNames: Set<string>,
-  options: Required<
-    Pick<
-      EmitGraphqlInputZodOptions,
-      "scalars" | "builtinScalars" | "scalarReferences"
-    >
-  >,
+  options: ScalarFieldEmitOptions,
 ): string {
   let required = false;
   let current: GraphQLInputType = fieldType;
@@ -219,12 +211,7 @@ function fieldZodExpr(
 function emitInputObjectSchema(
   input: GraphQLInputObjectType,
   lazyNames: Set<string>,
-  options: Required<
-    Pick<
-      EmitGraphqlInputZodOptions,
-      "scalars" | "builtinScalars" | "scalarReferences"
-    >
-  >,
+  options: ScalarFieldEmitOptions,
 ): string {
   const schemaVar = `${input.name}Schema`;
   const fieldLines = Object.entries(input.getFields())

@@ -1,4 +1,4 @@
-import { z, type ZodType, type output } from "zod";
+import { z, type output } from "zod";
 import {
   GraphqlInputValidationError,
   type GraphqlInputParseResult,
@@ -6,16 +6,24 @@ import {
   zodErrorToIssues,
 } from "./errors.js";
 
+function safeParseRegistryEntry<R extends InputParserRegistry, N extends keyof R>(
+  registry: R,
+  name: N,
+  value: unknown,
+): GraphqlInputParseResult<output<R[N]>> {
+  const result = registry[name].safeParse(value);
+  if (result.success) {
+    return { ok: true, data: result.data as output<R[N]> };
+  }
+  return { ok: false, issues: zodErrorToIssues(result.error) };
+}
+
 export function createInputParsers<R extends InputParserRegistry>(registry: R) {
   function safeParseGraphqlInput<N extends keyof R>(
     name: N,
     value: unknown,
   ): GraphqlInputParseResult<output<R[N]>> {
-    const result = registry[name].safeParse(value);
-    if (result.success) {
-      return { ok: true, data: result.data as output<R[N]> };
-    }
-    return { ok: false, issues: zodErrorToIssues(result.error) };
+    return safeParseRegistryEntry(registry, name, value);
   }
 
   function safeParseOptionalGraphqlInput<N extends keyof R>(
@@ -83,11 +91,7 @@ export function createScalarParsers<R extends InputParserRegistry>(
     name: N,
     value: unknown,
   ): GraphqlInputParseResult<output<R[N]>> {
-    const result = registry[name].safeParse(value);
-    if (result.success) {
-      return { ok: true, data: result.data as output<R[N]> };
-    }
-    return { ok: false, issues: zodErrorToIssues(result.error) };
+    return safeParseRegistryEntry(registry, name, value);
   }
 
   function parseGraphqlScalar<N extends keyof R>(

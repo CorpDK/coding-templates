@@ -11,5 +11,5 @@ export const PG_INT64_MIN = BigInt("-9223372036854775808");
 export const PG_INT64_MAX = BigInt("9223372036854775807");
 
 /** IEEE 754 binary32 finite magnitude limit (PG `real`). */
-export const PG_REAL_MAX = 3.402_823_5e38;
+export const PG_REAL_MAX = 3.4028235e38;
 export const PG_REAL_MIN = -PG_REAL_MAX;

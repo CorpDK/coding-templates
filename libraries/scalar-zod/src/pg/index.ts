@@ -21,6 +21,7 @@ import {
   zMAC,
   zTimeTz,
 } from "../wire-zod.js";
+import { zFiniteNumber } from "../z-finite-number.js";
 
 export {
   PG_INT32_MAX,
@@ -42,7 +43,7 @@ function issueFromError(ctx: z.RefinementCtx, error: unknown): void {
 
 function int64MsSchema(): ZodType<string | number | bigint> {
   return z
-    .union([z.string(), z.number().finite(), z.bigint()])
+    .union([z.string(), zFiniteNumber(), z.bigint()])
     .superRefine((val, ctx) => {
       try {
         const wire = parseIntervalMs(val);
@@ -74,10 +75,7 @@ const zSmallInt = z
     }
   });
 
-const zDouble = z
-  .number()
-  .finite()
-  .superRefine((val, ctx) => {
+const zDouble = zFiniteNumber().superRefine((val, ctx) => {
     try {
       parseDouble(val);
     } catch (error) {
@@ -89,7 +87,7 @@ const zDouble = z
 export const zPgInt32 = z.number().int().min(PG_INT32_MIN).max(PG_INT32_MAX);
 
 /** Zod for GraphQL built-in Float mapped from PG `real` (IEEE binary32). */
-export const zPgReal = z.number().finite().min(PG_REAL_MIN).max(PG_REAL_MAX);
+export const zPgReal = zFiniteNumber().min(PG_REAL_MIN).max(PG_REAL_MAX);
 
 /** Zod validators aligned with DAL GraphQL scalar parse rules (mutation/filter inputs). */
 export const dalScalarZod = {

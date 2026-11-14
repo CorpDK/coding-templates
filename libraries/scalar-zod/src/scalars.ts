@@ -80,9 +80,9 @@ const BIGINT_RE = /^-?\d+$/;
 const BIGINT_MIN = BigInt("-9223372036854775808");
 const BIGINT_MAX = BigInt("9223372036854775807");
 
-function serializeIntegralString(
-  value: bigint | number | string | null | undefined,
-): string | null {
+type IntegralSerializeInput = bigint | number | string | null | undefined;
+
+function serializeIntegralString(value: IntegralSerializeInput): string | null {
   if (value == null) return null;
   if (typeof value === "bigint") return value.toString();
   if (typeof value === "number") return Math.trunc(value).toString();
@@ -338,7 +338,7 @@ function ipv6HostToBigInt(host: string): bigint {
     if (missing < 0) {
       throw new TypeError("CIDR must be valid CIDR notation");
     }
-    parts = [...head, ...Array<string>(missing).fill("0"), ...tail];
+    parts = [...head, ...new Array<string>(missing).fill("0"), ...tail];
   } else {
     parts = expandEmbeddedIpv4Groups(lowered.split(":"));
     if (parts.length !== 8) {

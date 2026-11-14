@@ -15,6 +15,7 @@ import {
   parseMacAddr,
   parseTimeTz,
 } from "./scalars.js";
+import { zFiniteNumber } from "./z-finite-number.js";
 
 function issueFromError(ctx: z.RefinementCtx, error: unknown): void {
   const message =
@@ -75,7 +76,7 @@ export const zDate = z.string().superRefine((val, ctx) => {
 
 /** Unbounded GraphQL BigInt wire validation. */
 export const zBigInt = z
-  .union([z.string(), z.number().finite(), z.bigint()])
+  .union([z.string(), zFiniteNumber(), z.bigint()])
   .superRefine((val, ctx) => {
     try {
       parseBigIntCoerced(val);

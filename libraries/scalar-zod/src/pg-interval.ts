@@ -10,10 +10,8 @@ const MS_PER_MONTH = 30n * MS_PER_DAY;
 // Fixed 365.25-day year; PG calendar `year` fields are not equal to this ms literal in filters.
 const MS_PER_YEAR = 31557600000n;
 
-const BACKEND_INTERVAL = new RegExp(
-  String.raw`^(?:([+-]?\d+)\s+years?)?(?:\s*([+-]?\d+)\s+mons?)?(?:\s*([+-]?\d+)\s+days?)?(?:\s*([+-])?(\d*):(\d\d):(\d\d)(?:\.(\d{1,6}))?)?$`,
-  "i",
-);
+const BACKEND_INTERVAL =
+  /^(?:([+-]?\d+)\s+years?)?(?:\s*([+-]?\d+)\s+mons?)?(?:\s*([+-]?\d+)\s+days?)?(?:\s*([+-])?(\d*):(\d\d):(\d\d)(?:\.(\d{1,6}))?)?$/i;
 
 const TIME_ONLY = /^([+-])?(\d+):(\d{2}):(\d{2})(?:\.(\d{1,6}))?$/;
 const DAY_TIME = /^(\d+)\s+([+-])?(\d+):(\d{2}):(\d{2})(?:\.(\d{1,6}))?$/;
