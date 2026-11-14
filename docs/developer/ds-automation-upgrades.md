@@ -32,7 +32,7 @@ pnpm dlx @corpdk/create-ds upgrade ./packages/my-ds
 | `1` | Invalid consumer `package.json` or `dal.config.yaml` (unparseable) |
 | `3` | Tool failure (`entity:lint`, DAL bootstrap exec) |
 
-Global / shared: **`--dry-run`**, **`--no-install`** (init only; CLI does not run install — omits install from printed next steps when set, except init **`--dry-run`** previews always list install), **`--version`**, **`-h` / `--help`**.
+Global / shared: **`--dry-run`**, **`--no-install`** (init only; CLI never runs install — printed next steps omit `pnpm install` when this flag is set, including **`--dry-run`** previews), **`--version`**, **`-h` / `--help`**.
 
 `upgrade` writes **`.create-ds-version`** with the engine release used for the merge.
 

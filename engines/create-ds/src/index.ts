@@ -17,11 +17,16 @@ async function main(): Promise<number> {
   }
 
   if (parsed.kind === "version") {
-    const pkg = await readJson<{ version: string }>(
-      path.join(CREATE_DS_ENGINE_ROOT, "package.json"),
-    );
-    console.log(pkg.version);
-    return 0;
+    try {
+      const pkg = await readJson<{ version: string }>(
+        path.join(CREATE_DS_ENGINE_ROOT, "package.json"),
+      );
+      console.log(pkg.version);
+      return 0;
+    } catch (err: unknown) {
+      console.error(err instanceof Error ? err.message : err);
+      return 1;
+    }
   }
 
   if (parsed.kind === "usage") {

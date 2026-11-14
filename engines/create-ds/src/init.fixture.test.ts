@@ -190,4 +190,33 @@ describe("runInit fixture", () => {
     await expect(fs.stat(target)).rejects.toThrow();
   });
 
+  it("dry-run honors noInstall in next steps", async () => {
+    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "create-ds-init-"));
+    const result = await runInit({
+      dir: path.join(tmp, "dry-no-install"),
+      name: "@test/dry-ni",
+      dryRun: true,
+      noInstall: true,
+      repoRoot: repoRootFromEngine(),
+    });
+    expect(result.nextSteps).toEqual([
+      "pnpm --filter @test/dry-ni dal:codegen",
+    ]);
+  });
+
+  it("does not inherit template publishConfig on scaffold", async () => {
+    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "create-ds-init-"));
+    const target = path.join(tmp, "nopub");
+    const result = await runInit({
+      dir: target,
+      name: "@test/nopub",
+      repoRoot: repoRootFromEngine(),
+    });
+    expect(result.exitCode).toBe(0);
+    const pkg = await readJson<Record<string, unknown>>(
+      path.join(target, "package.json"),
+    );
+    expect(pkg.publishConfig).toBeUndefined();
+  });
+
 });

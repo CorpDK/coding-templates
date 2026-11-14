@@ -8,6 +8,7 @@ import {
   mergePackageJson,
   type EngineResult,
   EXIT_SUCCESS,
+  EXIT_TOOL,
   EXIT_USAGE,
 } from "@corpdk/engine-kit";
 import { exitCodeForEngineError } from "./engine-errors.js";
@@ -36,11 +37,28 @@ export interface InitOptions {
   repoRoot?: string;
 }
 
+function initNextSteps(packageName: string, noInstall?: boolean): string[] {
+  const steps: string[] = [];
+  if (!noInstall) steps.push("pnpm install");
+  steps.push(`pnpm --filter ${packageName} dal:codegen`);
+  return steps;
+}
+
 export async function runInit(options: InitOptions): Promise<EngineResult> {
   const repoRoot =
     options.repoRoot ?? path.resolve(CREATE_DS_ENGINE_ROOT, "..", "..");
   const targetDir = path.resolve(options.dir);
-  const templateDir = await resolveCanonicalDsTemplateDir(repoRoot);
+
+  let templateDir: string;
+  try {
+    templateDir = await resolveCanonicalDsTemplateDir(repoRoot);
+  } catch (err: unknown) {
+    return {
+      exitCode: EXIT_TOOL,
+      changedFiles: [],
+      message: err instanceof Error ? err.message : String(err),
+    };
+  }
 
   if (!(await pathExists(templateDir))) {
     return {
@@ -65,10 +83,7 @@ export async function runInit(options: InitOptions): Promise<EngineResult> {
     return {
       exitCode: EXIT_SUCCESS,
       changedFiles: ["<scaffold layout>"],
-      nextSteps: [
-        "pnpm install",
-        `pnpm --filter ${options.name} dal:codegen`,
-      ],
+      nextSteps: initNextSteps(options.name, options.noInstall),
     };
   }
 
@@ -133,14 +148,10 @@ export async function runInit(options: InitOptions): Promise<EngineResult> {
 
     s.stop("DS package scaffolded");
 
-    const nextSteps = options.noInstall
-      ? [`pnpm --filter ${options.name} dal:codegen`]
-      : ["pnpm install", `pnpm --filter ${options.name} dal:codegen`];
-
     return {
       exitCode: EXIT_SUCCESS,
       changedFiles: [],
-      nextSteps,
+      nextSteps: initNextSteps(options.name, options.noInstall),
     };
   } catch (err: unknown) {
     s.stop("Scaffold failed");
