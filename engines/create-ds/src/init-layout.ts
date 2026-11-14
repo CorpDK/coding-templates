@@ -59,7 +59,10 @@ async function copyInitSchemaLayout(
 
   const starterDal = path.join(engineStarterDir(), "dal", "dal.config.yaml");
   if (await pathExists(starterDal)) {
-    await fs.copyFile(starterDal, path.join(targetDir, "dal", "dal.config.yaml"));
+    await fs.copyFile(
+      starterDal,
+      path.join(targetDir, "dal", "dal.config.yaml"),
+    );
   }
 }
 

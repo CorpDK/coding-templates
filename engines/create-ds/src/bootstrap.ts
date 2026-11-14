@@ -31,10 +31,7 @@ async function copyFallbackBootstrapFiles(
 ): Promise<void> {
   await Promise.all(
     FALLBACK_BOOTSTRAP_REL.map((rel) =>
-      fs.copyFile(
-        path.join(templateDir, rel),
-        path.join(targetDir, rel),
-      ),
+      fs.copyFile(path.join(templateDir, rel), path.join(targetDir, rel)),
     ),
   );
 }

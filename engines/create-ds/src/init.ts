@@ -8,16 +8,9 @@ import {
 } from "@corpdk/engine-kit";
 import { exitCodeForEngineError } from "./engine-errors.js";
 import { spinner } from "@clack/prompts";
-import {
-  CREATE_DS_ENGINE_ROOT,
-} from "./constants.js";
-import {
-  resolveCanonicalDsTemplateDir,
-} from "./template.js";
-import {
-  applyScaffoldLayout,
-  ensureEmptyTarget,
-} from "./init-layout.js";
+import { CREATE_DS_ENGINE_ROOT } from "./constants.js";
+import { resolveCanonicalDsTemplateDir } from "./template.js";
+import { applyScaffoldLayout, ensureEmptyTarget } from "./init-layout.js";
 
 export interface InitOptions {
   dir: string;

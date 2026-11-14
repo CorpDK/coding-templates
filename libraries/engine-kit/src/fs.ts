@@ -91,9 +91,7 @@ async function copyDirRecursive(
 
   await Promise.all(
     entries.map(async (entry) => {
-      const relPath = relPrefix
-        ? path.join(relPrefix, entry.name)
-        : entry.name;
+      const relPath = relPrefix ? path.join(relPrefix, entry.name) : entry.name;
       if (segmentExcluded(relPath, options.excludeSet)) return;
 
       const srcPath = path.join(src, entry.name);

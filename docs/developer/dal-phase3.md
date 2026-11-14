@@ -4,10 +4,10 @@ Phase 3 extends `@corpdk/dal-core` and `@corpdk/dal-codegen` with optional HMAC 
 
 ## HMAC cursor signing (§13)
 
-| Env | Behavior |
-| --- | -------- |
-| **`DAL_CURSOR_SECRET` unset** | Cursors are Base64url JSON only (backward compatible local dev) |
-| **`DAL_CURSOR_SECRET` set** | Wire format `{base64urlPayload}.{hmacSha256Signature}`; unsigned or tampered cursors → validation error |
+| Env                           | Behavior                                                                                                |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------- |
+| **`DAL_CURSOR_SECRET` unset** | Cursors are Base64url JSON only (backward compatible local dev)                                         |
+| **`DAL_CURSOR_SECRET` set**   | Wire format `{base64urlPayload}.{hmacSha256Signature}`; unsigned or tampered cursors → validation error |
 
 Implementation lives in `@corpdk/dal-core` (`cursor-signing.ts`, `pagination.ts`). Generated repositories and `QueryEngine.listConnection` use `encodeCursor` / `decodeCursor` automatically.
 

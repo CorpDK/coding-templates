@@ -103,11 +103,11 @@ See [DS subscription transport (SSE)](../developer/11-ds-subscription-sse.md) fo
 
 Every DS variant runs `graphql-codegen` with the `@corpdk/codegen-cli` preset alongside the standard `client` preset. This generates three files in `templates/ds-cli/src/generated/` (and the equivalent path in scaffolded projects):
 
-| File               | Purpose                                                                   |
-| ------------------ | ------------------------------------------------------------------------- |
+| File               | Purpose                                                                                     |
+| ------------------ | ------------------------------------------------------------------------------------------- |
 | `index.js`         | Executable CLI — zero runtime dependencies (native `fetch` + streams for SSE subscriptions) |
-| `man/ds-cli.1`     | groff man page — `man ./src/generated/man/ds-cli.1`                       |
-| `info/ds-cli.texi` | Texinfo source — compile with `makeinfo`                                  |
+| `man/ds-cli.1`     | groff man page — `man ./src/generated/man/ds-cli.1`                                         |
+| `info/ds-cli.texi` | Texinfo source — compile with `makeinfo`                                                    |
 
 All command names, descriptions, and argument documentation are derived directly from the GraphQL schema docstrings. Regenerate by running `pnpm codegen` whenever the schema changes.
 
@@ -127,8 +127,8 @@ Variable merging order: `--input <file>` → piped stdin → explicit flags (fla
 
 ### Environment
 
-| Variable      | Default | Description                                                                                                                                                                              |
-| ------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Variable      | Default | Description                                                                                                                                                                                   |
+| ------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `DS_HTTP_URL` | —       | HTTP endpoint for queries, mutations, and subscriptions (subscriptions use `Accept: text/event-stream` on the same URL — [11-ds-subscription-sse.md](../developer/11-ds-subscription-sse.md)) |
 
 ### How it's wired

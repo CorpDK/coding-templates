@@ -85,18 +85,17 @@ export async function checkPublishOrder(
     return { ok: false, errors, derivedOrder: [] };
   }
 
-  const mismatch = firstPublishOrderMismatch(options.publishOrder, derivedOrder);
+  const mismatch = firstPublishOrderMismatch(
+    options.publishOrder,
+    derivedOrder,
+  );
   if (mismatch) {
     errors.push(mismatch);
   }
 
   const workflow = options.workflowFile ?? "publish-ds-automation.yml";
   errors.push(
-    ...trustedPackagesErrors(
-      options.trustedPackages,
-      orderSet,
-      workflow,
-    ),
+    ...trustedPackagesErrors(options.trustedPackages, orderSet, workflow),
   );
 
   return { ok: errors.length === 0, errors, derivedOrder };

@@ -28,11 +28,11 @@ Generated repositories delegate list/count/connection to **QueryEngine**; CRUD a
 
 ## Bulk mutations
 
-| Mutation | Union / result | Notes |
-| -------- | -------------- | ----- |
-| `bulkCreate` / `bulkUpdate` | `BulkCreate/Update<Entity>Result` | `atomic` default: true when ≤100 items |
-| `bulkDelete` | `BulkDelete<Entity>Result` | Success = `BulkDeleteCountPayload` |
-| `bulkUpdateByFilter` / `bulkDeleteByFilter` | `BulkMutationResult!` | Always atomic; requires confirm flag on empty filter |
+| Mutation                                    | Union / result                    | Notes                                                |
+| ------------------------------------------- | --------------------------------- | ---------------------------------------------------- |
+| `bulkCreate` / `bulkUpdate`                 | `BulkCreate/Update<Entity>Result` | `atomic` default: true when ≤100 items               |
+| `bulkDelete`                                | `BulkDelete<Entity>Result`        | Success = `BulkDeleteCountPayload`                   |
+| `bulkUpdateByFilter` / `bulkDeleteByFilter` | `BulkMutationResult!`             | Always atomic; requires confirm flag on empty filter |
 
 Env: `DAL_BULK_FILTER_MAX` (default **1000**) caps filter-based bulk matched rows.
 

@@ -24,7 +24,10 @@ export async function pingDatabase(): Promise<DbPingResult> {
   const start = performance.now();
   try {
     await pool.query("SELECT 1");
-    return { connected: true, latencyMs: Math.round(performance.now() - start) };
+    return {
+      connected: true,
+      latencyMs: Math.round(performance.now() - start),
+    };
   } catch {
     return { connected: false, latencyMs: null };
   }
