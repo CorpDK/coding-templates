@@ -11,7 +11,7 @@ These **twelve** packages ship together at the same CalVer (e.g. `2026.10.0-alph
 | Order | Package                      | Path                          | Role                                                 |
 | ----- | ---------------------------- | ----------------------------- | ---------------------------------------------------- |
 | 1     | `@corpdk/graphql-dsl`        | `libraries/graphql-dsl`       | Typed selection DSL (SDK L2); scaffold until SDK P1b |
-| 2     | `@corpdk/scalar-zod`         | `libraries/scalar-zod`        | Shared scalar rules (SDK P1a)                       |
+| 2     | `@corpdk/scalar-zod`         | `libraries/scalar-zod`        | Shared scalar rules (SDK P1a)                        |
 | 3     | `@corpdk/dal-core`           | `libraries/dal-core`          | DAL types, filters, scalars, error taxonomy          |
 | 4     | `@corpdk/pub-sub`            | `libraries/pub-sub`           | GraphQL pub/sub factory (DAL DS runtime)             |
 | 5     | `@corpdk/graphql-input-zod`  | `libraries/graphql-input-zod` | Input Zod codegen runtime (SDK P1a)                  |
@@ -115,7 +115,7 @@ The workflow evaluates the CalVer gate right after checkout, **before** `pnpm` /
 
 1. Verify every package in the set has the **same** `version` as the release (from input or `libraries/dal-core/package.json`).
 2. `pnpm turbo run build` for all twelve lockstep packages (respects dependency order via Turbo).
-3. `pnpm --filter @corpdk/dal-core test` and `@corpdk/dal-codegen test` (Monorepo quality matrix in [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) already ran these on the same SHA).
+3. `pnpm --filter @corpdk/dal-core test`, `@corpdk/graphql-input-zod test`, and `@corpdk/dal-codegen test` (Monorepo quality matrix in [`.github/workflows/ci.yml`](../../.github/workflows/ci.yml) already ran these on the same SHA).
 4. Confirm each package has declaration output after build (publish script [`verify_dist_types`](../../.github/scripts/publish-ds-automation.sh): **`dist/index.d.ts`** for the nine library/engine packages that use the default layout; **`dist/types-entry.d.ts`** for **`@corpdk/create-ds`**, **`@corpdk/create-graphql-sdk`**, and **`@corpdk/create-graphql-cli`** — typings on `exports["."].import` / `types-entry` while `bin.*` may point at **`./dist/index.js`**). Spot-check packaging: `pnpm --filter @corpdk/dal-core exec npm pack --dry-run` and ensure the tarball lists `.d.ts` files. Library `package.json` must expose types via top-level `"types"` and `exports["."].types` (string-only `exports` breaks TypeScript resolution even when `.d.ts` is in the tarball).
 5. `pnpm publish --no-git-checks --tag latest` in dependency order; `--dry-run` when not releasing; live runs add `--provenance`.
 6. On live publish only: ensure git tag `ds-automation/v<CalVer>` on the release commit, then `gh release create` with generated notes (`permissions.contents: write`).
@@ -237,6 +237,7 @@ pnpm turbo run build \
   --filter=@corpdk/create-ds
 
 pnpm --filter @corpdk/dal-core test
+pnpm --filter @corpdk/graphql-input-zod test
 pnpm --filter @corpdk/dal-codegen test
 
 # Same declaration paths as publish-ds-automation.sh verify_dist_types

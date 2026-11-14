@@ -41,17 +41,22 @@ function issueFromError(ctx: z.RefinementCtx, error: unknown): void {
 }
 
 function int64MsSchema(): ZodType<string | number | bigint> {
-  return z.union([z.string(), z.number().finite(), z.bigint()]).superRefine((val, ctx) => {
-    try {
-      const wire = parseIntervalMs(val);
-      const bi = BigInt(wire);
-      if (bi < PG_INT64_MIN || bi > PG_INT64_MAX) {
-        ctx.addIssue({ code: "custom", message: "IntervalMs out of signed 64-bit range" });
+  return z
+    .union([z.string(), z.number().finite(), z.bigint()])
+    .superRefine((val, ctx) => {
+      try {
+        const wire = parseIntervalMs(val);
+        const bi = BigInt(wire);
+        if (bi < PG_INT64_MIN || bi > PG_INT64_MAX) {
+          ctx.addIssue({
+            code: "custom",
+            message: "IntervalMs out of signed 64-bit range",
+          });
+        }
+      } catch (error) {
+        issueFromError(ctx, error);
       }
-    } catch (error) {
-      issueFromError(ctx, error);
-    }
-  });
+    });
 }
 
 const zIntervalMs = int64MsSchema();
@@ -69,20 +74,19 @@ const zSmallInt = z
     }
   });
 
-const zDouble = z.number().finite().superRefine((val, ctx) => {
-  try {
-    parseDouble(val);
-  } catch (error) {
-    issueFromError(ctx, error);
-  }
-});
+const zDouble = z
+  .number()
+  .finite()
+  .superRefine((val, ctx) => {
+    try {
+      parseDouble(val);
+    } catch (error) {
+      issueFromError(ctx, error);
+    }
+  });
 
 /** Zod for GraphQL built-in Int mapped from PG `integer` (32-bit). */
-export const zPgInt32 = z
-  .number()
-  .int()
-  .min(PG_INT32_MIN)
-  .max(PG_INT32_MAX);
+export const zPgInt32 = z.number().int().min(PG_INT32_MIN).max(PG_INT32_MAX);
 
 /** Zod for GraphQL built-in Float mapped from PG `real` (IEEE binary32). */
 export const zPgReal = z.number().finite().min(PG_REAL_MIN).max(PG_REAL_MAX);

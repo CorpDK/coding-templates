@@ -8,7 +8,9 @@ import { DAL_SCALAR_ZOD_BY_NAME } from "./input-zod-scalars.js";
 
 export type { GraphqlInputZodEmit };
 
-export function entityCreateUpdateSkipSet(entities: EntityModel[]): Set<string> {
+export function entityCreateUpdateSkipSet(
+  entities: EntityModel[],
+): Set<string> {
   const skip = new Set<string>();
   for (const entity of entities) {
     skip.add(`${entity.graphqlType}CreateInput`);

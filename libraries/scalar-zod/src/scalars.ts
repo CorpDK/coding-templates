@@ -1,4 +1,9 @@
-import { guildParseIP, guildParseMAC, guildSerializeIP, guildSerializeMAC } from "./guild-scalars.js";
+import {
+  guildParseIP,
+  guildParseMAC,
+  guildSerializeIP,
+  guildSerializeMAC,
+} from "./guild-scalars.js";
 import {
   PG_INT64_MAX,
   PG_INT64_MIN,
@@ -13,7 +18,9 @@ export { intervalMsToPgInterval, pgIntervalTextToMs } from "./pg-interval.js";
 import { pgIntervalTextToMs } from "./pg-interval.js";
 
 /** Serialize timestamptz Date to ISO-8601 UTC with milliseconds and Z suffix. */
-export function serializeDateTime(value: Date | string | null | undefined): string | null {
+export function serializeDateTime(
+  value: Date | string | null | undefined,
+): string | null {
   if (value == null) return null;
   const d = value instanceof Date ? value : new Date(value);
   return d.toISOString();
@@ -33,7 +40,9 @@ export function parseDateTime(value: unknown): Date {
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 
-export function serializeDate(value: Date | string | null | undefined): string | null {
+export function serializeDate(
+  value: Date | string | null | undefined,
+): string | null {
   if (value == null) return null;
   if (typeof value === "string") return value;
   return value.toISOString().slice(0, 10);
@@ -53,7 +62,9 @@ export function parseDate(value: unknown): string {
 const TIME_TZ_RE =
   /^(\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?)(Z|[+-]\d{2}:\d{2})$/;
 
-export function serializeTimeTz(value: string | null | undefined): string | null {
+export function serializeTimeTz(
+  value: string | null | undefined,
+): string | null {
   if (value == null) return null;
   return value;
 }
@@ -78,7 +89,9 @@ function serializeIntegralString(
   return value;
 }
 
-export function serializeBigInt(value: bigint | number | string | null | undefined): string | null {
+export function serializeBigInt(
+  value: bigint | number | string | null | undefined,
+): string | null {
   return serializeIntegralString(value);
 }
 
@@ -95,7 +108,9 @@ export function parseBigInt(value: unknown): string {
 
 const DECIMAL_RE = /^-?\d+(\.\d+)?$/;
 
-export function serializeDecimal(value: string | number | null | undefined): string | null {
+export function serializeDecimal(
+  value: string | number | null | undefined,
+): string | null {
   if (value == null) return null;
   if (typeof value === "number") return value.toString();
   return value;
@@ -110,9 +125,12 @@ export function parseDecimal(value: unknown): string {
 
 const INTERVAL_MS_RE = /^-?\d+$/;
 
-export function serializeIntervalMs(value: string | number | bigint | null | undefined): string | null {
+export function serializeIntervalMs(
+  value: string | number | bigint | null | undefined,
+): string | null {
   if (value == null) return null;
-  if (typeof value === "bigint") return assertInt64WireDecimal(value.toString());
+  if (typeof value === "bigint")
+    return assertInt64WireDecimal(value.toString());
   if (typeof value === "number") {
     if (!Number.isSafeInteger(value)) {
       throw new TypeError(
@@ -146,7 +164,9 @@ export function parseIntervalMs(value: unknown): string {
     return assertInt64WireDecimal(value.toString());
   }
   if (typeof value !== "string" || !INTERVAL_MS_RE.test(value)) {
-    throw new TypeError("IntervalMs must be a signed integer string of milliseconds");
+    throw new TypeError(
+      "IntervalMs must be a signed integer string of milliseconds",
+    );
   }
   return assertInt64WireDecimal(value);
 }
@@ -157,7 +177,11 @@ function parseBoundedInt(
   max: number,
   label: string,
 ): number {
-  if (typeof value !== "number" || !Number.isFinite(value) || !Number.isInteger(value)) {
+  if (
+    typeof value !== "number" ||
+    !Number.isFinite(value) ||
+    !Number.isInteger(value)
+  ) {
     throw new TypeError(`${label} must be a finite integer`);
   }
   if (value < min || value > max) {
@@ -166,7 +190,9 @@ function parseBoundedInt(
   return value;
 }
 
-export function serializeSmallInt(value: number | null | undefined): number | null {
+export function serializeSmallInt(
+  value: number | null | undefined,
+): number | null {
   if (value == null) return null;
   return parseBoundedInt(value, PG_SMALLINT_MIN, PG_SMALLINT_MAX, "SmallInt");
 }
@@ -175,7 +201,9 @@ export function parseSmallInt(value: unknown): number {
   return parseBoundedInt(value, PG_SMALLINT_MIN, PG_SMALLINT_MAX, "SmallInt");
 }
 
-export function serializeDouble(value: number | null | undefined): number | null {
+export function serializeDouble(
+  value: number | null | undefined,
+): number | null {
   if (value == null) return null;
   if (typeof value !== "number" || !Number.isFinite(value)) {
     throw new TypeError("Double must be a finite number");
@@ -198,7 +226,9 @@ export function parseReal(value: unknown): number {
   return n;
 }
 
-export function serializeCitext(value: string | null | undefined): string | null {
+export function serializeCitext(
+  value: string | null | undefined,
+): string | null {
   if (value == null) return null;
   if (typeof value !== "string") {
     throw new TypeError("InsensitiveString must be a string");
@@ -269,7 +299,8 @@ function expandEmbeddedIpv4Groups(parts: string[]): string[] {
 function assertIpv4CidrNetwork(host: string, prefix: number): void {
   const parts = host.split(".").map(Number);
   const addr =
-    ((parts[0]! << 24) | (parts[1]! << 16) | (parts[2]! << 8) | parts[3]!) >>> 0;
+    ((parts[0]! << 24) | (parts[1]! << 16) | (parts[2]! << 8) | parts[3]!) >>>
+    0;
   const hostBits = 32 - prefix;
   if (hostBits <= 0) {
     return;
@@ -372,7 +403,9 @@ export function parseCidr(value: unknown): string {
   return value;
 }
 
-export function serializeMacAddr(value: string | null | undefined): string | null {
+export function serializeMacAddr(
+  value: string | null | undefined,
+): string | null {
   if (value == null) return null;
   return guildSerializeMAC(value);
 }

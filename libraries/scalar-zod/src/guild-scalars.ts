@@ -18,4 +18,3 @@ export function guildParseMAC(value: unknown): string {
 export function guildSerializeMAC(value: unknown): string {
   return GraphQLMAC.serialize(value);
 }
-

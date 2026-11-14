@@ -23,7 +23,10 @@ export class GraphqlInputValidationError extends Error {
 
 export function zodErrorToIssues(error: ZodError): GraphqlInputIssue[] {
   return error.issues.map((issue) => ({
-    path: issue.path.filter((p): p is string | number => typeof p === "string" || typeof p === "number"),
+    path: issue.path.filter(
+      (p): p is string | number =>
+        typeof p === "string" || typeof p === "number",
+    ),
     message: issue.message,
     code: issue.code,
   }));

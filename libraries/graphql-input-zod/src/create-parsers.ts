@@ -49,7 +49,10 @@ export function createInputParsers<R extends InputParserRegistry>(registry: R) {
     return safeParseGraphqlInputList(name, value);
   }
 
-  function parseGraphqlInput<N extends keyof R>(name: N, value: unknown): output<R[N]> {
+  function parseGraphqlInput<N extends keyof R>(
+    name: N,
+    value: unknown,
+  ): output<R[N]> {
     const result = safeParseGraphqlInput(name, value);
     if (result.ok) return result.data;
     throw new GraphqlInputValidationError(result.issues);
@@ -73,7 +76,9 @@ export function createInputParsers<R extends InputParserRegistry>(registry: R) {
   };
 }
 
-export function createScalarParsers<R extends InputParserRegistry>(registry: R) {
+export function createScalarParsers<R extends InputParserRegistry>(
+  registry: R,
+) {
   function safeParseGraphqlScalar<N extends keyof R>(
     name: N,
     value: unknown,
@@ -85,7 +90,10 @@ export function createScalarParsers<R extends InputParserRegistry>(registry: R) 
     return { ok: false, issues: zodErrorToIssues(result.error) };
   }
 
-  function parseGraphqlScalar<N extends keyof R>(name: N, value: unknown): output<R[N]> {
+  function parseGraphqlScalar<N extends keyof R>(
+    name: N,
+    value: unknown,
+  ): output<R[N]> {
     const result = safeParseGraphqlScalar(name, value);
     if (result.ok) return result.data;
     throw new GraphqlInputValidationError(result.issues);

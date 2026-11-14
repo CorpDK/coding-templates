@@ -1,4 +1,8 @@
-import { GraphQLBigInt, GraphQLDate, GraphQLDateTimeISO } from "graphql-scalars";
+import {
+  GraphQLBigInt,
+  GraphQLDate,
+  GraphQLDateTimeISO,
+} from "graphql-scalars";
 import { z, type ZodType } from "zod";
 import {
   parseBigInt,

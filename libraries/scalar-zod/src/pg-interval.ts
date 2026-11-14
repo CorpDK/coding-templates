@@ -56,7 +56,8 @@ function fractionToMs(fraction: string): bigint {
 function parseBackendInterval(text: string): bigint | null {
   const matches = BACKEND_INTERVAL.exec(text.trim());
   if (!matches) return null;
-  const [, years, months, days, timeSign, hours, minutes, seconds, fraction] = matches;
+  const [, years, months, days, timeSign, hours, minutes, seconds, fraction] =
+    matches;
   if (!years && !months && !days && hours === undefined) return null;
 
   let total = 0n;
@@ -108,7 +109,8 @@ function parseDayTime(text: string): bigint | null {
 
 function parseAmountToMs(amount: string, unitMs: bigint): bigint {
   const sign = amount.startsWith("-") ? -1n : 1n;
-  const unsigned = amount.startsWith("-") || amount.startsWith("+") ? amount.slice(1) : amount;
+  const unsigned =
+    amount.startsWith("-") || amount.startsWith("+") ? amount.slice(1) : amount;
   if (unitMs === MS_PER_SECOND && unsigned.includes(".")) {
     const [whole, frac = ""] = unsigned.split(".");
     const wholeMs = BigInt(whole || "0") * MS_PER_SECOND;
@@ -127,7 +129,8 @@ function parseAmountToMs(amount: string, unitMs: bigint): bigint {
 
 function parseVerboseInterval(text: string): bigint | null {
   const trimmed = text.trim();
-  if (!trimmed || TIME_ONLY.test(trimmed) || DAY_TIME.test(trimmed)) return null;
+  if (!trimmed || TIME_ONLY.test(trimmed) || DAY_TIME.test(trimmed))
+    return null;
   const tokens = trimmed.split(/\s+/);
   if (tokens.length < 2 || tokens.length % 2 !== 0) return null;
   let total = 0n;

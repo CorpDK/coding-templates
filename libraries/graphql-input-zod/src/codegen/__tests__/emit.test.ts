@@ -31,7 +31,9 @@ function loadExportedSchema(
     ? asEvaluableSource(scalarRegistryBlocks)
     : "";
   const body = `${prelude}\n${asEvaluableSource(schemaBlocks)}\nreturn ${exportName};`;
-  const factory = new Function("z", body) as (z: typeof import("zod").z) => ZodTypeAny;
+  const factory = new Function("z", body) as (
+    z: typeof import("zod").z,
+  ) => ZodTypeAny;
   return factory(z);
 }
 
@@ -44,10 +46,13 @@ function schemaWithIdField(builtinIdExpr?: string) {
     name: "ByBuiltinId",
     fields: { id: { type: GraphQLID } },
   });
-  return emitGraphqlInputZodBlocks(new GraphQLSchema({ query: Query, types: [ById] }), {
-    builtinScalars: builtinIdExpr ? { ID: builtinIdExpr } : undefined,
-    scalarReferences: "inline",
-  });
+  return emitGraphqlInputZodBlocks(
+    new GraphQLSchema({ query: Query, types: [ById] }),
+    {
+      builtinScalars: builtinIdExpr ? { ID: builtinIdExpr } : undefined,
+      scalarReferences: "inline",
+    },
+  );
 }
 
 describe("emitGraphqlInputZodBlocks", () => {
@@ -55,22 +60,25 @@ describe("emitGraphqlInputZodBlocks", () => {
     const spec = schemaWithIdField();
     const schema = loadExportedSchema(spec.schemaBlocks, "ByBuiltinIdSchema");
     expect(schema.safeParse({ id: "not-a-uuid" }).success).toBe(true);
-    expect(schema.safeParse({ id: "550e8400-e29b-41d4-a716-446655440000" }).success).toBe(
-      true,
-    );
+    expect(
+      schema.safeParse({ id: "550e8400-e29b-41d4-a716-446655440000" }).success,
+    ).toBe(true);
   });
 
   it("honors DAL ID override", () => {
     const dal = schemaWithIdField("z.string().uuid()");
     const schema = loadExportedSchema(dal.schemaBlocks, "ByBuiltinIdSchema");
     expect(schema.safeParse({ id: "not-a-uuid" }).success).toBe(false);
-    expect(schema.safeParse({ id: "550e8400-e29b-41d4-a716-446655440000" }).success).toBe(
-      true,
-    );
+    expect(
+      schema.safeParse({ id: "550e8400-e29b-41d4-a716-446655440000" }).success,
+    ).toBe(true);
   });
 
   it("registry mode references scalarZodSchemas object", () => {
-    const Custom = new GraphQLScalarType({ name: "CustomDate", serialize: (v) => v });
+    const Custom = new GraphQLScalarType({
+      name: "CustomDate",
+      serialize: (v) => v,
+    });
     const Query = new GraphQLObjectType({
       name: "Query",
       fields: { _: { type: GraphQLString, resolve: () => null } },

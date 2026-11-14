@@ -46,7 +46,9 @@ export interface GraphqlInputZodEmit {
   scalarRegistryNames?: string[];
 }
 
-function collectInputObjectTypes(schema: GraphQLSchema): GraphQLInputObjectType[] {
+function collectInputObjectTypes(
+  schema: GraphQLSchema,
+): GraphQLInputObjectType[] {
   const inputs: GraphQLInputObjectType[] = [];
   for (const type of Object.values(schema.getTypeMap())) {
     if (isInputObjectType(type)) {
@@ -126,17 +128,26 @@ function builtinScalarZodExpr(
   type: GraphQLScalarType,
   builtinScalars: Partial<Record<BuiltinScalarName, string>>,
 ): string | null {
-  if (type === GraphQLString) return builtinScalars.String ?? SPEC_BUILTIN_SCALARS.String;
-  if (type === GraphQLBoolean) return builtinScalars.Boolean ?? SPEC_BUILTIN_SCALARS.Boolean;
+  if (type === GraphQLString)
+    return builtinScalars.String ?? SPEC_BUILTIN_SCALARS.String;
+  if (type === GraphQLBoolean)
+    return builtinScalars.Boolean ?? SPEC_BUILTIN_SCALARS.Boolean;
   if (type === GraphQLID) return builtinScalars.ID ?? SPEC_BUILTIN_SCALARS.ID;
-  if (type === GraphQLInt) return builtinScalars.Int ?? SPEC_BUILTIN_SCALARS.Int;
-  if (type === GraphQLFloat) return builtinScalars.Float ?? SPEC_BUILTIN_SCALARS.Float;
+  if (type === GraphQLInt)
+    return builtinScalars.Int ?? SPEC_BUILTIN_SCALARS.Int;
+  if (type === GraphQLFloat)
+    return builtinScalars.Float ?? SPEC_BUILTIN_SCALARS.Float;
   return null;
 }
 
 function scalarZodExpr(
   type: GraphQLScalarType,
-  options: Required<Pick<EmitGraphqlInputZodOptions, "scalars" | "builtinScalars" | "scalarReferences">>,
+  options: Required<
+    Pick<
+      EmitGraphqlInputZodOptions,
+      "scalars" | "builtinScalars" | "scalarReferences"
+    >
+  >,
 ): string {
   const builtin = builtinScalarZodExpr(type, options.builtinScalars);
   if (builtin) return builtin;
@@ -153,7 +164,12 @@ function scalarZodExpr(
 function typeToZodExpr(
   type: GraphQLInputType,
   lazyNames: Set<string>,
-  options: Required<Pick<EmitGraphqlInputZodOptions, "scalars" | "builtinScalars" | "scalarReferences">>,
+  options: Required<
+    Pick<
+      EmitGraphqlInputZodOptions,
+      "scalars" | "builtinScalars" | "scalarReferences"
+    >
+  >,
 ): string {
   let current: GraphQLInputType = type;
   if (current instanceof GraphQLNonNull) current = current.ofType;
@@ -183,7 +199,12 @@ function typeToZodExpr(
 function fieldZodExpr(
   fieldType: GraphQLInputType,
   lazyNames: Set<string>,
-  options: Required<Pick<EmitGraphqlInputZodOptions, "scalars" | "builtinScalars" | "scalarReferences">>,
+  options: Required<
+    Pick<
+      EmitGraphqlInputZodOptions,
+      "scalars" | "builtinScalars" | "scalarReferences"
+    >
+  >,
 ): string {
   let required = false;
   let current: GraphQLInputType = fieldType;
@@ -198,12 +219,20 @@ function fieldZodExpr(
 function emitInputObjectSchema(
   input: GraphQLInputObjectType,
   lazyNames: Set<string>,
-  options: Required<Pick<EmitGraphqlInputZodOptions, "scalars" | "builtinScalars" | "scalarReferences">>,
+  options: Required<
+    Pick<
+      EmitGraphqlInputZodOptions,
+      "scalars" | "builtinScalars" | "scalarReferences"
+    >
+  >,
 ): string {
   const schemaVar = `${input.name}Schema`;
   const fieldLines = Object.entries(input.getFields())
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([name, field]) => `  ${name}: ${fieldZodExpr(field.type, lazyNames, options)},`)
+    .map(
+      ([name, field]) =>
+        `  ${name}: ${fieldZodExpr(field.type, lazyNames, options)},`,
+    )
     .join("\n");
   const objectExpr = `z.object({\n${fieldLines}\n})`;
 
@@ -225,7 +254,9 @@ export function emitGraphqlInputZodBlocks(
   };
   const skipTypeNames = options.skipTypeNames ?? new Set<string>();
 
-  const inputTypes = sortInputTypesTopologically(collectInputObjectTypes(schema));
+  const inputTypes = sortInputTypesTopologically(
+    collectInputObjectTypes(schema),
+  );
   const lazyNames = new Set(
     inputTypes.filter(needsLazyDefinition).map((t) => t.name),
   );
@@ -242,7 +273,10 @@ export function emitGraphqlInputZodBlocks(
     registryNames.push(input.name);
   }
 
-  if (resolved.scalarReferences === "registry" && Object.keys(resolved.scalars).length > 0) {
+  if (
+    resolved.scalarReferences === "registry" &&
+    Object.keys(resolved.scalars).length > 0
+  ) {
     const scalarRegistryNames = Object.keys(resolved.scalars).sort((a, b) =>
       a.localeCompare(b),
     );

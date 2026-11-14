@@ -299,7 +299,7 @@ What happens to existing `create-app` output as the monorepo changes is not cove
 
 ## 7. Fixed-order builds and CI
 
-From SDK P1a, `dal-codegen` imports `@corpdk/graphql-input-zod/codegen`. These fixed-order builds must build that library first, in the P1a PR (SDK §9.3):
+From SDK P1a, `dal-codegen` imports `@corpdk/graphql-input-zod/codegen`. Fixed-order builds are wired in [SDK §9.3](13-graphql-sdk-generator.md#93-docker) (`dal.yml`, Sonar, DS Dockerfiles):
 
 - `.github/workflows/ci.yml` (Monorepo quality matrix + Sonar)
 - `sonar-project.properties`
