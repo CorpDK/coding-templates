@@ -813,8 +813,7 @@ The manual variants' multi-file SDL (`base.graphqls`, `item.graphqls`, `server.g
 
 | File | Change in P1a |
 | ---- | ------------- |
-| `.github/workflows/dal.yml` | Build (and test) `@corpdk/graphql-input-zod` before `@corpdk/dal-codegen` |
-| `.github/workflows/sonar.yml` | Same build order |
+| `.github/workflows/ci.yml` | Parallel Monorepo quality (includes publish-stack build of `@corpdk/graphql-input-zod` and `@corpdk/dal-codegen` groups) + Sonar |
 | `sonar-project.properties` | Add the new library to `sonar.tests` and its lcov path |
 | `templates/ds/Dockerfile`, `engines/create-ds/canonical/Dockerfile` | `COPY libraries/graphql-input-zod` (manifest and sources) and build it before `dal-codegen` |
 
