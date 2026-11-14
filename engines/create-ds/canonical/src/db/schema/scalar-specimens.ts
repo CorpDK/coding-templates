@@ -49,15 +49,9 @@ export const scalarSpecimens = pgTable(
     /** Nullable bigint — `BigIntFilter.isNull`. */
     tokenBigOptional: bigint("token_big_optional", { mode: "bigint" }),
     /** Fixed-scale amount — PG `numeric` → GraphQL `Decimal` (string on wire). */
-    amountDecimal: numeric("amount_decimal", {
-      precision: 14,
-      scale: 4,
-    }).notNull(),
+    amountDecimal: numeric("amount_decimal", { precision: 14, scale: 4 }).notNull(),
     /** Nullable numeric — `DecimalFilter.isNull`. */
-    amountDecimalOptional: numeric("amount_decimal_optional", {
-      precision: 14,
-      scale: 4,
-    }),
+    amountDecimalOptional: numeric("amount_decimal_optional", { precision: 14, scale: 4 }),
     /** IEEE single — PG `real` → GraphQL `Float`. */
     ratioFloat: real("ratio_float").notNull(),
     /** IEEE double — PG `double precision` → GraphQL `Double`. */
@@ -91,19 +85,13 @@ export const scalarSpecimens = pgTable(
     /** Nullable enum — `<ScalarSpecimenKind>Filter.isNull`. */
     kindOptional: scalarSpecimenKindEnum("kind_optional"),
     /** Row creation time (UTC) — audit `timestamptz` → GraphQL `DateTime`. */
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     /** Last update time (UTC). */
-    updatedAt: timestamp("updated_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     /** Actor ID from request context; never client-supplied. */
     createdBy: text("created_by").notNull(),
     /** Actor ID from request context on last update. */
     updatedBy: text("updated_by").notNull(),
   },
-  (table) => [
-    index("scalar_specimens_specimen_code_idx").on(table.specimenCode),
-  ],
+  (table) => [index("scalar_specimens_specimen_code_idx").on(table.specimenCode)],
 );
