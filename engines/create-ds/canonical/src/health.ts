@@ -10,8 +10,7 @@ function readPackageVersion(): string {
   for (const rel of ["../package.json", "../../package.json"]) {
     try {
       const path = join(here, rel);
-      return (JSON.parse(readFileSync(path, "utf-8")) as { version: string })
-        .version;
+      return (JSON.parse(readFileSync(path, "utf-8")) as { version: string }).version;
     } catch {
       continue;
     }
@@ -31,9 +30,7 @@ export interface HealthPayload {
   };
 }
 
-export async function collectHealth(
-  uptimeSeconds: number,
-): Promise<HealthPayload> {
+export async function collectHealth(uptimeSeconds: number): Promise<HealthPayload> {
   const tracer = trace.getTracer("@corpdk/ds/health");
   const db = await tracer.startActiveSpan("db.health_ping", async (span) => {
     try {
