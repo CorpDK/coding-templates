@@ -8,20 +8,20 @@ CI workflow and release process for the **lockstep CalVer** DS automation stack 
 
 These **twelve** packages ship together at the same CalVer (e.g. `2026.10.0-alpha.14`). Order matches [`.github/scripts/publish-ds-automation.sh`](../../.github/scripts/publish-ds-automation.sh) and [generator publish order](../developer/15-create-ds-generator-integration.md#43-dependencies-and-publishing-canonical-publish-order):
 
-| Order | Package | Path | Role |
-| ----- | ------- | ---- | ---- |
-| 1 | `@corpdk/graphql-dsl` | `libraries/graphql-dsl` | Typed selection DSL (SDK L2); scaffold until SDK P1b |
-| 2 | `@corpdk/scalar-zod` | `libraries/scalar-zod` | Shared scalar rules; scaffold until SDK P1a |
-| 3 | `@corpdk/dal-core` | `libraries/dal-core` | DAL types, filters, scalars, error taxonomy |
-| 4 | `@corpdk/pub-sub` | `libraries/pub-sub` | GraphQL pub/sub factory (DAL DS runtime) |
-| 5 | `@corpdk/graphql-input-zod` | `libraries/graphql-input-zod` | Input Zod codegen (SDK L3); scaffold until SDK P1a |
-| 6 | `@corpdk/dal-codegen` | `libraries/dal-codegen` | `dal-codegen` / `dal-entity-lint` CLIs |
-| 7 | `@corpdk/engine-kit` | `libraries/engine-kit` | Shared `create-*` engine kit; scaffold until DS-P0b |
-| 8 | `@corpdk/graphql-cli-core` | `libraries/graphql-cli-core` | CLI runtime + codegen; scaffold until CLI C-P1 |
-| 9 | `@corpdk/create-graphql-sdk` | `engines/create-graphql-sdk` | SDK scaffold engine; stub until SDK P1c |
-| 10 | `@corpdk/create-graphql-cli` | `engines/create-graphql-cli` | CLI scaffold engine; stub until CLI C-P2 |
-| 11 | `@corpdk/codegen-cli` | `libraries/codegen-cli` | Legacy GraphQL codegen plugin (deprecation planned) |
-| 12 | `@corpdk/create-ds` | `engines/create-ds` | Scaffold + upgrade CLI for DAL DS apps |
+| Order | Package                      | Path                          | Role                                                 |
+| ----- | ---------------------------- | ----------------------------- | ---------------------------------------------------- |
+| 1     | `@corpdk/graphql-dsl`        | `libraries/graphql-dsl`       | Typed selection DSL (SDK L2); scaffold until SDK P1b |
+| 2     | `@corpdk/scalar-zod`         | `libraries/scalar-zod`        | Shared scalar rules; scaffold until SDK P1a          |
+| 3     | `@corpdk/dal-core`           | `libraries/dal-core`          | DAL types, filters, scalars, error taxonomy          |
+| 4     | `@corpdk/pub-sub`            | `libraries/pub-sub`           | GraphQL pub/sub factory (DAL DS runtime)             |
+| 5     | `@corpdk/graphql-input-zod`  | `libraries/graphql-input-zod` | Input Zod codegen (SDK L3); scaffold until SDK P1a   |
+| 6     | `@corpdk/dal-codegen`        | `libraries/dal-codegen`       | `dal-codegen` / `dal-entity-lint` CLIs               |
+| 7     | `@corpdk/engine-kit`         | `libraries/engine-kit`        | Shared `create-*` engine kit; scaffold until DS-P0b  |
+| 8     | `@corpdk/graphql-cli-core`   | `libraries/graphql-cli-core`  | CLI runtime + codegen; scaffold until CLI C-P1       |
+| 9     | `@corpdk/create-graphql-sdk` | `engines/create-graphql-sdk`  | SDK scaffold engine; stub until SDK P1c              |
+| 10    | `@corpdk/create-graphql-cli` | `engines/create-graphql-cli`  | CLI scaffold engine; stub until CLI C-P2             |
+| 11    | `@corpdk/codegen-cli`        | `libraries/codegen-cli`       | Legacy GraphQL codegen plugin (deprecation planned)  |
+| 12    | `@corpdk/create-ds`          | `engines/create-ds`           | Scaffold + upgrade CLI for DAL DS apps               |
 
 **Not in this pipeline:** `@corpdk/create-app`, UI packages, `eslint-config`, or any `templates/*` (Artifactory). `@corpdk/ds` in the monorepo is a template, not an npm consumer package for this release unit.
 
@@ -33,15 +33,15 @@ Each `package.json` must include a monorepo **`repository`** object (`url` → t
 
 The [GraphQL SDK](../developer/13-graphql-sdk-generator.md), [CLI](../developer/14-graphql-cli-generator.md), and [DS generator integration](../developer/15-create-ds-generator-integration.md) designs add seven npm packages. **B0** reserved each name on the registry; they now share the lockstep CalVer in `publish-ds-automation.sh`. Trusted publishing uses **`publish-ds-automation.yml`** (OIDC validates on the first successful CI publish after merge to `main`).
 
-| Package | Path | Status |
-| ------- | ---- | ------ |
-| `@corpdk/scalar-zod` | `libraries/scalar-zod` | Bootstrap on npm; trust configured; **pending OIDC validation** until first CI publish from `main` |
-| `@corpdk/graphql-input-zod` | `libraries/graphql-input-zod` | Same |
-| `@corpdk/graphql-dsl` | `libraries/graphql-dsl` | Same |
-| `@corpdk/engine-kit` | `libraries/engine-kit` | Same |
-| `@corpdk/graphql-cli-core` | `libraries/graphql-cli-core` | Same |
-| `@corpdk/create-graphql-sdk` | `engines/create-graphql-sdk` | Same |
-| `@corpdk/create-graphql-cli` | `engines/create-graphql-cli` | Same |
+| Package                      | Path                          | Status                                                                                             |
+| ---------------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------- |
+| `@corpdk/scalar-zod`         | `libraries/scalar-zod`        | Bootstrap on npm; trust configured; **pending OIDC validation** until first CI publish from `main` |
+| `@corpdk/graphql-input-zod`  | `libraries/graphql-input-zod` | Same                                                                                               |
+| `@corpdk/graphql-dsl`        | `libraries/graphql-dsl`       | Same                                                                                               |
+| `@corpdk/engine-kit`         | `libraries/engine-kit`        | Same                                                                                               |
+| `@corpdk/graphql-cli-core`   | `libraries/graphql-cli-core`  | Same                                                                                               |
+| `@corpdk/create-graphql-sdk` | `engines/create-graphql-sdk`  | Same                                                                                               |
+| `@corpdk/create-graphql-cli` | `engines/create-graphql-cli`  | Same                                                                                               |
 
 Placeholders ship only `README.md` and `LICENSE` (no `main`, `exports`, `bin`, or scripts). **`templates/ds-sdk` and `templates/ds-cli` are not published** and are not part of B0.
 
@@ -189,7 +189,7 @@ Use `npm login` or `//registry.npmjs.org/:_authToken=${NPM_TOKEN}` in `~/.npmrc`
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **npm org**              | The `@corpdk` organization exists on [npmjs.com](https://www.npmjs.com/org/corpdk).                                                                                                                                                               |
 | **Your account**         | You are an npm **org owner** or have **publish** rights on scoped packages under `@corpdk` (team member with read-write, or package owner).                                                                                                       |
-| **Monorepo**             | Checkout `main` (or the branch that contains [`.github/scripts/publish-ds-automation.sh`](../../.github/scripts/publish-ds-automation.sh)) with all twelve `package.json` files at the **same** CalVer you intend to ship.                          |
+| **Monorepo**             | Checkout `main` (or the branch that contains [`.github/scripts/publish-ds-automation.sh`](../../.github/scripts/publish-ds-automation.sh)) with all twelve `package.json` files at the **same** CalVer you intend to ship.                        |
 | **Scoped public access** | Each package already has `"publishConfig": { "access": "public" }`. The **first** publish of a scoped package must still pass `--access public` (the publish script does this). Scoped modules default to restricted until you publish as public. |
 
 Do **not** use GitHub Actions OIDC for this step — trusted publishing is configured **after** the initial tarball upload. Pull requests that touch DS automation still run the workflow in **dry-run** mode (build, tests, **`dist/` declaration check**, `npm publish --dry-run`) with **no** registry auth, which validates packaging before bootstrap.
@@ -355,7 +355,7 @@ Symptoms: `npm trust github` (or `npm github`) returns **`E400 Bad Request`** on
 | ---- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 1    | **Missing allowed-action flags** — npm CLI **&lt; 11.15** sends a trust payload **without** `allow-publish` / `allow-stage-publish`; the registry rejects it with **400** and no helpful body ([npm trust docs](https://docs.npmjs.com/cli/v11/commands/npm-trust/)).                    | Upgrade locally: `npm install -g npm@^11.15`. Re-run **one package** with **`--allow-publish`** using the [CLI equivalent](#cli-equivalent). npm **≥ 11.15** may refuse the command client-side if the flag is omitted.                 |
 | 2    | **Workflow not on the default branch** — npm/npmjs resolves the workflow file from **`main`**. If [`publish-ds-automation.yml`](../../.github/workflows/publish-ds-automation.yml) is missing there, trust setup or OIDC publish can fail even when the file exists on a feature branch. | Confirm the workflow is on **`main`** before configuring trusted publishing. Verify: `curl -sI 'https://raw.githubusercontent.com/CorpDK/coding-templates/main/.github/workflows/publish-ds-automation.yml'` returns **200** (not 404). |
-| 3    | **2FA web auth not finished before the next command** — batch loops fire multiple trust POSTs; only the first gets a clean browser approval.                                                                                                                                             | Run **one package at a time**. Wait until browser 2FA completes and the CLI exits **successfully** before starting the next package. Do not loop all twelve until the first `npm trust list` shows a configuration.                       |
+| 3    | **2FA web auth not finished before the next command** — batch loops fire multiple trust POSTs; only the first gets a clean browser approval.                                                                                                                                             | Run **one package at a time**. Wait until browser 2FA completes and the CLI exits **successfully** before starting the next package. Do not loop all twelve until the first `npm trust list` shows a configuration.                     |
 | 4    | **Package not on the registry yet**                                                                                                                                                                                                                                                      | Complete [First-time bootstrap](#first-time-bootstrap-packages-not-on-npm-yet) so each package exists on npmjs before trust setup.                                                                                                      |
 | 5    | **Wrong workflow filename or repo**                                                                                                                                                                                                                                                      | Filename must be exactly `publish-ds-automation.yml` (not a path). Repository must be `CorpDK/coding-templates` (case-sensitive).                                                                                                       |
 
@@ -372,9 +372,9 @@ The **workflow does not read** `NPM_TOKEN`. Long-lived tokens are optional for:
 
 If CI used an org **`NPM_TOKEN`** secret only for this workflow, you can remove repository access to that secret after trusted publishing is verified on all twelve lockstep packages. Revoke or disable unused **automation / granular publish tokens** and any **2FA bypass** tokens that existed solely for this pipeline — they are no longer required for GitHub Actions publishes.
 
-| Method                        | When to use                                                              |
-| ----------------------------- | ------------------------------------------------------------------------ |
-| **Trusted publishing (OIDC)** | All CI live publishes (default)                                          |
+| Method                        | When to use                                                                         |
+| ----------------------------- | ----------------------------------------------------------------------------------- |
+| **Trusted publishing (OIDC)** | All CI live publishes (default)                                                     |
 | **Granular npm token**        | Local maintainer publish or break-glass only; scope to the twelve lockstep packages |
 
 Ensure the `@corpdk` npm org grants **publish** on the twelve lockstep packages above. `"access": "public"` is already set in each package `publishConfig`.
@@ -386,4 +386,4 @@ Ensure the `@corpdk` npm org grants **publish** on the twelve lockstep packages 
 - [Monorepo Design — Versioning & publishing](../architecture/02-monorepo-design.md#publishing-strategy)
 - [DS automation upgrades (`create-ds`)](../developer/ds-automation-upgrades.md)
 
-**Last updated**: November 6, 2026
+**Last updated**: November 14, 2026

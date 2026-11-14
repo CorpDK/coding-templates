@@ -16,7 +16,7 @@ Add Vitest (and `@testing-library/react` where components need it) to the two mo
 
 ### 2. CalVer graduation (alpha → stable)
 
-**Status:** In progress — npm **DS automation set** (`dal-core`, `dal-codegen`, `codegen-cli`, `pub-sub`, `create-ds`) is on **`2026.10.0-alpha.13`** on branch **`feature/dal-graphql-scalars`** (SDL/filter fixes — [graphql-dal-requirements.md § SDL review fixes](graphql-dal-requirements.md#generated-sdl-review-fixes-2026100-alpha13); publish on `main` after merge) with automated publish on `main` when CalVer bumps ([04-npm-publish-ds-automation.md](../admin/04-npm-publish-ds-automation.md)). Other publishable `@corpdk/*` (e.g. `@corpdk/ui-core`) remain on **`2026.10.0-alpha.1`** until the next lockstep bump. Stable `2026.10.0` (or the next calendar period) not released yet.
+**Status:** In progress — npm **DS automation lockstep set** (twelve packages; see [04-npm-publish-ds-automation.md § Package set](../admin/04-npm-publish-ds-automation.md#package-set-npmjs)) is on **`2026.10.0-alpha.14`** with seven generator scaffolds added in PR #33; automated publish on `main` when CalVer bumps ([04-npm-publish-ds-automation.md](../admin/04-npm-publish-ds-automation.md)). Other publishable `@corpdk/*` (e.g. `@corpdk/ui-core`) remain on **`2026.10.0-alpha.1`** until the next lockstep bump. Stable `2026.10.0` (or the next calendar period) not released yet.
 
 Graduate to stable CalVer (`YYYY.MM.MICRO`, Limitless rules in [02-monorepo-design.md](../architecture/02-monorepo-design.md)) when public APIs for the npm set and UI libraries stabilize.
 
@@ -40,7 +40,7 @@ Investigate `@corpdk/ui-core/styles` (or equivalent) once Turbopack supports the
 
 ### 5. GitHub Actions CI (monorepo)
 
-**Status:** Partial — [dal.yml](../../.github/workflows/dal.yml) builds/tests DAL libraries and runs `@corpdk/ds` (`templates/ds`) Turbo build plus `entity:lint`; [sonar.yml](../../.github/workflows/sonar.yml) runs DAL coverage + SonarCloud; [publish-ds-automation.yml](../../.github/workflows/publish-ds-automation.yml) dry-runs the npm five-pack on relevant PRs. DAL and Sonar workflows use **`pull_request`** on feature branches and **`push` to `main` only** so a PR branch push does not fire both events. **Gap:** no repo-wide workflow for UI packages — lint, typecheck, and `pnpm build` (or targeted Turbo filters) on every PR.
+**Status:** Partial — [dal.yml](../../.github/workflows/dal.yml) builds/tests DAL libraries and runs `@corpdk/ds` (`templates/ds`) Turbo build plus `entity:lint`; [sonar.yml](../../.github/workflows/sonar.yml) runs DAL coverage + SonarCloud; [publish-ds-automation.yml](../../.github/workflows/publish-ds-automation.yml) dry-runs the twelve-package DS automation lockstep set on relevant PRs. DAL and Sonar workflows use **`pull_request`** on feature branches and **`push` to `main` only** so a PR branch push does not fire both events. **Gap:** no repo-wide workflow for UI packages — lint, typecheck, and `pnpm build` (or targeted Turbo filters) on every PR.
 
 Add `.github/workflows/ci.yml` (or extend an existing workflow) for shared packages and UI templates. Optional: Turbo remote cache (e.g. Vercel) for speed.
 

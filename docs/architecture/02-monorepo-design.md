@@ -82,11 +82,11 @@ tsconfig.base.json     ← strict, esModuleInterop, skipLibCheck, sourceMap, dec
        └─ tsconfig.next.json   ← incremental, Next.js plugin (UI app templates)
 ```
 
-| Base config           | Target | Module         | Used by                                                                                                                                                |
-| --------------------- | ------ | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `tsconfig.node.json`  | ES2024 | NodeNext       | `ds`, `ds-no-sql`, `ds-cdb`, `ds-ddb`, `ds-file`, `ds-mongo`, `ds-sdk`, `dal-core`, `dal-codegen`, `pub-sub`, `codegen-cli`, `create-app`, `create-ds` |
-| `tsconfig.react.json` | ES2024 | esnext/bundler | `ui-core`, `ui-auth`, `ui-charts`, `ui-forms`, `ui-datagrid`, `ui-feedback`                                                                            |
-| `tsconfig.next.json`  | ES2024 | esnext/bundler | `ui`, `ui-hprt`                                                                                                                                        |
+| Base config           | Target | Module         | Used by                                                                                                                                                                                                                                                                                |
+| --------------------- | ------ | -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tsconfig.node.json`  | ES2024 | NodeNext       | `ds`, `ds-no-sql`, `ds-cdb`, `ds-ddb`, `ds-file`, `ds-mongo`, `ds-sdk`, `dal-core`, `dal-codegen`, `pub-sub`, `codegen-cli`, `scalar-zod`, `graphql-input-zod`, `graphql-dsl`, `engine-kit`, `graphql-cli-core`, `create-app`, `create-ds`, `create-graphql-sdk`, `create-graphql-cli` |
+| `tsconfig.react.json` | ES2024 | esnext/bundler | `ui-core`, `ui-auth`, `ui-charts`, `ui-forms`, `ui-datagrid`, `ui-feedback`                                                                                                                                                                                                            |
+| `tsconfig.next.json`  | ES2024 | esnext/bundler | `ui`, `ui-hprt`                                                                                                                                                                                                                                                                        |
 
 Per-package tsconfigs declare only local overrides (paths, custom includes). UI shared packages additionally have a `tsconfig.build.json` that extends their `tsconfig.json` with `noEmit: false`, `outDir: "dist"`, and `declarationMap: true`.
 
@@ -202,10 +202,10 @@ pnpm --filter './templates/**' publish --no-git-checks
 
 ### CI — DS automation (npmjs)
 
-The **DS automation** subset (`dal-core`, `pub-sub`, `codegen-cli`, `dal-codegen`, `create-ds`) is published to npmjs in **lockstep CalVer** via GitHub Actions when CalVer bumps merge to `main` (CI tags `ds-automation/v*` after npm publish). Templates are not included. See [npm publish — DS automation packages](../admin/04-npm-publish-ds-automation.md).
+The **DS automation** lockstep set (**twelve** npm packages: legacy five plus seven generator scaffolds) publishes to npmjs in **lockstep CalVer** via GitHub Actions when CalVer bumps merge to `main` (CI tags `ds-automation/v*` after npm publish). Templates are not included. Package list and order: [npm publish — DS automation packages](../admin/04-npm-publish-ds-automation.md#package-set-npmjs).
 
 ---
 
 **Related**: [System Overview](01-system-overview.md) | [Package Dependencies](06-package-dependencies.md) | [Monorepo Overview](../developer/01-monorepo-overview.md)
 
-**Last updated**: October 5, 2026
+**Last updated**: November 14, 2026
