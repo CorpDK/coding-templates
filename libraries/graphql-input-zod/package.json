@@ -1,0 +1,43 @@
+{
+  "name": "@corpdk/graphql-input-zod",
+  "version": "2026.10.0-alpha.14",
+  "description": "GraphQL input-object Zod codegen and parse helpers (SDK L3)",
+  "type": "module",
+  "license": "MIT",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CorpDK/coding-templates.git",
+    "directory": "libraries/graphql-input-zod"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./codegen": {
+      "types": "./dist/codegen/index.d.ts",
+      "import": "./dist/codegen/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist node_modules .turbo *.tsbuildinfo"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^6.0.2"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  }
+}

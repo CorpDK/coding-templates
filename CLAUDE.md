@@ -16,13 +16,20 @@ coding-templates/
 ├── CLAUDE.md                       ← this file
 ├── docs/                           ← all documentation (user / admin / developer)
 ├── engines/
-│   ├── create-app/  (@corpdk/create-app)   Interactive CLI scaffolding tool
-│   └── create-ds/   (@corpdk/create-ds)    DS scaffold + DAL automation upgrade CLI
+│   ├── create-app/         (@corpdk/create-app)          Interactive CLI scaffolding tool
+│   ├── create-ds/          (@corpdk/create-ds)             DS scaffold + DAL automation upgrade CLI
+│   ├── create-graphql-sdk/ (@corpdk/create-graphql-sdk)   SDK scaffold engine (doc 13; stub CLI until P1c)
+│   └── create-graphql-cli/ (@corpdk/create-graphql-cli)   CLI scaffold engine (doc 14; stub until C-P2)
 ├── libraries/
-│   ├── codegen-cli/ (@corpdk/codegen-cli)   GraphQL codegen plugin for resolver types + SDK generation
-│   ├── dal-core/    (@corpdk/dal-core)      DAL shared types, filters, scalars, mutation error taxonomy
-│   ├── dal-codegen/ (@corpdk/dal-codegen)   Drizzle → GraphQL SDL + repositories + resolvers codegen CLI
-│   └── pub-sub/     (@corpdk/pub-sub)       Plugin-style GraphQL pub/sub factory (memory + Redis)
+│   ├── codegen-cli/        (@corpdk/codegen-cli)          GraphQL codegen plugin for resolver types + SDK generation
+│   ├── dal-core/           (@corpdk/dal-core)             DAL shared types, filters, scalars, mutation error taxonomy
+│   ├── dal-codegen/        (@corpdk/dal-codegen)          Drizzle → GraphQL SDL + repositories + resolvers codegen CLI
+│   ├── engine-kit/         (@corpdk/engine-kit)           Shared generator engine kit (doc 15; DS-P0b)
+│   ├── graphql-cli-core/   (@corpdk/graphql-cli-core)     CLI runtime + codegen (doc 14; C-P1+)
+│   ├── graphql-dsl/        (@corpdk/graphql-dsl)          Typed selection DSL (doc 13; P1b)
+│   ├── graphql-input-zod/  (@corpdk/graphql-input-zod)    Input Zod codegen runtime (doc 13; P1a)
+│   ├── pub-sub/            (@corpdk/pub-sub)              Plugin-style GraphQL pub/sub factory (memory + Redis)
+│   └── scalar-zod/         (@corpdk/scalar-zod)           Shared scalar rules (doc 13; P1a)
 ├── packages/
 │   ├── ui-core/     (@corpdk/ui-core)       Design system, primitives, shadcn/ui, theming
 │   ├── ui-auth/     (@corpdk/ui-auth)        Auth.js v5 BFF components + OAuth2/OIDC scaffold
@@ -69,10 +76,17 @@ coding-templates/
 | `ui-forms`      | `@corpdk/ui-forms`      | React Hook Form + Zod integration (form fields, resolvers)                                                     |
 | `ui-datagrid`   | `@corpdk/ui-datagrid`   | TanStack Table v8 + @tanstack/react-virtual for large datasets                                                 |
 | `ui-feedback`   | `@corpdk/ui-feedback`   | Sonner toast notifications + AppErrorBoundary                                                                  |
-| `codegen-cli`   | `@corpdk/codegen-cli`   | GraphQL codegen plugin for resolver types + SDK generation                                                     |
-| `eslint-config` | `@corpdk/eslint-config` | Shared ESLint flat config (base + Next.js) for all packages                                                    |
-| `create-app`    | `@corpdk/create-app`    | Interactive CLI scaffolding tool for full-stack, DS-only, or UI-only projects                                  |
-| `create-ds`     | `@corpdk/create-ds`     | Scaffold and upgrade DAL-automated DS packages (`init` / `upgrade`; schema dir stays team-owned)               |
+| `codegen-cli`       | `@corpdk/codegen-cli`       | GraphQL codegen plugin for resolver types + SDK generation                                                     |
+| `scalar-zod`        | `@corpdk/scalar-zod`        | Shared scalar validation rules (doc 13 §7.7; SDK P1a)                                                          |
+| `graphql-input-zod` | `@corpdk/graphql-input-zod` | GraphQL input Zod codegen runtime (doc 13; SDK P1a)                                                            |
+| `graphql-dsl`       | `@corpdk/graphql-dsl`       | Typed selection DSL / genql fork (doc 13; SDK P1b)                                                             |
+| `engine-kit`        | `@corpdk/engine-kit`        | Shared `init`/`upgrade` engine plumbing (doc 15; DS-P0b)                                                        |
+| `graphql-cli-core`  | `@corpdk/graphql-cli-core`  | GraphQL automation CLI runtime + codegen (doc 14; C-P1+)                                                       |
+| `eslint-config`     | `@corpdk/eslint-config`     | Shared ESLint flat config (base + Next.js) for all packages                                                    |
+| `create-app`        | `@corpdk/create-app`        | Interactive CLI scaffolding tool for full-stack, DS-only, or UI-only projects                                |
+| `create-ds`         | `@corpdk/create-ds`         | Scaffold and upgrade DAL-automated DS packages (`init` / `upgrade`; schema dir stays team-owned)             |
+| `create-graphql-sdk`| `@corpdk/create-graphql-sdk`| Scaffold/sync/upgrade GraphQL client SDKs (doc 13; P1c+)                                                      |
+| `create-graphql-cli`| `@corpdk/create-graphql-cli`| Scaffold/upgrade GraphQL automation CLIs (doc 14; C-P2+)                                                      |
 | `ui-showcase`   | `@corpdk/ui-showcase`   | Storybook showcase — visual testing for all shared `packages/ui-*` components                                  |
 
 ### Key Design Decisions

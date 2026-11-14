@@ -14,6 +14,9 @@ Implementation guides, coding patterns, and standards for contributors to the co
 | [04-pubsub-internals.md](04-pubsub-internals.md)                | `createAppPubSub` factory, topic definition, resolver wiring                                          |
 | [11-ds-subscription-sse.md](11-ds-subscription-sse.md)          | DS and stock UI subscriptions over SSE (`graphql-sse` via `/api/graphql`)                             |
 | [12-ds-observability.md](12-ds-observability.md)                | `@corpdk/ds` health probe, optional OTLP tracing, generated input Zod                                 |
+| [13-graphql-sdk-generator.md](13-graphql-sdk-generator.md)      | Design: `@corpdk/create-graphql-sdk` — publishable client SDK from SDL or `typeDefs` (L1 types, L2 builder DSL via owned genql fork `@corpdk/graphql-dsl`, L3 input Zod; multi-file SDL merge) |
+| [14-graphql-cli-generator.md](14-graphql-cli-generator.md)      | Design: `@corpdk/create-graphql-cli` — automation CLI wrapping the SDK (relation-ids selections, SDK L3 validation, exit codes, LLM command catalog, replaces the `codegen-cli` preset) |
+| [15-create-ds-generator-integration.md](15-create-ds-generator-integration.md) | Design: `create-ds` integration with the SDK and CLI generators (`--with-sdk` / `--with-cli`, upgrade migration, engine `runInit`); `create-app` out of scope |
 | [05-ui-architecture.md](05-ui-architecture.md)                  | UI template state and app-level configuration                                                         |
 | [06-ui-status.md](06-ui-status.md)                              | Living capability status matrix across all UI packages                                                |
 | [07-git-conventions.md](07-git-conventions.md)                  | Conventional Commits format and examples                                                              |
@@ -38,4 +41,4 @@ Implementation guides, coding patterns, and standards for contributors to the co
 
 **Related**: [Documentation Index](../00-index.md) | [Architecture](../architecture/README.md) | [Contributing](../10-contributing.md)
 
-**Last updated**: October 6, 2026
+**Last updated**: November 7, 2026

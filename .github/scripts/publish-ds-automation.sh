@@ -25,33 +25,66 @@ fi
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "${ROOT}"
 
-# Dependency order: leaves first, then dal-codegen (workspace dep on dal-core), then create-ds.
+# Canonical order: docs/developer/15-create-ds-generator-integration.md §4.3
 PUBLISH_ORDER=(
+  "@corpdk/graphql-dsl"
+  "@corpdk/scalar-zod"
   "@corpdk/dal-core"
   "@corpdk/pub-sub"
-  "@corpdk/codegen-cli"
+  "@corpdk/graphql-input-zod"
   "@corpdk/dal-codegen"
+  "@corpdk/engine-kit"
+  "@corpdk/graphql-cli-core"
+  "@corpdk/create-graphql-sdk"
+  "@corpdk/create-graphql-cli"
+  "@corpdk/codegen-cli"
   "@corpdk/create-ds"
 )
+
+package_json_path() {
+  case "$1" in
+    @corpdk/graphql-dsl) echo "libraries/graphql-dsl/package.json" ;;
+    @corpdk/scalar-zod) echo "libraries/scalar-zod/package.json" ;;
+    @corpdk/dal-core) echo "libraries/dal-core/package.json" ;;
+    @corpdk/pub-sub) echo "libraries/pub-sub/package.json" ;;
+    @corpdk/graphql-input-zod) echo "libraries/graphql-input-zod/package.json" ;;
+    @corpdk/dal-codegen) echo "libraries/dal-codegen/package.json" ;;
+    @corpdk/engine-kit) echo "libraries/engine-kit/package.json" ;;
+    @corpdk/graphql-cli-core) echo "libraries/graphql-cli-core/package.json" ;;
+    @corpdk/create-graphql-sdk) echo "engines/create-graphql-sdk/package.json" ;;
+    @corpdk/create-graphql-cli) echo "engines/create-graphql-cli/package.json" ;;
+    @corpdk/codegen-cli) echo "libraries/codegen-cli/package.json" ;;
+    @corpdk/create-ds) echo "engines/create-ds/package.json" ;;
+    *)
+      echo "Unknown package: $1" >&2
+      return 1
+      ;;
+  esac
+}
+
+package_rel_dir() {
+  local path
+  path="$(package_json_path "$1")" || return 1
+  dirname "${path}"
+}
+
+dist_types_file() {
+  case "$1" in
+    @corpdk/create-ds | @corpdk/create-graphql-sdk | @corpdk/create-graphql-cli)
+      echo "dist/types-entry.d.ts"
+      ;;
+    *)
+      echo "dist/index.d.ts"
+      ;;
+  esac
+}
 
 echo "Verifying lockstep version ${EXPECTED_VERSION} on DS automation packages…"
 
 verify_version() {
   local filter="$1"
-  local dir
-  dir="$(pnpm pkg get name --filter "${filter}" --json 2>/dev/null | head -1 || true)"
   local path
-  case "${filter}" in
-    @corpdk/dal-core) path="libraries/dal-core/package.json" ;;
-    @corpdk/pub-sub) path="libraries/pub-sub/package.json" ;;
-    @corpdk/codegen-cli) path="libraries/codegen-cli/package.json" ;;
-    @corpdk/dal-codegen) path="libraries/dal-codegen/package.json" ;;
-    @corpdk/create-ds) path="engines/create-ds/package.json" ;;
-    *)
-      echo "Unknown package: ${filter}" >&2
-      exit 1
-      ;;
-  esac
+  path="$(package_json_path "${filter}")" || exit 1
   actual="$(node -p "require('./${path}').version")"
   if [[ "${actual}" != "${EXPECTED_VERSION}" ]]; then
     echo "Version mismatch: ${filter} is ${actual}, expected ${EXPECTED_VERSION}" >&2
@@ -63,13 +96,13 @@ for name in "${PUBLISH_ORDER[@]}"; do
   verify_version "${name}"
 done
 
+build_filters=()
+for name in "${PUBLISH_ORDER[@]}"; do
+  build_filters+=(--filter="${name}")
+done
+
 echo "Building DS automation packages…"
-pnpm turbo run build \
-  --filter=@corpdk/dal-core \
-  --filter=@corpdk/pub-sub \
-  --filter=@corpdk/codegen-cli \
-  --filter=@corpdk/dal-codegen \
-  --filter=@corpdk/create-ds
+pnpm turbo run build "${build_filters[@]}"
 
 echo "Running DAL unit tests…"
 pnpm --filter @corpdk/dal-core test
@@ -78,22 +111,9 @@ pnpm --filter @corpdk/dal-codegen test
 echo "Verifying TypeScript declarations in dist/…"
 verify_dist_types() {
   local filter="$1"
-  local rel
-  case "${filter}" in
-    @corpdk/dal-core) rel="libraries/dal-core" ;;
-    @corpdk/pub-sub) rel="libraries/pub-sub" ;;
-    @corpdk/codegen-cli) rel="libraries/codegen-cli" ;;
-    @corpdk/dal-codegen) rel="libraries/dal-codegen" ;;
-    @corpdk/create-ds) rel="engines/create-ds" ;;
-    *)
-      echo "Unknown package: ${filter}" >&2
-      exit 1
-      ;;
-  esac
-  local types_file="dist/index.d.ts"
-  if [[ "${filter}" == "@corpdk/create-ds" ]]; then
-    types_file="dist/types-entry.d.ts"
-  fi
+  local rel types_file
+  rel="$(package_rel_dir "${filter}")" || exit 1
+  types_file="$(dist_types_file "${filter}")"
   if [[ ! -f "${ROOT}/${rel}/${types_file}" ]]; then
     echo "Missing ${rel}/${types_file} — build must emit declarations before publish." >&2
     exit 1

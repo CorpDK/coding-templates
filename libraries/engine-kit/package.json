@@ -1,0 +1,39 @@
+{
+  "name": "@corpdk/engine-kit",
+  "version": "2026.10.0-alpha.14",
+  "description": "Shared init/upgrade engine kit for create-* CLIs",
+  "type": "module",
+  "license": "MIT",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CorpDK/coding-templates.git",
+    "directory": "libraries/engine-kit"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist node_modules .turbo *.tsbuildinfo"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^6.0.2"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  }
+}

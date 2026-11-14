@@ -14,13 +14,20 @@ coding-templates/
 ├── pnpm-workspace.yaml             ← packages: ["templates/*", "engines/*", "libraries/*", "packages/*"]
 ├── turbo.json                      ← task pipeline (codegen → build → dev/start)
 ├── engines/
-│   ├── create-app/  (@corpdk/create-app)   Interactive CLI scaffolding tool
-│   └── create-ds/   (@corpdk/create-ds)    DS-only scaffold + automation upgrade CLI
+│   ├── create-app/          (@corpdk/create-app)          Interactive CLI scaffolding tool
+│   ├── create-ds/           (@corpdk/create-ds)           DS scaffold + DAL automation upgrade CLI
+│   ├── create-graphql-sdk/  (@corpdk/create-graphql-sdk)   SDK scaffold engine (doc 13; stub until P1c)
+│   └── create-graphql-cli/  (@corpdk/create-graphql-cli)   CLI scaffold engine (doc 14; stub until C-P2)
 ├── libraries/
-│   ├── codegen-cli/ (@corpdk/codegen-cli)   GraphQL codegen plugin for resolver types + SDK generation
-│   ├── dal-core/    (@corpdk/dal-core)      DAL shared types, filters, scalars, mutation error taxonomy
-│   ├── dal-codegen/ (@corpdk/dal-codegen)   Drizzle → GraphQL SDL + repositories + resolvers codegen CLI
-│   └── pub-sub/     (@corpdk/pub-sub)       Plugin-style GraphQL pub/sub factory
+│   ├── codegen-cli/        (@corpdk/codegen-cli)         GraphQL codegen plugin for resolver types + SDK generation
+│   ├── dal-core/           (@corpdk/dal-core)            DAL shared types, filters, scalars, mutation error taxonomy
+│   ├── dal-codegen/        (@corpdk/dal-codegen)         Drizzle → GraphQL SDL + repositories + resolvers codegen CLI
+│   ├── engine-kit/         (@corpdk/engine-kit)          Shared generator engine kit (doc 15; DS-P0b)
+│   ├── graphql-cli-core/   (@corpdk/graphql-cli-core)    CLI runtime + codegen (doc 14; C-P1+)
+│   ├── graphql-dsl/        (@corpdk/graphql-dsl)         Typed selection DSL (doc 13; P1b)
+│   ├── graphql-input-zod/  (@corpdk/graphql-input-zod)   Input Zod codegen runtime (doc 13; P1a)
+│   ├── pub-sub/            (@corpdk/pub-sub)             Plugin-style GraphQL pub/sub factory (memory + Redis)
+│   └── scalar-zod/         (@corpdk/scalar-zod)          Shared scalar rules (doc 13; P1a)
 ├── packages/
 │   ├── ui-core/     (@corpdk/ui-core)       Design system foundation
 │   ├── ui-datagrid/ (@corpdk/ui-datagrid)   Data tables + virtualization
@@ -78,14 +85,21 @@ coding-templates/
 
 ### Engines and libraries
 
-| Package       | Scope                 | Description                                                                        |
-| ------------- | --------------------- | ---------------------------------------------------------------------------------- |
-| `create-app`  | `@corpdk/create-app`  | Interactive CLI scaffolding tool                                                   |
-| `create-ds`   | `@corpdk/create-ds`   | DS-only scaffold + DAL automation upgrade CLI ([guide](ds-automation-upgrades.md)) |
-| `codegen-cli` | `@corpdk/codegen-cli` | GraphQL codegen plugin for resolver types + SDK generation                         |
-| `dal-core`    | `@corpdk/dal-core`    | DAL shared types, filters, query translation, mutation errors                      |
-| `dal-codegen` | `@corpdk/dal-codegen` | Drizzle → GraphQL SDL + repositories + resolvers codegen                           |
-| `pub-sub`     | `@corpdk/pub-sub`     | `createAppPubSub<T>()` — selects Redis or in-memory pub/sub                        |
+| Package              | Scope                        | Description                                                                      |
+| -------------------- | ---------------------------- | -------------------------------------------------------------------------------- |
+| `create-app`         | `@corpdk/create-app`         | Interactive CLI scaffolding tool                                                 |
+| `create-ds`          | `@corpdk/create-ds`          | DS scaffold + DAL automation upgrade CLI ([guide](ds-automation-upgrades.md))    |
+| `create-graphql-sdk` | `@corpdk/create-graphql-sdk` | SDK scaffold engine ([design](13-graphql-sdk-generator.md); stub until P1c)      |
+| `create-graphql-cli` | `@corpdk/create-graphql-cli` | CLI scaffold engine ([design](14-graphql-cli-generator.md); stub until C-P2)     |
+| `codegen-cli`        | `@corpdk/codegen-cli`        | GraphQL codegen plugin for resolver types + SDK generation                       |
+| `dal-core`           | `@corpdk/dal-core`           | DAL shared types, filters, query translation, mutation errors                    |
+| `dal-codegen`        | `@corpdk/dal-codegen`        | Drizzle → GraphQL SDL + repositories + resolvers codegen                         |
+| `engine-kit`         | `@corpdk/engine-kit`         | Shared `create-*` engine kit ([design](15-create-ds-generator-integration.md))   |
+| `graphql-cli-core`   | `@corpdk/graphql-cli-core`   | GraphQL automation CLI runtime + codegen ([design](14-graphql-cli-generator.md)) |
+| `graphql-dsl`        | `@corpdk/graphql-dsl`        | Typed selection DSL ([design](13-graphql-sdk-generator.md))                      |
+| `graphql-input-zod`  | `@corpdk/graphql-input-zod`  | GraphQL input Zod codegen runtime ([design](13-graphql-sdk-generator.md))        |
+| `pub-sub`            | `@corpdk/pub-sub`            | `createAppPubSub<T>()` — selects Redis or in-memory pub/sub                      |
+| `scalar-zod`         | `@corpdk/scalar-zod`         | Shared scalar validation rules ([design](13-graphql-sdk-generator.md))           |
 
 For versioning strategy and key design decisions (module system, HTTP/WS routing, SDK strategy, repository pattern, pub/sub), see [Monorepo Design](../architecture/02-monorepo-design.md).
 
@@ -115,4 +129,4 @@ pnpm --filter @corpdk/ds codegen    # run codegen for ds
 
 **Related**: [Monorepo Design](../architecture/02-monorepo-design.md) | [Post-Scaffold Setup](../user/05-post-scaffold-setup.md)
 
-**Last updated**: October 5, 2026
+**Last updated**: November 14, 2026
