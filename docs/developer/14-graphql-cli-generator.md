@@ -688,7 +688,7 @@ man:
 | `templates/ds/Dockerfile`, `engines/create-ds/canonical/Dockerfile` | Remove the `libraries/codegen-cli` and `templates/ds-cli` `COPY` lines and the `codegen-cli` build step | C-P3 |
 | `templates/ds-cli` | Replace with `init` output; `private: true`; drop the Artifactory `publishConfig` (§2.2) | C-P3 |
 | `engines/create-ds` | `--with-cli` on `init`; `upgrade` drops `@corpdk/codegen-cli` and guides migration ([doc 15](15-create-ds-generator-integration.md)) | C-P3 (upgrade) / C-P4 (`--with-cli`) |
-| `.github/scripts/publish-ds-automation.sh` | Add `@corpdk/graphql-cli-core` (after `@corpdk/graphql-input-zod`, which it depends on for types) and `@corpdk/create-graphql-cli` to `PUBLISH_ORDER`, build and test filters, and workflow `paths`. Remove `@corpdk/codegen-cli` after its deprecation release (§2.5.1). | C-P1 / C-P4 / after C-P3 |
+| `.github/scripts/publish-ds-automation.sh` | Add `@corpdk/graphql-cli-core` (after `@corpdk/graphql-input-zod`, which it depends on for types) and `@corpdk/create-graphql-cli` to `PUBLISH_ORDER`, build and test filters, and `ci.yml` `publish-paths` globs. Remove `@corpdk/codegen-cli` after its deprecation release (§2.5.1). | C-P1 / C-P4 / after C-P3 |
 
 `create-app` is **out of scope**: it is frozen and outdated, and this design makes no changes to it.
 
