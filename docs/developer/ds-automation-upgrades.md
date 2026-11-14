@@ -30,7 +30,7 @@ pnpm dlx @corpdk/create-ds upgrade ./packages/my-ds
 | `0`  | Success; `--help` / `--version`                                                                        |
 | `2`  | Usage (unknown command, unknown flag, missing `dal/dal.config.yaml` on upgrade, non-empty init target) |
 | `1`  | Invalid consumer `package.json` or `dal.config.yaml` (unparseable)                                     |
-| `3`  | Tool failure (`entity:lint`, DAL bootstrap exec)                                                       |
+| `3`  | Tool failure (`entity:lint`, DAL bootstrap exec, missing canonical overwrite on upgrade)             |
 
 Global / shared: **`--dry-run`**, **`--no-install`** (init only; CLI never runs install — printed next steps omit `pnpm install` when this flag is set, including **`--dry-run`** previews), **`--version`**, **`-h` / `--help`**.
 
@@ -61,7 +61,7 @@ Scaffolded **`codegen.ts`** targets sibling **`../ds-sdk`** and **`../ds-cli`** 
 2. Merges **`dal/dal.config.yaml`**: template defaults + consumer overrides (consumer keys win).
 3. Overwrites automation files: `codegen.ts`, `drizzle.config.ts`, `tsconfig.json`, Docker assets, `.env.example`, `.gitignore`, bootstrap TypeScript entry files.
 4. **Skips** `src/db/schema/**` entirely.
-5. **Fails (exit 3)** when any required overwrite file is missing from the canonical template (no partial merge). Maintainers rely on **`check-canonical`** and **`sync:canonical`** so every listed path is present before release.
+5. **Fails (exit 3)** when any required overwrite file is missing from the canonical template (`MissingOverwriteSourceError`). Paths already processed in `UPGRADE_RELATIVE_FILES` order may be written before the failure; fix canonical/`check-canonical` and re-run **`upgrade`**. Maintainers rely on **`check-canonical`** and **`sync:canonical`** so every listed path is present before release.
 6. Runs **`entity:lint`** only when the monorepo `libraries/dal-codegen/dist/lint-cli.js` exists or **`node_modules/.bin/dal-entity-lint`** is present (skipped after a bare merge until `pnpm install` in DS-only repos).
 7. Prints **`pnpm install`** then **`pnpm dal:codegen`** as required follow-up.
 
