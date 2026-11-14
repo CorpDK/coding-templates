@@ -81,6 +81,7 @@ jobs:
       - name: dal-core
         if: matrix.group == 'dal-core'
         run: |
+          pnpm --filter @corpdk/scalar-zod build
           pnpm --filter @corpdk/dal-core build
           pnpm --filter @corpdk/dal-core test
 
@@ -93,8 +94,11 @@ jobs:
       - name: dal-codegen
         if: matrix.group == 'dal-codegen'
         run: |
+          pnpm --filter @corpdk/scalar-zod build
           pnpm --filter @corpdk/dal-core build
+          pnpm --filter @corpdk/graphql-input-zod build
           pnpm --filter @corpdk/dal-codegen build
+          pnpm --filter @corpdk/graphql-input-zod test
           pnpm --filter @corpdk/dal-codegen test
 
       - name: ds-template
@@ -137,7 +141,9 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      - run: pnpm --filter @corpdk/scalar-zod build
       - run: pnpm --filter @corpdk/dal-core build
+      - run: pnpm --filter @corpdk/graphql-input-zod build
       - run: pnpm --filter @corpdk/dal-codegen build
       - run: pnpm --filter @corpdk/pub-sub build
       - run: pnpm --filter @corpdk/dal-core test:coverage

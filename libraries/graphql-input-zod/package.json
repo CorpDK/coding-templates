@@ -31,11 +31,25 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "clean": "rm -rf dist node_modules .turbo *.tsbuildinfo"
+  },
+  "dependencies": {
+    "graphql": "^16.13.2"
+  },
+  "peerDependencies": {
+    "graphql": "^16 || ^17",
+    "zod": "^4"
+  },
+  "peerDependenciesMeta": {
+    "graphql": { "optional": true },
+    "zod": { "optional": true }
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
-    "typescript": "^6.0.2"
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.2",
+    "zod": "^4.3.6"
   },
   "engines": {
     "node": ">=24.0.0"

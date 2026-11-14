@@ -11,10 +11,10 @@ These **twelve** packages ship together at the same CalVer (e.g. `2026.10.0-alph
 | Order | Package                      | Path                          | Role                                                 |
 | ----- | ---------------------------- | ----------------------------- | ---------------------------------------------------- |
 | 1     | `@corpdk/graphql-dsl`        | `libraries/graphql-dsl`       | Typed selection DSL (SDK L2); scaffold until SDK P1b |
-| 2     | `@corpdk/scalar-zod`         | `libraries/scalar-zod`        | Shared scalar rules; scaffold until SDK P1a          |
+| 2     | `@corpdk/scalar-zod`         | `libraries/scalar-zod`        | Shared scalar rules (SDK P1a)                       |
 | 3     | `@corpdk/dal-core`           | `libraries/dal-core`          | DAL types, filters, scalars, error taxonomy          |
 | 4     | `@corpdk/pub-sub`            | `libraries/pub-sub`           | GraphQL pub/sub factory (DAL DS runtime)             |
-| 5     | `@corpdk/graphql-input-zod`  | `libraries/graphql-input-zod` | Input Zod codegen (SDK L3); scaffold until SDK P1a   |
+| 5     | `@corpdk/graphql-input-zod`  | `libraries/graphql-input-zod` | Input Zod codegen runtime (SDK P1a)                  |
 | 6     | `@corpdk/dal-codegen`        | `libraries/dal-codegen`       | `dal-codegen` / `dal-entity-lint` CLIs               |
 | 7     | `@corpdk/engine-kit`         | `libraries/engine-kit`        | Shared `create-*` engine kit; scaffold until DS-P0b  |
 | 8     | `@corpdk/graphql-cli-core`   | `libraries/graphql-cli-core`  | CLI runtime + codegen; scaffold until CLI C-P1       |

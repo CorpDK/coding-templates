@@ -106,6 +106,7 @@ pnpm turbo run build "${build_filters[@]}"
 
 echo "Running DAL unit tests…"
 pnpm --filter @corpdk/dal-core test
+pnpm --filter @corpdk/graphql-input-zod test
 pnpm --filter @corpdk/dal-codegen test
 
 echo "Verifying TypeScript declarations in dist/…"
