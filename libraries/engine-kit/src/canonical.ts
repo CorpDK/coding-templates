@@ -78,7 +78,7 @@ export async function checkCanonical(
 
   const mismatches: string[] = [];
 
-  for (const rel of [...allRels].sort()) {
+  for (const rel of [...allRels].sort((a, b) => a.localeCompare(b))) {
     const fromPath = path.join(options.from, rel);
     const toPath = path.join(options.to, rel);
     const fromOk = await pathExists(fromPath);
