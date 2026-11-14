@@ -22,6 +22,32 @@ These five packages ship together at the same CalVer (e.g. `2026.10.0-alpha.5`):
 
 Each `package.json` must include a monorepo **`repository`** object (`url` → this GitHub repo, `directory` → package path). CI live publish passes `--provenance`; npm rejects uploads when `repository.url` is missing or does not match the GitHub Actions provenance source.
 
+### Generator family — package bootstrap (phase B0)
+
+The [GraphQL SDK](../developer/13-graphql-sdk-generator.md), [CLI](../developer/14-graphql-cli-generator.md), and [DS generator integration](../developer/15-create-ds-generator-integration.md) designs add seven **new** npm packages. Before implementation phases add them to the lockstep publish script, each name must exist on the registry and trust **`publish-ds-automation.yml`** so later CalVer releases use OIDC only.
+
+| Package | Path | Status |
+| ------- | ---- | ------ |
+| `@corpdk/scalar-zod` | `libraries/scalar-zod` | Placeholder `0.0.0-bootstrap.0` (not in lockstep publish yet) |
+| `@corpdk/graphql-input-zod` | `libraries/graphql-input-zod` | Placeholder |
+| `@corpdk/graphql-dsl` | `libraries/graphql-dsl` | Placeholder |
+| `@corpdk/engine-kit` | `libraries/engine-kit` | Placeholder |
+| `@corpdk/graphql-cli-core` | `libraries/graphql-cli-core` | Placeholder |
+| `@corpdk/create-graphql-sdk` | `engines/create-graphql-sdk` | Placeholder |
+| `@corpdk/create-graphql-cli` | `engines/create-graphql-cli` | Placeholder |
+
+Placeholders ship only `README.md` and `LICENSE` (no `main`, `exports`, `bin`, or scripts). **`templates/ds-sdk` and `templates/ds-cli` are not published** and are not part of B0.
+
+**After the B0 PR merges to `main`**, a maintainer completes these steps once per package (local npm login with `@corpdk` publish + 2FA; **not** OIDC):
+
+1. From each package directory: `npm publish --access public --tag bootstrap`
+2. `npm deprecate <pkg>@0.0.0-bootstrap.0 "Placeholder with no code; use a CalVer release"`
+3. Configure trusted publishing (UI or [CLI equivalent](#cli-equivalent)) with workflow `publish-ds-automation.yml`, same field values as the five-package table below.
+4. Optional: in npm package settings, require 2FA and disallow publish tokens so only CI OIDC can publish.
+5. Verify: `npm view <pkg> versions` includes `0.0.0-bootstrap.0`; `npm trust list <pkg>` shows the GitHub Actions publisher.
+
+Version **`0.0.0-bootstrap.0`** sorts below CalVer and is never used in consumer `^2026.x` ranges. First **real** releases join `PUBLISH_ORDER` in their implementation phase (SDK P1a/P1b, DS-P0b, CLI C-P1, etc.).
+
 ---
 
 ## Workflow
@@ -241,13 +267,22 @@ For **each** of the five packages below, an npm org owner or package maintainer 
 
 5. Save. Repeat for:
 
-| Package               |
-| --------------------- |
-| `@corpdk/dal-core`    |
-| `@corpdk/pub-sub`     |
-| `@corpdk/codegen-cli` |
-| `@corpdk/dal-codegen` |
-| `@corpdk/create-ds`   |
+| Package                      |
+| ---------------------------- |
+| `@corpdk/dal-core`           |
+| `@corpdk/pub-sub`            |
+| `@corpdk/codegen-cli`        |
+| `@corpdk/dal-codegen`        |
+| `@corpdk/create-ds`          |
+| `@corpdk/scalar-zod`         |
+| `@corpdk/graphql-input-zod`  |
+| `@corpdk/graphql-dsl`        |
+| `@corpdk/engine-kit`         |
+| `@corpdk/graphql-cli-core`   |
+| `@corpdk/create-graphql-sdk` |
+| `@corpdk/create-graphql-cli` |
+
+The last seven rows apply after [B0 bootstrap](#generator-family--package-bootstrap-phase-b0) placeholders are on the registry.
 
 #### CLI equivalent
 
