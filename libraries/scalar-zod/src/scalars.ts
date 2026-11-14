@@ -5,6 +5,13 @@ import {
   guildSerializeMAC,
 } from "./guild-scalars.js";
 import {
+  isAsciiDigit,
+  isDecimalString,
+  isDigitsOnly,
+  isHexString,
+  isSignedIntegerString,
+} from "./parse-helpers.js";
+import {
   PG_INT64_MAX,
   PG_INT64_MIN,
   PG_INT32_MAX,
@@ -38,7 +45,18 @@ export function parseDateTime(value: unknown): Date {
   return d;
 }
 
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+function isGraphqlDateString(value: string): boolean {
+  if (value.length !== 10) return false;
+  if (value[4] !== "-" || value[7] !== "-") return false;
+  for (let i = 0; i < value.length; i++) {
+    if (i === 4 || i === 7) continue;
+    if (!isAsciiDigit(value[i]!)) return false;
+  }
+  const y = Number(value.slice(0, 4));
+  const m = Number(value.slice(5, 7));
+  const d = Number(value.slice(8, 10));
+  return y >= 1 && m >= 1 && m <= 12 && d >= 1 && d <= 31;
+}
 
 export function serializeDate(
   value: Date | string | null | undefined,
@@ -49,7 +67,7 @@ export function serializeDate(
 }
 
 export function parseDate(value: unknown): string {
-  if (typeof value !== "string" || !DATE_RE.test(value)) {
+  if (typeof value !== "string" || !isGraphqlDateString(value)) {
     throw new TypeError("Date must be YYYY-MM-DD");
   }
   const d = new Date(`${value}T00:00:00.000Z`);
@@ -59,8 +77,47 @@ export function parseDate(value: unknown): string {
   return value;
 }
 
-const TIME_TZ_RE =
-  /^(\d{2}:\d{2}(?::\d{2}(?:\.\d{1,3})?)?)(Z|[+-]\d{2}:\d{2})$/;
+function isTimeTzWire(value: string): boolean {
+  let offsetStart = -1;
+  if (value.endsWith("Z")) {
+    offsetStart = value.length - 1;
+  } else {
+    const plus = value.lastIndexOf("+");
+    const minus = value.lastIndexOf("-");
+    const candidate = Math.max(plus, minus);
+    if (candidate > 0) offsetStart = candidate;
+  }
+  if (offsetStart < 0) return false;
+  const timePart = value.slice(0, offsetStart);
+  const offsetPart = value.slice(offsetStart);
+  if (offsetPart !== "Z" && (offsetPart.length !== 6 || offsetPart[3] !== ":")) {
+    return false;
+  }
+  if (offsetPart !== "Z") {
+    const offH = offsetPart.slice(1, 3);
+    const offM = offsetPart.slice(4, 6);
+    if (!isAsciiDigit(offH[0]!) || !isAsciiDigit(offH[1]!)) return false;
+    if (!isAsciiDigit(offM[0]!) || !isAsciiDigit(offM[1]!)) return false;
+  }
+  const segments = timePart.split(":");
+  if (segments.length < 2 || segments.length > 3) return false;
+  for (const seg of segments) {
+    if (seg.length !== 2 || !isAsciiDigit(seg[0]!) || !isAsciiDigit(seg[1]!)) {
+      return false;
+    }
+  }
+  if (segments.length === 3) {
+    const sec = segments[2]!;
+    const dot = sec.indexOf(".");
+    if (dot >= 0) {
+      const whole = sec.slice(0, dot);
+      const frac = sec.slice(dot + 1);
+      if (whole.length !== 2 || frac.length === 0 || frac.length > 3) return false;
+      if (!isDigitsOnly(frac)) return false;
+    }
+  }
+  return true;
+}
 
 export function serializeTimeTz(
   value: string | null | undefined,
@@ -70,13 +127,11 @@ export function serializeTimeTz(
 }
 
 export function parseTimeTz(value: unknown): string {
-  if (typeof value !== "string" || !TIME_TZ_RE.test(value)) {
+  if (typeof value !== "string" || !isTimeTzWire(value)) {
     throw new TypeError("TimeTz must be ISO-8601 time with offset");
   }
   return value;
 }
-
-const BIGINT_RE = /^-?\d+$/;
 const BIGINT_MIN = BigInt("-9223372036854775808");
 const BIGINT_MAX = BigInt("9223372036854775807");
 
@@ -96,7 +151,7 @@ export function serializeBigInt(
 }
 
 export function parseBigInt(value: unknown): string {
-  if (typeof value !== "string" || !BIGINT_RE.test(value)) {
+  if (typeof value !== "string" || !isSignedIntegerString(value)) {
     throw new TypeError("BigInt must be a decimal integer string");
   }
   const bi = BigInt(value);
@@ -105,8 +160,6 @@ export function parseBigInt(value: unknown): string {
   }
   return value;
 }
-
-const DECIMAL_RE = /^-?\d+(\.\d+)?$/;
 
 export function serializeDecimal(
   value: string | number | null | undefined,
@@ -117,13 +170,15 @@ export function serializeDecimal(
 }
 
 export function parseDecimal(value: unknown): string {
-  if (typeof value !== "string" || !DECIMAL_RE.test(value)) {
+  if (typeof value !== "string" || !isDecimalString(value)) {
     throw new TypeError("Decimal must be a decimal string");
   }
   return value;
 }
 
-const INTERVAL_MS_RE = /^-?\d+$/;
+function isIntervalMsDecimalWire(value: string): boolean {
+  return isSignedIntegerString(value);
+}
 
 export function serializeIntervalMs(
   value: string | number | bigint | null | undefined,
@@ -139,7 +194,7 @@ export function serializeIntervalMs(
     }
     return assertInt64WireDecimal(value.toString());
   }
-  if (INTERVAL_MS_RE.test(value)) {
+  if (isIntervalMsDecimalWire(value)) {
     return assertInt64WireDecimal(value);
   }
   return pgIntervalTextToMs(value);
@@ -163,7 +218,7 @@ export function parseIntervalMs(value: unknown): string {
     }
     return assertInt64WireDecimal(value.toString());
   }
-  if (typeof value !== "string" || !INTERVAL_MS_RE.test(value)) {
+  if (typeof value !== "string" || !isSignedIntegerString(value)) {
     throw new TypeError(
       "IntervalMs must be a signed integer string of milliseconds",
     );
@@ -259,20 +314,20 @@ export function serializeCidr(value: string | null | undefined): string | null {
 }
 
 /** PostgreSQL cidr — graphql-scalars has no CIDR scalar (v1.26); prefix + network-bit checks. */
-const CIDR_IPV4_HOST_RE = /^(?:\d{1,3}\.){3}\d{1,3}$/;
+function isDottedIpv4Host(dotted: string): boolean {
+  const parts = dotted.split(".");
+  if (parts.length !== 4) return false;
+  for (const octet of parts) {
+    if (octet.length === 0 || octet.length > 3 || !isDigitsOnly(octet)) return false;
+    const n = Number(octet);
+    if (n > 255) return false;
+  }
+  return true;
+}
 
 function assertIpv4Octets(dotted: string): void {
-  if (!CIDR_IPV4_HOST_RE.test(dotted)) {
+  if (!isDottedIpv4Host(dotted)) {
     throw new TypeError("CIDR must be valid CIDR notation");
-  }
-  for (const octet of dotted.split(".")) {
-    if (octet.length === 0 || !/^\d{1,3}$/.test(octet)) {
-      throw new TypeError("CIDR must be valid CIDR notation");
-    }
-    const n = Number(octet);
-    if (n > 255) {
-      throw new TypeError("CIDR must be valid CIDR notation");
-    }
   }
 }
 
@@ -347,7 +402,7 @@ function ipv6HostToBigInt(host: string): bigint {
   }
   let addr = 0n;
   for (const part of parts) {
-    if (part.length === 0 || part.length > 4 || !/^[0-9a-f]+$/i.test(part)) {
+    if (part.length === 0 || part.length > 4 || !isHexString(part)) {
       throw new TypeError("CIDR must be valid CIDR notation");
     }
     const group = BigInt(`0x${part}`);
@@ -387,7 +442,7 @@ export function parseCidr(value: unknown): string {
   }
   const host = value.slice(0, slash);
   const prefix = Number(value.slice(slash + 1));
-  if (CIDR_IPV4_HOST_RE.test(host)) {
+  if (isDottedIpv4Host(host)) {
     assertIpv4CidrHost(host);
     if (!Number.isInteger(prefix) || prefix < 0 || prefix > 32) {
       throw new TypeError("CIDR must be valid CIDR notation");

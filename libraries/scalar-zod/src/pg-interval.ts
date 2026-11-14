@@ -1,23 +1,13 @@
 import { PG_INT64_MAX, PG_INT64_MIN } from "./pg-bounds.js";
+import { isAsciiDigit, isDigitsOnly, isSignedIntegerString } from "./parse-helpers.js";
 
 const MS_PER_SECOND = 1000n;
 const MS_PER_MILLISECOND = 1n;
 const MS_PER_MINUTE = 60n * MS_PER_SECOND;
 const MS_PER_HOUR = 60n * MS_PER_MINUTE;
 const MS_PER_DAY = 24n * MS_PER_HOUR;
-// Fixed 30-day month; PG calendar `mon` fields are not equal to this ms literal in filters.
 const MS_PER_MONTH = 30n * MS_PER_DAY;
-// Fixed 365.25-day year; PG calendar `year` fields are not equal to this ms literal in filters.
 const MS_PER_YEAR = 31557600000n;
-
-const RE_YEAR = /([+-]?\d+)\s+years?\b/i;
-const RE_MON = /([+-]?\d+)\s+mons?\b/i;
-const RE_DAY = /([+-]?\d+)\s+days?\b/i;
-const RE_TIME_SUFFIX = /\s+([+-])?(\d*):(\d{2}):(\d{2})(?:\.(\d{1,6}))?$/;
-const RE_TIME_ONLY = /^([+-])?(\d*):(\d{2}):(\d{2})(?:\.(\d{1,6}))?$/;
-
-const TIME_ONLY = /^([+-])?(\d+):(\d{2}):(\d{2})(?:\.(\d{1,6}))?$/;
-const DAY_TIME = /^(\d+)\s+([+-])?(\d+):(\d{2}):(\d{2})(?:\.(\d{1,6}))?$/;
 
 const VERBOSE_UNIT_MS: Record<string, bigint> = {
   millisecond: MS_PER_MILLISECOND,
@@ -50,101 +40,219 @@ const VERBOSE_UNIT_MS: Record<string, bigint> = {
   yrs: MS_PER_YEAR,
 };
 
+interface HmsTime {
+  sign?: string;
+  hours: string;
+  minutes: string;
+  seconds: string;
+  fraction?: string;
+}
+
 function fractionToMs(fraction: string): bigint {
   return BigInt((fraction + "000").slice(0, 3));
 }
 
-function stripField(
+function normalizeSpaces(text: string): string {
+  let out = "";
+  let pendingSpace = false;
+  for (const ch of text.trim()) {
+    if (ch === " " || ch === "\t") {
+      pendingSpace = true;
+    } else {
+      if (pendingSpace && out.length > 0) out += " ";
+      pendingSpace = false;
+      out += ch;
+    }
+  }
+  return out;
+}
+
+function parseOptionalUnsignedInt(s: string): boolean {
+  return s.length === 0 || isDigitsOnly(s);
+}
+
+/** `HH:MM:SS` with optional leading sign on hours and optional `.ffffff` fraction (1–6 digits). */
+function parseHmsSegment(segment: string): HmsTime | null {
+  const trimmed = segment.trim();
+  if (trimmed.length === 0) return null;
+
+  let sign: string | undefined;
+  let body = trimmed;
+  if (body[0] === "+" || body[0] === "-") {
+    sign = body[0];
+    body = body.slice(1);
+  }
+
+  const parts = body.split(":");
+  if (parts.length !== 3) return null;
+  const [hours, minutes, secPart] = parts;
+  if (!parseOptionalUnsignedInt(hours!)) return null;
+  if (minutes!.length !== 2 || !isAsciiDigit(minutes![0]!) || !isAsciiDigit(minutes![1]!)) {
+    return null;
+  }
+
+  let seconds = secPart!;
+  let fraction: string | undefined;
+  const dotInSec = secPart!.indexOf(".");
+  if (dotInSec >= 0) {
+    seconds = secPart!.slice(0, dotInSec);
+    fraction = secPart!.slice(dotInSec + 1);
+    if (
+      fraction.length === 0 ||
+      fraction.length > 6 ||
+      !isDigitsOnly(fraction)
+    ) {
+      return null;
+    }
+  }
+  if (seconds.length !== 2 || !isAsciiDigit(seconds[0]!) || !isAsciiDigit(seconds[1]!)) {
+    return null;
+  }
+
+  return { sign, hours: hours!, minutes: minutes!, seconds, fraction };
+}
+
+function hmsToMs(time: HmsTime): bigint {
+  const negativeTime = time.sign === "-";
+  let h = BigInt(time.hours || "0");
+  let min = BigInt(time.minutes);
+  let sec = BigInt(time.seconds);
+  let ms = time.fraction ? fractionToMs(time.fraction) : 0n;
+  if (negativeTime) {
+    h = -h;
+    min = -min;
+    sec = -sec;
+    ms = -ms;
+  }
+  return h * MS_PER_HOUR + min * MS_PER_MINUTE + sec * MS_PER_SECOND + ms;
+}
+
+function findLastSpace(text: string): number {
+  for (let i = text.length - 1; i >= 0; i--) {
+    if (text[i] === " ") return i;
+  }
+  return -1;
+}
+
+function readTrailingInteger(beforeUnit: string): string | null {
+  const trimmed = beforeUnit.trimEnd();
+  if (trimmed.length === 0) return null;
+  let end = trimmed.length;
+  let start = end;
+  while (start > 0 && isAsciiDigit(trimmed[start - 1]!)) {
+    start -= 1;
+  }
+  if (start === end) return null;
+  const signIdx =
+    start > 0 && (trimmed[start - 1] === "+" || trimmed[start - 1] === "-")
+      ? start - 1
+      : -1;
+  const numStart = signIdx >= 0 ? signIdx : start;
+  const num = trimmed.slice(numStart, end);
+  if (!isSignedIntegerString(num)) return null;
+  return num;
+}
+
+function indexOfWord(haystack: string, word: string, from = 0): number {
+  const lower = haystack.toLowerCase();
+  const w = word.toLowerCase();
+  let idx = lower.indexOf(w, from);
+  while (idx >= 0) {
+    const before = idx === 0 || haystack[idx - 1] === " ";
+    const after =
+      idx + w.length === haystack.length || haystack[idx + w.length] === " ";
+    if (before && after) return idx;
+    idx = lower.indexOf(w, idx + 1);
+  }
+  return -1;
+}
+
+function stripCalendarUnit(
   source: string,
-  pattern: RegExp,
+  unitVariants: readonly string[],
 ): [string, string | undefined] {
-  const match = pattern.exec(source);
-  if (!match) return [source, undefined];
-  const value = match[1];
-  const next = (
-    source.slice(0, match.index) + source.slice(match.index + match[0].length)
-  )
-    .replace(/\s+/g, " ")
-    .trim();
-  return [next, value];
+  for (const unit of unitVariants) {
+    const idx = indexOfWord(source, unit);
+    if (idx < 0) continue;
+    const before = source.slice(0, idx);
+    const after = source.slice(idx + unit.length);
+    const value = readTrailingInteger(before);
+    if (value == null) continue;
+    const valueStart = before.trimEnd().length - value.length;
+    const rest = normalizeSpaces((before.slice(0, valueStart) + after).trim());
+    return [rest, value];
+  }
+  return [source, undefined];
 }
 
 function parseBackendInterval(text: string): bigint | null {
-  const trimmed = text.trim();
+  const trimmed = normalizeSpaces(text.trim());
   let remainder = trimmed;
-  let timeSign: string | undefined;
-  let hours: string | undefined;
-  let minutes: string | undefined;
-  let seconds: string | undefined;
-  let fraction: string | undefined;
+  let timeParts: HmsTime | undefined;
 
-  const suffixTime = RE_TIME_SUFFIX.exec(trimmed);
-  if (suffixTime) {
-    remainder = trimmed.slice(0, suffixTime.index).trim();
-    [, timeSign, hours, minutes, seconds, fraction] = suffixTime;
+  const wholeTime = parseHmsSegment(trimmed);
+  if (wholeTime) {
+    timeParts = wholeTime;
+    remainder = "";
   } else {
-    const onlyTime = RE_TIME_ONLY.exec(trimmed);
-    if (onlyTime) {
-      [, timeSign, hours, minutes, seconds, fraction] = onlyTime;
-      remainder = "";
+    const space = findLastSpace(trimmed);
+    if (space > 0) {
+      const suffix = trimmed.slice(space + 1);
+      const parsed = parseHmsSegment(suffix);
+      if (parsed) {
+        timeParts = parsed;
+        remainder = trimmed.slice(0, space).trim();
+      }
     }
   }
 
   let years: string | undefined;
   let months: string | undefined;
   let days: string | undefined;
-  [remainder, years] = stripField(remainder, RE_YEAR);
-  [remainder, months] = stripField(remainder, RE_MON);
-  [remainder, days] = stripField(remainder, RE_DAY);
+  [remainder, years] = stripCalendarUnit(remainder, ["years", "year"] as const);
+  [remainder, months] = stripCalendarUnit(remainder, ["mons", "mon"] as const);
+  [remainder, days] = stripCalendarUnit(remainder, ["days", "day"] as const);
 
   if (remainder.length > 0) return null;
-  if (!years && !months && !days && hours === undefined) return null;
+  if (!years && !months && !days && !timeParts) return null;
 
   let total = 0n;
   if (years) total += BigInt(Number.parseInt(years, 10)) * MS_PER_YEAR;
   if (months) total += BigInt(Number.parseInt(months, 10)) * MS_PER_MONTH;
   if (days) total += BigInt(Number.parseInt(days, 10)) * MS_PER_DAY;
-
-  if (hours !== undefined) {
-    const negativeTime = timeSign === "-";
-    let h = BigInt(Number.parseInt(hours || "0", 10));
-    let min = BigInt(Number.parseInt(minutes!, 10));
-    let sec = BigInt(Number.parseInt(seconds!, 10));
-    let ms = fraction ? fractionToMs(fraction) : 0n;
-    if (negativeTime) {
-      h = -h;
-      min = -min;
-      sec = -sec;
-      ms = -ms;
-    }
-    total += h * MS_PER_HOUR + min * MS_PER_MINUTE + sec * MS_PER_SECOND + ms;
-  }
+  if (timeParts) total += hmsToMs(timeParts);
   return total;
 }
 
 function parseTimeOnly(text: string): bigint | null {
-  const m = TIME_ONLY.exec(text.trim());
-  if (!m) return null;
-  const [, sign, hours, minutes, seconds, fraction] = m;
-  const base =
-    BigInt(hours) * MS_PER_HOUR +
-    BigInt(minutes) * MS_PER_MINUTE +
-    BigInt(seconds) * MS_PER_SECOND +
-    (fraction ? fractionToMs(fraction) : 0n);
-  return sign === "-" ? -base : base;
+  const time = parseHmsSegment(text);
+  if (!time) return null;
+  return hmsToMs(time);
+}
+
+function looksLikeDayPlusTime(text: string): boolean {
+  const space = text.indexOf(" ");
+  if (space <= 0) return false;
+  const dayPart = text.slice(0, space).trim();
+  const timePart = text.slice(space + 1);
+  if (!isDigitsOnly(dayPart)) return false;
+  return parseHmsSegment(timePart) !== null;
 }
 
 function parseDayTime(text: string): bigint | null {
-  const m = DAY_TIME.exec(text.trim());
-  if (!m) return null;
-  const [, days, sign, hours, minutes, seconds, fraction] = m;
+  const trimmed = text.trim();
+  if (!looksLikeDayPlusTime(trimmed)) return null;
+  const space = trimmed.indexOf(" ");
+  const days = trimmed.slice(0, space).trim();
+  const time = parseHmsSegment(trimmed.slice(space + 1));
+  if (!time) return null;
   const dayMs = BigInt(days) * MS_PER_DAY;
-  const timeMs =
-    BigInt(hours) * MS_PER_HOUR +
-    BigInt(minutes) * MS_PER_MINUTE +
-    BigInt(seconds) * MS_PER_SECOND +
-    (fraction ? fractionToMs(fraction) : 0n);
-  return dayMs + (sign === "-" ? -timeMs : timeMs);
+  const timeMs = hmsToMs(time);
+  return dayMs + timeMs;
+}
+
+function looksLikeBareHms(text: string): boolean {
+  return parseHmsSegment(text) !== null;
 }
 
 function parseAmountToMs(amount: string, unitMs: bigint): bigint {
@@ -169,9 +277,10 @@ function parseAmountToMs(amount: string, unitMs: bigint): bigint {
 
 function parseVerboseInterval(text: string): bigint | null {
   const trimmed = text.trim();
-  if (!trimmed || TIME_ONLY.test(trimmed) || DAY_TIME.test(trimmed))
+  if (!trimmed || looksLikeBareHms(trimmed) || looksLikeDayPlusTime(trimmed)) {
     return null;
-  const tokens = trimmed.split(/\s+/);
+  }
+  const tokens = normalizeSpaces(trimmed).split(" ");
   if (tokens.length < 2 || tokens.length % 2 !== 0) return null;
   let total = 0n;
   for (let i = 0; i < tokens.length; i += 2) {

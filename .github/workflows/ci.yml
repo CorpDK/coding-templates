@@ -82,6 +82,7 @@ jobs:
         if: matrix.group == 'dal-core'
         run: |
           pnpm --filter @corpdk/scalar-zod build
+          pnpm --filter @corpdk/scalar-zod test
           pnpm --filter @corpdk/dal-core build
           pnpm --filter @corpdk/dal-core test
 

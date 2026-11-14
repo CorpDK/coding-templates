@@ -105,6 +105,7 @@ echo "Building DS automation packages…"
 pnpm turbo run build "${build_filters[@]}"
 
 echo "Running DAL unit tests…"
+pnpm --filter @corpdk/scalar-zod test
 pnpm --filter @corpdk/dal-core test
 pnpm --filter @corpdk/graphql-input-zod test
 pnpm --filter @corpdk/dal-codegen test
