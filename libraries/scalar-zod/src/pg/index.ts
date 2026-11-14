@@ -87,15 +87,6 @@ export const zPgInt32 = z
 /** Zod for GraphQL built-in Float mapped from PG `real` (IEEE binary32). */
 export const zPgReal = z.number().finite().min(PG_REAL_MIN).max(PG_REAL_MAX);
 
-/** GraphQL-spec defaults for built-in Int/Float (SDK emitter). */
-export const zGraphqlInt32 = z
-  .number()
-  .int()
-  .min(-2_147_483_648)
-  .max(2_147_483_647);
-
-export const zGraphqlFloat = z.number().finite();
-
 /** Zod validators aligned with DAL GraphQL scalar parse rules (mutation/filter inputs). */
 export const dalScalarZod = {
   DateTime: zDateTime,

@@ -32,7 +32,9 @@ export interface EmitGraphqlInputZodOptions {
   scalars?: Record<string, string>;
   builtinScalars?: Partial<Record<BuiltinScalarName, string>>;
   skipTypeNames?: ReadonlySet<string>;
-  /** `registry` emits `scalarZodSchemas.Name`; `inline` repeats expressions (DAL default). */
+  /** Extra import lines prepended before schema blocks in `schemaBlocks`. */
+  preamble?: string;
+  /** `registry` emits `scalarZodSchemas.Name`; `inline` repeats expressions (DAL passes inline). */
   scalarReferences?: "registry" | "inline";
 }
 
@@ -140,7 +142,7 @@ function scalarZodExpr(
   if (builtin) return builtin;
   const custom = options.scalars[type.name];
   if (custom) {
-    if (options.scalarReferences === "registry" && !custom.includes("(")) {
+    if (options.scalarReferences === "registry") {
       return `scalarZodSchemas.${type.name}`;
     }
     return custom;
@@ -219,7 +221,7 @@ export function emitGraphqlInputZodBlocks(
   const resolved = {
     scalars: options.scalars ?? {},
     builtinScalars: options.builtinScalars ?? {},
-    scalarReferences: options.scalarReferences ?? "inline",
+    scalarReferences: options.scalarReferences ?? "registry",
   };
   const skipTypeNames = options.skipTypeNames ?? new Set<string>();
 
@@ -229,6 +231,9 @@ export function emitGraphqlInputZodBlocks(
   );
 
   const schemaBlocks: string[] = [];
+  if (options.preamble?.trim()) {
+    schemaBlocks.push(options.preamble.trim());
+  }
   const registryNames: string[] = [];
 
   for (const input of inputTypes) {
@@ -238,14 +243,16 @@ export function emitGraphqlInputZodBlocks(
   }
 
   if (resolved.scalarReferences === "registry" && Object.keys(resolved.scalars).length > 0) {
-    const scalarRegistryBlocks: string[] = [];
-    const scalarRegistryNames: string[] = [];
-    for (const name of Object.keys(resolved.scalars).sort((a, b) => a.localeCompare(b))) {
-      scalarRegistryNames.push(name);
-      scalarRegistryBlocks.push(
-        `export const ${name}ScalarSchema = ${resolved.scalars[name]};`,
-      );
-    }
+    const scalarRegistryNames = Object.keys(resolved.scalars).sort((a, b) =>
+      a.localeCompare(b),
+    );
+    const scalarEntries = scalarRegistryNames.map(
+      (name) => `  ${name}: ${resolved.scalars[name]},`,
+    );
+    const scalarRegistryBlocks = [
+      `export const scalarZodSchemas = {\n${scalarEntries.join("\n")}\n} as const;`,
+      "export type ScalarZodSchemaName = keyof typeof scalarZodSchemas;",
+    ];
     return {
       schemaBlocks,
       registryNames,
