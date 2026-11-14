@@ -18,7 +18,7 @@ Before build/publish, CI runs **`@corpdk/engine-kit`** publish-order guard (`che
 | 4     | `@corpdk/pub-sub`            | `libraries/pub-sub`           | GraphQL pub/sub factory (DAL DS runtime)             |
 | 5     | `@corpdk/graphql-input-zod`  | `libraries/graphql-input-zod` | Input Zod codegen (SDK L3); scaffold until SDK P1a   |
 | 6     | `@corpdk/dal-codegen`        | `libraries/dal-codegen`       | `dal-codegen` / `dal-entity-lint` CLIs               |
-| 7     | `@corpdk/engine-kit`         | `libraries/engine-kit`        | Shared `create-*` engine kit; scaffold until DS-P0b  |
+| 7     | `@corpdk/engine-kit`         | `libraries/engine-kit`        | Shared `create-*` engine kit (DS-P0b)                  |
 | 8     | `@corpdk/graphql-cli-core`   | `libraries/graphql-cli-core`  | CLI runtime + codegen; scaffold until CLI C-P1       |
 | 9     | `@corpdk/create-graphql-sdk` | `engines/create-graphql-sdk`  | SDK scaffold engine; stub until SDK P1c              |
 | 10    | `@corpdk/create-graphql-cli` | `engines/create-graphql-cli`  | CLI scaffold engine; stub until CLI C-P2             |

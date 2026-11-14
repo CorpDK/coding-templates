@@ -285,6 +285,7 @@ Tracked here until applied. Remove entries as they are completed.
 | 2026-10-05 | DS automation npm (lockstep)           | —        | —              | CalVer `2026.10.0-alpha.1` → `2026.10.0-alpha.2`; package READMEs for npmjs                                                                                        |
 | 2026-10-07 | DS automation npm (lockstep)           | —        | —              | CalVer `2026.10.0-alpha.4` → `2026.10.0-alpha.5`; npm `.d.ts` + `exports`/`types`; publish script gate                                                             |
 | 2026-11-14 | DS automation npm (lockstep)           | —        | —              | CalVer `2026.10.0-alpha.13` → `2026.10.0-alpha.14`; seven generator scaffolds join lockstep publish ([doc 15](../developer/15-create-ds-generator-integration.md)) |
+| 2026-11-14 | `@corpdk/create-ds`, `@corpdk/engine-kit` | —     | —              | DS-P0b: `create-ds` builds with `tsc` (replaces tsup); shared `@corpdk/engine-kit` with publish-order guard and canonical sync/check |
 
 ---
 
