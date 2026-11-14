@@ -25,7 +25,9 @@ export class MissingOverwriteSourceError extends Error {
   readonly templatePath: string;
 
   constructor(relPath: string, templatePath: string) {
-    super(`Canonical template file missing: ${relPath} (expected ${templatePath})`);
+    super(
+      `Canonical template file missing: ${relPath} (expected ${templatePath})`,
+    );
     this.name = "MissingOverwriteSourceError";
     this.relPath = relPath;
     this.templatePath = templatePath;

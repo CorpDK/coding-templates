@@ -2,19 +2,15 @@ import { isOtelEnabled, otelServiceName } from "./otel-config.js";
 
 if (isOtelEnabled()) {
   const { NodeSDK } = await import("@opentelemetry/sdk-node");
-  const { OTLPTraceExporter } = await import(
-    "@opentelemetry/exporter-trace-otlp-http"
-  );
+  const { OTLPTraceExporter } =
+    await import("@opentelemetry/exporter-trace-otlp-http");
   const { resourceFromAttributes } = await import("@opentelemetry/resources");
-  const { ATTR_SERVICE_NAME } = await import(
-    "@opentelemetry/semantic-conventions"
-  );
-  const { HttpInstrumentation } = await import(
-    "@opentelemetry/instrumentation-http"
-  );
-  const { PgInstrumentation } = await import(
-    "@opentelemetry/instrumentation-pg"
-  );
+  const { ATTR_SERVICE_NAME } =
+    await import("@opentelemetry/semantic-conventions");
+  const { HttpInstrumentation } =
+    await import("@opentelemetry/instrumentation-http");
+  const { PgInstrumentation } =
+    await import("@opentelemetry/instrumentation-pg");
 
   const sdk = new NodeSDK({
     resource: resourceFromAttributes({
