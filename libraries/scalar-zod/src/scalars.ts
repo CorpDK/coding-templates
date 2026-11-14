@@ -274,7 +274,8 @@ function isDottedIpv4Host(dotted: string): boolean {
   const parts = dotted.split(".");
   if (parts.length !== 4) return false;
   for (const octet of parts) {
-    if (octet.length === 0 || octet.length > 3 || !isDigitsOnly(octet)) return false;
+    if (octet.length === 0 || octet.length > 3 || !isDigitsOnly(octet))
+      return false;
     const n = Number(octet);
     if (n > 255) return false;
   }

@@ -32,7 +32,10 @@ export function isDecimalString(s: string): boolean {
   const dot = unsigned.indexOf(".");
   if (dot < 0) return isDigitsOnly(unsigned);
   if (dot === 0 || dot === unsigned.length - 1) return false;
-  return isDigitsOnly(unsigned.slice(0, dot)) && isDigitsOnly(unsigned.slice(dot + 1));
+  return (
+    isDigitsOnly(unsigned.slice(0, dot)) &&
+    isDigitsOnly(unsigned.slice(dot + 1))
+  );
 }
 
 function isHexCodePoint(code: number): boolean {
