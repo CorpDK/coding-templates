@@ -32,7 +32,7 @@ pnpm dlx @corpdk/create-ds upgrade ./packages/my-ds
 | `1` | Invalid consumer `package.json` or `dal.config.yaml` (unparseable) |
 | `3` | Tool failure (`entity:lint`, DAL bootstrap exec) |
 
-Global / shared: **`--dry-run`**, **`--no-install`** (init only; CLI does not run install — omits install from printed next steps when set), **`--version`**, **`-h` / `--help`**.
+Global / shared: **`--dry-run`**, **`--no-install`** (init only; CLI does not run install — omits install from printed next steps when set, except init **`--dry-run`** previews always list install), **`--version`**, **`-h` / `--help`**.
 
 `upgrade` writes **`.create-ds-version`** with the engine release used for the merge.
 
@@ -47,7 +47,7 @@ Global / shared: **`--dry-run`**, **`--no-install`** (init only; CLI does not ru
 - `dal/dal.config.yaml`
 - `package.json` at an initial **CalVer** **`YYYY.MM.0`** (UTC year and month when `init` runs, `MICRO` starts at `0`), **`license`: `MIT`**, scripts/deps aligned with the canonical template (`workspace:*` when resolving `templates/ds`; **`^@corpdk/create-ds` release version** for `@corpdk/*` when using the bundled canonical snapshot, e.g. `pnpm dlx`). Deployable DS packages follow Limitless **CalVer** (`YYYY.MM.MICRO`), not semver `0.1.0`; see [Monorepo design — CalVer](../architecture/02-monorepo-design.md#calver-format-rules).
 - Root **`LICENSE`** (MIT, CorpDK) copied from the canonical template
-- Does **not** copy template **`publishConfig`** (avoids inheriting monorepo Artifactory registry settings)
+- **`publishConfig`**: `mergePackageJson` starts from the canonical template; init supplies only `name`, `version`, and `license`, so template registry settings can appear unless the team clears them after scaffold (upgrade preserves an existing consumer `publishConfig` via `preserveKeys`)
 - `.gitignore` entries for `src/generated/**`
 - Yoga bootstrap via **`dal-codegen --mode=bootstrap`** when the monorepo `dal-codegen` CLI is built; otherwise copies bootstrap files from the canonical template
 
@@ -111,7 +111,7 @@ When changing `templates/ds` automation files, refresh the bundled snapshot unde
 
 `package.json`, `LICENSE`, `dal/dal.config.yaml`, `codegen.ts`, `drizzle.config.ts`, `tsconfig.json`, `Dockerfile`, `docker-compose.yml`, `docker/otel-collector-config.yaml`, `docker/postgres-init/**`, `docker-entrypoint.sh`, `.gitignore`, `.env.example`, `src/schema.ts`, `src/index.ts`, `src/db/index.ts`, `src/health.ts`, `src/validation/parse-input.ts`, `src/observability/**`
 
-Copy from `templates/ds` (omit `src/db/schema/**`, `drizzle/**`, and generated output). When refreshing **`engines/create-ds/canonical/.gitignore`**, keep the **`drizzle/migrations/`** ignore line — the monorepo **`templates/ds`** template tracks demo baseline migrations in git; scaffolded DS packages treat migration SQL as team-owned and gitignored. Keep **`engines/create-ds/starter/`** in sync when changing the minimal default schema.
+Copy from `templates/ds` (omit `src/db/schema/**`, `drizzle/**`, and generated output). Refresh the bundled tree with **`pnpm --filter @corpdk/create-ds sync:canonical`** (also runs on `prepack`); CI **`check-canonical`** runs from [`.github/scripts/publish-ds-automation.sh`](../../.github/scripts/publish-ds-automation.sh). When refreshing **`engines/create-ds/canonical/.gitignore`**, keep the **`drizzle/migrations/`** ignore line — the monorepo **`templates/ds`** template tracks demo baseline migrations in git; scaffolded DS packages treat migration SQL as team-owned and gitignored. Keep **`engines/create-ds/starter/`** in sync when changing the minimal default schema.
 
 Release **`@corpdk/create-ds`** on the same train as **`@corpdk/dal-codegen`** when upgrade deltas matter.
 
@@ -119,4 +119,4 @@ Release **`@corpdk/create-ds`** on the same train as **`@corpdk/dal-codegen`** w
 
 **Related**: [Monorepo Overview](01-monorepo-overview.md) | [GraphQL DAL Requirements](graphql-dal-requirements.md) | [Monorepo Design — CalVer](../architecture/02-monorepo-design.md#calver-format-rules)
 
-**Last updated**: November 5, 2026
+**Last updated**: November 14, 2026
