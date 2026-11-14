@@ -2,7 +2,7 @@
 
 Design specification for a **publishable GraphQL client SDK** produced from a **complete schema** (one or many SDL files, or a TypeScript `typeDefs` module), and for the **CLI** that scaffolds, regenerates, and upgrades it. This initiative covers the SDK package, the CLI, and two in-house libraries the SDK is built from. It does not cover the GraphQL server, the automation CLI ([14-graphql-cli-generator.md](14-graphql-cli-generator.md)), or HTTP transport. Apollo, urql, `graphql-sse`, and similar clients stay in consumer apps.
 
-**Status:** Design (pre-implementation). Revision 7. Open work is tracked in the §17 register.
+**Status:** Design (pre-implementation). Revision 12. Open work is tracked in the §17 register.
 
 - Appendix A: gap review of revision 1.
 - Appendix B: dependency maintenance audit.
@@ -19,6 +19,11 @@ Design specification for a **publishable GraphQL client SDK** produced from a **
 | 5 | 2026-11-12 | **`genql` forked into the owned `@corpdk/graphql-dsl`**, which adds aliases, `@include`/`@skip`, named variables, and native ESM. The DSL computes its result types from the SDK's own `Types.*` (L1) instead of generating a second set of interfaces. |
 | 6 | 2026-11-12 | **`templates/ds-sdk` is a test proof and sample, never published** (§9.1). New libraries join the npmjs publish pipeline (§13). All remaining work is collected in the §17 register. Later on rev 6: `graphql-dsl` stays in this monorepo with its own version line and move-out triggers (§16.2.1). The §5 diagram's `z.ZodType<Types.X>` label is escaped (Mermaid stripped it as HTML). |
 | 7 | 2026-11-12 | **Shared runtime over copied code:** parse helpers move into `@corpdk/graphql-input-zod` (runtime entry `.`; emitter at `./codegen`), and each SDK's `src/validation.ts` becomes a binding. **Scalar validators:** generated `scalarZodSchemas` registry + `safeParseGraphqlScalar`, used by input fields and by the CLI for top-level scalar arguments. Register items R-32, R-33. |
+| 8 | 2026-11-13 | **Final cross-design review** (SDK, CLI, DS generator). Emitter built-in scalars made configurable with spec defaults (DAL overrides keep `dal-codegen` byte-identical; no `@corpdk/dal-core` in SDKs); `scalarReferences` option; `scalarWireFormats`; `validation.enabled: false` defined; optional peers on `graphql-input-zod`. Phase order fixed: the `../ds-sdk` target is removed in P2 with the `templates/ds-sdk` replacement. P1a now updates fixed-order CI/Docker builds; publish bootstrap and trusted-publisher setup recorded; `graphql-dsl` version gate. Script renamed `sdk:codegen`; `init --defer-sync`, `runInit` export, `--schema` path rule. `create-ds` changes moved to [doc 15](15-create-ds-generator-integration.md); `create-app` declared frozen and out of scope (R-22 dropped). Engine built on the shared `@corpdk/engine-kit` with the `create-ds`-style contract (doc 15 §11). Register R-34 to R-36; evidence wording corrected. |
+| 9 | 2026-11-13 | **Second cross-design review.** P3 and P4 merged into P2: the DS Docker steps and the `create-graphql-sdk` publish move to P2, because the DS image breaks and `create-ds` would point users at an unpublished engine otherwise. Two `create-app` Dockerfile rows dropped. R-17 folded into doc 15 R-D02; R-24 rescoped. `graphql-dsl` codegen API and its types-only dependency specified; `GraphqlInputIssue.code` source stated. |
+| 10 | 2026-11-13 | **`@corpdk/scalar-zod`** (§7.7): one package for all scalar rules, extracted from `dal-core`, with Postgres-bounded rules under `/pg`. The DAL preset and built-in overrides reference it instead of copying rules; `dal-core` re-exports. R-37, R-38. |
+| 11 | 2026-11-13 | **Response helpers** (§3.8), adopted after comparing Linear's SDK: a typed request-error normaliser and a Relay connection paginator, both transport-free, in the `graphql-dsl` runtime. **Package bootstrap phase B0** (doc 15 §4.4): every new package is created as a placeholder, published by hand once, and given npm trusted publishing before any implementation phase starts; the per-phase bootstrap steps are removed. R-39 to R-41. |
+| 12 | 2026-11-14 | **`graphql-dsl` joins the lockstep publish set** (§16.2.1): same CalVer, workflow, and trusted-publisher setup as the other packages, first in `PUBLISH_ORDER`. The separate `publish-graphql-dsl.yml`, its own version line, and the lockstep version gate are dropped. An own version line becomes a move-out step instead. |
 
 **Related:** [02-graphql-schema.md](02-graphql-schema.md) · [11-ds-subscription-sse.md](11-ds-subscription-sse.md) · [ds-automation-upgrades.md](ds-automation-upgrades.md) (pattern reference for `create-ds`) · [dal-pg-type-mapping.md](dal-pg-type-mapping.md) · [02-monorepo-design.md](../architecture/02-monorepo-design.md)
 
@@ -63,7 +68,7 @@ Design specification for a **publishable GraphQL client SDK** produced from a **
 | ----- | ---- | ----------------- | ----- |
 | **L1 types** | `@graphql-codegen/cli` ^8 + `@graphql-codegen/typescript` ^7 (`enumsAsTypes`, `nonOptionalTypename`) | `src/generated/schema-types.ts` | snapshot |
 | **L2 DSL** | `@corpdk/graphql-dsl/codegen` (generator); `@corpdk/graphql-dsl` (runtime, a dependency) | `src/generated/dsl/selections.ts` (selection types, with `__args` typed as L1 `*Args`), `src/generated/dsl/type-map.ts`, `src/generated/dsl/index.ts` (builders bound to this schema) | snapshot + L1 |
-| **L3 validators** | `@corpdk/graphql-input-zod` | `src/generated/input-schemas.ts`, `src/generated/input-registry.ts` (annotated with L1 types) | snapshot + L1 |
+| **L3 validators** | `@corpdk/graphql-input-zod` | `src/generated/input-schemas.ts`, `src/generated/input-registry.ts`, `src/generated/scalar-registry.ts` (annotated with L1 types) | snapshot + L1 |
 
 All generated code lives under **`src/generated/`**, which is gitignored and regenerated from the committed snapshot.
 
@@ -111,7 +116,7 @@ const { document, variables } = buildQuery({
   search: { __args: { term: "a" }, __typename: true, on_Item: { id: true }, on_Label: { text: true } },
 });
 
-// Reusable, named variables (fork): built once; typed TypedDocumentNode<Result, { filter: Types.ItemFilter; withTags: boolean }>.
+// Reusable, named variables (fork): built once; typed BuiltOperation<Result, { filter: Types.ItemFilter; withTags: boolean }>.
 export const ItemsQuery = defineQuery({
   name: "Items",
   variables: { filter: v<Types.ItemFilter>(), withTags: v<boolean>() },
@@ -142,7 +147,7 @@ export const ItemsQuery = defineQuery({
 
 `aliases` keep typo protection because aliases live under one reserved key (`__aliases`), not as arbitrary sibling keys. Ordinary field keys therefore stay subject to excess-property checks.
 
-**Variable type checking.** For named variables the runtime compares the declared `v<T>()` against the argument's GraphQL type from the type map, and throws at `define*` time on mismatch. P1 decides whether this can also be checked at compile time.
+**Variable type checking.** For named variables the runtime compares the declared `v<T>()` against the argument's GraphQL type from the type map, and throws at `define*` time on mismatch. P1b decides whether this can also be checked at compile time.
 
 **v1.1 (not v1):** arbitrary executable directives (`__directives`), `@defer`/`@stream`, persisted-query hashes.
 
@@ -158,6 +163,13 @@ export {
   type QueryResult, type MutationResult, type SubscriptionResult,
 } from "./generated/dsl/index.js";
 export type * as Selections from "./generated/dsl/selections.js"; // e.g. Selections.ItemSelection
+export {
+  iterateConnection, paginateConnection, type ConnectionField,   // §3.8, typed over this schema
+} from "./generated/dsl/index.js";
+export {
+  normalizeGraphqlResult, unwrapGraphqlResult, toGraphqlRequestError, isGraphqlRequestError,
+  type GraphqlRequestError, type GraphqlRequestErrorKind, type GraphqlErrorEntry,
+} from "@corpdk/graphql-dsl";                                     // §3.8
 export type { BuiltOperation, ResultOf, VariablesOf } from "@corpdk/graphql-dsl";
 export type { TypedDocumentNode } from "@graphql-typed-document-node/core";
 export type * as Types from "./generated/schema-types.js"; // L1: the one type set
@@ -231,12 +243,14 @@ The SDK builds with **`tsconfig.node.json` (NodeNext)**. The fork's generator em
   "scripts": {
     "sdk:sync": "create-graphql-sdk sync .",
     "sdk:check": "create-graphql-sdk sync . --check",
-    "codegen": "create-graphql-sdk codegen .",
-    "build": "pnpm codegen && tsc -p tsconfig.json",
+    "sdk:codegen": "create-graphql-sdk codegen .",
+    "build": "pnpm sdk:codegen && tsc -p tsconfig.json",
     "prepublishOnly": "pnpm sdk:check && pnpm build"
   }
 }
 ```
+
+The script is `sdk:codegen`, not `codegen`: the repo's generic Turbo `codegen` task (`turbo.json`) has DS-specific `dependsOn` and `outputs`, and scaffolded roots run `turbo run codegen` unfiltered. A separate name keeps the SDK out of that task.
 
 | Kind | Packages | Reason |
 | ---- | -------- | ------ |
@@ -246,6 +260,88 @@ The SDK builds with **`tsconfig.node.json` (NodeNext)**. The fork's generator em
 | **Forbidden** | `@genql/*`, Apollo, urql, `graphql-request`, `graphql-sse`, `graphql-ws`, `typescript-resolvers`, `@corpdk/dal-core` | No upstream DSL packages; the SDK stays transport-free |
 
 **Publishing is the SDK owner's choice.** The canonical `package.json` carries no `publishConfig` and no `private` flag. A team that generates an SDK for its own service adds its registry, or marks the package private. The manifest above shows the shape every generated SDK has. For the in-repo sample `templates/ds-sdk`, §9.1 overrides this: it is `private: true`.
+
+### 3.8 Response helpers: error normaliser and connection paginator
+
+Added in rev 11 after comparing [Linear's SDK](https://github.com/linear/linear/tree/master/packages/sdk), which ships a typed error hierarchy and a `paginate` helper. Both helpers here stay **transport-free**: they read results and errors that the consumer's client produces, and they never send a request themselves. They live in the `@corpdk/graphql-dsl` runtime (§8.1), so fixes reach every SDK through a dependency update, and the CLI runtime uses the same code ([CLI §4.4](14-graphql-cli-generator.md#44-output-and-exit-codes)).
+
+#### 3.8.1 Typed request-error normaliser
+
+Every failure is turned into one discriminated union, whatever client produced it:
+
+```ts
+// @corpdk/graphql-dsl (runtime), re-exported by every SDK
+export type GraphqlRequestErrorKind = "validation" | "transport" | "graphql" | "userErrors";
+
+export interface GraphqlErrorEntry {
+  message: string;
+  path?: readonly (string | number)[];
+  code?: string;                                  // extensions.code when present
+  extensions?: Record<string, unknown>;
+}
+
+interface Base extends Error { operationName?: string; cause?: unknown }
+export type GraphqlRequestError =
+  | (Base & { kind: "validation"; issues: readonly unknown[] })                          // pre-flight L3 failure, no request sent
+  | (Base & { kind: "transport"; status?: number; timedOut: boolean; aborted: boolean }) // network, timeout, abort, non-2xx, non-JSON body
+  | (Base & { kind: "graphql"; errors: readonly GraphqlErrorEntry[]; data?: unknown })   // response `errors`, with any partial data
+  | (Base & { kind: "userErrors"; field: string; userErrors: readonly unknown[]; data: unknown }); // mutation payload reports user errors
+
+export function normalizeGraphqlResult<R>(
+  result: { data?: R | null; errors?: readonly unknown[] },
+  options?: { operationName?: string; userErrorsFields?: readonly string[] },   // default ["userErrors"]
+): { ok: true; data: R } | { ok: false; error: GraphqlRequestError };
+export function unwrapGraphqlResult<R>(result: { data?: R | null; errors?: readonly unknown[] },
+  options?: { operationName?: string; userErrorsFields?: readonly string[] }): R; // throws GraphqlRequestError
+export function toGraphqlRequestError(thrown: unknown, options?: { operationName?: string }): GraphqlRequestError;
+export function isGraphqlRequestError(value: unknown): value is GraphqlRequestError;
+```
+
+| Input | Becomes |
+| ----- | ------- |
+| Response with a non-empty `errors` array | `graphql`; partial `data` kept |
+| Response whose root payload has a non-empty field listed in `userErrorsFields` (DAL: `userErrors`) | `userErrors`; only root-level payload fields are checked |
+| Both of the above | `graphql` (the server-side failure wins) |
+| `fetch` rejection, `AbortError`, `TimeoutError`, non-2xx status, unparseable body | `transport`, with `status`, `timedOut`, `aborted` |
+| `GraphqlInputValidationError` from `./validation` (§7.4) | `validation`, with its `issues` |
+| Apollo Client 4 errors (`CombinedGraphQLErrors`, `ServerError`, `ServerParseError`) and urql 5 `CombinedError` (`graphQLErrors`, `networkError`, `response`) | The matching kind, detected structurally by their documented fields. No client package is imported. |
+| Anything else | `transport` with `cause` set (unknown failures are never swallowed) |
+
+- The kinds map one-to-one to the CLI's exit codes 3, 4, 1, and 5.
+- Each object is a real `Error` with `name = "GraphqlRequestError"` and a stack, so `throw` and logging behave normally.
+- `GraphqlInputValidationError` gains `kind: "validation"` in `@corpdk/graphql-input-zod`, so the detection is structural and `graphql-dsl` stays free of workspace imports (R-30).
+
+#### 3.8.2 Connection paginator
+
+The DAL's `*Connection` root queries follow the [Relay cursor connections spec](https://relay.dev/graphql/connections.htm): `edges { cursor node }`, `pageInfo { hasNextPage hasPreviousPage startCursor endCursor }`, and `first` / `after` / `last` / `before` arguments. They also have a `nodes` shortcut. The paginator walks such a field page by page.
+
+```ts
+import { iterateConnection, unwrapGraphqlResult } from "@corpdk/ds-sdk";
+
+const exec = async (op) => unwrapGraphqlResult(await myClient.request(op.query, op.variables)); // any client
+
+for await (const item of iterateConnection(exec, {
+  field: "itemConnection",                 // ConnectionField: only Relay-shaped root query fields type-check
+  args: { filter: { isActive: { eq: true } }, sort: [{ field: "CREATED_AT", direction: "DESC" }] },
+  select: { id: true, name: true },        // node selection; the result element type is inferred over L1
+  pageSize: 50,                            // required; sent as `first` (or `last` when backward)
+})) {
+  console.log(item.id);
+}
+```
+
+| Rule | Detail |
+| ---- | ------ |
+| What counts as a connection | Generate time: a **root `Query`** field whose type has `pageInfo` (with `hasNextPage` and `endCursor`, or `hasPreviousPage` and `startCursor` for backward) plus `edges { cursor node }` and/or `nodes`, and which accepts `first` + `after` (forward) or `last` + `before` (backward). `emitDslModules` records these fields in the type map, and the generated index exports `ConnectionField` as their union. Nested connections are out of scope in v1. |
+| Requests | Each page is a `buildQuery` call for the same field. The paginator adds `first`/`after` (or `last`/`before`) and always selects `pageInfo`, so callers never select cursors. `args` excludes the four paging arguments and is sent unchanged on every page. |
+| Reading a page | Uses `nodes` when the type has it, otherwise `edges.node`. |
+| Stopping | `hasNextPage` (or `hasPreviousPage`) is false, or the end cursor is `null`. |
+| Safety | Throws a `transport`-kind `GraphqlRequestError` when the server returns a cursor it already returned (no infinite loop); `maxPages` caps the walk; `signal: AbortSignal` cancels between pages. |
+| Errors | Whatever `exec` throws propagates. Items already yielded stay yielded. |
+| Variants | `iterateConnection` yields nodes; `paginateConnection` yields one page at a time: `{ nodes, pageInfo, pageNumber }`. Option `direction: "forward" \| "backward"` (default `forward`). |
+| Not covered | Plain list queries such as the DAL's `items(limit: Int)` have no cursor, so they stay single requests. |
+
+The generic core (`@corpdk/graphql-dsl`) takes the `build` function as a parameter. The generated `src/generated/dsl/index.ts` binds it to the SDK's own `buildQuery` and adds the schema-specific types (`ConnectionField`, the `args` type from L1 `Query<Field>Args`, the node selection and result types).
 
 ---
 
@@ -295,10 +391,10 @@ These rules are `mergeTypeDefs` behavior. Rows marked ✓ were verified in Appen
 | ✓ `extend type X` with the base in another file | Folded into `X` |
 | ✓ `extend type X` with no base `X` | **Error**: `Cannot extend type "X" because it is not defined.` |
 | Same field, same type, in two files | De-duplicated |
-| ✓ Same field, **different** type in two files | **Error** naming the type, field, and both types. The CLI adds the declaring files. |
+| ✓ Same field, **different** type in two files | **Error** naming the parent type, field, and both types. The CLI adds the declaring files. |
 | ✓ Enum declared in two files | Union of values |
 | ✓ Same directive definition in two files | De-duplicated |
-| ✓ Duplicate descriptions on one type | The first description in path order wins; describe a type in one file only |
+| Duplicate descriptions on one type | Expected: one description wins (not verified; R-36). Describe a type in one file only. |
 | ✓ No explicit `schema { }` block | One is emitted |
 | ✓ Output order | Types sorted; merged object fields sorted. Input fields keep (stable) source order. |
 
@@ -364,6 +460,7 @@ scalars:
   DateTime:
     type: string # L1 TypeScript type (L2 and L3 use L1)
     zod: z.string() # L3 expression; `z` is in scope
+    wire: string # string | json — how a value is written outside JSON (CLI flags); default string
   BigInt:
     type: string
     zod: z.union([z.string(), z.number().int()])
@@ -372,15 +469,28 @@ dsl:
   engine: corpdk-graphql-dsl # enum; only value in v1
 
 validation:
-  enabled: true
+  enabled: true # false: no L3 — no input-schemas/registries, and no "./validation" export
   strictObjects: false
+  builtinScalars: {} # optional overrides for ID/String/Int/Float/Boolean (§7.2.1)
 ```
 
 `types.enumsAsTypes` and `nonOptionalTypename` are fixed in the canonical `codegen.ts`, because the DSL needs both (§3.3). Scalars map only into L1 (`scalars.<Name>.type`) and L3 (`zod`). L2 has no scalar config, because it reads L1.
 
-**DAL scalar entries.** The custom scalars are `DateTime`, `Date`, `TimeTz`, `BigInt`, `Decimal`, `IntervalMs`, `SmallInt`, `Double`, `InsensitiveString`, `IP`, `CIDR`, `MAC` (`DAL_SCALAR_ZOD_BY_NAME` in `libraries/dal-codegen/src/generators/input-zod-scalars.ts`). Their entries encode the wire format from [dal-pg-type-mapping.md](dal-pg-type-mapping.md) and `libraries/dal-core/src/scalar-zod.ts`, without importing `@corpdk/dal-core`. The server stays authoritative where its rules are stricter.
+`scalars.<Name>.wire` is emitted into `scalar-registry.ts` as `scalarWireFormats` (`{ DateTime: "string", JSON: "json" }`) and exported from `./validation`. Consumers that read raw text, such as the CLI's flag parser, use it to decide whether a value is a plain string or JSON. They don't need `sdk.config.yaml`, which is not part of the published package.
 
-**Custom scalars typed as objects** (for example `JSON: Record<string, unknown>`) need care. The result-typing scalar check is `string | number | Date | boolean | null | undefined`, so an object-typed scalar would be treated as a selectable object. The fork adds a generated scalar-name list to the type map so `FieldsSelection` treats those fields as leaves. P1 adds a regression test.
+`validation.enabled: false` turns L3 off: no `input-schemas.ts`, `input-registry.ts`, or `scalar-registry.ts`, and the `./validation` export is omitted from `package.json`. Consumers that need L3, such as the CLI generator, check for the export and fail clearly when it is missing.
+
+**DAL scalar entries.** The custom scalars are `DateTime`, `Date`, `TimeTz`, `BigInt`, `Decimal`, `IntervalMs`, `SmallInt`, `Double`, `InsensitiveString`, `IP`, `CIDR`, `MAC`. Their entries **reference** `@corpdk/scalar-zod` (§7.7) instead of repeating the rules as expression strings, so SDK and server validate with the same code:
+
+```yaml
+scalars:
+  DateTime:  { type: string, zod: { from: "@corpdk/scalar-zod", name: "DateTime" } }
+  SmallInt:  { type: number, zod: { from: "@corpdk/scalar-zod/pg", name: "SmallInt" } }
+```
+
+`zod` accepts either an expression string (`z.string()`) or an `{ from, name }` reference. The emitter turns references into imports in `scalar-registry.ts`. The `dal` preset (`--scalar-preset dal`) writes the 12 references.
+
+**Custom scalars typed as objects** (for example `JSON: Record<string, unknown>`) need care. The result-typing scalar check is `string | number | Date | boolean | null | undefined`, so an object-typed scalar would be treated as a selectable object. The fork adds a generated scalar-name list to the type map so `FieldsSelection` treats those fields as leaves. P1b adds a regression test.
 
 ---
 
@@ -402,12 +512,17 @@ The library has **two entry points**, the same split as `@corpdk/graphql-dsl`:
 | Entry | Used by | Contents | Peer |
 | ----- | ------- | -------- | ---- |
 | `@corpdk/graphql-input-zod/codegen` | `dal-codegen`, `create-graphql-sdk` | The emitter (below) | `graphql` ^16 \|\| ^17 |
-| `@corpdk/graphql-input-zod` | Every generated SDK at runtime (§3.5) | `createInputParsers`, `createScalarParsers`, `GraphqlInputValidationError`, issue types (§7.4) | `zod` ^4 |
+| `@corpdk/graphql-input-zod` | Every generated SDK at runtime (§3.5); `@corpdk/graphql-cli-core` for types | `createInputParsers`, `createScalarParsers`, `GraphqlInputValidationError`, issue types (§7.4) | `zod` ^4 |
+
+Peer dependencies apply to the whole package, not per entry point, so **both peers are optional** in `peerDependenciesMeta`. `dal-codegen` (codegen only) doesn't need `zod`, and SDKs (runtime only) don't need `graphql` from this package.
 
 ```ts
 // @corpdk/graphql-input-zod/codegen
 export interface EmitInputZodOptions {
-  scalars: Record<string, string>;      // scalar name → Zod expression source
+  scalars: Record<string, string>;      // custom scalar name → Zod expression source
+  builtinScalars?: Partial<Record<"ID" | "String" | "Int" | "Float" | "Boolean", string>>; // overrides (§7.2.1)
+  preamble?: string;                    // extra import lines for the emitted modules (DAL: its dal-core import)
+  scalarReferences?: "registry" | "inline"; // default "registry"; dal-codegen passes "inline"
   skipTypeNames?: ReadonlySet<string>;
   typesImport?: string;                 // "./schema-types.js" → z.ZodType<Types.X> annotations
   strictObjects?: boolean;
@@ -420,8 +535,22 @@ export function emitInputZodModule(schema: GraphQLSchema, options: EmitInputZodO
 };
 ```
 
-- **Scalars defined once.** Each custom scalar's Zod expression is emitted once, into `scalar-registry.ts`. Input-object fields reference it (`createdAt: scalarZodSchemas.DateTime`) instead of repeating the expression. That registry also validates top-level scalar arguments outside an input object, which the CLI uses (§7.4).
-- `dal-codegen` calls the emitter with DAL scalars and its create/update skip set; its output is unchanged. The SDK calls it with the snapshot and `sdk.config.yaml` scalars.
+- **Scalars defined once.** With `scalarReferences: "registry"` (the default, used by the SDK), each custom scalar's Zod expression is emitted once, into `scalar-registry.ts`. Input-object fields reference it (`createdAt: scalarZodSchemas.DateTime`) instead of repeating the expression. The registry also validates top-level scalar arguments outside an input object, which the CLI uses (§7.4).
+- **`dal-codegen` keeps byte-identical output.** It calls the emitter with `scalarReferences: "inline"`, its DAL scalar expressions (`dalScalarZod.*`), the DAL built-in overrides and import preamble (§7.2.1), and its create/update skip set. That reproduces today's `input-zod.ts` exactly (R-10). The SDK calls the emitter with the snapshot, `sdk.config.yaml` scalars, and no overrides.
+
+#### 7.2.1 Built-in scalars
+
+Today's emitter hard-codes DAL rules for built-in scalars (`libraries/dal-codegen/src/generators/input-zod-graphql.ts`: `ID` → `z.string().uuid()`, `Int` → `zPgInt32`, `Float` → `zPgReal`, the last two imported from `@corpdk/dal-core`). Those are wrong for a generic API (IDs need not be UUIDs), and they would pull `@corpdk/dal-core`, a forbidden SDK dependency (§3.7), into every SDK. The extracted emitter uses **GraphQL-spec defaults** and lets the caller override them:
+
+| Built-in | Emitter default (spec) | DAL override (`dal-codegen`) |
+| -------- | ---------------------- | ---------------------------- |
+| `ID` | `z.string()` | `z.string().uuid()` |
+| `String` | `z.string()` | unchanged |
+| `Int` | `z.number().int().min(-2147483648).max(2147483647)` | `Int` from `@corpdk/scalar-zod/pg` (today `zPgInt32` in `@corpdk/dal-core`), imported via `preamble` |
+| `Float` | `z.number().finite()` | `Real` from `@corpdk/scalar-zod/pg` (today `zPgReal` in `@corpdk/dal-core`), imported via `preamble` |
+| `Boolean` | `z.boolean()` | unchanged |
+
+An SDK may also override built-ins in `sdk.config.yaml` (`validation.builtinScalars`, for example `ID: z.string().uuid()` for a UUID-only API).
 
 ### 7.3 Scope
 
@@ -444,7 +573,7 @@ export type InputZodSchemaName = keyof typeof inputZodSchemas;
 Shared once, in `@corpdk/graphql-input-zod` (runtime entry), and bound per SDK in `src/validation.ts` (§3.5):
 
 ```ts
-export interface GraphqlInputIssue { path: (string | number)[]; message: string; code: string }
+export interface GraphqlInputIssue { path: (string | number)[]; message: string; code: string } // code: Zod issue code, passed through
 export type GraphqlInputParseResult<T> =
   | { ok: true; data: T }
   | { ok: false; issues: GraphqlInputIssue[] };
@@ -493,6 +622,20 @@ The server does not import the SDK and wins at runtime (`userErrors` / `BAD_USER
 
 `useZodForm(ItemCreateInputSchema)` works directly. Zod resolves to one instance (peer of the SDK, dependency of `ui-forms`, both ^4). L3 does not coerce HTML string values.
 
+### 7.7 `@corpdk/scalar-zod`: one package for all scalar rules
+
+`libraries/scalar-zod` (`@corpdk/scalar-zod`, npmjs, lockstep) holds every scalar validation rule, client- and server-safe. It is extracted from `@corpdk/dal-core` (`scalar-zod.ts`, `scalars.ts`, `guild-scalars.ts`, `pg-bounds.ts`, `pg-interval.ts`), whose imports are only `zod`, `graphql-scalars`, and each other.
+
+| Entry | Exports (named, tree-shakeable) |
+| ----- | ------------------------------- |
+| `@corpdk/scalar-zod` | Generic GraphQL wire scalars: `DateTime`, `Date`, `TimeTz`, `Decimal`, `InsensitiveString`, `IP`, `CIDR`, `MAC`, `BigInt` (unbounded), plus their `parse*` functions |
+| `@corpdk/scalar-zod/pg` | Postgres-bounded rules, **not** exported from the root: `BigInt` (int64 range), `IntervalMs`, `SmallInt`, `Double`, `Int` (int32, today `zPgInt32`), `Real` (today `zPgReal`), and the `PG_*` bound constants |
+
+- **Package shape:** `"sideEffects": false`, ESM, one module per scalar, so an SDK that uses `DateTime` loads only `DateTime`'s code.
+- **`dal-core`:** depends on `@corpdk/scalar-zod` and keeps exporting `dalScalarZod` (built from both entries) and `zPgInt32` / `zPgReal` as re-exports. Server code and `dal-codegen` output stay unchanged (R-10).
+- **SDKs:** the `dal` preset references it (§6), so DAL SDKs depend on `@corpdk/scalar-zod`. Non-DAL SDKs with their own scalars keep expression strings and don't install it. Like the other owned runtimes, rule fixes reach every SDK through a dependency update.
+- **Dependencies:** `zod` ^4 (peer), `graphql-scalars` (needs a dependency-policy audit row, R-38).
+
 ---
 
 ## 8. Libraries and CLI
@@ -502,7 +645,8 @@ The server does not import the SDK and wins at runtime (`userErrors` / `BAD_USER
 ```text
 libraries/graphql-dsl/
   src/runtime/        printer (aliases, directives, named variables), FieldsSelection over L1,
-                      linkTypeMap, define*/build* helpers, BuiltOperation, ResultOf/VariablesOf
+                      linkTypeMap, define*/build* helpers, BuiltOperation, ResultOf/VariablesOf,
+                      response helpers (§3.8: error normaliser, connection paginator)
   src/codegen/        selection-type renderer (__args → L1 *Args), type-map renderer, bound-index renderer
   test/               ported upstream typeSelection/printer tests + new feature tests
   LICENSE             MIT, with genql's copyright notice kept
@@ -511,14 +655,27 @@ libraries/graphql-dsl/
 ```
 
 - **Base:** `remorses/genql` `main` at `15f27b9` (6.3.4 plus 6 unreleased commits).
-- **Published** to npmjs under CalVer, like the other `libraries/*`. Runtime peer: `graphql` ^16 || ^17. No other runtime dependencies.
+- **Published** to npmjs in the lockstep CalVer set, first in `PUBLISH_ORDER` (it has no `@corpdk/*` dependencies; §16.2.1). Runtime peer: `graphql` ^16 || ^17. One types-only dependency: `@graphql-typed-document-node/core` (for `BuiltOperation.document`). No other runtime dependencies.
+- **Codegen API** (`@corpdk/graphql-dsl/codegen`, called by `create-graphql-sdk codegen`):
+
+  ```ts
+  export function emitDslModules(schema: GraphQLSchema, options: {
+    typesImport: string;        // "../schema-types.js" — L1 module the selections import from
+    customScalars: string[];    // scalar names treated as leaves (R-06)
+    sortProperties?: boolean;   // default true
+  }): { selections: string; typeMap: string; index: string }; // src/generated/dsl/{selections,type-map,index}.ts
+  ```
+
+  The type map marks Relay connection root fields (§3.8.2), and `index` binds `iterateConnection` / `paginateConnection` to the SDK's `buildQuery` with the `ConnectionField` type.
+
 - **Divergences from upstream:**
   - transport, CLI, introspection, and own response types removed;
   - native ESM output;
   - results computed over L1;
   - aliases, `@include`/`@skip`, and named variables added;
+  - transport-free response helpers added (§3.8);
   - the selection-type key renamed from `GenqlSelection` to `Selection`.
-- **Upstream tracking:** each quarter, review new upstream commits and cherry-pick relevant fixes into `UPSTREAM.md`. Open PR #168 (nullable non-scalar typing) is reviewed in P1 and its case added as a regression test.
+- **Upstream tracking:** each quarter, review new upstream commits and cherry-pick relevant fixes into `UPSTREAM.md`. Open PR #168 (nullable non-scalar typing) is reviewed in P1b and its case added as a regression test.
 
 ### 8.2 `@corpdk/graphql-input-zod`
 
@@ -534,7 +691,18 @@ engines/create-graphql-sdk/
   package.json  bin: create-graphql-sdk; build: tsc (not tsup — see Appendix B.4)
 ```
 
-Runtime dependencies: `graphql`, `@graphql-tools/merge`, `@graphql-codegen/cli`, `@graphql-codegen/typescript`, `@corpdk/graphql-dsl` (`/codegen`), `@corpdk/graphql-input-zod`, `yaml`, `@clack/prompts`.
+Runtime dependencies: `@corpdk/engine-kit`, `graphql`, `@graphql-tools/merge`, `@graphql-codegen/cli`, `@graphql-codegen/typescript`, `@corpdk/graphql-dsl` (`/codegen`), `@corpdk/graphql-input-zod`.
+
+**Engine family.** The engine is built on `@corpdk/engine-kit` and follows the shared contract in [doc 15 §11](15-create-ds-generator-integration.md#11-generator-engine-family-and-corpdkengine-kit), like `create-ds`:
+
+- the same command shape, help, and "Next steps" output;
+- exit codes 0/1/2/3 (§8.6);
+- `runInit` / `runUpgrade` exports;
+- the overwrite / merge / never-touch upgrade model;
+- a `.create-graphql-sdk-version` record;
+- a root script, `"create-graphql-sdk": "node engines/create-graphql-sdk/dist/index.js"`.
+
+`yaml` and `@clack/prompts` come through `engine-kit`.
 
 ### 8.4 Commands
 
@@ -557,9 +725,15 @@ create-graphql-sdk <init|sync|codegen|generate|upgrade> [directory] [options]
   --check               Compare only; exit 1 on drift (sync, generate)
   --fail-on-breaking    Exit 1 on breaking schema changes (sync, generate)
   --no-install          Skip pnpm install (init)
+  --scalar-preset <name> init: write a scalar preset into sdk.config.yaml (v1: `dal` — the 12 DAL scalars, R-14)
+  --version             print the engine version
+  --defer-sync          init: write config and template only; skip sync and codegen (the source schema
+                        may not exist yet, e.g. before the DS's first dal:codegen:schema)
   --dry-run             Print planned writes without writing (init, upgrade)
   -h, --help
 ```
+
+**Path resolution.** `--schema` values are resolved against the current working directory, then written into `sdk.config.yaml` relative to the SDK package directory. `paths` inside `sdk.config.yaml` are always relative to that file (§4.1). So `create-graphql-sdk init ../ds-sdk --schema ./src/generated/generated-schema.ts`, run from a DS package, stores `../ds/src/generated/generated-schema.ts`.
 
 ### 8.6 `init`, `upgrade`, exit codes
 
@@ -568,8 +742,10 @@ create-graphql-sdk <init|sync|codegen|generate|upgrade> [directory] [options]
 1. The target must be empty.
 2. Copy `canonical/`.
 3. Write `sdk.config.yaml` and `package.json` (CalVer `YYYY.M.0`).
-4. Run `sync`. Unmapped scalars get reviewable stubs, and the command exits 1.
-5. Install, then run `codegen`.
+4. Run `sync`. Unmapped scalars get reviewable stubs, and the command exits 1. Skipped with `--defer-sync`.
+5. Install (unless `--no-install`), then run `codegen`. Skipped with `--defer-sync`.
+
+`init` is also exported programmatically (`runInit(options)` from `@corpdk/create-graphql-sdk`), so `create-ds` can call it without spawning a process ([doc 15](15-create-ds-generator-integration.md)).
 
 **`upgrade`:**
 
@@ -591,22 +767,22 @@ create-graphql-sdk <init|sync|codegen|generate|upgrade> [directory] [options]
 
 ### 9.1 Output package and its source
 
-`templates/ds-sdk` (`@corpdk/ds-sdk`) is the dogfood output, sourced from `templates/ds` only. It is a **test proof and sample, and is never published** to any registry. It exists to prove the engine end to end against the DAL schema in CI, and to serve as the reference copy that `create-app` scaffolds from (through the engine canonical, §9.4). Consequences:
+`templates/ds-sdk` (`@corpdk/ds-sdk`) is the dogfood output, sourced from `templates/ds` only. It is a **test proof and sample, and is never published** to any registry. It exists to prove the engine end to end against the DAL schema in CI, and to serve as a reference example of a generated SDK. Consequences:
 
 - `templates/ds-sdk/package.json` gets `"private": true`, and its Artifactory `publishConfig` is removed. npm documents that a real publish of a private package is refused.
 - **Dry runs do not check `private`.** Both `pnpm publish --dry-run` and `npm publish --dry-run` accepted a `private: true` package in a local test (Appendix C.10). A successful dry run therefore proves nothing about this guard. CI adds an explicit check (§11) that `templates/ds-sdk` stays `private: true`, has no `publishConfig`, and is absent from `PUBLISH_ORDER` in `.github/scripts/publish-ds-automation.sh`.
 - It is an exception to the repo rule that only the workspace root is private. `CLAUDE.md` ("Publishing: npmjs vs Artifactory"), [02-monorepo-design.md](../architecture/02-monorepo-design.md) (publishing table), and [04-npm-publish-ds-automation.md](../admin/04-npm-publish-ds-automation.md) (which today calls `templates/ds-sdk` "Artifactory-only") are updated in P2.
-- The "packed manifest" checks in §11 and §14 still run, through `pnpm pack`, which works on private packages, so the generated-SDK contract stays tested.
+- The "packed manifest" checks in §11 still run, through `pnpm pack`, which works on private packages, so the generated-SDK contract stays tested.
 - CalVer bumps for `templates/ds-sdk` stop. Its version stays a fixed placeholder (`0.0.0-sample`), so nothing suggests a release.
 
 All six DS variants stop writing `client-preset` output into `../ds-sdk`:
 
 | File | Change |
 | ---- | ------ |
-| `templates/{ds,ds-no-sql,ds-cdb,ds-mongo,ds-ddb,ds-file}/codegen.ts` | Remove the `../ds-sdk/src/generated/` target; keep resolvers and the `../ds-cli` target |
+| `templates/{ds,ds-no-sql,ds-cdb,ds-mongo,ds-ddb,ds-file}/codegen.ts` | Remove the `../ds-sdk/src/generated/` `client-preset` target **in P2**, in the same PR that hands `templates/ds-sdk/src/generated/**` to the engine (both would otherwise write the same folder). The `../ds-cli` preset target is removed later, in CLI C-P3 ([CLI design §9](14-graphql-cli-generator.md#9-monorepo-integration-and-migration)). After both, only the server's resolver-types target remains. |
 | `engines/create-ds/canonical/codegen.ts` | Same; drop the "must sit beside ds-sdk" note |
 | DS `package.json` files | Drop `@graphql-codegen/client-preset` |
-| `turbo.json` `codegen.outputs` | Remove `../ds-sdk/src/generated/**` |
+| `turbo.json` `codegen.outputs` | Remove `../ds-sdk/src/generated/**` (P2) |
 
 The manual variants' multi-file SDL (`base.graphqls`, `item.graphqls`, `server.graphqls`) is covered by a CI smoke test (§11).
 
@@ -631,18 +807,22 @@ The manual variants' multi-file SDL (`base.graphqls`, `item.graphqls`, `server.g
 
 | Dockerfile | Change |
 | ---------- | ------ |
-| `templates/ds/Dockerfile`, `engines/create-ds/canonical/Dockerfile`, `templates/docker/Dockerfile.ds` | Remove `templates/ds-sdk` `COPY` / build lines |
-| `templates/docker/Dockerfile.ui` | From P5, `COPY` and build `packages/ds-sdk` before the UI (hermetic: snapshot only) |
+| `templates/ds/Dockerfile`, `engines/create-ds/canonical/Dockerfile` | Remove the `templates/ds-sdk` `COPY` / build lines **in P2**. From P2 the SDK's `build` needs the engine and the new libraries, which the DS image does not copy, so the DS image breaks if this waits. |
 
-### 9.4 `create-app` and `create-ds`
+**Fixed-order builds must learn the new library in P1a.** `dal-codegen` imports `@corpdk/graphql-input-zod/codegen` from P1a, and these build `dal-codegen` with explicit `pnpm --filter` lists or copy only listed libraries. All of them must copy and build `graphql-input-zod` first, in the P1a PR:
 
-- **`create-app`** produces `ds-sdk` from the engine canonical, with `schema.sources` set for the chosen DS: `typeDefs` for `ds`; a `graphqls` directory (multi-file) for the manual variants.
-- **`create-ds upgrade`** overwrites `codegen.ts`. Release notes tell consumers to run once:
+| File | Change in P1a |
+| ---- | ------------- |
+| `.github/workflows/dal.yml` | Build (and test) `@corpdk/graphql-input-zod` before `@corpdk/dal-codegen` |
+| `.github/workflows/sonar.yml` | Same build order |
+| `sonar-project.properties` | Add the new library to `sonar.tests` and its lcov path |
+| `templates/ds/Dockerfile`, `engines/create-ds/canonical/Dockerfile` | `COPY libraries/graphql-input-zod` (manifest and sources) and build it before `dal-codegen` |
 
-```bash
-pnpm dlx @corpdk/create-graphql-sdk init ../ds-sdk \
-  --name @<scope>/ds-sdk --schema ./src/generated/generated-schema.ts
-```
+### 9.4 `create-ds`
+
+`create-ds` gains `--with-sdk` / `--with-cli` on `init` and a guided migration on `upgrade`. The design is in [15-create-ds-generator-integration.md](15-create-ds-generator-integration.md).
+
+`create-app` is **out of scope**: it is frozen and outdated, and this design makes no changes to it.
 
 ---
 
@@ -655,6 +835,8 @@ pnpm dlx @corpdk/create-graphql-sdk init ../ds-sdk \
 | Next.js (`templates/ui-hprt`, urql) | `useQuery({ query: ItemsQuery.document, variables })` | urql `subscriptionExchange` backed by `graphql-sse` |
 
 P2 type tests confirm that Apollo and urql infer `data` and check `variables` without casts.
+
+**Errors and paging (§3.8).** Wrap the client call in `unwrapGraphqlResult` (or pass a caught error to `toGraphqlRequestError`) and branch on `error.kind`. For a `*Connection` query, pass the same wrapped call to `iterateConnection` as `exec`.
 
 ---
 
@@ -669,9 +851,16 @@ P2 type tests confirm that Apollo and urql infer `data` and check `variables` wi
 | Named variables: printed variable definitions use the type map's GraphQL type; `VariablesOf` matches the declaration; runtime mismatch throws | `libraries/graphql-dsl` |
 | Every generated operation in the test suite passes `graphql.validate` against its schema | `libraries/graphql-dsl` |
 | Merge unit tests (one per §4.3 row), file-order determinism, source and glob tests, breaking-change report on graphql 16 and 17 | `engines/create-graphql-sdk` |
-| Emitter parity: `dal-codegen` output unchanged; cyclic-input fixture | `libraries/graphql-input-zod`, `libraries/dal-codegen` |
+| Emitter parity: `dal-codegen` output unchanged with `scalarReferences: "inline"` + DAL built-in overrides; cyclic-input fixture | `libraries/graphql-input-zod`, `libraries/dal-codegen` |
+| Built-in scalar defaults (§7.2.1): SDK output never imports `@corpdk/dal-core`; `ID` accepts non-UUID strings; `Int` rejects values outside 32-bit | `libraries/graphql-input-zod` |
+| Fork self-containment (R-30): CI fails on any `@corpdk/*` import in `libraries/graphql-dsl/src` | CI |
+| Scalar-root operations: `buildQuery({ hello: { __args: { name: "x" } } })` prints `hello(name: $v1)` with no selection set and validates (R-34) | `libraries/graphql-dsl` |
 | Runtime helpers: `createInputParsers` / `createScalarParsers` keep per-name typing after destructuring (type tests); issue shape and `GraphqlInputValidationError` (unit tests) | `libraries/graphql-input-zod` |
 | Scalar registry: each `sdk.config.yaml` scalar appears once in `scalar-registry.ts`; input fields reference it; `safeParseGraphqlScalar` accepts and rejects the documented wire values | `libraries/graphql-input-zod`, `templates/ds-sdk/test/` |
+| Error normaliser: one case per §3.8.1 input row, including both-`errors`-and-`userErrors` precedence, partial `data`, timeout vs abort, and an unknown thrown value; narrowing by `kind` (type tests) | `libraries/graphql-dsl` |
+| Client error adapters: real Apollo Client 4 and urql 5 errors (from a stub server returning GraphQL errors, HTTP 500, and a dropped connection) normalise to the right kind | `templates/ds-sdk/test/` (P2) |
+| Paginator: connection detection (positive and negative fixtures: missing `pageInfo`, no `first`/`after`, list query); forward and backward walks; `nodes` vs `edges.node`; repeated-cursor throw; `maxPages`; abort; `args` unchanged across pages; every page document validates | `libraries/graphql-dsl` |
+| Paginator typing: `field` rejects a non-connection field (`@ts-expect-error`); yielded element equals the node selection result over L1 | `templates/ds-sdk/test/` (P2) |
 | Snapshot drift | CI: `pnpm --filter @corpdk/ds-sdk sdk:check` |
 | SDK type tests: DSL results and variables against the DAL schema; `@ts-expect-error` on an unknown field and unknown `__args` key; `Types.ItemFilter` flows from `parseGraphqlInput` into `__args` without a cast | `templates/ds-sdk/test/` |
 | Apollo / urql type compatibility with `BuiltOperation.document` | `templates/ds-sdk/test/` |
@@ -700,6 +889,8 @@ P2 type tests confirm that Apollo and urql infer `data` and check `variables` wi
 | Arbitrary executable directives, `@defer` / `@stream` | v1.1 |
 | Federation `_entities` helpers | No dedicated API |
 | Input object Zod + registry | Yes (L3) |
+| Typed error normalisation (validation, transport, GraphQL, user errors) | Yes (§3.8.1) |
+| Relay connection paging helper | Yes (§3.8.2), root query fields |
 
 ---
 
@@ -708,15 +899,15 @@ P2 type tests confirm that Apollo and urql infer `data` and check `variables` wi
 | Phase | Deliverable | Docs updated in the same PR |
 | ----- | ----------- | --------------------------- |
 | **P0** | This design | `docs/00-index.md`, `docs/developer/README.md` |
-| **P1a** | `libraries/graphql-input-zod` extracted; `dal-codegen` output unchanged. Added to `PUBLISH_ORDER` ahead of `dal-codegen` in the same PR, because `dal-codegen` now depends on it (R-20). | `libraries/graphql-input-zod/README.md`; `CLAUDE.md`; `docs/developer/01-monorepo-overview.md`; `docs/admin/04-npm-publish-ds-automation.md` (new package in the lockstep set) |
-| **P1b** | `libraries/graphql-dsl`: fork at `15f27b9`, strip transport and CLI, native ESM, `FieldsSelection` over L1, port upstream tests. Then a **feature spike**: alias typing (one-field-per-entry), directive optionality, `define*` named variables (decide whether variable/argument type checks can be compile-time). | `libraries/graphql-dsl/README.md`, `UPSTREAM.md`; `CLAUDE.md`; `docs/developer/01-monorepo-overview.md` |
-| **P1c** | `engines/create-graphql-sdk` | `engines/create-graphql-sdk/README.md`; `CLAUDE.md` |
-| **P2** | Replace `templates/ds-sdk` with `init` output, marked `private: true` with no `publishConfig` (§9.1); first `sync` from `templates/ds`; Turbo; DAL scalars; client compatibility tests; type-check baseline | `CLAUDE.md` (ds-sdk → NodeNext; "single shared SDK" rule; ds-sdk private exception); `docs/architecture/02-monorepo-design.md` (publishing table); `docs/architecture/06-package-dependencies.md`; `docs/admin/04-npm-publish-ds-automation.md` (ds-sdk is no longer "Artifactory-only") |
-| **P3** | Decouple all six DS `codegen.ts` + `create-ds` canonical; drop `client-preset`; Docker | `docs/admin/02-docker-deployment.md`, `docs/developer/ds-automation-upgrades.md`, `docs/developer/graphql-dal-requirements.md`, `docs/architecture/01-system-overview.md`, `libraries/codegen-cli/README.md` |
-| **P4** | `create-app` uses the engine canonical. Publish `@corpdk/graphql-input-zod` and `@corpdk/create-graphql-sdk` to npmjs through the lockstep CalVer pipeline (`.github/scripts/publish-ds-automation.sh` `PUBLISH_ORDER`, its build/test filters, and the workflow `paths`). Publish `@corpdk/graphql-dsl` through its own workflow and CalVer line (§16.2.1), before `create-graphql-sdk`, which depends on it. `graphql-input-zod` must publish **before** `dal-codegen`, which depends on it from P1a; from P1a on, `dal-codegen` cannot ship without it. `templates/ds-sdk` is not published. | `docs/user/01-introduction.md`, `02-interactive-mode.md`, `03-cli-reference.md`, `05-post-scaffold-setup.md`; `docs/admin/04-npm-publish-ds-automation.md` |
-| **P5** | First SDK usage in `templates/ui` and `templates/ui-hprt`; `Dockerfile.ui` | `docs/developer/05-ui-architecture.md`, `docs/developer/06-ui-status.md` |
+| **B0** | **Package bootstrap, before any implementation phase** ([doc 15 §4.4](15-create-ds-generator-integration.md#44-package-bootstrap-phase-b0)): placeholder workspace packages for every new publishable package, one manual npm publish each, npm trusted publishing configured (all on `publish-ds-automation.yml`). | `docs/admin/04-npm-publish-ds-automation.md` (new packages, trust table); `CLAUDE.md` (package table marks them as placeholders) |
+| **P1a** | `libraries/graphql-input-zod` extracted; `dal-codegen` output unchanged. Added to `PUBLISH_ORDER` ahead of `dal-codegen` in the same PR, because `dal-codegen` now depends on it (R-20). Fixed-order CI and Docker builds updated (§9.3). The package already exists on npm with trusted publishing from B0. | `libraries/graphql-input-zod/README.md`; `CLAUDE.md`; `docs/developer/01-monorepo-overview.md`; `docs/admin/04-npm-publish-ds-automation.md` (new package in the lockstep set) |
+| **P1b** | `libraries/graphql-dsl`: fork at `15f27b9`, strip transport and CLI, native ESM, `FieldsSelection` over L1, port upstream tests. Then a **feature spike**: alias typing (one-field-per-entry), directive optionality, `define*` named variables (decide whether variable/argument type checks can be compile-time). Response helpers (§3.8). Added to `PUBLISH_ORDER` first (trust already configured in B0); P1b makes the first real release (R-20). | `libraries/graphql-dsl/README.md`, `UPSTREAM.md`; `CLAUDE.md`; `docs/developer/01-monorepo-overview.md` |
+| **P1c** | `engines/create-graphql-sdk` on `@corpdk/engine-kit` (needs DS-P0b, [doc 15 §8](15-create-ds-generator-integration.md#8-phases)); root `pnpm create-graphql-sdk` script | `engines/create-graphql-sdk/README.md`; `CLAUDE.md` |
+| **P2** | Replace `templates/ds-sdk` with `init` output, marked `private: true` with no `publishConfig` (§9.1); in the same PR, remove the `../ds-sdk` `client-preset` target from all six DS `codegen.ts` + `create-ds` canonical and from `turbo.json` `codegen.outputs`, and drop `client-preset` (§9.1); remove the `templates/ds-sdk` Docker steps (§9.3); first `sync` from `templates/ds`; **publish `@corpdk/create-graphql-sdk`** (lockstep, after `graphql-dsl`, `graphql-input-zod`, and `engine-kit`; first real release over the B0 placeholder, R-20) so the `create-ds` changes that ship alongside (doc 15 DS-P1) point users at a published engine; Turbo; DAL scalars; client compatibility tests; type-check baseline | `CLAUDE.md` (ds-sdk → NodeNext; "single shared SDK" rule; ds-sdk private exception); `docs/architecture/02-monorepo-design.md` (publishing table); `docs/architecture/06-package-dependencies.md`; `docs/admin/04-npm-publish-ds-automation.md` (ds-sdk is no longer "Artifactory-only"; new package rows); `docs/admin/02-docker-deployment.md`; `docs/developer/graphql-dal-requirements.md`; `docs/architecture/01-system-overview.md` |
+| **P3** | Merged into P2 (rev 9): the Docker removal moved to P2 because the DS image breaks without it, and the `create-ds` migration ships as doc 15 DS-P1 (with P2) | n/a |
+| **P4** | Merged into P2 (rev 9): `create-graphql-sdk` publishes in P2, so no `create-ds` release points at an unpublished engine | n/a |
+| **P5** | First SDK usage in `templates/ui` and `templates/ui-hprt` | `docs/developer/05-ui-architecture.md`, `docs/developer/06-ui-status.md` |
 
-**Out of scope, raised by the audit:** `create-app`, `create-ds`, and `codegen-cli` still build with tsup (unmaintained). Moving them is a separate task.
 
 ---
 
@@ -733,6 +924,8 @@ P2 type tests confirm that Apollo and urql infer `data` and check `variables` wi
 - [ ] The SDK's `src/validation.ts` is a binding only; no parse-helper logic is copied into any generated SDK.
 - [ ] No DS `codegen.ts` references `../ds-sdk` or `client-preset`. DS Docker images build without `templates/ds-sdk`.
 - [ ] `upgrade` keeps `src/extensions/**` and `sdk.config.yaml` customizations.
+- [ ] Apollo, urql, and plain `fetch` failures all normalise to the same `GraphqlRequestError` kinds (§3.8.1).
+- [ ] `iterateConnection` walks every page of a DAL `*Connection` query against a seeded `templates/ds`, and a non-connection field fails `tsc` (§3.8.2).
 - [ ] On the P4 release date, every third-party dependency passes §16.1.
 
 ---
@@ -755,7 +948,9 @@ P2 type tests confirm that Apollo and urql infer `data` and check `variables` wi
 | Breaking-change detection | graphql-js (`findSchemaChanges` when present); `@graphql-inspector/core` as fallback |
 | `templates/ds-sdk` publishing | **Never published.** Test proof and sample: `private: true`, no `publishConfig` (§9.1) |
 | Generated SDK publishing (outside this repo) | The SDK owner's choice; the canonical sets no registry (§3.7) |
-| New package publishing | `graphql-input-zod` and `create-graphql-sdk` → npmjs, lockstep CalVer with the DS automation stack. `graphql-dsl` → npmjs on its **own** CalVer line and workflow (§16.2.1). |
+| New package publishing | `graphql-dsl`, `graphql-input-zod`, and `create-graphql-sdk` → npmjs, lockstep CalVer with the DS automation stack, through `publish-ds-automation.yml` (decided 2026-11-14, §16.2.1) |
+| Response helpers | Transport-free error normaliser and Relay connection paginator in the `graphql-dsl` runtime, re-exported by every SDK (§3.8). Linear's model classes, lazy relation getters, and bundled transport are not adopted. |
+| Package bootstrap | Phase B0 publishes a placeholder of every new package by hand and configures trusted publishing before implementation starts; all later releases go through CI ([doc 15 §4.4](15-create-ds-generator-integration.md#44-package-bootstrap-phase-b0)) |
 | Where `graphql-dsl` lives | **This monorepo** (`libraries/graphql-dsl`), kept self-contained, with explicit triggers for moving to its own repo (§16.2.1) |
 | **Open (P1b spike):** compile-time check of named-variable types against argument types | Runtime check in v1 for sure; compile-time if the spike shows it stays readable and fast |
 
@@ -801,7 +996,7 @@ Owned forks today: `@corpdk/graphql-dsl` (from `genql`). `@corpdk/graphql-input-
 
 | Rule | Detail |
 | ---- | ------ |
-| Own version line | `graphql-dsl` has its **own CalVer** and its own publish workflow (`.github/workflows/publish-graphql-dsl.yml`, triggered by its `package.json` version). It is not in the lockstep DS automation set, because `publish-ds-automation.sh` checks one expected version for every package. Consumers (`create-graphql-sdk`, generated SDKs) use a caret range. |
+| Lockstep publishing (decided 2026-11-14) | `graphql-dsl` is in the lockstep DS automation set: same CalVer, `publish-ds-automation.yml`, and trusted-publisher setup as the other packages, first in `PUBLISH_ORDER` because it depends on no `@corpdk/*` package. Consumers use `workspace:^` in the monorepo (release stamping turns it into `^<release>`). Rev 6 gave it its own version line and workflow for an independent cadence; that was dropped because every other package already accepts lockstep releases, the DSL is most coupled to the SDK engine during P1b–P2, and a second workflow, trust entry, and version gate cost more than they saved for one owner. An own version line is now a move-out step (below). |
 | Self-contained package | No imports from other workspace packages. Its own `LICENSE` (with genql's MIT notice), `UPSTREAM.md`, README, tests, and fixture schemas, so it builds and tests in isolation (`pnpm --filter @corpdk/graphql-dsl test`). |
 | Clean import, no upstream history | Import a clean copy of the kept files. `UPSTREAM.md` records the base commit (`15f27b9`) and each divergence; upstream history is not merged in. |
 | Sonar scope | The import PR excludes the inherited upstream files from SonarCloud's new-code coverage and duplication conditions (via `sonar.coverage.exclusions` / `sonar.cpd.exclusions` for that path, listed in `UPSTREAM.md`). The exclusions are removed file by file as each file is rewritten or brought under the fork's tests. Code added by the fork is gated normally. |
@@ -810,10 +1005,17 @@ Owned forks today: `@corpdk/graphql-dsl` (from `genql`). `@corpdk/graphql-input-
 
 - a consumer outside CorpDK templates adopts it and needs its own issue tracker and release notes;
 - we decide to send features (aliases, directives) back to upstream `genql` as PRs, which a GitHub fork is the natural vehicle for;
-- its API settles after P2 and its release cadence clearly separates from the SDK engine's;
+- its API settles after P2 and its release cadence clearly separates from the SDK engine's, so lockstep releases mostly republish it unchanged;
 - maintaining it here starts to slow monorepo CI or reviews in a measurable way.
 
-Because of the rules above, moving out is a directory extraction (`git subtree split --prefix=libraries/graphql-dsl`) plus a new workflow, with no code changes. The host organization is decided at that point.
+Because of the rules above, moving out needs no code changes:
+
+1. a directory extraction (`git subtree split --prefix=libraries/graphql-dsl`);
+2. its own CalVer line and publish workflow in the new repository, and its removal from `PUBLISH_ORDER` here;
+3. npm trusted publishing reconfigured for the new repository and workflow;
+4. consumers (`create-graphql-sdk`, `graphql-cli-core`) switch from `workspace:^` to a caret range on the published version.
+
+The host organization is decided at that point.
 
 ### 16.3 Re-audit
 
@@ -847,8 +1049,16 @@ Everything this design has not yet proven, built, or decided. Each item closes o
 | R-08 | Interfaces (not only unions) through `on_<Type>` over L1 | Prototype tested a union only | P1b | Exact result equality for an interface field with two implementations | Open |
 | R-09 | L3 annotations `z.ZodType<Types.X>` compile against L1's `InputMaybe` / optional fields, including recursive inputs | Not prototyped | P1a | `@corpdk/graphql-input-zod` output type-checks against L1 for the DAL schema and a cyclic fixture | Open |
 | R-10 | `dal-codegen` output unchanged after extracting the emitter | Extraction not done | P1a | Existing `input-zod` tests green; byte-identical `input-zod.ts` for the DAL schema | Open |
-| R-32 | `scalar-registry.ts`: one Zod schema per custom scalar, generated from `sdk.config.yaml`; input-object fields reference it; exported through `./validation` with `safeParseGraphqlScalar` / `parseGraphqlScalar` | Added for the CLI's top-level scalar arguments (CLI R-C10) | P1a | §11 scalar-registry checks green | Open |
+| R-32 | `scalar-registry.ts`: one Zod schema per custom scalar, generated from `sdk.config.yaml`; input-object fields reference it; exported through `./validation` with `safeParseGraphqlScalar` / `parseGraphqlScalar` | Added for the CLI's top-level scalar arguments (CLI R-C10) | P1a (library emitter + `createScalarParsers`) / P2 (SDK binding and `templates/ds-sdk` tests) | Library tests green in P1a; `templates/ds-sdk` scalar tests green in P2 | Open |
 | R-33 | Optional: `dal-codegen`'s server `input-zod.ts` uses `createInputParsers` with a server issue mapper (`userErrors` / `GraphQLError`) instead of emitting its own helper bodies | Further reduces generated code; server output changes shape, so it is not part of the P1a byte-identical extraction | After P1a | Decision recorded; if adopted, server tests green | Open |
+| R-34 | DSL `build*` / `define*` accept `__args` on scalar-root fields (`hello(name: String): String!`) and emit no selection set | The CLI relies on it for scalar-returning commands (CLI R-C04) | P1b | §11 scalar-root test green | Open |
+| R-35 | Extracted emitter: configurable built-in scalars (spec defaults, DAL overrides), `preamble`, `scalarReferences` (§7.2.1) | Found in the final review: today's emitter hard-codes DAL rules (`ID` → UUID, `Int`/`Float` from `@corpdk/dal-core`) | P1a | §11 built-in scalar and emitter-parity rows green | Open |
+| R-36 | Which description wins when two files describe the same type in a merge | Not exercised by the prototype (Appendix C.1) | P1c | Merge test asserts the behavior; §4.3 row updated | Open |
+| R-37 | `libraries/scalar-zod` extracted from `dal-core` (§7.7), root and `/pg` entries; `dal-core` re-exports unchanged; `dal` preset and emitter `{ from, name }` references | Shared scalar rules for server, SDK, CLI, forms | P1a | `dal-core` and `dal-codegen` tests unchanged; SDK built-in and scalar tests green; per-scalar tree-shaking check (bundle of a `DateTime`-only consumer contains no `/pg` code) | Open |
+| R-39 | Error normaliser (§3.8.1) in the `graphql-dsl` runtime; `GraphqlInputValidationError` gains `kind: "validation"` | Adopted 2026-11-13 from the Linear comparison | P1b (core) / P2 (Apollo 4 and urql 5 adapters) | §11 normaliser rows green in P1b; client-adapter row green in P2 | Open |
+| R-40 | Connection paginator (§3.8.2): detection in `emitDslModules`, generic core, typed binding in the generated index | Adopted 2026-11-13 from the Linear comparison | P1b (core and detection) / P2 (typed binding tests on the DAL schema) | §11 paginator rows green | Open |
+| R-41 | Whether the paginator should also cover nested connections (a connection field under an entity) | v1 covers root query fields only; the DAL has no nested connections | After v1 | Decision recorded in §15 with a schema that needs it | Open |
+| R-38 | Dependency-policy audit row for `graphql-scalars` (now a dependency of every DAL SDK) | Required by §16.1 | P1a | Appendix B updated; passes §16.1 or replaced | Open |
 
 ### 17.2 Measurements still owed
 
@@ -862,10 +1072,10 @@ Everything this design has not yet proven, built, or decided. Each item closes o
 
 | ID | Item | Phase | Done when | Status |
 | -- | ---- | ----- | --------- | ------ |
-| R-14 | Real `scalars` entries (`type` + `zod`) for the 12 DAL scalars, matching `dal-core` wire rules | P2 | Entries in `templates/ds-sdk/sdk.config.yaml`; L3 tests accept and reject the same wire values as `dalScalarZod` for each scalar's documented format | Open |
+| R-14 | Real `scalars` entries (`type` + `zod`) for the 12 DAL scalars, matching `dal-core` wire rules | P1c (as the engine's `dal` scalar preset, doc 15 R-D16) / P2 | Entries in `templates/ds-sdk/sdk.config.yaml`; L3 tests accept and reject the same wire values as `dalScalarZod` for each scalar's documented format | Open |
 | R-15 | `libraries/graphql-dsl/UPSTREAM.md` (base `15f27b9`, divergence list) and `LICENSE` with genql's MIT notice | P1b | Files present; review checklist signed off | Open |
-| R-16 | SDK README template: DSL guide, consumer recipes (§10), client-vs-server validation note (§7.5) | P1c | Canonical README renders for `templates/ds-sdk` | Open |
-| R-17 | `create-ds` release note and migration step (`create-graphql-sdk init ../ds-sdk …`) | P3 | Note in `docs/developer/ds-automation-upgrades.md` and the release notes | Open |
+| R-16 | SDK README template: DSL guide, consumer recipes (§10), client-vs-server validation note (§7.5) | P1c | Canonical README renders for `create-graphql-sdk init --demo-schema` output | Open |
+| R-17 | ~~`create-ds` release note and migration step~~ | — | — | Merged into doc 15 R-D02 (rev 9) |
 
 ### 17.4 Repo changes outside the new packages
 
@@ -873,18 +1083,18 @@ Everything this design has not yet proven, built, or decided. Each item closes o
 | -- | ---- | ----- | --------- | ------ |
 | R-18 | `templates/ds-sdk/package.json`: `private: true`, drop Artifactory `publishConfig`, version `0.0.0-sample` | P2 | CI guard (§11) green | Open |
 | R-19 | Docs reflect "ds-sdk is a sample, never published": `CLAUDE.md`, `docs/architecture/02-monorepo-design.md`, `docs/admin/04-npm-publish-ds-automation.md` | P2 | No doc says `templates/ds-sdk` is published or Artifactory-bound | Open |
-| R-20 | Publish pipeline: add `graphql-input-zod` (before `dal-codegen`) and `create-graphql-sdk` to `PUBLISH_ORDER`, build/test filters, and workflow `paths`. Create `publish-graphql-dsl.yml` for `graphql-dsl`'s own CalVer line, with npm trusted publishing configured for it. | P1a for `graphql-input-zod` (`dal-codegen` depends on it from then); P1b for the `graphql-dsl` workflow; P4 for `create-graphql-sdk` | CI publish-order guard green; dry-run publish of both workflows lists the expected packages | Open |
+| R-20 | Publish pipeline. Lockstep script: add `engine-kit` (DS-P0b, before every engine), `graphql-input-zod` (before `dal-codegen`), and `create-graphql-sdk`, including the per-package maps in `verify_version` / `verify_dist_types`, test filters, the workflow release-notes table, and workflow `paths`. `graphql-dsl` joins the same list, first. Package creation, the one manual publish, and trusted-publisher setup all happen once in **B0** for every new package (doc 15 R-D17); the phases below only add each package to its workflow and make its first real release. | B0 (trust); DS-P0b for `engine-kit`; P1a for `graphql-input-zod`; P1b for `graphql-dsl`; P2 for `create-graphql-sdk`. The full order is in [doc 15 §4.3](15-create-ds-generator-integration.md#43-dependencies-and-publishing-canonical-publish-order). | CI publish-order guard green; dry-run publish lists the expected packages; each first real release publishes from CI with provenance and no token | Open |
 | R-30 | `graphql-dsl` self-containment and Sonar scope (§16.2.1): no workspace imports; isolated build and test; Sonar exclusions for inherited files listed in `UPSTREAM.md` | P1b | CI check fails on any `@corpdk/*` import in `libraries/graphql-dsl/src`; Sonar gate passes on the import PR with only fork-added code gated | Open |
 | R-31 | Review the §16.2.1 move-out triggers | Quarterly, with R-29 | Outcome recorded in `UPSTREAM.md` | Open |
-| R-21 | Decouple six DS `codegen.ts` + `create-ds` canonical; drop `client-preset`; Turbo `codegen.outputs`; Dockerfiles | P3 | §14 criteria for DS packages green | Open |
-| R-22 | `create-app` scaffolds `ds-sdk` from the engine canonical with per-DS `schema.sources` | P4 | Scaffold test for `ds` and one manual variant generates and builds | Open |
-| R-23 | `CLAUDE.md` / architecture docs: ds-sdk module format (NodeNext), drop the "single shared SDK, all variants codegen into it" rule, add the three new packages | P1–P2 | Docs Update Rule satisfied per phase (§13) | Open |
+| R-21 | Remove the `../ds-sdk` `client-preset` target from six DS `codegen.ts` + `create-ds` canonical, drop `client-preset`, update `turbo.json` `codegen.outputs` (P2, same PR as the `templates/ds-sdk` replacement); Dockerfile `ds-sdk` steps, all in P2 | P2 | §14 criteria for DS packages green | Open |
+| R-22 | ~~`create-app` scaffolds `ds-sdk` from the engine canonical~~ | — | — | Dropped (2026-11-13): `create-app` is frozen and out of scope |
+| R-23 | `CLAUDE.md` / architecture docs: ds-sdk module format (NodeNext), drop the "single shared SDK, all variants codegen into it" rule, add the three new packages. Also stale today: `docs/architecture/03-data-service-design.md` (codegen preset section), `docs/developer/11-ds-subscription-sse.md`, `libraries/dal-codegen/README.md`, `libraries/dal-core/README.md` (lockstep list), root `README.md`, `engines/create-ds/README.md`, and the header comment in `templates/ds/codegen.ts` | P1a–P2 | Docs Update Rule satisfied per phase (§13) | Open |
 
 ### 17.5 Follow-ups outside this initiative
 
 | ID | Item | Trigger | Status |
 | -- | ---- | ------- | ------ |
-| R-24 | Move `create-app`, `create-ds`, `codegen-cli` builds off tsup (unmaintained) to `tsc` or tsdown ≥ 1.0 | Audit finding (Appendix B.4) | Open |
+| R-24 | Builds off tsup (unmaintained): `create-ds` moves to `tsc` in doc 15 DS-P0b (R-D11); `codegen-cli` is not moved (it is deprecated in CLI C-P4); `create-app` is frozen | DS-P0b | `create-ds` builds with `tsc` | Open |
 | R-25 | Repo-wide move to graphql 17 (the new libraries already support ^16 \|\| ^17) | graphql 18 removes `findBreakingChanges`; plan before then | Open |
 | R-26 | DSL v1.1: arbitrary executable directives (`__directives`), `@defer` / `@stream` | After v1 ships | Open |
 | R-27 | Engine v1.1: introspection URL as a source; directive-driven validation (`@constraint`) in L3 | After v1 ships | Open |
@@ -913,7 +1123,7 @@ Everything this design has not yet proven, built, or decided. Each item closes o
 | 9 | High | Only `templates/ds` decoupled | All six decoupled (§9.1) |
 | 10 | High | Bundler resolution, `exports` → `src` | NodeNext, `exports` → `dist/`, native ESM generator |
 | 11 | High | No drift detection | `sync --check`, Turbo `sdk:sync` |
-| 12 | High | `create-app` relies on DS codegen | Engine canonical (§9.4) |
+| 12 | High | `create-app` relies on DS codegen | Rev 8: `create-app` is frozen and out of scope (§9.4) |
 | 13 | Medium | Scalars in three places; unmapped silent | One table; unmapped fails (§6) |
 | 14 | Medium | `codegen.yml` both template and CLI-merged | Canonical `codegen.ts` reads `sdk.config.yaml` |
 | 15 | Medium | Zod as a regular dependency | Optional peer + `./validation` |
@@ -989,8 +1199,8 @@ Sources: `npm view`, the npm downloads API (last week), and the GitHub REST API.
 
 Throwaway prototypes in `/tmp` (not committed): Node 24.21, TypeScript 6, `graphql` 16, `@graphql-tools/merge` 10.0.9, `@graphql-codegen/cli` 8.0.0 + `typescript` 7.0.1, `@genql/cli` 6.3.4.
 
-1. **Multi-file merge.** Two files (one redeclaring `type Item` without `extend`, adding inputs including a self-referencing `ItemFilter`, extending `Query`/`Mutation`) → `fs.promises.glob` → `mergeTypeDefs({ sort: true, throwOnConflict: true })` → `print`. Result: one valid, sorted SDL with fields combined and `@deprecated` kept.
-2. **Merge failures.** Field type conflict: `Field "a" already defined with a different type. Declared as "Int", but you tried to override with "String"`. Missing base: `Cannot extend type "Ghost" because it is not defined.`. Enum values and duplicate directive definitions merged.
+1. **Multi-file merge.** Two files (one redeclaring `type Item` without `extend`, adding inputs including a self-referencing `ItemFilter`, extending `Query`/`Mutation`) → `fs.promises.glob` → `mergeTypeDefs({ sort: true, throwOnConflict: true })` → `print`. Result: one valid, sorted SDL with fields combined and `@deprecated` kept. The output began with an emitted `schema { query: Query mutation: Mutation }` block, and `ItemFilter`'s fields kept source order (`name`, then `and`) while merged object fields were sorted. Only one of the two files carried a description for `Item`, so precedence between two conflicting descriptions was not exercised.
+2. **Merge failures.** Field type conflict: `Unable to merge GraphQL type "Query": Field "a" already defined with a different type. Declared as "Int", but you tried to override with "String"`. Missing base: `Cannot extend type "Ghost" because it is not defined.`. Enum values and duplicate directive definitions merged.
 3. **`genql` DSL typing (upstream).** Result field types, enum unions, `__typename` union narrowing, and nested `__args` with a recursive input all type-checked. Plain `tsc` rejected `nmae` and `__args.idd` (TS2353).
 4. **Upstream output under NodeNext ESM.** TS2835 at compile time, `ERR_MODULE_NOT_FOUND` at run time.
 5. **After an import rewrite.** Compiled under NodeNext and ran. A query (with union fragments) and a subscription validated with **0** errors. Argument values were hoisted to `$v1`, `$v2`.
@@ -1007,4 +1217,4 @@ Not yet built or measured: everything in the §17 register.
 
 ---
 
-**Last updated:** November 12, 2026
+**Last updated:** November 13, 2026
