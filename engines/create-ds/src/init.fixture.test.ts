@@ -6,6 +6,7 @@ import { EXIT_USAGE, readJson } from "@corpdk/engine-kit";
 import { initialCalVer } from "@corpdk/engine-kit";
 import { runInit } from "./init.js";
 import {
+  engineStarterDir,
   isBundledCanonicalTemplate,
   readCreateDsReleaseVersion,
   repoRootFromEngine,
@@ -157,6 +158,28 @@ describe("runInit fixture", () => {
     for (const rel of expectedSubset) {
       expect(files, `missing ${rel}`).toContain(rel);
     }
+    expect(files).not.toContain("src/db/schema/items.ts");
+    expect(files).not.toContain("src/db/seed.ts");
+  });
+
+  it("copies starter dal.config.yaml bytes unchanged", async () => {
+    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "create-ds-init-"));
+    const target = path.join(tmp, "dal-yaml");
+    const starterDal = await fs.readFile(
+      path.join(engineStarterDir(), "dal", "dal.config.yaml"),
+      "utf8",
+    );
+    const result = await runInit({
+      dir: target,
+      name: "@test/dal-yaml",
+      repoRoot: repoRootFromEngine(),
+    });
+    expect(result.exitCode).toBe(0);
+    const onDisk = await fs.readFile(
+      path.join(target, "dal/dal.config.yaml"),
+      "utf8",
+    );
+    expect(onDisk).toBe(starterDal);
   });
 
   it("rejects a non-empty target with usage exit", async () => {
