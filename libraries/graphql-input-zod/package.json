@@ -42,8 +42,12 @@
     "zod": "^4"
   },
   "peerDependenciesMeta": {
-    "graphql": { "optional": true },
-    "zod": { "optional": true }
+    "graphql": {
+      "optional": true
+    },
+    "zod": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@types/node": "^24.0.0",

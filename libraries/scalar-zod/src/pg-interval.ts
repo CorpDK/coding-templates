@@ -54,11 +54,16 @@ function fractionToMs(fraction: string): bigint {
   return BigInt((fraction + "000").slice(0, 3));
 }
 
-function stripField(source: string, pattern: RegExp): [string, string | undefined] {
+function stripField(
+  source: string,
+  pattern: RegExp,
+): [string, string | undefined] {
   const match = pattern.exec(source);
   if (!match) return [source, undefined];
   const value = match[1];
-  const next = (source.slice(0, match.index) + source.slice(match.index + match[0].length))
+  const next = (
+    source.slice(0, match.index) + source.slice(match.index + match[0].length)
+  )
     .replace(/\s+/g, " ")
     .trim();
   return [next, value];
