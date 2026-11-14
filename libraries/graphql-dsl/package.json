@@ -1,0 +1,22 @@
+{
+  "name": "@corpdk/graphql-dsl",
+  "version": "0.0.0-bootstrap.0",
+  "description": "Placeholder reserving the npm package name for trusted publishing; no implementation yet.",
+  "license": "MIT",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/",
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/CorpDK/coding-templates.git",
+    "directory": "libraries/graphql-dsl"
+  },
+  "files": [
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=24.0.0"
+  }
+}
