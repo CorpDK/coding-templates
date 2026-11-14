@@ -33,9 +33,6 @@
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist node_modules .turbo *.tsbuildinfo"
   },
-  "dependencies": {
-    "graphql": "^16.13.2"
-  },
   "devDependencies": {
     "@types/node": "^24.0.0",
     "typescript": "^6.0.2"

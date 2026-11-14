@@ -60,12 +60,12 @@ Resume after a failure with `--from @corpdk/<name>`; run `./scripts/npm-b0-boots
 Manual equivalent per package:
 
 1. `npm publish --access public --tag bootstrap` in the package directory
-2. `npm deprecate <pkg>@0.0.0-bootstrap.0 "Placeholder with no code; use a CalVer release"`
+2. `npm deprecate <pkg>@<version> "Placeholder with no code; use a CalVer release"` (`<version>` = lockstep CalVer from that package’s `package.json`)
 3. Trusted publishing via [CLI equivalent](#cli-equivalent) (`publish-ds-automation.yml`)
 4. Optional: package settings — require 2FA, disallow publish tokens
 5. Verify: `npm view <pkg> versions`; `npm trust list <pkg>`
 
-Version **`0.0.0-bootstrap.0`** sorts below CalVer and is never used in consumer `^2026.x` ranges. First **real** releases join `PUBLISH_ORDER` in their implementation phase (SDK P1a/P1b, DS-P0b, CLI C-P1, etc.).
+All **twelve** lockstep packages (including B0 scaffolds) are already in [`PUBLISH_ORDER`](../../.github/scripts/publish-ds-automation.sh); CI publishes them together on every CalVer bump on `main`. B0 uploads use the same CalVer with dist-tag **`bootstrap`** until merge; consumers should install from **`latest`** after the first CI release.
 
 ---
 
@@ -139,7 +139,11 @@ npm view @corpdk/create-ds dist-tags
 
 ```bash
 VERSION=2026.10.0-alpha.5   # replace with the CalVer you shipped
-for pkg in @corpdk/dal-core @corpdk/pub-sub @corpdk/codegen-cli @corpdk/dal-codegen @corpdk/create-ds; do
+for pkg in \
+  @corpdk/graphql-dsl @corpdk/scalar-zod @corpdk/dal-core @corpdk/pub-sub \
+  @corpdk/graphql-input-zod @corpdk/dal-codegen @corpdk/engine-kit @corpdk/graphql-cli-core \
+  @corpdk/create-graphql-sdk @corpdk/create-graphql-cli @corpdk/codegen-cli @corpdk/create-ds
+do
   npm dist-tag add "${pkg}@${VERSION}" latest
 done
 ```
@@ -206,13 +210,7 @@ npm login --registry=https://registry.npmjs.org
 .github/scripts/publish-ds-automation.sh "${VERSION}"
 ```
 
-The script verifies lockstep versions, runs `pnpm turbo run build`, the same DAL tests as CI, and **declaration output in `dist/`** (see [What CI runs](#what-ci-runs) step 4), then `pnpm publish --no-git-checks --access public --tag latest` in dependency order:
-
-1. `@corpdk/dal-core`
-2. `@corpdk/pub-sub`
-3. `@corpdk/codegen-cli`
-4. `@corpdk/dal-codegen`
-5. `@corpdk/create-ds`
+The script verifies lockstep versions, runs `pnpm turbo run build`, the same DAL tests as CI, and **declaration output in `dist/`** (see [What CI runs](#what-ci-runs) step 4), then `pnpm publish --no-git-checks --access public --tag latest` in **`PUBLISH_ORDER`** (same twelve packages as [Package set](#package-set-npmjs) / [`.github/scripts/publish-ds-automation.sh`](../../.github/scripts/publish-ds-automation.sh)).
 
 #### One-time publish (manual equivalent)
 
@@ -224,23 +222,41 @@ VERSION="$(node -p "require('./libraries/dal-core/package.json').version")"
 # …verify all twelve package.json version fields equal ${VERSION}…
 
 pnpm turbo run build \
+  --filter=@corpdk/graphql-dsl \
+  --filter=@corpdk/scalar-zod \
   --filter=@corpdk/dal-core \
   --filter=@corpdk/pub-sub \
-  --filter=@corpdk/codegen-cli \
+  --filter=@corpdk/graphql-input-zod \
   --filter=@corpdk/dal-codegen \
+  --filter=@corpdk/engine-kit \
+  --filter=@corpdk/graphql-cli-core \
+  --filter=@corpdk/create-graphql-sdk \
+  --filter=@corpdk/create-graphql-cli \
+  --filter=@corpdk/codegen-cli \
   --filter=@corpdk/create-ds
 
 pnpm --filter @corpdk/dal-core test
 pnpm --filter @corpdk/dal-codegen test
 
 # Same declaration paths as publish-ds-automation.sh verify_dist_types
+test -f libraries/graphql-dsl/dist/index.d.ts
+test -f libraries/scalar-zod/dist/index.d.ts
 test -f libraries/dal-core/dist/index.d.ts
 test -f libraries/pub-sub/dist/index.d.ts
-test -f libraries/codegen-cli/dist/index.d.ts
+test -f libraries/graphql-input-zod/dist/index.d.ts
 test -f libraries/dal-codegen/dist/index.d.ts
+test -f libraries/engine-kit/dist/index.d.ts
+test -f libraries/graphql-cli-core/dist/index.d.ts
+test -f engines/create-graphql-sdk/dist/types-entry.d.ts
+test -f engines/create-graphql-cli/dist/types-entry.d.ts
+test -f libraries/codegen-cli/dist/index.d.ts
 test -f engines/create-ds/dist/types-entry.d.ts
 
-for pkg in @corpdk/dal-core @corpdk/pub-sub @corpdk/codegen-cli @corpdk/dal-codegen @corpdk/create-ds; do
+for pkg in \
+  @corpdk/graphql-dsl @corpdk/scalar-zod @corpdk/dal-core @corpdk/pub-sub \
+  @corpdk/graphql-input-zod @corpdk/dal-codegen @corpdk/engine-kit @corpdk/graphql-cli-core \
+  @corpdk/create-graphql-sdk @corpdk/create-graphql-cli @corpdk/codegen-cli @corpdk/create-ds
+do
   pnpm --filter "${pkg}" publish --no-git-checks --access public --tag latest
 done
 ```

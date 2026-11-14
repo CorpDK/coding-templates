@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# B0 npm bootstrap (one-time): publish 0.0.0-bootstrap.0 placeholders, deprecate, npm trust.
+# B0 npm bootstrap (one-time): publish lockstep CalVer placeholders (--tag bootstrap), deprecate, npm trust.
 #
 # Run from a real terminal (not through redacted agent output) so npm can print
 # https://www.npmjs.com/auth/cli/... links when EOTP is required.
@@ -25,7 +25,6 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 
 DEPRECATE_MSG='Placeholder with no code; use a CalVer release'
-BOOTSTRAP_VERSION='0.0.0-bootstrap.0'
 # npm often returns 404 for npm view briefly after a successful publish
 REGISTRY_WAIT_MAX="${REGISTRY_WAIT_MAX:-36}"
 REGISTRY_WAIT_SECS="${REGISTRY_WAIT_SECS:-10}"
@@ -122,21 +121,27 @@ maybe_pause() {
   read -r _
 }
 
-wait_for_bootstrap_version() {
+pkg_version() {
+  local dir="$1"
+  node -p "require('./${dir}/package.json').version"
+}
+
+wait_for_pkg_version() {
   local name="$1"
+  local version="$2"
   local i
-  if npm view "${name}@${BOOTSTRAP_VERSION}" version >/dev/null 2>&1; then
+  if npm view "${name}@${version}" version >/dev/null 2>&1; then
     return 0
   fi
-  echo "Waiting for ${name}@${BOOTSTRAP_VERSION} to appear on the registry (up to $((REGISTRY_WAIT_MAX * REGISTRY_WAIT_SECS))s)..."
+  echo "Waiting for ${name}@${version} to appear on the registry (up to $((REGISTRY_WAIT_MAX * REGISTRY_WAIT_SECS))s)..."
   for ((i = 1; i <= REGISTRY_WAIT_MAX; i++)); do
-    if npm view "${name}@${BOOTSTRAP_VERSION}" version >/dev/null 2>&1; then
+    if npm view "${name}@${version}" version >/dev/null 2>&1; then
       echo "  visible after ${i} attempt(s)"
       return 0
     fi
     sleep "$REGISTRY_WAIT_SECS"
   done
-  echo "  timed out waiting for ${name}@${BOOTSTRAP_VERSION}" >&2
+  echo "  timed out waiting for ${name}@${version}" >&2
   return 1
 }
 
@@ -166,10 +171,11 @@ npm_publish_pkg() {
 
 npm_deprecate_pkg() {
   local name="$1"
+  local version="$2"
   local otp
   otp="$(otp_args)"
   # shellcheck disable=SC2086
-  npm deprecate "${name}@${BOOTSTRAP_VERSION}" "${DEPRECATE_MSG}" ${otp:+$otp}
+  npm deprecate "${name}@${version}" "${DEPRECATE_MSG}" ${otp:+$otp}
 }
 
 npm_trust_pkg() {
@@ -184,16 +190,18 @@ npm_trust_pkg() {
 
 is_deprecated() {
   local name="$1"
-  npm view "${name}@${BOOTSTRAP_VERSION}" deprecated 2>/dev/null | grep -q .
+  local version="$2"
+  npm view "${name}@${version}" deprecated 2>/dev/null | grep -q .
 }
 
 verify_pkg() {
   local name="$1"
+  local version="$2"
   local ok=0
-  if npm view "${name}@${BOOTSTRAP_VERSION}" version >/dev/null 2>&1; then
-    echo "  [ok] ${name}@${BOOTSTRAP_VERSION} on registry"
+  if npm view "${name}@${version}" version >/dev/null 2>&1; then
+    echo "  [ok] ${name}@${version} on registry"
   else
-    echo "  [FAIL] ${name}@${BOOTSTRAP_VERSION} missing on registry"
+    echo "  [FAIL] ${name}@${version} missing on registry"
     ok=1
   fi
   if npm trust list "${name}" 2>/dev/null | grep -q publish-ds-automation.yml; then
@@ -212,8 +220,19 @@ fi
 
 failures=0
 
+EXPECTED_VERSION="$(pkg_version "${PKG_DIRS[0]}")"
+for dir in "${PKG_DIRS[@]}"; do
+  v="$(pkg_version "$dir")"
+  if [[ "$v" != "$EXPECTED_VERSION" ]]; then
+    echo "Version mismatch: ${dir} is ${v}, expected ${EXPECTED_VERSION}" >&2
+    exit 1
+  fi
+done
+echo "B0 placeholder version (lockstep): ${EXPECTED_VERSION}"
+
 for dir in "${PKG_DIRS[@]}"; do
   name="$(node -p "require('./${dir}/package.json').name")"
+  version="$(pkg_version "$dir")"
 
   if [[ "$skipped" -eq 0 ]] && [[ "$name" != "$START_FROM" ]]; then
     continue
@@ -226,7 +245,7 @@ for dir in "${PKG_DIRS[@]}"; do
   echo "======== ${name} (${dir}) ========"
 
   if [[ "$DO_PUBLISH" -eq 1 ]]; then
-    if npm view "${name}@${BOOTSTRAP_VERSION}" version >/dev/null 2>&1; then
+    if npm view "${name}@${version}" version >/dev/null 2>&1; then
       echo "Publish: already on registry"
     else
       maybe_pause "Publish ${name}"
@@ -236,23 +255,23 @@ for dir in "${PKG_DIRS[@]}"; do
         continue
       fi
       published_now=1
-      echo "Published ${name}@${BOOTSTRAP_VERSION} (tag: bootstrap)"
+      echo "Published ${name}@${version} (tag: bootstrap)"
     fi
   fi
 
   if [[ "$DO_DEPRECATE" -eq 1 ]]; then
-    if ! wait_for_bootstrap_version "$name"; then
+    if ! wait_for_pkg_version "$name" "$version"; then
       echo "Deprecate: skipped (version not on registry yet)" >&2
       failures=$((failures + 1))
-    elif is_deprecated "$name"; then
+    elif is_deprecated "$name" "$version"; then
       echo "Deprecate: already deprecated"
     else
-      maybe_pause "Deprecate ${name}@${BOOTSTRAP_VERSION}"
-      if ! npm_deprecate_pkg "$name"; then
+      maybe_pause "Deprecate ${name}@${version}"
+      if ! npm_deprecate_pkg "$name" "$version"; then
         echo "Deprecate failed for ${name}" >&2
         failures=$((failures + 1))
       else
-        echo "Deprecated ${name}@${BOOTSTRAP_VERSION}"
+        echo "Deprecated ${name}@${version}"
       fi
     fi
   fi
@@ -279,7 +298,8 @@ if [[ "$DO_VERIFY" -eq 1 ]]; then
   echo "======== Verification ========"
   for dir in "${PKG_DIRS[@]}"; do
     name="$(node -p "require('./${dir}/package.json').name")"
-    verify_pkg "$name" || failures=$((failures + 1))
+    version="$(pkg_version "$dir")"
+    verify_pkg "$name" "$version" || failures=$((failures + 1))
   done
 fi
 
