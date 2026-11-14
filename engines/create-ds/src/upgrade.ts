@@ -3,43 +3,54 @@ import path from "node:path";
 import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 import { spinner } from "@clack/prompts";
 import {
+  mergePackageJson,
+  mergeYamlConfig,
+  pathExists,
+  readJson,
+  runUpgradePlan,
+  writeEngineVersion,
+  writeJson,
+  type EngineResult,
+  EXIT_SUCCESS,
+  EXIT_TOOL,
+  EXIT_USAGE,
+} from "@corpdk/engine-kit";
+import { execAsync } from "./exec.js";
+import {
+  CORP_DK_OWNED,
+  CREATE_DS_ENGINE_ROOT,
+  normalizeDalScripts,
+  UPGRADE_MERGE_FILES,
   UPGRADE_RELATIVE_FILES,
-  resolveCanonicalDsTemplateDir,
+} from "./constants.js";
+import {
   isBundledCanonicalTemplate,
   readCreateDsReleaseVersion,
+  resolveCanonicalDsTemplateDir,
 } from "./template.js";
-import { execAsync, pathExists, readJson, writeJson } from "./utils.js";
-import {
-  mergePackageJson,
-  type MergePackageJsonOptions,
-} from "./package-merge.js";
 
 export interface UpgradeOptions {
-  packageDir: string;
-  repoRoot: string;
-}
-
-function mergeDalConfig(
-  templateRaw: string,
-  consumerRaw: string | null,
-): string {
-  const template = (parseYaml(templateRaw) as Record<string, unknown>) ?? {};
-  const consumer = consumerRaw
-    ? ((parseYaml(consumerRaw) as Record<string, unknown>) ?? {})
-    : {};
-  return stringifyYaml({ ...template, ...consumer });
+  dir: string;
+  dryRun?: boolean;
+  repoRoot?: string;
 }
 
 async function mergeUpgradePackageJson(
   templatePath: string,
   destPath: string,
-  mergeOptions: MergePackageJsonOptions | undefined,
+  releaseVersion: string | undefined,
 ): Promise<void> {
-  const consumer =
-    await readJson<Parameters<typeof mergePackageJson>[0]>(destPath);
+  const consumer = await readJson<Parameters<typeof mergePackageJson>[0]>(destPath);
   const template =
     await readJson<Parameters<typeof mergePackageJson>[1]>(templatePath);
-  await writeJson(destPath, mergePackageJson(consumer, template, mergeOptions));
+  await writeJson(
+    destPath,
+    mergePackageJson(consumer, template, {
+      owned: CORP_DK_OWNED,
+      scriptsTransform: normalizeDalScripts,
+      releaseVersion,
+    }),
+  );
 }
 
 async function mergeUpgradeDalConfig(
@@ -50,37 +61,13 @@ async function mergeUpgradeDalConfig(
   const consumerRaw = (await pathExists(destPath))
     ? await fs.readFile(destPath, "utf8")
     : null;
+  const template = (parseYaml(templateRaw) as Record<string, unknown>) ?? {};
+  const consumer = consumerRaw
+    ? ((parseYaml(consumerRaw) as Record<string, unknown>) ?? {})
+    : {};
+  const merged = mergeYamlConfig(template, consumer);
   await fs.mkdir(path.dirname(destPath), { recursive: true });
-  await fs.writeFile(
-    destPath,
-    mergeDalConfig(templateRaw, consumerRaw),
-    "utf8",
-  );
-}
-
-async function copyUpgradeRelativeFile(
-  rel: string,
-  templateDir: string,
-  packageDir: string,
-  mergeOptions: MergePackageJsonOptions | undefined,
-): Promise<void> {
-  const templatePath = path.join(templateDir, rel);
-  const destPath = path.join(packageDir, rel);
-
-  if (!(await pathExists(templatePath))) return;
-
-  if (rel === "package.json") {
-    await mergeUpgradePackageJson(templatePath, destPath, mergeOptions);
-    return;
-  }
-
-  if (rel === "dal/dal.config.yaml") {
-    await mergeUpgradeDalConfig(templatePath, destPath);
-    return;
-  }
-
-  await fs.mkdir(path.dirname(destPath), { recursive: true });
-  await fs.copyFile(templatePath, destPath);
+  await fs.writeFile(destPath, stringifyYaml(merged), "utf8");
 }
 
 async function runEntityLintIfAvailable(
@@ -118,32 +105,77 @@ async function runEntityLintIfAvailable(
   }
 }
 
-export async function runUpgrade(options: UpgradeOptions): Promise<void> {
-  const s = spinner();
-  const packageDir = path.resolve(options.packageDir);
-  const templateDir = await resolveCanonicalDsTemplateDir(options.repoRoot);
+export async function runUpgrade(options: UpgradeOptions): Promise<EngineResult> {
+  const repoRoot =
+    options.repoRoot ?? path.resolve(CREATE_DS_ENGINE_ROOT, "..", "..");
+  const packageDir = path.resolve(options.dir);
+  const templateDir = await resolveCanonicalDsTemplateDir(repoRoot);
 
   if (!(await pathExists(path.join(packageDir, "dal/dal.config.yaml")))) {
-    throw new Error(
-      `Not a DAL DS package (missing dal/dal.config.yaml): ${packageDir}`,
-    );
+    return {
+      exitCode: EXIT_USAGE,
+      changedFiles: [],
+    };
   }
 
   if (!(await pathExists(templateDir))) {
-    throw new Error(`Canonical DS template not found: ${templateDir}`);
+    return {
+      exitCode: EXIT_USAGE,
+      changedFiles: [],
+    };
   }
 
+  const s = spinner();
   s.start("Merging automation stack from canonical template");
 
-  const mergeOptions = isBundledCanonicalTemplate(templateDir)
-    ? { publishedCorpdkVersions: await readCreateDsReleaseVersion() }
+  const releaseVersion = isBundledCanonicalTemplate(templateDir)
+    ? await readCreateDsReleaseVersion()
     : undefined;
 
-  for (const rel of UPGRADE_RELATIVE_FILES) {
-    await copyUpgradeRelativeFile(rel, templateDir, packageDir, mergeOptions);
+  let changedFiles: string[] = [];
+
+  try {
+    const plan = await runUpgradePlan({
+      overwrite: UPGRADE_RELATIVE_FILES,
+      merge: [...UPGRADE_MERGE_FILES],
+      templateDir,
+      packageDir,
+      dryRun: options.dryRun,
+      mergeFile: async (rel, templatePath, destPath) => {
+        if (rel === "package.json") {
+          await mergeUpgradePackageJson(templatePath, destPath, releaseVersion);
+          return;
+        }
+        if (rel === "dal/dal.config.yaml") {
+          await mergeUpgradeDalConfig(templatePath, destPath);
+        }
+      },
+      afterWrite: options.dryRun
+        ? undefined
+        : async () => {
+            await runEntityLintIfAvailable(repoRoot, packageDir);
+          },
+    });
+
+    changedFiles = plan.changedFiles;
+    const version = await readCreateDsReleaseVersion();
+    const versionRel = await writeEngineVersion(
+      "create-ds",
+      packageDir,
+      version,
+      options.dryRun,
+    );
+    changedFiles.push(versionRel);
+  } catch {
+    s.stop("Upgrade failed after writing some files");
+    return { exitCode: EXIT_TOOL, changedFiles };
   }
 
   s.stop("Template deltas merged (src/db/schema/** untouched)");
 
-  await runEntityLintIfAvailable(options.repoRoot, packageDir);
+  return {
+    exitCode: EXIT_SUCCESS,
+    changedFiles,
+    nextSteps: ["pnpm install", "pnpm dal:codegen"],
+  };
 }

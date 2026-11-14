@@ -17,9 +17,18 @@ Global install is optional; `pnpm dlx` / `npx` work the same.
 ## Usage
 
 ```bash
-create-ds init [directory]    # new DAL DS package
-create-ds upgrade [directory] # merge automation updates from the published template
+create-ds init [directory] [options]
+create-ds upgrade [directory] [options]
+create-ds --version
 ```
+
+Common flags: `--dry-run`, `--no-install` (init; defers install to printed next steps), `--help` / `-h`.
+
+**Exit codes** (shared engine contract): `0` success · `1` validation / stale input · `2` usage · `3` tool failure (`entity:lint`, bootstrap).
+
+Programmatic API: `runInit` / `runUpgrade` from the package root export (`types-entry`). The `create-ds` bin entry stays separate.
+
+Canonical `templates/ds` is synced into bundled `canonical/` before publish (`pnpm sync:canonical` in the engine package).
 
 From the monorepo root (development):
 

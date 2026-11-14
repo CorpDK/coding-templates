@@ -23,10 +23,22 @@ pnpm dlx @corpdk/create-ds init ./packages/my-ds --name @myorg/my-ds
 pnpm dlx @corpdk/create-ds upgrade ./packages/my-ds
 ```
 
+### Exit codes and flags (§11.2)
+
+| Code | Meaning |
+| ---- | ------- |
+| `0` | Success; `--help` / `--version` |
+| `2` | Usage (unknown command, unknown flag, missing `dal/dal.config.yaml` on upgrade, non-empty init target) |
+| `3` | Tool failure (`entity:lint`, DAL bootstrap exec) |
+
+Global / shared: **`--dry-run`**, **`--no-install`** (init only; CLI does not run install — next steps still list it when set), **`--version`**, **`-h` / `--help`**.
+
+`upgrade` writes **`.create-ds-version`** with the engine release used for the merge.
+
 ### `init` options
 
 - **`--name <pkg>`** — npm package name (default `@corpdk/ds`)
-- **`--demo-schema`** — copy the full commerce demo schema and `seed.ts` from `templates/ds` instead of the minimal starter under `engines/create-ds/starter/`
+- **`--demo-schema`** — copy the full commerce demo schema and `seed.ts` from the canonical template (monorepo `templates/ds` or bundled `canonical/` after `syncCanonical`)
 
 `init` writes:
 
