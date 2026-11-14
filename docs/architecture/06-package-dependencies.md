@@ -172,10 +172,10 @@ Dependencies used across multiple workspace packages.
 
 ### graphql-input-zod (@corpdk/graphql-input-zod)
 
-| Package | Version  | Type    |
-| ------- | -------- | ------- |
-| graphql | ^16.13.2 | runtime |
-| zod     | ^4.3.6   | dev     |
+| Package | Version  | Type                         |
+| ------- | -------- | ---------------------------- |
+| graphql | ^16.13.2 | runtime; peer (^16 \|\| ^17) |
+| zod     | ^4.3.6   | dev (tests); peer (optional) |
 
 ### dal-core (@corpdk/dal-core)
 

@@ -1,5 +1,9 @@
 import { PG_INT64_MAX, PG_INT64_MIN } from "./pg-bounds.js";
-import { isAsciiDigit, isDigitsOnly, isSignedIntegerString } from "./parse-helpers.js";
+import {
+  isAsciiDigit,
+  isDigitsOnly,
+  isSignedIntegerString,
+} from "./parse-helpers.js";
 
 const MS_PER_SECOND = 1000n;
 const MS_PER_MILLISECOND = 1n;
@@ -87,7 +91,11 @@ function parseHmsSegment(segment: string): HmsTime | null {
   if (parts.length !== 3) return null;
   const [hours, minutes, secPart] = parts;
   if (!parseOptionalUnsignedInt(hours!)) return null;
-  if (minutes!.length !== 2 || !isAsciiDigit(minutes![0]!) || !isAsciiDigit(minutes![1]!)) {
+  if (
+    minutes!.length !== 2 ||
+    !isAsciiDigit(minutes![0]!) ||
+    !isAsciiDigit(minutes![1]!)
+  ) {
     return null;
   }
 
@@ -105,7 +113,11 @@ function parseHmsSegment(segment: string): HmsTime | null {
       return null;
     }
   }
-  if (seconds.length !== 2 || !isAsciiDigit(seconds[0]!) || !isAsciiDigit(seconds[1]!)) {
+  if (
+    seconds.length !== 2 ||
+    !isAsciiDigit(seconds[0]!) ||
+    !isAsciiDigit(seconds[1]!)
+  ) {
     return null;
   }
 

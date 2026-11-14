@@ -15,11 +15,15 @@ describe("pgIntervalTextToMs", () => {
   });
 
   it("parses backend intervals with negative time-of-day components", () => {
-    expect(pgIntervalTextToMs("1 day -02:30:00")).toBe(String(86400000n - 9000000n));
+    expect(pgIntervalTextToMs("1 day -02:30:00")).toBe(
+      String(86400000n - 9000000n),
+    );
   });
 
   it("parses day-plus-time and time-only wire forms", () => {
-    expect(pgIntervalTextToMs("2 03:04:05")).toBe(String(2n * 86400000n + 11045000n));
+    expect(pgIntervalTextToMs("2 03:04:05")).toBe(
+      String(2n * 86400000n + 11045000n),
+    );
     expect(pgIntervalTextToMs("-01:02:03")).toBe("-3723000");
     expect(pgIntervalTextToMs("00:00:01.500")).toBe("1500");
   });
@@ -31,8 +35,12 @@ describe("pgIntervalTextToMs", () => {
   });
 
   it("rejects unknown verbose units and out-of-range totals", () => {
-    expect(() => pgIntervalTextToMs("3 fortnights")).toThrow(/Invalid PostgreSQL interval/);
-    expect(() => pgIntervalTextToMs("not an interval")).toThrow(/Invalid PostgreSQL interval/);
+    expect(() => pgIntervalTextToMs("3 fortnights")).toThrow(
+      /Invalid PostgreSQL interval/,
+    );
+    expect(() => pgIntervalTextToMs("not an interval")).toThrow(
+      /Invalid PostgreSQL interval/,
+    );
     const overMaxMs = (BigInt(PG_INT64_MAX) + 1n).toString() + " milliseconds";
     expect(() => pgIntervalTextToMs(overMaxMs)).toThrow(/signed 64-bit range/);
   });

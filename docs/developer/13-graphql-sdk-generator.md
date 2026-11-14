@@ -756,7 +756,7 @@ The server does not import the SDK and wins at runtime (`userErrors` / `BAD_USER
 | `@corpdk/scalar-zod`    | Generic GraphQL wire scalars: `DateTime`, `Date`, `TimeTz`, `Decimal`, `InsensitiveString`, `IP`, `CIDR`, `MAC`, `BigInt` (unbounded), plus their `parse*` functions                                          |
 | `@corpdk/scalar-zod/pg` | Postgres-bounded rules, **not** exported from the root: `BigInt` (int64 range), `IntervalMs`, `SmallInt`, `Double`, `Int` (int32, today `zPgInt32`), `Real` (today `zPgReal`), and the `PG_*` bound constants |
 
-- **Package shape:** `"sideEffects": false`, ESM, one module per scalar, so an SDK that uses `DateTime` loads only `DateTime`'s code.
+- **Package shape:** ESM with root and `/pg` entry points; wire validators in `wire-zod.ts`, shared parse helpers in `scalars.ts` and `parse-helpers.ts`, and procedural PostgreSQL interval text ↔ ms conversion in `pg-interval.ts` (no Luxon). Import `@corpdk/scalar-zod/pg` only when PG-bounded rules are needed; per-scalar tree-shaking is verified under R-37.
 - **`dal-core`:** depends on `@corpdk/scalar-zod` and re-exports `dalScalarZod`, `zPgInt32`, and `zPgReal` from `@corpdk/scalar-zod/pg`. Server code and `dal-codegen` output stay unchanged (R-10).
 - **SDKs:** the `dal` preset references it (§6), so DAL SDKs depend on `@corpdk/scalar-zod`. Non-DAL SDKs with their own scalars keep expression strings and don't install it. Like the other owned runtimes, rule fixes reach every SDK through a dependency update.
 - **Dependencies:** `zod` ^4 (peer), `graphql-scalars` (needs a dependency-policy audit row, R-38).

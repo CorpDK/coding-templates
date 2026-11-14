@@ -3,6 +3,7 @@
   "version": "2026.10.0-alpha.14",
   "description": "Shared GraphQL scalar validation rules for DAL, SDK, and CLI",
   "type": "module",
+  "sideEffects": false,
   "license": "MIT",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
