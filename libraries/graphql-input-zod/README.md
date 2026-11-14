@@ -1,5 +1,5 @@
 # @corpdk/graphql-input-zod
 
-Placeholder that reserves the name for npm trusted publishing; no code yet.
+Zod codegen and runtime helpers for GraphQL input types (**SDK L3**). Implementation **SDK P1a**.
 
-Planned role: GraphQL input-object Zod codegen runtime (SDK L3 layer). See [GraphQL SDK generator design](../../docs/developer/13-graphql-sdk-generator.md).
+- [Design doc](https://github.com/CorpDK/coding-templates/blob/main/docs/developer/13-graphql-sdk-generator.md)

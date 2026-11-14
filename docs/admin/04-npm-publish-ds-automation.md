@@ -28,23 +28,35 @@ The [GraphQL SDK](../developer/13-graphql-sdk-generator.md), [CLI](../developer/
 
 | Package | Path | Status |
 | ------- | ---- | ------ |
-| `@corpdk/scalar-zod` | `libraries/scalar-zod` | Placeholder `0.0.0-bootstrap.0` (not in lockstep publish yet) |
-| `@corpdk/graphql-input-zod` | `libraries/graphql-input-zod` | Placeholder |
-| `@corpdk/graphql-dsl` | `libraries/graphql-dsl` | Placeholder |
-| `@corpdk/engine-kit` | `libraries/engine-kit` | Placeholder |
-| `@corpdk/graphql-cli-core` | `libraries/graphql-cli-core` | Placeholder |
-| `@corpdk/create-graphql-sdk` | `engines/create-graphql-sdk` | Placeholder |
-| `@corpdk/create-graphql-cli` | `engines/create-graphql-cli` | Placeholder |
+| `@corpdk/scalar-zod` | `libraries/scalar-zod` | Bootstrap on npm; trust configured; **pending OIDC validation** until first CI publish from `main` |
+| `@corpdk/graphql-input-zod` | `libraries/graphql-input-zod` | Same |
+| `@corpdk/graphql-dsl` | `libraries/graphql-dsl` | Same |
+| `@corpdk/engine-kit` | `libraries/engine-kit` | Same |
+| `@corpdk/graphql-cli-core` | `libraries/graphql-cli-core` | Same |
+| `@corpdk/create-graphql-sdk` | `engines/create-graphql-sdk` | Same |
+| `@corpdk/create-graphql-cli` | `engines/create-graphql-cli` | Same |
 
 Placeholders ship only `README.md` and `LICENSE` (no `main`, `exports`, `bin`, or scripts). **`templates/ds-sdk` and `templates/ds-cli` are not published** and are not part of B0.
 
-**After the B0 PR merges to `main`**, a maintainer completes these steps once per package (local npm login with `@corpdk` publish + 2FA; **not** OIDC):
+**After the B0 PR merges**, a maintainer completes registry setup **from a local terminal** (npm publish + trust each trigger org 2FA / OTP; **not** OIDC):
 
-1. From each package directory: `npm publish --access public --tag bootstrap`
+```bash
+# Repo root; npm whoami must succeed; use npm >= 11.15 for trust
+chmod +x .github/scripts/b0-npm-bootstrap.sh
+./.github/scripts/b0-npm-bootstrap.sh
+```
+
+npm prompts for browser 2FA on each publish, deprecate, and `npm trust` as needed; optionally `export NPM_OTP=…` or pass `--pause` for an extra Enter before each step. If publish succeeded but deprecate/trust were skipped (registry index lag), wait a minute and run `./.github/scripts/b0-npm-bootstrap.sh --post-publish` (deprecate + trust only, with registry wait/retry).
+
+Resume after a failure with `--from @corpdk/<name>`; run `./.github/scripts/b0-npm-bootstrap.sh --help` for flags.
+
+Manual equivalent per package:
+
+1. `npm publish --access public --tag bootstrap` in the package directory
 2. `npm deprecate <pkg>@0.0.0-bootstrap.0 "Placeholder with no code; use a CalVer release"`
-3. Configure trusted publishing (UI or [CLI equivalent](#cli-equivalent)) with workflow `publish-ds-automation.yml`, same field values as the five-package table below.
-4. Optional: in npm package settings, require 2FA and disallow publish tokens so only CI OIDC can publish.
-5. Verify: `npm view <pkg> versions` includes `0.0.0-bootstrap.0`; `npm trust list <pkg>` shows the GitHub Actions publisher.
+3. Trusted publishing via [CLI equivalent](#cli-equivalent) (`publish-ds-automation.yml`)
+4. Optional: package settings — require 2FA, disallow publish tokens
+5. Verify: `npm view <pkg> versions`; `npm trust list <pkg>`
 
 Version **`0.0.0-bootstrap.0`** sorts below CalVer and is never used in consumer `^2026.x` ranges. First **real** releases join `PUBLISH_ORDER` in their implementation phase (SDK P1a/P1b, DS-P0b, CLI C-P1, etc.).
 

@@ -1,5 +1,5 @@
 # @corpdk/graphql-dsl
 
-Placeholder that reserves the name for npm trusted publishing; no code yet.
+Owned fork of **genql**: typed selection builders (**SDK L2**). `UPSTREAM.md` lands with the fork in **SDK P1b**.
 
-Planned role: typed GraphQL selection DSL (owned genql fork; SDK L2 layer). See [GraphQL SDK generator design](../../docs/developer/13-graphql-sdk-generator.md).
+- [Design doc](https://github.com/CorpDK/coding-templates/blob/main/docs/developer/13-graphql-sdk-generator.md)

@@ -1,5 +1,5 @@
 # @corpdk/create-graphql-cli
 
-Placeholder that reserves the name for npm trusted publishing; no code yet.
+Generator CLI for the GraphQL CLI family. Implementation **C-P2**.
 
-Planned role: scaffold and upgrade GraphQL automation CLI packages. See [GraphQL CLI generator design](../../docs/developer/14-graphql-cli-generator.md).
+- [Design doc](https://github.com/CorpDK/coding-templates/blob/main/docs/developer/14-graphql-cli-generator.md)

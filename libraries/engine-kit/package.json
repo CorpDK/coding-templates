@@ -1,7 +1,8 @@
 {
   "name": "@corpdk/engine-kit",
   "version": "0.0.0-bootstrap.0",
-  "description": "Placeholder reserving the npm package name for trusted publishing; no implementation yet.",
+  "description": "Shared init/upgrade engine kit for create-* CLIs",
+  "type": "module",
   "license": "MIT",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
@@ -9,14 +10,30 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/CorpDK/coding-templates.git",
+    "url": "git+https://github.com/CorpDK/coding-templates.git",
     "directory": "libraries/engine-kit"
   },
-  "files": [
-    "README.md",
-    "LICENSE"
-  ],
-  "engines": {
-    "node": ">=24.0.0"
-  }
+  "files": ["dist", "README.md"],
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist node_modules .turbo *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@clack/prompts": "^1.1.0",
+    "yaml": "^2.8.3"
+  },
+
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^6.0.2"
+  },
+  "engines": { "node": ">=24.0.0" }
 }

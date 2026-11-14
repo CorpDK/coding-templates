@@ -1,7 +1,8 @@
 {
   "name": "@corpdk/scalar-zod",
   "version": "0.0.0-bootstrap.0",
-  "description": "Placeholder reserving the npm package name for trusted publishing; no implementation yet.",
+  "description": "Shared GraphQL scalar validation rules for DAL, SDK, and CLI",
+  "type": "module",
   "license": "MIT",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
@@ -9,13 +10,37 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/CorpDK/coding-templates.git",
+    "url": "git+https://github.com/CorpDK/coding-templates.git",
     "directory": "libraries/scalar-zod"
   },
   "files": [
-    "README.md",
-    "LICENSE"
+    "dist",
+    "README.md"
   ],
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./pg": {
+      "types": "./dist/pg/index.d.ts",
+      "import": "./dist/pg/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist node_modules .turbo *.tsbuildinfo"
+  },
+  "dependencies": {
+    "graphql-scalars": "^1.26.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^6.0.2"
+  },
   "engines": {
     "node": ">=24.0.0"
   }

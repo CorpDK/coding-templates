@@ -1,5 +1,5 @@
 # @corpdk/graphql-cli-core
 
-Placeholder that reserves the name for npm trusted publishing; no code yet.
+Shared runtime and codegen for generated GraphQL automation CLIs. **CLI C-P1** / **C-P2**.
 
-Planned role: GraphQL automation CLI runtime and codegen. See [GraphQL CLI generator design](../../docs/developer/14-graphql-cli-generator.md).
+- [Design doc](https://github.com/CorpDK/coding-templates/blob/main/docs/developer/14-graphql-cli-generator.md)

@@ -1,7 +1,8 @@
 {
   "name": "@corpdk/create-graphql-sdk",
   "version": "0.0.0-bootstrap.0",
-  "description": "Placeholder reserving the npm package name for trusted publishing; no implementation yet.",
+  "description": "Scaffold and upgrade graphql-sdk packages",
+  "type": "module",
   "license": "MIT",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
@@ -9,14 +10,26 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/CorpDK/coding-templates.git",
+    "url": "git+https://github.com/CorpDK/coding-templates.git",
     "directory": "engines/create-graphql-sdk"
   },
-  "files": [
-    "README.md",
-    "LICENSE"
-  ],
-  "engines": {
-    "node": ">=24.0.0"
-  }
+  "files": ["dist", "canonical", "README.md"],
+  "types": "./dist/types-entry.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types-entry.d.ts",
+      "import": "./dist/types-entry.js"
+    }
+  },
+  "bin": { "create-graphql-sdk": "./dist/index.js" },
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist node_modules .turbo *.tsbuildinfo"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "typescript": "^6.0.2"
+  },
+  "engines": { "node": ">=24.0.0" }
 }

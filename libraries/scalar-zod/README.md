@@ -1,5 +1,14 @@
 # @corpdk/scalar-zod
 
-Placeholder that reserves the name for npm trusted publishing; no code yet.
+Shared **GraphQL scalar validation rules** for DAL servers, client SDKs, and automation CLIs.
 
-Planned role: shared GraphQL scalar validation rules (DAL preset and SDKs). See [GraphQL SDK generator design](../../docs/developer/13-graphql-sdk-generator.md) (§7.7).
+| Export | Contents (target) |
+| ------ | ----------------- |
+| `.` | Generic wire scalars |
+| `./pg` | Postgres-bounded rules |
+
+**Status:** Bootstrap on npm; implementation **SDK P1a**. See [§7.7](https://github.com/CorpDK/coding-templates/blob/main/docs/developer/13-graphql-sdk-generator.md).
+
+## License
+
+MIT.

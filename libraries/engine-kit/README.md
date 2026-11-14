@@ -1,5 +1,3 @@
 # @corpdk/engine-kit
 
-Placeholder that reserves the name for npm trusted publishing; no code yet.
-
-Planned role: shared scaffolding for `create-ds`, `create-graphql-sdk`, and `create-graphql-cli`. See [DS generator integration](../../docs/developer/15-create-ds-generator-integration.md) (§11).
+Shared CLI and filesystem helpers for `create-ds`, `create-graphql-sdk`, and `create-graphql-cli`. Implementation **DS-P0b** ([§11](https://github.com/CorpDK/coding-templates/blob/main/docs/developer/15-create-ds-generator-integration.md#113-corpdkengine-kit)).
