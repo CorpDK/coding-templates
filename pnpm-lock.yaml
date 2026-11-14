@@ -109,6 +109,9 @@ importers:
       '@corpdk/dal-core':
         specifier: workspace:*
         version: link:../dal-core
+      '@corpdk/graphql-input-zod':
+        specifier: workspace:*
+        version: link:../graphql-input-zod
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@electric-sql/pglite@0.4.1)(@opentelemetry/api@1.9.1)(@prisma/client@7.6.0(prisma@7.6.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.2))(typescript@6.0.2))(@types/pg@8.18.0)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.6.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.2))
@@ -140,6 +143,9 @@ importers:
 
   libraries/dal-core:
     dependencies:
+      '@corpdk/scalar-zod':
+        specifier: workspace:*
+        version: link:../scalar-zod
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@electric-sql/pglite@0.4.1)(@opentelemetry/api@1.9.1)(@prisma/client@7.6.0(prisma@7.6.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.2))(typescript@6.0.2))(@types/pg@8.18.0)(mysql2@3.15.3)(pg@8.20.0)(postgres@3.4.7)(prisma@7.6.0(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(typescript@6.0.2))
@@ -194,6 +200,10 @@ importers:
         version: 6.0.2
 
   libraries/graphql-input-zod:
+    dependencies:
+      graphql:
+        specifier: ^16.13.2
+        version: 16.13.2
     devDependencies:
       '@types/node':
         specifier: ^24.0.0
@@ -201,6 +211,12 @@ importers:
       typescript:
         specifier: ^6.0.2
         version: 6.0.2
+      vitest:
+        specifier: ^4.1.2
+        version: 4.1.2(@opentelemetry/api@1.9.1)(@types/node@24.19.1)(@vitest/browser-playwright@4.1.2)(msw@2.12.14(@types/node@24.19.1)(typescript@6.0.2))(vite@8.0.10(@types/node@24.19.1)(esbuild@0.27.4)(jiti@2.6.1)(sass@1.99.0)(tsx@4.21.0)(yaml@2.8.3))
+      zod:
+        specifier: ^4.3.6
+        version: 4.3.6
 
   libraries/graphql-ws-stub: {}
 
@@ -230,6 +246,13 @@ importers:
         version: 4.1.2(@opentelemetry/api@1.9.1)(@types/node@24.19.1)(@vitest/browser-playwright@4.1.2)(msw@2.12.14(@types/node@24.19.1)(typescript@6.0.2))(vite@8.0.10(@types/node@24.19.1)(esbuild@0.27.4)(jiti@2.6.1)(sass@1.99.0)(tsx@4.21.0)(yaml@2.8.3))
 
   libraries/scalar-zod:
+    dependencies:
+      graphql-scalars:
+        specifier: ^1.26.0
+        version: 1.26.0(graphql@16.13.2)
+      zod:
+        specifier: ^4.3.6
+        version: 4.3.6
     devDependencies:
       '@types/node':
         specifier: ^24.0.0
