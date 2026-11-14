@@ -61,7 +61,7 @@ Scaffolded **`codegen.ts`** targets sibling **`../ds-sdk`** and **`../ds-cli`** 
 2. Merges **`dal/dal.config.yaml`**: template defaults + consumer overrides (consumer keys win).
 3. Overwrites automation files: `codegen.ts`, `drizzle.config.ts`, `tsconfig.json`, Docker assets, `.env.example`, `.gitignore`, bootstrap TypeScript entry files.
 4. **Skips** `src/db/schema/**` entirely.
-5. **Skips** individual overwrite files when the canonical template path is missing (consumer copy unchanged). A partial bundled canonical therefore yields a partial merge; maintainers rely on **`check-canonical`** and **`sync:canonical`** so every listed path is present before release.
+5. **Fails (exit 3)** when any required overwrite file is missing from the canonical template (no partial merge). Maintainers rely on **`check-canonical`** and **`sync:canonical`** so every listed path is present before release.
 6. Runs **`entity:lint`** only when the monorepo `libraries/dal-codegen/dist/lint-cli.js` exists or **`node_modules/.bin/dal-entity-lint`** is present (skipped after a bare merge until `pnpm install` in DS-only repos).
 7. Prints **`pnpm install`** then **`pnpm dal:codegen`** as required follow-up.
 

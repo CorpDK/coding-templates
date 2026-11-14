@@ -1,16 +1,24 @@
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { afterEach, describe, expect, it } from "vitest";
-import { EXIT_USAGE, EXIT_VALIDATION, readJson } from "@corpdk/engine-kit";
+import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import {
+  EXIT_TOOL,
+  EXIT_USAGE,
+  EXIT_VALIDATION,
+  readJson,
+} from "@corpdk/engine-kit";
 import { runInit } from "./init.js";
 import { runUpgrade } from "./upgrade.js";
+import * as templateMod from "./template.js";
 import { readCreateDsReleaseVersion, repoRootFromEngine } from "./template.js";
 
 describe("runUpgrade fixture", () => {
   let tmp: string;
 
   afterEach(async () => {
+    vi.restoreAllMocks();
     if (tmp) await fs.rm(tmp, { recursive: true, force: true });
   });
 
@@ -131,19 +139,52 @@ describe("runUpgrade fixture", () => {
   it("deep-merges consumer dal.config.yaml overrides", async () => {
     const { target, repoRoot } = await scaffoldConsumer();
     const dalPath = path.join(target, "dal/dal.config.yaml");
-    const raw = await fs.readFile(dalPath, "utf8");
+    const before = parseYaml(await fs.readFile(dalPath, "utf8")) as Record<
+      string,
+      unknown
+    >;
     await fs.writeFile(
       dalPath,
-      `${raw.trimEnd()}\nconsumerMarker: true\n`,
+      stringifyYaml({
+        ...before,
+        consumerMarker: true,
+        filterMaxDepth: 7,
+      }),
       "utf8",
     );
+
     const result = await runUpgrade({
       dir: target,
       repoRoot,
     });
     expect(result.exitCode).toBe(0);
-    const merged = await fs.readFile(dalPath, "utf8");
-    expect(merged).toContain("consumerMarker: true");
+    const after = parseYaml(await fs.readFile(dalPath, "utf8")) as Record<
+      string,
+      unknown
+    >;
+    expect(after.consumerMarker).toBe(true);
+    expect(after.filterMaxDepth).toBe(7);
+    expect(after.strict).toBe(before.strict);
+  });
+
+  it("maps missing canonical overwrite to tool exit", async () => {
+    const { target, repoRoot } = await scaffoldConsumer();
+    tmp = path.dirname(target);
+    const broken = path.join(tmp, "broken-canonical");
+    const full = await templateMod.resolveCanonicalDsTemplateDir(repoRoot);
+    await fs.cp(full, broken, { recursive: true });
+    await fs.rm(path.join(broken, "LICENSE"), { force: true });
+
+    vi.spyOn(templateMod, "resolveCanonicalDsTemplateDir").mockResolvedValue(
+      broken,
+    );
+
+    const result = await runUpgrade({
+      dir: target,
+      repoRoot,
+    });
+    expect(result.exitCode).toBe(EXIT_TOOL);
+    expect(result.message).toMatch(/Canonical template file missing: LICENSE/);
   });
 
   it("maps invalid dal.config.yaml to validation exit", async () => {
