@@ -40,7 +40,7 @@ Investigate `@corpdk/ui-core/styles` (or equivalent) once Turbopack supports the
 
 ### 5. GitHub Actions CI (monorepo)
 
-**Status:** Partial — [ci.yml](../../.github/workflows/ci.yml) (**Monorepo CI**) runs parallel Monorepo quality matrix jobs (DAL libraries, `@corpdk/ds` Turbo build + `entity:lint`, lockstep npm package builds), then Sonar coverage + SonarCloud, then [publish-ds-automation.yml](../../.github/workflows/publish-ds-automation.yml) when paths match (`pull_request` dry-run; `main` live publish when CalVer bumps). Uses **`pull_request`** on feature branches and **`push` to `main` only** so a PR branch push does not fire both events. **Gap:** no repo-wide workflow for UI packages — lint, typecheck, and `pnpm build` (or targeted Turbo filters) on every PR.
+**Status:** Partial — [ci.yml](../../.github/workflows/ci.yml) (**Monorepo CI**) runs parallel Monorepo quality matrix jobs (DAL libraries, `@corpdk/ds` Turbo build + `entity:lint`, lockstep npm package builds), then Sonar coverage + SonarCloud, then the Monorepo CI publish job ([`publish-ds-automation.yml`](../../.github/workflows/publish-ds-automation.yml) via `workflow_call`) when the orchestrator path filter matches (`pull_request` dry-run; `main` live publish when CalVer bumps). Uses **`pull_request`** on feature branches and **`push` to `main` only** so a PR branch push does not fire both events. **Gap:** no repo-wide workflow for UI packages — lint, typecheck, and `pnpm build` (or targeted Turbo filters) on every PR.
 
 Extend [ci.yml](../../.github/workflows/ci.yml) for shared UI packages and templates. Optional: Turbo remote cache (e.g. Vercel) for speed.
 
