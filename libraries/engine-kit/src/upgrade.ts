@@ -14,9 +14,23 @@ export type RunUpgradePlanOptions = {
   templateDir: string;
   packageDir: string;
   dryRun?: boolean;
+  /** When true (default), every overwrite path must exist under templateDir. */
+  requireOverwriteSources?: boolean;
   mergeFile?: UpgradeMergeHandler;
   afterWrite?: () => Promise<void>;
 };
+
+export class MissingOverwriteSourceError extends Error {
+  readonly relPath: string;
+  readonly templatePath: string;
+
+  constructor(relPath: string, templatePath: string) {
+    super(`Canonical template file missing: ${relPath} (expected ${templatePath})`);
+    this.name = "MissingOverwriteSourceError";
+    this.relPath = relPath;
+    this.templatePath = templatePath;
+  }
+}
 
 export type UpgradePlanResult = {
   changedFiles: string[];
@@ -27,13 +41,19 @@ export async function runUpgradePlan(
 ): Promise<UpgradePlanResult> {
   const changedFiles: string[] = [];
   const dryRun = options.dryRun ?? false;
+  const requireSources = options.requireOverwriteSources ?? true;
   const mergeSet = new Set(options.merge);
 
   for (const rel of options.overwrite) {
     const templatePath = path.join(options.templateDir, rel);
     const destPath = path.join(options.packageDir, rel);
 
-    if (!(await pathExists(templatePath))) continue;
+    if (!(await pathExists(templatePath))) {
+      if (requireSources) {
+        throw new MissingOverwriteSourceError(rel, templatePath);
+      }
+      continue;
+    }
 
     changedFiles.push(rel);
 

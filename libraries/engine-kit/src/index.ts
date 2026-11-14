@@ -32,6 +32,7 @@ export {
 } from "./template.js";
 
 export {
+  MissingOverwriteSourceError,
   runUpgradePlan,
   writeEngineVersion,
   type RunUpgradePlanOptions,

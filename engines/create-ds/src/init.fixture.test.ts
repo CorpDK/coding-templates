@@ -232,6 +232,24 @@ describe("runInit fixture", () => {
     ]);
   });
 
+  it("normalizes dal scripts on scaffolded package.json", async () => {
+    tmp = await fs.mkdtemp(path.join(os.tmpdir(), "create-ds-init-"));
+    const target = path.join(tmp, "scripts");
+    const result = await runInit({
+      dir: target,
+      name: "@test/scripts",
+      repoRoot: repoRootFromEngine(),
+    });
+    expect(result.exitCode).toBe(0);
+    const pkg = await readJson<{ scripts?: Record<string, string> }>(
+      path.join(target, "package.json"),
+    );
+    expect(pkg.scripts?.["dal:codegen:schema"]).toMatch(
+      /@corpdk\/dal-codegen\/dist\/cli\.js.*schema/,
+    );
+    expect(pkg.scripts?.["entity:lint"]).toMatch(/dal-codegen\/dist\/lint-cli/);
+  });
+
   it("does not inherit template publishConfig on scaffold", async () => {
     tmp = await fs.mkdtemp(path.join(os.tmpdir(), "create-ds-init-"));
     const target = path.join(tmp, "nopub");
