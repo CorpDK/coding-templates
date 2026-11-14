@@ -1,11 +1,4 @@
-import {
-  index,
-  pgTable,
-  text,
-  timestamp,
-  uuid,
-  varchar,
-} from "drizzle-orm/pg-core";
+import { index, pgTable, text, timestamp, uuid, varchar } from "drizzle-orm/pg-core";
 
 /** Append-only security and domain audit trail; rows never updated after insert. */
 export const auditEvents = pgTable(
@@ -18,9 +11,7 @@ export const auditEvents = pgTable(
     /** Serialized event payload (plain text; not JSON column). */
     payload: text("payload").notNull(),
     /** Row creation time (UTC). */
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     /** Actor ID from request context; never client-supplied. */
     createdBy: text("created_by").notNull(),
   },
