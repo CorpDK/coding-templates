@@ -21,6 +21,12 @@ COPY libraries/graphql-input-zod/package.json ./libraries/graphql-input-zod/pack
 COPY libraries/dal-codegen/package.json ./libraries/dal-codegen/package.json
 COPY libraries/pub-sub/package.json ./libraries/pub-sub/package.json
 COPY libraries/codegen-cli/package.json ./libraries/codegen-cli/package.json
+COPY libraries/graphql-ws-stub/package.json ./libraries/graphql-ws-stub/package.json
+COPY libraries/graphql-ws-stub/index.js ./libraries/graphql-ws-stub/index.js
+COPY libraries/graphql-ws-stub/index.d.ts ./libraries/graphql-ws-stub/index.d.ts
+COPY libraries/ws-stub/package.json ./libraries/ws-stub/package.json
+COPY libraries/ws-stub/index.js ./libraries/ws-stub/index.js
+COPY libraries/ws-stub/index.d.ts ./libraries/ws-stub/index.d.ts
 
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
     pnpm install --frozen-lockfile

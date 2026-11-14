@@ -10,8 +10,11 @@ const MS_PER_MONTH = 30n * MS_PER_DAY;
 // Fixed 365.25-day year; PG calendar `year` fields are not equal to this ms literal in filters.
 const MS_PER_YEAR = 31557600000n;
 
-const BACKEND_INTERVAL =
-  /^(?:([+-]?\d+)\s+years?)?(?:\s*([+-]?\d+)\s+mons?)?(?:\s*([+-]?\d+)\s+days?)?(?:\s*([+-])?(\d*):(\d\d):(\d\d)(?:\.(\d{1,6}))?)?$/i;
+const RE_YEAR = /([+-]?\d+)\s+years?\b/i;
+const RE_MON = /([+-]?\d+)\s+mons?\b/i;
+const RE_DAY = /([+-]?\d+)\s+days?\b/i;
+const RE_TIME_SUFFIX = /\s+([+-])?(\d*):(\d{2}):(\d{2})(?:\.(\d{1,6}))?$/;
+const RE_TIME_ONLY = /^([+-])?(\d*):(\d{2}):(\d{2})(?:\.(\d{1,6}))?$/;
 
 const TIME_ONLY = /^([+-])?(\d+):(\d{2}):(\d{2})(?:\.(\d{1,6}))?$/;
 const DAY_TIME = /^(\d+)\s+([+-])?(\d+):(\d{2}):(\d{2})(?:\.(\d{1,6}))?$/;
@@ -51,11 +54,45 @@ function fractionToMs(fraction: string): bigint {
   return BigInt((fraction + "000").slice(0, 3));
 }
 
+function stripField(source: string, pattern: RegExp): [string, string | undefined] {
+  const match = pattern.exec(source);
+  if (!match) return [source, undefined];
+  const value = match[1];
+  const next = (source.slice(0, match.index) + source.slice(match.index + match[0].length))
+    .replace(/\s+/g, " ")
+    .trim();
+  return [next, value];
+}
+
 function parseBackendInterval(text: string): bigint | null {
-  const matches = BACKEND_INTERVAL.exec(text.trim());
-  if (!matches) return null;
-  const [, years, months, days, timeSign, hours, minutes, seconds, fraction] =
-    matches;
+  const trimmed = text.trim();
+  let remainder = trimmed;
+  let timeSign: string | undefined;
+  let hours: string | undefined;
+  let minutes: string | undefined;
+  let seconds: string | undefined;
+  let fraction: string | undefined;
+
+  const suffixTime = RE_TIME_SUFFIX.exec(trimmed);
+  if (suffixTime) {
+    remainder = trimmed.slice(0, suffixTime.index).trim();
+    [, timeSign, hours, minutes, seconds, fraction] = suffixTime;
+  } else {
+    const onlyTime = RE_TIME_ONLY.exec(trimmed);
+    if (onlyTime) {
+      [, timeSign, hours, minutes, seconds, fraction] = onlyTime;
+      remainder = "";
+    }
+  }
+
+  let years: string | undefined;
+  let months: string | undefined;
+  let days: string | undefined;
+  [remainder, years] = stripField(remainder, RE_YEAR);
+  [remainder, months] = stripField(remainder, RE_MON);
+  [remainder, days] = stripField(remainder, RE_DAY);
+
+  if (remainder.length > 0) return null;
   if (!years && !months && !days && hours === undefined) return null;
 
   let total = 0n;
