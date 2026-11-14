@@ -22,5 +22,5 @@ export async function listRelativeFiles(
   }
 
   await walk(root, "");
-  return out.sort();
+  return out.sort((a, b) => a.localeCompare(b));
 }
