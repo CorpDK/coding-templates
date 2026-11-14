@@ -41,6 +41,9 @@ async function main(): Promise<number> {
       noInstall: parsed.noInstall,
       repoRoot,
     });
+    if (result.message && result.exitCode !== 0) {
+      console.error(result.message);
+    }
     if (result.exitCode === 0) {
       const steps = result.nextSteps?.length
         ? result.nextSteps.join("\n  ")
@@ -56,6 +59,9 @@ async function main(): Promise<number> {
     repoRoot,
   });
 
+  if (result.message && result.exitCode !== 0) {
+    console.error(result.message);
+  }
   if (result.exitCode === 0) {
     const steps = result.nextSteps?.join("\n  ") ?? "pnpm install\n  pnpm dal:codegen";
     outro(`Upgrade complete for:\n  ${parsed.dir}\n\nNext steps:\n  ${steps}`);

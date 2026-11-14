@@ -4,6 +4,7 @@ export type EngineResult = {
   exitCode: EngineExitCode;
   nextSteps?: string[];
   changedFiles: string[];
+  message?: string;
 };
 
 export interface Reporter {

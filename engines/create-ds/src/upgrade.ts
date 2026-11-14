@@ -12,9 +12,9 @@ import {
   writeJson,
   type EngineResult,
   EXIT_SUCCESS,
-  EXIT_TOOL,
   EXIT_USAGE,
 } from "@corpdk/engine-kit";
+import { exitCodeForEngineError } from "./engine-errors.js";
 import { execAsync } from "./exec.js";
 import {
   CORP_DK_OWNED,
@@ -115,6 +115,7 @@ export async function runUpgrade(options: UpgradeOptions): Promise<EngineResult>
     return {
       exitCode: EXIT_USAGE,
       changedFiles: [],
+      message: `Missing dal/dal.config.yaml under ${packageDir}`,
     };
   }
 
@@ -122,6 +123,7 @@ export async function runUpgrade(options: UpgradeOptions): Promise<EngineResult>
     return {
       exitCode: EXIT_USAGE,
       changedFiles: [],
+      message: `Canonical DS template not found (looked under ${templateDir}).`,
     };
   }
 
@@ -166,9 +168,13 @@ export async function runUpgrade(options: UpgradeOptions): Promise<EngineResult>
       options.dryRun,
     );
     changedFiles.push(versionRel);
-  } catch {
+  } catch (err: unknown) {
     s.stop("Upgrade failed after writing some files");
-    return { exitCode: EXIT_TOOL, changedFiles };
+    return {
+      exitCode: exitCodeForEngineError(err),
+      changedFiles,
+      message: err instanceof Error ? err.message : String(err),
+    };
   }
 
   s.stop("Template deltas merged (src/db/schema/** untouched)");

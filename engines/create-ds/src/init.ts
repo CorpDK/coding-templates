@@ -10,6 +10,7 @@ import {
   EXIT_SUCCESS,
   EXIT_USAGE,
 } from "@corpdk/engine-kit";
+import { exitCodeForEngineError } from "./engine-errors.js";
 import { spinner } from "@clack/prompts";
 import { copyBootstrapStaticSrc, runDalBootstrap } from "./bootstrap.js";
 import {
@@ -45,6 +46,7 @@ export async function runInit(options: InitOptions): Promise<EngineResult> {
     return {
       exitCode: EXIT_USAGE,
       changedFiles: [],
+      message: `Canonical DS template not found (looked under ${templateDir}).`,
     };
   }
 
@@ -54,6 +56,7 @@ export async function runInit(options: InitOptions): Promise<EngineResult> {
       return {
         exitCode: EXIT_USAGE,
         changedFiles: [],
+        message: `Init target is not empty: ${targetDir}`,
       };
     }
   }
@@ -72,68 +75,79 @@ export async function runInit(options: InitOptions): Promise<EngineResult> {
   const s = spinner();
   s.start("Scaffolding DS package layout");
 
-  await fs.mkdir(targetDir, { recursive: true });
+  try {
+    await fs.mkdir(targetDir, { recursive: true });
 
-  await copyDir(templateDir, targetDir, {
-    exclude: [...COPY_TEMPLATE_EXCLUDE],
-  });
+    await copyDir(templateDir, targetDir, {
+      exclude: [...COPY_TEMPLATE_EXCLUDE],
+    });
 
-  const schemaSrc = options.demoSchema
-    ? path.join(templateDir, "src", "db", "schema")
-    : path.join(engineStarterDir(), "db", "schema");
+    const schemaSrc = options.demoSchema
+      ? path.join(templateDir, "src", "db", "schema")
+      : path.join(engineStarterDir(), "db", "schema");
 
-  await copyDir(schemaSrc, path.join(targetDir, "src", "db", "schema"), {
-    requireSource: Boolean(options.demoSchema),
-  });
+    await copyDir(schemaSrc, path.join(targetDir, "src", "db", "schema"), {
+      requireSource: Boolean(options.demoSchema),
+    });
 
-  if (options.demoSchema) {
-    const seedSrc = path.join(templateDir, "src", "db", "seed.ts");
-    if (await pathExists(seedSrc)) {
-      await fs.copyFile(seedSrc, path.join(targetDir, "src", "db", "seed.ts"));
+    if (options.demoSchema) {
+      const seedSrc = path.join(templateDir, "src", "db", "seed.ts");
+      if (await pathExists(seedSrc)) {
+        await fs.copyFile(seedSrc, path.join(targetDir, "src", "db", "seed.ts"));
+      } else {
+        throw new Error(`Demo seed missing in canonical: ${seedSrc}`);
+      }
     } else {
-      throw new Error(`Demo seed missing in canonical: ${seedSrc}`);
+      const starterDal = path.join(engineStarterDir(), "dal", "dal.config.yaml");
+      if (await pathExists(starterDal)) {
+        await fs.copyFile(
+          starterDal,
+          path.join(targetDir, "dal", "dal.config.yaml"),
+        );
+      }
     }
-  } else {
-    const starterDal = path.join(engineStarterDir(), "dal", "dal.config.yaml");
-    if (await pathExists(starterDal)) {
-      await fs.copyFile(
-        starterDal,
-        path.join(targetDir, "dal", "dal.config.yaml"),
-      );
-    }
+
+    const templatePkg = await readJson<Record<string, unknown>>(
+      path.join(templateDir, "package.json"),
+    );
+    const releaseVersion = isBundledCanonicalTemplate(templateDir)
+      ? await readCreateDsReleaseVersion()
+      : undefined;
+    const merged = mergePackageJson(
+      {
+        name: options.name,
+        version: initialScaffoldCalVer(),
+        license: "MIT",
+      },
+      templatePkg as Parameters<typeof mergePackageJson>[1],
+      {
+        owned: CORP_DK_OWNED,
+        scriptsTransform: normalizeDalScripts,
+        releaseVersion,
+      },
+    );
+    await writeJson(path.join(targetDir, "package.json"), merged);
+
+    await runDalBootstrap(repoRoot, targetDir, templateDir);
+    await copyBootstrapStaticSrc(templateDir, targetDir);
+
+    s.stop("DS package scaffolded");
+
+    const nextSteps = options.noInstall
+      ? [`pnpm --filter ${options.name} dal:codegen`]
+      : ["pnpm install", `pnpm --filter ${options.name} dal:codegen`];
+
+    return {
+      exitCode: EXIT_SUCCESS,
+      changedFiles: [],
+      nextSteps,
+    };
+  } catch (err: unknown) {
+    s.stop("Scaffold failed");
+    return {
+      exitCode: exitCodeForEngineError(err),
+      changedFiles: [],
+      message: err instanceof Error ? err.message : String(err),
+    };
   }
-
-  const templatePkg = await readJson<Record<string, unknown>>(
-    path.join(templateDir, "package.json"),
-  );
-  const releaseVersion = isBundledCanonicalTemplate(templateDir)
-    ? await readCreateDsReleaseVersion()
-    : undefined;
-  const merged = mergePackageJson(
-    {
-      name: options.name,
-      version: initialScaffoldCalVer(),
-      license: "MIT",
-    },
-    templatePkg as Parameters<typeof mergePackageJson>[1],
-    {
-      owned: CORP_DK_OWNED,
-      scriptsTransform: normalizeDalScripts,
-      releaseVersion,
-    },
-  );
-  await writeJson(path.join(targetDir, "package.json"), merged);
-
-  await runDalBootstrap(repoRoot, targetDir, templateDir);
-  await copyBootstrapStaticSrc(templateDir, targetDir);
-
-  s.stop("DS package scaffolded");
-
-  return {
-    exitCode: EXIT_SUCCESS,
-    changedFiles: [],
-    nextSteps: options.noInstall
-      ? ["pnpm install", `pnpm --filter ${options.name} dal:codegen`]
-      : [`pnpm --filter ${options.name} dal:codegen`],
-  };
 }
