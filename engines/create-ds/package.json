@@ -29,18 +29,23 @@
     "create-ds": "./dist/index.js"
   },
   "scripts": {
-    "build": "tsup && pnpm exec tsc -p tsconfig.json --emitDeclarationOnly",
-    "dev": "tsup --watch",
+    "build": "tsc",
+    "check:canonical": "node ./dist/scripts/check-canonical.js",
+    "dev": "tsc --watch --preserveWatchOutput",
+    "prepack": "pnpm run build && node ./dist/scripts/sync-canonical.js",
+    "sync:canonical": "pnpm run build && node ./dist/scripts/sync-canonical.js",
+    "test": "vitest run",
     "clean": "rm -rf dist node_modules .turbo"
   },
   "dependencies": {
     "@clack/prompts": "^1.1.0",
+    "@corpdk/engine-kit": "workspace:^",
     "yaml": "^2.8.3"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
-    "tsup": "^8.5.1",
-    "typescript": "^6.0.2"
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.2"
   },
   "license": "MIT",
   "engines": {

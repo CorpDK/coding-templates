@@ -6,7 +6,9 @@ CI workflow and release process for the **lockstep CalVer** DS automation stack 
 
 ## Package set (npmjs)
 
-These **twelve** packages ship together at the same CalVer (e.g. `2026.10.0-alpha.14`). Order matches [`.github/scripts/publish-ds-automation.sh`](../../.github/scripts/publish-ds-automation.sh) and [generator publish order](../developer/15-create-ds-generator-integration.md#43-dependencies-and-publishing-canonical-publish-order):
+These **twelve** packages ship together at the same CalVer (e.g. `2026.10.0-alpha.14`). Order matches [`.github/scripts/publish-ds-automation.sh`](../../.github/scripts/publish-ds-automation.sh) and [generator publish order](../developer/15-create-ds-generator-integration.md#43-dependencies-and-publishing-canonical-publish-order).
+
+Before build/publish, CI runs **`@corpdk/engine-kit`** publish-order guard (`check-ds-publish-order`) and **`create-ds`** canonical drift check (`templates/ds` ⇄ `engines/create-ds/canonical`) via the same shell script.
 
 | Order | Package                      | Path                          | Role                                                 |
 | ----- | ---------------------------- | ----------------------------- | ---------------------------------------------------- |
