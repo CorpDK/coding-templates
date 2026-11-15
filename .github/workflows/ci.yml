@@ -178,10 +178,10 @@ jobs:
           workflow_ref="${GITHUB_SHA}"
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
             watch_sha="${{ github.event.pull_request.head.sha }}"
-            workflow_ref="${{ github.event.pull_request.head.sha }}"
+            workflow_ref="${{ github.event.pull_request.head.ref }}"
             trigger="true"
             dry_run="true"
-            echo "Pull request — publish dry-run at ${workflow_ref}."
+            echo "Pull request — publish dry-run on branch ${workflow_ref} (commit ${watch_sha})."
           elif [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
             before="${{ github.event.before }}"
             if [[ -n "${before}" && "${before}" != "0000000000000000000000000000000000000000" ]]; then
@@ -217,7 +217,7 @@ jobs:
             echo "Unsupported ref for publish dispatch; skipping."
             trigger="false"
           fi
-          if [[ "${trigger}" == "true" && "${dry_run}" == "false" && "${{ github.event_name }}" == "push" ]]; then
+          if [[ "${trigger}" == "true" && "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
             workflow_ref="main"
           fi
           echo "trigger=${trigger}" >> "${GITHUB_OUTPUT}"
