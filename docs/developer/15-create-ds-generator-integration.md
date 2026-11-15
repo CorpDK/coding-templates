@@ -302,7 +302,7 @@ What happens to existing `create-app` output as the monorepo changes is not cove
 
 From SDK P1a, `dal-codegen` imports `@corpdk/graphql-input-zod/codegen`. Fixed-order builds are wired in [SDK §9.3](13-graphql-sdk-generator.md#93-docker) (`dal.yml`, Sonar, DS Dockerfiles):
 
-- `.github/workflows/ci.yml` (12 lockstep Monorepo quality jobs + `quality-ds-template`, then Sonar; see [admin publish doc](../admin/04-npm-publish-ds-automation.md#triggers))
+- `.github/workflows/ci.yml` (12 lockstep Monorepo quality jobs + `quality-templates`, then Sonar; see [admin publish doc](../admin/04-npm-publish-ds-automation.md#triggers))
 - `sonar-project.properties`
 - `templates/ds/Dockerfile`
 - `engines/create-ds/canonical/Dockerfile`
