@@ -174,12 +174,14 @@ jobs:
           source .github/scripts/lockstep-calver.sh
           trigger="false"
           dry_run="true"
-          ref="${GITHUB_SHA}"
+          watch_sha="${GITHUB_SHA}"
+          workflow_ref="${GITHUB_SHA}"
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            ref="${{ github.event.pull_request.head.sha }}"
+            watch_sha="${{ github.event.pull_request.head.sha }}"
+            workflow_ref="${{ github.event.pull_request.head.sha }}"
             trigger="true"
             dry_run="true"
-            echo "Pull request — dispatch publish dry-run at ${ref}."
+            echo "Pull request — publish dry-run at ${workflow_ref}."
           elif [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
             before="${{ github.event.before }}"
             if [[ -n "${before}" && "${before}" != "0000000000000000000000000000000000000000" ]]; then
@@ -215,22 +217,86 @@ jobs:
             echo "Unsupported ref for publish dispatch; skipping."
             trigger="false"
           fi
+          if [[ "${trigger}" == "true" && "${dry_run}" == "false" && "${{ github.event_name }}" == "push" ]]; then
+            workflow_ref="main"
+          fi
           echo "trigger=${trigger}" >> "${GITHUB_OUTPUT}"
           echo "dry_run=${dry_run}" >> "${GITHUB_OUTPUT}"
-          echo "ref=${ref}" >> "${GITHUB_OUTPUT}"
+          echo "workflow_ref=${workflow_ref}" >> "${GITHUB_OUTPUT}"
+          echo "watch_sha=${watch_sha}" >> "${GITHUB_OUTPUT}"
 
       - name: Dispatch publish-ds-automation.yml
-        if: steps.dispatch.outputs.trigger == 'true'
+        if: |
+          steps.dispatch.outputs.trigger == 'true' &&
+          (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false)
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          version="$(node -p "require('./libraries/dal-core/package.json').version")"
           gh workflow run publish-ds-automation.yml \
             --repo "${GITHUB_REPOSITORY}" \
-            --ref "${{ steps.dispatch.outputs.ref }}" \
-            -f "dry_run=${{ steps.dispatch.outputs.dry_run }}" \
-            -f "version=${version}"
-          echo "Dispatched publish-ds-automation.yml at ${{ steps.dispatch.outputs.ref }} (dry_run=${{ steps.dispatch.outputs.dry_run }}, version=${version})."
+            --ref "${{ steps.dispatch.outputs.workflow_ref }}" \
+            -f "dry_run=${{ steps.dispatch.outputs.dry_run }}"
+          watch_sha="${{ steps.dispatch.outputs.watch_sha }}"
+          run_id=""
+          for _ in $(seq 1 45); do
+            run_id="$(gh run list \
+              --repo "${GITHUB_REPOSITORY}" \
+              --workflow=publish-ds-automation.yml \
+              --commit "${watch_sha}" \
+              --limit 1 \
+              --json databaseId \
+              --jq '.[0].databaseId // empty')"
+            if [[ -n "${run_id}" ]]; then
+              break
+            fi
+            sleep 2
+          done
+          if [[ -z "${run_id}" ]]; then
+            echo "No publish workflow run found for commit ${watch_sha}" >&2
+            exit 1
+          fi
+          gh run watch "${run_id}" --repo "${GITHUB_REPOSITORY}" --exit-status
+          echo "Publish workflow ${run_id} completed for commit ${watch_sha} (dry_run=${{ steps.dispatch.outputs.dry_run }})."
+
+      - uses: actions/checkout@v4
+        if: |
+          steps.dispatch.outputs.trigger == 'true' &&
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.fork == true
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - uses: pnpm/action-setup@v4
+        if: |
+          steps.dispatch.outputs.trigger == 'true' &&
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.fork == true
+
+      - uses: actions/setup-node@v4
+        if: |
+          steps.dispatch.outputs.trigger == 'true' &&
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.fork == true
+        with:
+          node-version: "24"
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+        if: |
+          steps.dispatch.outputs.trigger == 'true' &&
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.fork == true
+
+      - name: Fork PR publish dry-run (inline)
+        if: |
+          steps.dispatch.outputs.trigger == 'true' &&
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.fork == true
+        run: |
+          version="$(node -p "require('./libraries/dal-core/package.json').version")"
+          chmod +x .github/scripts/publish-ds-automation.sh
+          .github/scripts/publish-ds-automation.sh "${version}" --dry-run
+          echo "Fork pull request publish dry-run succeeded at ${{ github.event.pull_request.head.sha }}."
 
       - name: Publish workflow not required
         if: steps.dispatch.outputs.trigger != 'true'
