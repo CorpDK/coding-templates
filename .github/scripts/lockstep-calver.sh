@@ -60,7 +60,7 @@ if [[ -z "${LOCKSTEP_CALVER_SOURCED:-}" ]]; then
 
   # Echo "changed" if any lockstep package version differs between git_ref and worktree.
   # Echo "unchanged" if every prior version was read and all match the worktree.
-  # Echo "unreadable" if git_ref is set but at least one prior version could not be read.
+  # Echo "unreadable" if git_ref is set but not every prior lockstep version could be read.
   lockstep_calver_compare() {
     local git_ref="${1:-}"
     local any_prev_readable=false

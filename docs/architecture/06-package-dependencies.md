@@ -1,6 +1,6 @@
 # Package Dependencies
 
-Version reference for every third-party dependency used across the monorepo. Updated: 2026-11-14.
+Version reference for every third-party dependency used across the monorepo. Updated: 2026-11-15.
 
 ---
 
