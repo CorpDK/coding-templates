@@ -8,7 +8,7 @@ CI workflow and release process for the **lockstep CalVer** DS automation stack 
 
 These **twelve** packages ship together at the same CalVer (e.g. `2026.10.0-alpha.15`). Order matches [`PUBLISH_ORDER`](../../.github/scripts/lockstep-calver.sh) and [generator publish order](../developer/15-create-ds-generator-integration.md#43-dependencies-and-publishing-canonical-publish-order).
 
-Before build/publish, CI runs **`@corpdk/engine-kit`** publish-order guard (`check-ds-publish-order`) and **`create-ds`** canonical drift check (`templates/ds` ⇄ `engines/create-ds/canonical`) via the same shell script.
+Monorepo quality runs **`create-ds`** canonical drift check (`check-canonical`) on the **`@corpdk/create-ds`** lockstep matrix job ([`.github/scripts/ci-quality-lockstep-package.sh`](../../.github/scripts/ci-quality-lockstep-package.sh)). Before npm upload, [`.github/scripts/publish-ds-automation.sh`](../../.github/scripts/publish-ds-automation.sh) runs the **`@corpdk/engine-kit`** publish-order guard (`check-ds-publish-order`) and **`check-canonical`** again.
 
 | Order | Package                      | Path                          | Role                                                 |
 | ----- | ---------------------------- | ----------------------------- | ---------------------------------------------------- |
@@ -390,4 +390,4 @@ Ensure the `@corpdk` npm org grants **publish** on the twelve lockstep packages 
 - [Monorepo Design — Versioning & publishing](../architecture/02-monorepo-design.md#publishing-strategy)
 - [DS automation upgrades (`create-ds`)](../developer/ds-automation-upgrades.md)
 
-**Last updated**: November 14, 2026
+**Last updated**: November 15, 2026
