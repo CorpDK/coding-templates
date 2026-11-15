@@ -1,6 +1,6 @@
 {
   "name": "@corpdk/graphql-dsl",
-  "version": "2026.10.0-alpha.14",
+  "version": "2026.10.0-alpha.15",
   "description": "Typed GraphQL selection DSL (owned genql fork)",
   "type": "module",
   "license": "MIT",

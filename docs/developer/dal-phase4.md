@@ -47,7 +47,7 @@ When **`strict: true`** in `dal/dal.config.yaml`, `dal:codegen` runs the same **
 
 ## CI
 
-[Monorepo CI](../../.github/workflows/ci.yml) runs parallel quality jobs: `@corpdk/dal-core` and `@corpdk/dal-codegen` tests, `pnpm turbo run build --filter=@corpdk/ds` ( `dal:codegen` → graphql-codegen → `tsc` ), and `@corpdk/ds entity:lint`.
+[Monorepo CI](../../.github/workflows/ci.yml) runs `@corpdk/dal-core` and `@corpdk/dal-codegen` tests on the lockstep quality matrix (see [npm publish — Triggers](../admin/04-npm-publish-ds-automation.md#triggers)); `@corpdk/ds` build plus `entity:lint` runs in the separate **`quality-templates`** job via [`.github/scripts/ci-quality-template.sh`](../../.github/scripts/ci-quality-template.sh).
 
 ## Out of scope (Phase 6+)
 

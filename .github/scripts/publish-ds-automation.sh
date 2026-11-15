@@ -2,7 +2,7 @@
 # Publish the lockstep DS automation package set to npmjs (public @corpdk scope).
 # Git tag ds-automation/v<CalVer> and GitHub Release are created by CI on live main publish, not here.
 # Repair stale latest without republish: npm dist-tag add @corpdk/<pkg>@<CalVer> latest (see admin doc § dist-tags).
-# Live CI publish runs only on push to main when libraries/dal-core CalVer changed (see workflow).
+# Live CI publish runs on push to main when any lockstep package CalVer changed (see workflow + lockstep-calver.sh).
 #
 # First time the packages are not on npm yet: use this script locally with npm login or
 # NPM_TOKEN (not GitHub OIDC). See docs/admin/04-npm-publish-ds-automation.md
@@ -32,42 +32,8 @@ node "${ROOT}/libraries/engine-kit/dist/bin/check-publish-order.js"
 pnpm --filter @corpdk/create-ds build
 node "${ROOT}/engines/create-ds/dist/scripts/check-canonical.js"
 
-# Canonical order: docs/developer/15-create-ds-generator-integration.md §4.3
-PUBLISH_ORDER=(
-  "@corpdk/graphql-dsl"
-  "@corpdk/scalar-zod"
-  "@corpdk/dal-core"
-  "@corpdk/pub-sub"
-  "@corpdk/graphql-input-zod"
-  "@corpdk/dal-codegen"
-  "@corpdk/engine-kit"
-  "@corpdk/graphql-cli-core"
-  "@corpdk/create-graphql-sdk"
-  "@corpdk/create-graphql-cli"
-  "@corpdk/codegen-cli"
-  "@corpdk/create-ds"
-)
-
-package_json_path() {
-  case "$1" in
-    @corpdk/graphql-dsl) echo "libraries/graphql-dsl/package.json" ;;
-    @corpdk/scalar-zod) echo "libraries/scalar-zod/package.json" ;;
-    @corpdk/dal-core) echo "libraries/dal-core/package.json" ;;
-    @corpdk/pub-sub) echo "libraries/pub-sub/package.json" ;;
-    @corpdk/graphql-input-zod) echo "libraries/graphql-input-zod/package.json" ;;
-    @corpdk/dal-codegen) echo "libraries/dal-codegen/package.json" ;;
-    @corpdk/engine-kit) echo "libraries/engine-kit/package.json" ;;
-    @corpdk/graphql-cli-core) echo "libraries/graphql-cli-core/package.json" ;;
-    @corpdk/create-graphql-sdk) echo "engines/create-graphql-sdk/package.json" ;;
-    @corpdk/create-graphql-cli) echo "engines/create-graphql-cli/package.json" ;;
-    @corpdk/codegen-cli) echo "libraries/codegen-cli/package.json" ;;
-    @corpdk/create-ds) echo "engines/create-ds/package.json" ;;
-    *)
-      echo "Unknown package: $1" >&2
-      return 1
-      ;;
-  esac
-}
+# shellcheck source=lockstep-calver.sh
+source "${ROOT}/.github/scripts/lockstep-calver.sh"
 
 package_rel_dir() {
   local path

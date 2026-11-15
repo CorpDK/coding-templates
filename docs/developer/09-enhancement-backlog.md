@@ -16,7 +16,7 @@ Add Vitest (and `@testing-library/react` where components need it) to the two mo
 
 ### 2. CalVer graduation (alpha → stable)
 
-**Status:** In progress — npm **DS automation lockstep set** (twelve packages; see [04-npm-publish-ds-automation.md § Package set](../admin/04-npm-publish-ds-automation.md#package-set-npmjs)) is on **`2026.10.0-alpha.14`** with seven generator scaffolds added in PR #33; automated publish on `main` when CalVer bumps ([04-npm-publish-ds-automation.md](../admin/04-npm-publish-ds-automation.md)). Other publishable `@corpdk/*` (e.g. `@corpdk/ui-core`) remain on **`2026.10.0-alpha.1`** until the next lockstep bump. Stable `2026.10.0` (or the next calendar period) not released yet.
+**Status:** In progress — npm **DS automation lockstep set** (twelve packages; see [04-npm-publish-ds-automation.md § Package set](../admin/04-npm-publish-ds-automation.md#package-set-npmjs)) is on **`2026.10.0-alpha.15`** with seven generator scaffolds added in PR #33; automated publish on `main` when **any** lockstep package CalVer bumps ([04-npm-publish-ds-automation.md](../admin/04-npm-publish-ds-automation.md)). Other publishable `@corpdk/*` (e.g. `@corpdk/ui-core`) remain on **`2026.10.0-alpha.1`** until the next lockstep bump. Stable `2026.10.0` (or the next calendar period) not released yet.
 
 Graduate to stable CalVer (`YYYY.MM.MICRO`, Limitless rules in [02-monorepo-design.md](../architecture/02-monorepo-design.md)) when public APIs for the npm set and UI libraries stabilize.
 
@@ -40,7 +40,7 @@ Investigate `@corpdk/ui-core/styles` (or equivalent) once Turbopack supports the
 
 ### 5. GitHub Actions CI (monorepo)
 
-**Status:** Partial — [ci.yml](../../.github/workflows/ci.yml) (**Monorepo CI**) runs parallel Monorepo quality matrix jobs (DAL libraries, `@corpdk/ds` Turbo build + `entity:lint`, lockstep npm package builds), then Sonar coverage + SonarCloud, then the Monorepo CI publish job ([`publish-ds-automation.yml`](../../.github/workflows/publish-ds-automation.yml) via `workflow_call`) when the orchestrator path filter matches (`pull_request` dry-run; `main` live publish when CalVer bumps). Uses **`pull_request`** on feature branches and **`push` to `main` only** so a PR branch push does not fire both events. **Gap:** no repo-wide workflow for UI packages — lint, typecheck, and `pnpm build` (or targeted Turbo filters) on every PR.
+**Status:** Partial — [ci.yml](../../.github/workflows/ci.yml) (**Monorepo CI**) runs parallel Monorepo quality (12 lockstep `@corpdk` packages in `PUBLISH_ORDER`) plus `quality-templates` for `templates/*` integration, then Sonar coverage + SonarCloud, then the Monorepo CI publish job ([`publish-ds-automation.yml`](../../.github/workflows/publish-ds-automation.yml) via `workflow_call`) when the orchestrator path filter matches (`pull_request` dry-run; `main` live publish when **any** lockstep package CalVer changes vs the merge parent). Uses **`pull_request`** on feature branches and **`push` to `main` only** so a PR branch push does not fire both events. **Gap:** no repo-wide workflow for UI packages — lint, typecheck, and `pnpm build` (or targeted Turbo filters) on every PR.
 
 Extend [ci.yml](../../.github/workflows/ci.yml) for shared UI packages and templates. Optional: Turbo remote cache (e.g. Vercel) for speed.
 
