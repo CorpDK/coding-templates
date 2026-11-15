@@ -46,27 +46,29 @@ jobs:
               - ".github/workflows/ci.yml"
               - ".github/scripts/publish-ds-automation.sh"
               - ".github/scripts/lockstep-calver.sh"
+              - ".github/scripts/ci-quality-lockstep-package.sh"
 
-  # Parallel quality groups (replaces the former single sequential DAL workflow job).
-  # | group          | Packages / scope |
-  # |----------------|------------------|
-  # | dal-core       | @corpdk/dal-core build + test |
-  # | pub-sub        | @corpdk/pub-sub build + test |
-  # | dal-codegen    | @corpdk/dal-codegen build + test |
-  # | ds-template    | @corpdk/ds turbo build + entity:lint |
-  # | publish-stack  | turbo build + engine-kit/create-ds tests for remaining lockstep packages |
+  # One parallel job per lockstep npm package (PUBLISH_ORDER in lockstep-calver.sh) plus @corpdk/ds template.
   quality:
-    name: Monorepo quality (${{ matrix.group }})
+    name: Monorepo quality (${{ matrix.package }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
-          - group: dal-core
-          - group: pub-sub
-          - group: dal-codegen
-          - group: ds-template
-          - group: publish-stack
+          - package: "@corpdk/graphql-dsl"
+          - package: "@corpdk/scalar-zod"
+          - package: "@corpdk/dal-core"
+          - package: "@corpdk/pub-sub"
+          - package: "@corpdk/graphql-input-zod"
+          - package: "@corpdk/dal-codegen"
+          - package: "@corpdk/engine-kit"
+          - package: "@corpdk/graphql-cli-core"
+          - package: "@corpdk/create-graphql-sdk"
+          - package: "@corpdk/create-graphql-cli"
+          - package: "@corpdk/codegen-cli"
+          - package: "@corpdk/create-ds"
+          - package: "@corpdk/ds"
     steps:
       - uses: actions/checkout@v4
 
@@ -79,53 +81,10 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
-      - name: dal-core
-        if: matrix.group == 'dal-core'
+      - name: Package quality
         run: |
-          pnpm --filter @corpdk/scalar-zod build
-          pnpm --filter @corpdk/scalar-zod test
-          pnpm --filter @corpdk/dal-core build
-          pnpm --filter @corpdk/dal-core test
-
-      - name: pub-sub
-        if: matrix.group == 'pub-sub'
-        run: |
-          pnpm --filter @corpdk/pub-sub build
-          pnpm --filter @corpdk/pub-sub test
-
-      - name: dal-codegen
-        if: matrix.group == 'dal-codegen'
-        run: |
-          pnpm --filter @corpdk/scalar-zod build
-          pnpm --filter @corpdk/dal-core build
-          pnpm --filter @corpdk/graphql-input-zod build
-          pnpm --filter @corpdk/dal-codegen build
-          pnpm --filter @corpdk/graphql-input-zod test
-          pnpm --filter @corpdk/dal-codegen test
-
-      - name: ds-template
-        if: matrix.group == 'ds-template'
-        run: |
-          # Turbo @corpdk/ds#build runs dal:codegen:schema → graphql-codegen → dal:codegen:impl → tsc
-          pnpm turbo run build --filter=@corpdk/ds
-          pnpm --filter @corpdk/ds entity:lint
-
-      - name: publish-stack
-        if: matrix.group == 'publish-stack'
-        run: |
-          pnpm turbo run build \
-            --filter=@corpdk/graphql-dsl \
-            --filter=@corpdk/scalar-zod \
-            --filter=@corpdk/graphql-input-zod \
-            --filter=@corpdk/engine-kit \
-            --filter=@corpdk/graphql-cli-core \
-            --filter=@corpdk/create-graphql-sdk \
-            --filter=@corpdk/create-graphql-cli \
-            --filter=@corpdk/codegen-cli \
-            --filter=@corpdk/create-ds
-          pnpm --filter @corpdk/engine-kit test
-          pnpm --filter @corpdk/create-ds test
-          node engines/create-ds/dist/scripts/check-canonical.js
+          chmod +x .github/scripts/ci-quality-lockstep-package.sh
+          .github/scripts/ci-quality-lockstep-package.sh '${{ matrix.package }}'
 
   sonar:
     name: SonarQube Analysis
