@@ -8,10 +8,10 @@ Health probes and optional OpenTelemetry tracing for `@corpdk/ds` (DAL-automated
 
 `GET /health` (same host/port as GraphQL, path `/health`):
 
-| HTTP | `status` in JSON | Meaning |
-| ---- | ---------------- | ------- |
+| HTTP | `status` in JSON | Meaning                         |
+| ---- | ---------------- | ------------------------------- |
 | 200  | `ok`             | Postgres reachable (`SELECT 1`) |
-| 503  | `degraded`       | Database ping failed |
+| 503  | `degraded`       | Database ping failed            |
 
 Response shape:
 
@@ -39,8 +39,8 @@ Set `DS_OTEL_ENABLED=false` to force tracing off when an endpoint is present (e.
 
 Optional:
 
-| Variable | Default |
-| -------- | ------- |
+| Variable            | Default      |
+| ------------------- | ------------ |
 | `OTEL_SERVICE_NAME` | `@corpdk/ds` |
 
 When enabled, `pnpm dev` and `pnpm start` preload observability (`--import ./src/observability/preload-otel.ts` in dev; `--import ./dist/src/observability/preload-otel.js` after `tsc`) so **pg** and **HTTP** instrumentation register before the pool is created. GraphQL operations get spans via a Yoga plugin with attributes `graphql.operation.name`, `graphql.operation.type`, `graphql.document` (operation source with sensitive **argument/object-field literals** redacted when the field name matches password/secret/token-style keys), and `graphql.variables` (JSON with the same key-based redaction, including nested objects). Other literals in `graphql.document` are unchanged. `GET /health` emits a `db.health_ping` span when tracing is on.

@@ -1,53 +1,34 @@
-import { outro } from "@clack/prompts";
-import { parseArgs, printHelp } from "./args.js";
-import { runInit } from "./init.js";
-import { runUpgrade } from "./upgrade.js";
+#!/usr/bin/env node
+import { CREATE_DS_HELP, parseCli, printHelp } from "./args.js";
+import { handleInit, handleUpgrade, handleVersion } from "./cli-handlers.js";
 import { repoRootFromEngine } from "./template.js";
 
-async function main(): Promise<void> {
-  const parsed = parseArgs(process.argv);
+async function main(): Promise<number> {
+  const parsed = parseCli(process.argv);
 
-  if (parsed.command === "help" || parsed.command === null) {
+  if (parsed.kind === "help") {
     printHelp();
-    process.exit(parsed.command === "help" ? 0 : 1);
+    return 0;
+  }
+
+  if (parsed.kind === "version") {
+    return handleVersion();
+  }
+
+  if (parsed.kind === "usage") {
+    console.error(parsed.message);
+    console.error(CREATE_DS_HELP);
+    return 2;
   }
 
   const repoRoot = repoRootFromEngine();
 
-  if (parsed.command === "init") {
-    await runInit({
-      targetDir: parsed.targetDir,
-      repoRoot,
-      packageName: parsed.packageName,
-      withDemoSchema: parsed.withDemoSchema,
-    });
-
-    outro(
-      `DS package ready at:\n  ${parsed.targetDir}\n\nNext steps:\n` +
-        `  cd ${parsed.targetDir}\n` +
-        `  pnpm install\n` +
-        `  pnpm dal:codegen\n`,
-    );
-    return;
+  if (parsed.kind === "init") {
+    return handleInit(parsed, repoRoot);
   }
 
-  if (parsed.command === "upgrade") {
-    await runUpgrade({
-      packageDir: parsed.targetDir,
-      repoRoot,
-    });
-
-    outro(
-      `Upgrade complete for:\n  ${parsed.targetDir}\n\nNext steps:\n` +
-        `  pnpm install\n` +
-        `  pnpm dal:codegen\n`,
-    );
-  }
+  return handleUpgrade(parsed, repoRoot);
 }
 
-try {
-  await main();
-} catch (err: unknown) {
-  console.error(err instanceof Error ? err.message : err);
-  process.exit(1);
-}
+const code = await main();
+process.exit(code);

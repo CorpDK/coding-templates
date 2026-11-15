@@ -1,106 +1,92 @@
-import fs from "node:fs/promises";
 import path from "node:path";
-import { spinner } from "@clack/prompts";
 import {
-  engineStarterDir,
-  isBundledCanonicalTemplate,
-  initialScaffoldCalVer,
-  readCreateDsReleaseVersion,
-  copyBootstrapStaticSrc,
-  resolveCanonicalDsTemplateDir,
-} from "./template.js";
-import {
-  copyDir,
-  execAsync,
   pathExists,
-  readJson,
-  writeJson,
-} from "./utils.js";
-import { mergePackageJson } from "./package-merge.js";
+  type EngineResult,
+  EXIT_SUCCESS,
+  EXIT_TOOL,
+  EXIT_USAGE,
+} from "@corpdk/engine-kit";
+import { exitCodeForEngineError } from "./engine-errors.js";
+import { spinner } from "@clack/prompts";
+import { CREATE_DS_ENGINE_ROOT } from "./constants.js";
+import { resolveCanonicalDsTemplateDir } from "./template.js";
+import { applyScaffoldLayout, ensureEmptyTarget } from "./init-layout.js";
 
 export interface InitOptions {
-  targetDir: string;
-  repoRoot: string;
-  packageName: string;
-  withDemoSchema: boolean;
+  dir: string;
+  name: string;
+  demoSchema?: boolean;
+  noInstall?: boolean;
+  dryRun?: boolean;
+  repoRoot?: string;
 }
 
-export async function runInit(options: InitOptions): Promise<void> {
-  const s = spinner();
-  const templateDir = await resolveCanonicalDsTemplateDir(options.repoRoot);
-  const targetDir = path.resolve(options.targetDir);
-  const dalCodegenCli = path.join(
-    options.repoRoot,
-    "libraries/dal-codegen/dist/cli.js",
-  );
+function initNextSteps(packageName: string, noInstall?: boolean): string[] {
+  const steps: string[] = [];
+  if (!noInstall) steps.push("pnpm install");
+  steps.push(`pnpm --filter ${packageName} dal:codegen`);
+  return steps;
+}
+
+export async function runInit(options: InitOptions): Promise<EngineResult> {
+  const repoRoot =
+    options.repoRoot ?? path.resolve(CREATE_DS_ENGINE_ROOT, "..", "..");
+  const targetDir = path.resolve(options.dir);
+
+  let templateDir: string;
+  try {
+    templateDir = await resolveCanonicalDsTemplateDir(repoRoot);
+  } catch (err: unknown) {
+    return {
+      exitCode: EXIT_TOOL,
+      changedFiles: [],
+      message: err instanceof Error ? err.message : String(err),
+    };
+  }
 
   if (!(await pathExists(templateDir))) {
-    throw new Error(`Canonical DS template not found: ${templateDir}`);
+    return {
+      exitCode: EXIT_USAGE,
+      changedFiles: [],
+      message: `Canonical DS template not found (looked under ${templateDir}).`,
+    };
   }
 
-  if (await pathExists(targetDir)) {
-    const entries = await fs.readdir(targetDir);
-    if (entries.length > 0) {
-      throw new Error(`Target directory is not empty: ${targetDir}`);
-    }
+  const emptyError = await ensureEmptyTarget(targetDir);
+  if (emptyError) {
+    return {
+      exitCode: EXIT_USAGE,
+      changedFiles: [],
+      message: emptyError,
+    };
   }
 
+  if (options.dryRun) {
+    return {
+      exitCode: EXIT_SUCCESS,
+      changedFiles: ["<scaffold layout>"],
+      nextSteps: initNextSteps(options.name, options.noInstall),
+    };
+  }
+
+  const s = spinner();
   s.start("Scaffolding DS package layout");
-  await fs.mkdir(targetDir, { recursive: true });
 
-  await copyDir(templateDir, targetDir, {
-    extraExclude: ["src", "drizzle"],
-  });
+  try {
+    await applyScaffoldLayout(options, repoRoot, templateDir, targetDir);
+    s.stop("DS package scaffolded");
 
-  const schemaSrc = options.withDemoSchema
-    ? path.join(templateDir, "src", "db", "schema")
-    : path.join(engineStarterDir(), "db", "schema");
-
-  await copyDir(schemaSrc, path.join(targetDir, "src", "db", "schema"));
-
-  if (options.withDemoSchema) {
-    const seedSrc = path.join(templateDir, "src", "db", "seed.ts");
-    if (await pathExists(seedSrc)) {
-      await fs.copyFile(seedSrc, path.join(targetDir, "src", "db", "seed.ts"));
-    }
+    return {
+      exitCode: EXIT_SUCCESS,
+      changedFiles: [],
+      nextSteps: initNextSteps(options.name, options.noInstall),
+    };
+  } catch (err: unknown) {
+    s.stop("Scaffold failed");
+    return {
+      exitCode: exitCodeForEngineError(err),
+      changedFiles: [],
+      message: err instanceof Error ? err.message : String(err),
+    };
   }
-
-  const starterDal = path.join(engineStarterDir(), "dal", "dal.config.yaml");
-  if (!options.withDemoSchema && (await pathExists(starterDal))) {
-    await fs.copyFile(
-      starterDal,
-      path.join(targetDir, "dal", "dal.config.yaml"),
-    );
-  }
-
-  const templatePkg = await readJson<Record<string, unknown>>(
-    path.join(templateDir, "package.json"),
-  );
-  const mergeOptions = isBundledCanonicalTemplate(templateDir)
-    ? { publishedCorpdkVersions: await readCreateDsReleaseVersion() }
-    : undefined;
-  const merged = mergePackageJson(
-    {
-      name: options.packageName,
-      version: initialScaffoldCalVer(),
-      license: "MIT",
-    },
-    templatePkg as Parameters<typeof mergePackageJson>[1],
-    mergeOptions,
-  );
-  await writeJson(path.join(targetDir, "package.json"), merged);
-
-  if (await pathExists(dalCodegenCli)) {
-    await execAsync(`node "${dalCodegenCli}" --mode=bootstrap`, {
-      cwd: targetDir,
-    });
-  } else {
-    for (const rel of ["src/schema.ts", "src/index.ts", "src/db/index.ts"]) {
-      await fs.copyFile(path.join(templateDir, rel), path.join(targetDir, rel));
-    }
-  }
-
-  await copyBootstrapStaticSrc(templateDir, targetDir);
-
-  s.stop("DS package scaffolded");
 }

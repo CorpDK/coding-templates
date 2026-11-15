@@ -4,7 +4,7 @@
 
 Use `pnpm create-app` to scaffold a new project from any combination of these templates.
 
-To scaffold a new DAL-automated DS package or merge template upgrades into an existing one (team-owned **`src/db/schema/**`** only), use `pnpm create-ds init` or `pnpm create-ds upgrade` — see [DS automation upgrades](../developer/ds-automation-upgrades.md).
+To scaffold a new DAL-automated DS package or merge template upgrades into an existing one (team-owned **`src/db/schema/**`** only), use `pnpm create-ds init`or`pnpm create-ds upgrade` — see [DS automation upgrades](../developer/ds-automation-upgrades.md).
 
 ---
 

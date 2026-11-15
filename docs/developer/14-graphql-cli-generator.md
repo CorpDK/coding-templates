@@ -10,14 +10,14 @@ Design specification for a **GraphQL automation CLI** that **wraps a sibling SDK
 
 **Revision history**
 
-| Rev | Date | Change |
-| --- | ---- | ------ |
-| 1 | 2026-11-08 | Initial proposal (built on SDK design rev 1) |
-| 2 | 2026-11-12 | Gap review (Appendix A). Aligned to SDK design rev 6 (L1/L2/L3, genql-fork DSL, `./validation` entry, Zod as an optional peer, private `templates/ds-sdk`). Selection policy redesigned for wrapper types and proven on the full DAL schema. Added: flag and argument spec, exit codes, auth, LLM command catalog, destructive-operation guard, full monorepo migration, testing, and a remaining-work register. |
-| 3 | 2026-11-12 | **Shared runtime over copied code:** the CLI runtime moves from per-package `canonical/src/runtime/*` copies into `@corpdk/graphql-cli-core` (entry `.`; generator at `./codegen`). A generated CLI is now a `cli.ts` binding + generated catalog + user extensions. **Top-level custom-scalar arguments** are validated with the SDK's `scalarZodSchemas` (SDK rev 7). Owners assigned. |
-| 4 | 2026-11-13 | **Final cross-design review.** No joint PR: the SDK removes `../ds-sdk` in SDK P2, the CLI removes `../ds-cli` in C-P3. C-P2 also needs SDK P1c; R-C03/04/05 close against a fixture SDK in C-P2 and E2E in C-P3. `scalarZodSchemaName` / `scalarWire` on `ArgDescriptor`; scalar-registry stale check; JSON scalars from SDK `scalarWireFormats`. `graphql-cli-core` depends on `graphql-input-zod` (types); engine adds `graphql`. Scripts renamed `cli:codegen` / `cli:check`; `init --defer-generate`, `runInit` export. Publish bootstrap; `create-ds` work moved to [doc 15](15-create-ds-generator-integration.md); `create-app` declared frozen and out of scope (R-C13 dropped). Engine built on the shared `@corpdk/engine-kit` with the `create-ds`-style contract (doc 15 §11). |
-| 5 | 2026-11-13 | **Second review.** `create-graphql-cli` publishes in C-P3 (with `create-ds --with-cli`, doc 15 DS-P2); C-P1 needs SDK P1a; selection files named by command; `graphql-cli-core` codegen API; `--version`; stale comments fixed. |
-| 6 | 2026-11-13 | **Linear comparison adopted.** Stubs follow the **lookup rule**: a related object is stubbed with exactly the required arguments of the root query that fetches it, and embedded when no such query exists (§3.3). `--all` / `--max-pages` page through Relay connections with the SDK paginator (§4.10). Exit codes come from the SDK's error normaliser (§4.4). `describe --json` lists follow-up commands for stubs. Package bootstrap phase B0 replaces the per-phase bootstrap steps. R-C17 to R-C19. |
+| Rev | Date       | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| --- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | 2026-11-08 | Initial proposal (built on SDK design rev 1)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| 2   | 2026-11-12 | Gap review (Appendix A). Aligned to SDK design rev 6 (L1/L2/L3, genql-fork DSL, `./validation` entry, Zod as an optional peer, private `templates/ds-sdk`). Selection policy redesigned for wrapper types and proven on the full DAL schema. Added: flag and argument spec, exit codes, auth, LLM command catalog, destructive-operation guard, full monorepo migration, testing, and a remaining-work register.                                                                                                                                                                                                                                                                                                                                                                            |
+| 3   | 2026-11-12 | **Shared runtime over copied code:** the CLI runtime moves from per-package `canonical/src/runtime/*` copies into `@corpdk/graphql-cli-core` (entry `.`; generator at `./codegen`). A generated CLI is now a `cli.ts` binding + generated catalog + user extensions. **Top-level custom-scalar arguments** are validated with the SDK's `scalarZodSchemas` (SDK rev 7). Owners assigned.                                                                                                                                                                                                                                                                                                                                                                                                    |
+| 4   | 2026-11-13 | **Final cross-design review.** No joint PR: the SDK removes `../ds-sdk` in SDK P2, the CLI removes `../ds-cli` in C-P3. C-P2 also needs SDK P1c; R-C03/04/05 close against a fixture SDK in C-P2 and E2E in C-P3. `scalarZodSchemaName` / `scalarWire` on `ArgDescriptor`; scalar-registry stale check; JSON scalars from SDK `scalarWireFormats`. `graphql-cli-core` depends on `graphql-input-zod` (types); engine adds `graphql`. Scripts renamed `cli:codegen` / `cli:check`; `init --defer-generate`, `runInit` export. Publish bootstrap; `create-ds` work moved to [doc 15](15-create-ds-generator-integration.md); `create-app` declared frozen and out of scope (R-C13 dropped). Engine built on the shared `@corpdk/engine-kit` with the `create-ds`-style contract (doc 15 §11). |
+| 5   | 2026-11-13 | **Second review.** `create-graphql-cli` publishes in C-P3 (with `create-ds --with-cli`, doc 15 DS-P2); C-P1 needs SDK P1a; selection files named by command; `graphql-cli-core` codegen API; `--version`; stale comments fixed.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| 6   | 2026-11-13 | **Linear comparison adopted.** Stubs follow the **lookup rule**: a related object is stubbed with exactly the required arguments of the root query that fetches it, and embedded when no such query exists (§3.3). `--all` / `--max-pages` page through Relay connections with the SDK paginator (§4.10). Exit codes come from the SDK's error normaliser (§4.4). `describe --json` lists follow-up commands for stubs. Package bootstrap phase B0 replaces the per-phase bootstrap steps. R-C17 to R-C19.                                                                                                                                                                                                                                                                                  |
 
 **Related:** [13-graphql-sdk-generator.md](13-graphql-sdk-generator.md) (SDK design, rev 11) · [11-ds-subscription-sse.md](11-ds-subscription-sse.md) · [ds-automation-upgrades.md](ds-automation-upgrades.md) · [graphql-dal-requirements.md](graphql-dal-requirements.md) · legacy [`@corpdk/codegen-cli`](../../libraries/codegen-cli)
 
@@ -25,19 +25,19 @@ Design specification for a **GraphQL automation CLI** that **wraps a sibling SDK
 
 ## 1. Goals and non-goals
 
-| Goals | Non-goals |
-| ----- | --------- |
-| Scaffold and regenerate a **CLI npm package** from the **same schema snapshot** as its SDK | GraphQL server, DAL, resolvers, `typescript-resolvers` |
-| **Wrap the SDK**: L2 DSL for documents, L1 `Types.*` for typing, L3 validators for input checks (SDK §3) | Re-implementing SDK layers inside the CLI, or CLI-owned Zod codegen |
-| **Non-interactive** mode for scripts, CI, and LLM agents: kebab-case commands and flags, variables file, stdin JSON | Browser or app runtimes (Apollo, urql) |
-| **Interactive** mode for humans (`@clack/prompts`), only on a TTY | WebSocket subscriptions |
-| **Machine-readable command catalog** (`commands --json`, `describe <cmd> --json` with JSON Schema), so agents can discover operations without scraping help text | Natural-language command parsing |
-| **Bounded documents**: the relation-ids selection policy (§3.3) works on payload, connection, and union wrappers | Deep nested selection trees (legacy depth-6 expansion) |
-| **Live API only**: every invocation does fresh HTTP or SSE | Caching, persisted queries, offline replay |
-| **Safe by default** for destructive operations (§4.6) | Policy enforcement beyond a confirm gate (authorization is the server's job) |
-| Generic **any GraphQL API**; endpoint and auth from env | DS-specific env names (`DS_HTTP_URL`) in the generated CLI |
-| Engine shaped like `@corpdk/create-ds` / `@corpdk/create-graphql-sdk` | Being a GraphQL Code Generator preset (§2.4) |
-| Depend only on packages that pass the SDK dependency policy ([SDK §16](13-graphql-sdk-generator.md#16-dependency-policy)) | |
+| Goals                                                                                                                                                            | Non-goals                                                                    |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Scaffold and regenerate a **CLI npm package** from the **same schema snapshot** as its SDK                                                                       | GraphQL server, DAL, resolvers, `typescript-resolvers`                       |
+| **Wrap the SDK**: L2 DSL for documents, L1 `Types.*` for typing, L3 validators for input checks (SDK §3)                                                         | Re-implementing SDK layers inside the CLI, or CLI-owned Zod codegen          |
+| **Non-interactive** mode for scripts, CI, and LLM agents: kebab-case commands and flags, variables file, stdin JSON                                              | Browser or app runtimes (Apollo, urql)                                       |
+| **Interactive** mode for humans (`@clack/prompts`), only on a TTY                                                                                                | WebSocket subscriptions                                                      |
+| **Machine-readable command catalog** (`commands --json`, `describe <cmd> --json` with JSON Schema), so agents can discover operations without scraping help text | Natural-language command parsing                                             |
+| **Bounded documents**: the relation-ids selection policy (§3.3) works on payload, connection, and union wrappers                                                 | Deep nested selection trees (legacy depth-6 expansion)                       |
+| **Live API only**: every invocation does fresh HTTP or SSE                                                                                                       | Caching, persisted queries, offline replay                                   |
+| **Safe by default** for destructive operations (§4.6)                                                                                                            | Policy enforcement beyond a confirm gate (authorization is the server's job) |
+| Generic **any GraphQL API**; endpoint and auth from env                                                                                                          | DS-specific env names (`DS_HTTP_URL`) in the generated CLI                   |
+| Engine shaped like `@corpdk/create-ds` / `@corpdk/create-graphql-sdk`                                                                                            | Being a GraphQL Code Generator preset (§2.4)                                 |
+| Depend only on packages that pass the SDK dependency policy ([SDK §16](13-graphql-sdk-generator.md#16-dependency-policy))                                        |                                                                              |
 
 ---
 
@@ -59,9 +59,9 @@ schema sources ──create-graphql-sdk sync──► SDK snapshot (schema/schem
                                                                HTTP + SSE to the API
 ```
 
-| Package | Generator | Transport? | What it uses from the other |
-| ------- | --------- | ---------- | --------------------------- |
-| **SDK** | `create-graphql-sdk` | No | n/a |
+| Package | Generator            | Transport?              | What it uses from the other                                                                                                                                                                     |
+| ------- | -------------------- | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **SDK** | `create-graphql-sdk` | No                      | n/a                                                                                                                                                                                             |
 | **CLI** | `create-graphql-cli` | **Yes** (`fetch` + SSE) | L2 `buildQuery` / `buildMutation` / `buildSubscription` and selection types; L1 `Types.*`; L3 `inputZodSchemas` + parse helpers from `<sdk>/validation`; the snapshot (`<sdk>/schema.graphqls`) |
 
 **One schema, no CLI-level schema sources.** The CLI always reads its SDK's committed snapshot. Revision 1 let `cli.config.yaml` point at its own schema source "to trim harder"; that could make generated selections disagree with the SDK's types and validators. Trimming is done with `include` / `exclude` (§3.6) instead.
@@ -88,12 +88,12 @@ pnpm --filter @corpdk/ds-cli build            # create-graphql-cli generate . + 
 
 ### 2.4 `@corpdk/codegen-cli` vs `@corpdk/create-graphql-cli`
 
-| | `@corpdk/codegen-cli` (legacy) | `@corpdk/create-graphql-cli` |
-| --- | --- | --- |
-| **What it is** | A GraphQL Code Generator **preset** run inside each DS `pnpm codegen` | An **engine / bin** that scaffolds and regenerates a CLI package |
-| **When it runs** | During DS server codegen (all six DS `codegen.ts` + `create-ds` canonical) | On demand or in the CLI package's `build` |
-| **Output** | Monolithic `../ds-cli/src/generated/index.js` with depth-6 selections, plus man/texi. A copy generated on 2026-10-05 (older schema, 152 operations) is 491 KB. | `src/cli.ts` binding + `src/generated/*` (catalog and selections); the runtime lives in `@corpdk/graphql-cli-core`. About 40 KB of documents for today's 166 operations (Appendix B). |
-| **Uses the SDK?** | No | Yes |
+|                   | `@corpdk/codegen-cli` (legacy)                                                                                                                                 | `@corpdk/create-graphql-cli`                                                                                                                                                          |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **What it is**    | A GraphQL Code Generator **preset** run inside each DS `pnpm codegen`                                                                                          | An **engine / bin** that scaffolds and regenerates a CLI package                                                                                                                      |
+| **When it runs**  | During DS server codegen (all six DS `codegen.ts` + `create-ds` canonical)                                                                                     | On demand or in the CLI package's `build`                                                                                                                                             |
+| **Output**        | Monolithic `../ds-cli/src/generated/index.js` with depth-6 selections, plus man/texi. A copy generated on 2026-10-05 (older schema, 152 operations) is 491 KB. | `src/cli.ts` binding + `src/generated/*` (catalog and selections); the runtime lives in `@corpdk/graphql-cli-core`. About 40 KB of documents for today's 166 operations (Appendix B). |
+| **Uses the SDK?** | No                                                                                                                                                             | Yes                                                                                                                                                                                   |
 
 What is superseded is the **integration pattern** "DS `codegen.ts` → preset → sibling `ds-cli`".
 
@@ -101,22 +101,22 @@ What is superseded is the **integration pattern** "DS `codegen.ts` → preset �
 
 **Decision:** one shared library, `libraries/graphql-cli-core` (`@corpdk/graphql-cli-core`, npmjs, CalVer), holds **both** the generator side and the runtime, as two entry points (the same split as `@corpdk/graphql-dsl` and `@corpdk/graphql-input-zod`):
 
-| Entry | Used by | Contents | Dependencies |
-| ----- | ------- | -------- | ------------ |
-| `@corpdk/graphql-cli-core/codegen` | `create-graphql-cli` | Operation extraction, relation-ids selection emitter (§3.3), naming and collision rules (§3.6), catalog emitter, man/texi emitters | peer `graphql` ^16 \|\| ^17 |
-| `@corpdk/graphql-cli-core` | Every generated CLI at runtime | `runCli()`: dispatch, flag parsing and coercion, variable merge, validation calls, HTTP and SSE transport, output and exit codes, catalog/describe, interactive mode, destructive guard | `@clack/prompts`; `@corpdk/graphql-input-zod` (shared parse-result and issue types); `@corpdk/graphql-dsl` (error normaliser and connection paginator, SDK §3.8); peer `zod` ^4 |
+| Entry                              | Used by                        | Contents                                                                                                                                                                                | Dependencies                                                                                                                                                                    |
+| ---------------------------------- | ------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `@corpdk/graphql-cli-core/codegen` | `create-graphql-cli`           | Operation extraction, relation-ids selection emitter (§3.3), naming and collision rules (§3.6), catalog emitter, man/texi emitters                                                      | peer `graphql` ^16 \|\| ^17                                                                                                                                                     |
+| `@corpdk/graphql-cli-core`         | Every generated CLI at runtime | `runCli()`: dispatch, flag parsing and coercion, variable merge, validation calls, HTTP and SSE transport, output and exit codes, catalog/describe, interactive mode, destructive guard | `@clack/prompts`; `@corpdk/graphql-input-zod` (shared parse-result and issue types); `@corpdk/graphql-dsl` (error normaliser and connection paginator, SDK §3.8); peer `zod` ^4 |
 
 The runtime is written once. A generated CLI passes in its SDK's functions (§3.2), so `graphql-cli-core` never imports a specific SDK. Runtime fixes reach every CLI through a dependency update; no regenerate or `upgrade` is needed.
 
 The GraphQL Code Generator preset surface is **not** carried forward.
 
-| Current file (`libraries/codegen-cli/src`) | Fate | Target |
-| ------------------------------------------ | ---- | ------ |
+| Current file (`libraries/codegen-cli/src`)                                                                    | Fate               | Target                                                                                   |
+| ------------------------------------------------------------------------------------------------------------- | ------------------ | ---------------------------------------------------------------------------------------- |
 | `schema-utils.ts`: `extractOperations`, `OperationDescriptor`, `buildDocument`, `buildSelectionSet` (depth 6) | **Move + rewrite** | `codegen/extract-operations.ts`, `codegen/selection.ts` (relation-ids, §3.3), `types.ts` |
-| `gen-man.ts` | **Move** | `codegen/emit-man.ts`; env text uses the configured endpoint variable |
-| `gen-info.ts` | **Move** | `codegen/emit-texi.ts`; same |
-| `gen-cli.ts` (runtime + `OPERATIONS` + `fetch` + SSE as strings) | **Do not port** | Replaced by the typed runtime entry `@corpdk/graphql-cli-core` (`runCli`) |
-| `index.ts` (`Types.OutputPreset`) | **Deprecate** | No replacement export |
+| `gen-man.ts`                                                                                                  | **Move**           | `codegen/emit-man.ts`; env text uses the configured endpoint variable                    |
+| `gen-info.ts`                                                                                                 | **Move**           | `codegen/emit-texi.ts`; same                                                             |
+| `gen-cli.ts` (runtime + `OPERATIONS` + `fetch` + SSE as strings)                                              | **Do not port**    | Replaced by the typed runtime entry `@corpdk/graphql-cli-core` (`runCli`)                |
+| `index.ts` (`Types.OutputPreset`)                                                                             | **Deprecate**      | No replacement export                                                                    |
 
 `graphql-cli-core` has no dependency on any SDK package. Codegen entry: `emitCliModules(schema, { selection, include, exclude, guard, output, man }) → { commands, runtimeConfig, selections: Record<command, source>, man?, texi?, warnings }`, the inputs coming from `cli.config.yaml`. Its codegen entry emits selection objects as text; its runtime receives the SDK's `build*` and validation functions from the generated `cli.ts`.
 
@@ -124,12 +124,12 @@ The GraphQL Code Generator preset surface is **not** carried forward.
 
 `@corpdk/codegen-cli` **is published** (2026.10.0-alpha.13, updated 2026-11-05) in the lockstep DS automation set.
 
-| Milestone | Action |
-| --------- | ------ |
-| C-P1 | `graphql-cli-core` created; codegen-cli unchanged |
-| C-P3 | Remove the preset from all six DS `codegen.ts` + `create-ds` canonical; drop `@corpdk/codegen-cli` from DS `package.json` files (the SDK's `../ds-sdk` target is already gone in SDK P2) |
+| Milestone          | Action                                                                                                                                                                                     |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| C-P1               | `graphql-cli-core` created; codegen-cli unchanged                                                                                                                                          |
+| C-P3               | Remove the preset from all six DS `codegen.ts` + `create-ds` canonical; drop `@corpdk/codegen-cli` from DS `package.json` files (the SDK's `../ds-sdk` target is already gone in SDK P2)   |
 | Release after C-P3 | Publish a final `@corpdk/codegen-cli` with a README deprecation notice, then `npm deprecate @corpdk/codegen-cli "Replaced by @corpdk/create-graphql-cli"`. Remove it from `PUBLISH_ORDER`. |
-| One quarter later | Delete `libraries/codegen-cli` from the monorepo if no in-repo callers remain (CI-checked) |
+| One quarter later  | Delete `libraries/codegen-cli` from the monorepo if no in-repo callers remain (CI-checked)                                                                                                 |
 
 ---
 
@@ -169,9 +169,19 @@ import type { Selections } from "@corpdk/ds-sdk";
 
 export const createItemSelection = {
   item: {
-    createdAt: true, createdBy: true, description: true, hasAttachments: true, id: true,
-    isActive: true, name: true, updatedAt: true, updatedBy: true,
-    category: { id: true }, detail: { id: true }, itemTags: { id: true }, orderLines: { id: true },
+    createdAt: true,
+    createdBy: true,
+    description: true,
+    hasAttachments: true,
+    id: true,
+    isActive: true,
+    name: true,
+    updatedAt: true,
+    updatedBy: true,
+    category: { id: true },
+    detail: { id: true },
+    itemTags: { id: true },
+    orderLines: { id: true },
   },
   userErrors: { code: true, field: true, id: true, message: true },
 } satisfies Selections.CreateItemPayloadSelection;
@@ -198,12 +208,20 @@ process.exitCode = await runCli({
 ```ts
 // inside @corpdk/graphql-cli-core runCli() — written once, shared by every CLI (simplified)
 const op = catalog[commandName];
-const vars = await collectVariables(op, argv, stdin);            // §4.2–4.3
-const checked = validateVariables(op, vars, sdk.validation);     // §3.5
+const vars = await collectVariables(op, argv, stdin); // §4.2–4.3
+const checked = validateVariables(op, vars, sdk.validation); // §3.5
 if (!checked.ok) return exit(3, checked.issues);
-const build = { query: sdk.buildQuery, mutation: sdk.buildMutation, subscription: sdk.buildSubscription }[op.kind];
-const built = build({ [op.field]: { __args: checked.variables, ...op.selection } });
-return op.kind === "subscription" ? streamSse(built, config) : postHttp(built, config);
+const build = {
+  query: sdk.buildQuery,
+  mutation: sdk.buildMutation,
+  subscription: sdk.buildSubscription,
+}[op.kind];
+const built = build({
+  [op.field]: { __args: checked.variables, ...op.selection },
+});
+return op.kind === "subscription"
+  ? streamSse(built, config)
+  : postHttp(built, config);
 ```
 
 `runCli` takes a structural `SdkBindings` type: the three `build*` functions plus the `./validation` exports (§3.5). Any SDK produced by `create-graphql-sdk` satisfies it, and `tsc` checks the binding.
@@ -219,15 +237,15 @@ Legacy expands every object field to depth 6. That fits exploration, not automat
 
 #### 3.3.1 Definitions
 
-| Term | Rule |
-| ---- | ---- |
-| **Lookup** | A root `Query` field that returns one `T` (not a list, nullable or not) where every required argument without a default has a leaf type and matches, by name and named type, a leaf field of `T`. `user(id: ID!): User` is a lookup for `User`, because `User.id: ID` exists. `items(limit: Int): [Item!]!` is not (list). Optional arguments (`includeDeleted`) are ignored. |
-| **Lookup choice** | When `T` has several lookups: `selection.lookup.<T>` if set; else the field named after the type (`user` for `User`); else the one with the fewest required arguments; else the alphabetically first. When `T` has no lookup but implements an interface with one (Relay `node(id: ID!): Node`), that interface lookup is used. |
-| **Entity** | An object type with a lookup. Its **stub** is the lookup's required arguments, as fields: `{ id }` for `user(id:)`, `{ slug }` for `project(slug:)`, `{ orgId number }` for `issue(orgId:, number:)`. |
-| **Embedded type** | Any other object type: payloads (`CreateItemPayload`), connections, edges, `PageInfo`, aggregates, bulk results, change events, status objects, value objects, `MutationUserError`. It cannot be fetched on its own, so it is selected in full. |
-| **Abstract** | A union or interface |
-| **Focus entity** | The first entity reached from the operation root by passing only through embedded types or abstracts |
-| **Nested connection** | A Relay connection field (SDK §3.8.2 shape) that is not a root field |
+| Term                  | Rule                                                                                                                                                                                                                                                                                                                                                                          |
+| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Lookup**            | A root `Query` field that returns one `T` (not a list, nullable or not) where every required argument without a default has a leaf type and matches, by name and named type, a leaf field of `T`. `user(id: ID!): User` is a lookup for `User`, because `User.id: ID` exists. `items(limit: Int): [Item!]!` is not (list). Optional arguments (`includeDeleted`) are ignored. |
+| **Lookup choice**     | When `T` has several lookups: `selection.lookup.<T>` if set; else the field named after the type (`user` for `User`); else the one with the fewest required arguments; else the alphabetically first. When `T` has no lookup but implements an interface with one (Relay `node(id: ID!): Node`), that interface lookup is used.                                               |
+| **Entity**            | An object type with a lookup. Its **stub** is the lookup's required arguments, as fields: `{ id }` for `user(id:)`, `{ slug }` for `project(slug:)`, `{ orgId number }` for `issue(orgId:, number:)`.                                                                                                                                                                         |
+| **Embedded type**     | Any other object type: payloads (`CreateItemPayload`), connections, edges, `PageInfo`, aggregates, bulk results, change events, status objects, value objects, `MutationUserError`. It cannot be fetched on its own, so it is selected in full.                                                                                                                               |
+| **Abstract**          | A union or interface                                                                                                                                                                                                                                                                                                                                                          |
+| **Focus entity**      | The first entity reached from the operation root by passing only through embedded types or abstracts                                                                                                                                                                                                                                                                          |
+| **Nested connection** | A Relay connection field (SDK §3.8.2 shape) that is not a root field                                                                                                                                                                                                                                                                                                          |
 
 #### 3.3.2 Rules
 
@@ -246,15 +264,15 @@ Rev 5's rule stubbed any type with a non-null `id`, even when no command could f
 
 #### 3.3.3 Results on the DAL schema (prototype, Appendix B)
 
-| Operation | Generated selection (abridged) |
-| --------- | ------------------------------ |
-| `order(id)` | Order leaves + `lines { id } user { id }` |
-| `createItem(input)` | `item { …leaves… category { id } detail { id } itemTags { id } orderLines { id } } userErrors { code field id message }` |
-| `itemConnection(...)` | `nodes { …Item row… } pageInfo { endCursor hasNextPage hasPreviousPage startCursor }` |
+| Operation                     | Generated selection (abridged)                                                                                                      |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `order(id)`                   | Order leaves + `lines { id } user { id }`                                                                                           |
+| `createItem(input)`           | `item { …leaves… category { id } detail { id } itemTags { id } orderLines { id } } userErrors { code field id message }`            |
+| `itemConnection(...)`         | `nodes { …Item row… } pageInfo { endCursor hasNextPage hasPreviousPage startCursor }`                                               |
 | `bulkCreateItem(...)` (union) | `__typename ... on BulkMutationResult { failureCount successCount userErrors {…} } ... on ItemListPayload { items { …Item row… } }` |
-| `itemChanged(...)` | `count ids isTruncated operation` |
-| `status` | `ok timestamp` |
-| `hello(name)` | none (scalar root) |
+| `itemChanged(...)`            | `count ids isTruncated operation`                                                                                                   |
+| `status`                      | `ok timestamp`                                                                                                                      |
+| `hello(name)`                 | none (scalar root)                                                                                                                  |
 
 Across all 166 DAL operations, the rev 5 rule produced documents that all passed `graphql.validate`, with no warnings. The largest was 733 bytes; the total was 39.7 KB.
 
@@ -267,15 +285,15 @@ Follow-up reads are explicit and stateless: `ds-cli order --id "$ID"` returns `u
 ```yaml
 # cli.config.yaml
 selection:
-  policy: relation-ids          # only policy in v1
-  connection: nodes             # nodes | edges
+  policy: relation-ids # only policy in v1
+  connection: nodes # nodes | edges
   maxWrapperDepth: 4
-  lookup:                       # optional, per type
-    User: userByEmail           # pick this lookup when several exist
-    LegacyRef: { fields: [code] }   # force a stub for a type with no lookup
-  overrides:                    # per-operation additions, by GraphQL field name
+  lookup: # optional, per type
+    User: userByEmail # pick this lookup when several exist
+    LegacyRef: { fields: [code] } # force a stub for a type with no lookup
+  overrides: # per-operation additions, by GraphQL field name
     order:
-      expand: [lines]           # select lines' full rows (their own relations stay stubs)
+      expand: [lines] # select lines' full rows (their own relations stay stubs)
 ```
 
 - `overrides.<field>.expand` widens one relation (or includes one nested connection) for one operation without changing the global policy. Its effect is bounded by rule 4 one level below.
@@ -286,36 +304,39 @@ selection:
 
 ```ts
 export interface CommandDescriptor {
-  command: string;                 // kebab-case, collision-resolved (§3.6)
+  command: string; // kebab-case, collision-resolved (§3.6)
   kind: "query" | "mutation" | "subscription";
-  field: string;                   // GraphQL root field name
-  description?: string;            // from the schema
-  deprecated?: string;             // deprecation reason; help marks it
-  destructive: boolean;            // §4.6
-  paginated?: { direction: "forward" | "backward" | "both"; nodes: "nodes" | "edges" }; // Relay root connection (§4.10)
-  followUps: FollowUp[];           // one per stub in the selection (§3.3)
+  field: string; // GraphQL root field name
+  description?: string; // from the schema
+  deprecated?: string; // deprecation reason; help marks it
+  destructive: boolean; // §4.6
+  paginated?: {
+    direction: "forward" | "backward" | "both";
+    nodes: "nodes" | "edges";
+  }; // Relay root connection (§4.10)
+  followUps: FollowUp[]; // one per stub in the selection (§3.3)
   args: ArgDescriptor[];
-  selection: object;               // from generated/selections/*
+  selection: object; // from generated/selections/*
 }
 
 export interface FollowUp {
-  path: string;                    // result path of the stub, e.g. "order.user"
-  type: string;                    // GraphQL type, e.g. "User"
-  command: string;                 // lookup command, e.g. "user"
-  flags: Record<string, string>;   // stub field → flag, e.g. { id: "--id" }
+  path: string; // result path of the stub, e.g. "order.user"
+  type: string; // GraphQL type, e.g. "User"
+  command: string; // lookup command, e.g. "user"
+  flags: Record<string, string>; // stub field → flag, e.g. { id: "--id" }
 }
 
 export interface ArgDescriptor {
-  name: string;                    // GraphQL argument name
-  flag: string;                    // CLI flag, kebab-case, collision-resolved (§4.1)
-  graphqlType: string;             // wire type, e.g. "[ItemCreateInput!]!"
+  name: string; // GraphQL argument name
+  flag: string; // CLI flag, kebab-case, collision-resolved (§4.1)
+  graphqlType: string; // wire type, e.g. "[ItemCreateInput!]!"
   kind: "scalar" | "enum" | "input";
   list: boolean;
-  required: boolean;               // non-null without default
+  required: boolean; // non-null without default
   defaultValue?: unknown;
   enumValues?: string[];
-  inputZodSchemaName?: string;     // set when kind === "input"; key of SDK inputZodSchemas
-  scalarZodSchemaName?: string;    // set for custom scalars; key of SDK scalarZodSchemas
+  inputZodSchemaName?: string; // set when kind === "input"; key of SDK inputZodSchemas
+  scalarZodSchemaName?: string; // set for custom scalars; key of SDK scalarZodSchemas
   scalarWire?: "string" | "json"; // custom scalars: from SDK scalarWireFormats (§4.2)
   description?: string;
 }
@@ -330,24 +351,39 @@ The CLI generates no Zod. Input-object variables **and top-level custom-scalar a
 export interface SdkValidationBindings {
   inputZodSchemas: Record<string, ZodType>;
   scalarZodSchemas: Record<string, ZodType>;
-  safeParseGraphqlInput(name: string, value: unknown): GraphqlInputParseResult<unknown>;
-  safeParseOptionalGraphqlInput(name: string, value: unknown): GraphqlInputParseResult<unknown>;
-  safeParseGraphqlInputList(name: string, value: unknown): GraphqlInputParseResult<unknown>;
-  safeParseOptionalGraphqlInputList(name: string, value: unknown): GraphqlInputParseResult<unknown>;
-  safeParseGraphqlScalar(name: string, value: unknown): GraphqlInputParseResult<unknown>;
+  safeParseGraphqlInput(
+    name: string,
+    value: unknown,
+  ): GraphqlInputParseResult<unknown>;
+  safeParseOptionalGraphqlInput(
+    name: string,
+    value: unknown,
+  ): GraphqlInputParseResult<unknown>;
+  safeParseGraphqlInputList(
+    name: string,
+    value: unknown,
+  ): GraphqlInputParseResult<unknown>;
+  safeParseOptionalGraphqlInputList(
+    name: string,
+    value: unknown,
+  ): GraphqlInputParseResult<unknown>;
+  safeParseGraphqlScalar(
+    name: string,
+    value: unknown,
+  ): GraphqlInputParseResult<unknown>;
 }
 ```
 
 `GraphqlInputParseResult` and the helper logic come from `@corpdk/graphql-input-zod` ([SDK §7.4](13-graphql-sdk-generator.md#74-parse-helpers)). The SDK, the CLI, forms, and scripts all use the same code.
 
-| Argument shape | SDK call |
-| -------------- | -------- |
-| `input: FooInput!` | `safeParseGraphqlInput("FooInput", v)` |
-| `filter: FooInput` | `safeParseOptionalGraphqlInput` |
-| `inputs: [FooInput!]!` | `safeParseGraphqlInputList` |
-| `inputs: [FooInput!]` | `safeParseOptionalGraphqlInputList` |
-| Custom scalar (`since: DateTime`), or list of them | `safeParseGraphqlScalar("DateTime", v)` per value, using the same wire rules as input-object fields (SDK `scalarZodSchemas`) |
-| Built-in scalars (`Int`, `Float`, `Boolean`, `String`, `ID`), enums, lists of them | Checked by the flag parser (§4.2): type, enum membership, integer range |
+| Argument shape                                                                     | SDK call                                                                                                                     |
+| ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `input: FooInput!`                                                                 | `safeParseGraphqlInput("FooInput", v)`                                                                                       |
+| `filter: FooInput`                                                                 | `safeParseOptionalGraphqlInput`                                                                                              |
+| `inputs: [FooInput!]!`                                                             | `safeParseGraphqlInputList`                                                                                                  |
+| `inputs: [FooInput!]`                                                              | `safeParseOptionalGraphqlInputList`                                                                                          |
+| Custom scalar (`since: DateTime`), or list of them                                 | `safeParseGraphqlScalar("DateTime", v)` per value, using the same wire rules as input-object fields (SDK `scalarZodSchemas`) |
+| Built-in scalars (`Int`, `Float`, `Boolean`, `String`, `ID`), enums, lists of them | Checked by the flag parser (§4.2): type, enum membership, integer range                                                      |
 
 **On failure:** stderr gets `{"error":"validation","issues":[{ "arg", "path", "message", "code" }]}`, the exit code is **3**, and **no request is sent**.
 
@@ -372,7 +408,7 @@ The DAL server's column-aware rules may be stricter; the server wins at runtime 
 
 ```yaml
 include:
-  queries: []            # [] = all
+  queries: [] # [] = all
   mutations: []
   subscriptions: []
 exclude:
@@ -393,35 +429,35 @@ commands:
 
 **Reserved global flags.** These names are taken; a GraphQL argument whose flag would collide with one is emitted as `--arg-<name>` (warning at generate time).
 
-| Flag | Applies to | Meaning |
-| ---- | ---------- | ------- |
-| `--vars-file <path>` | all | Read variables from a JSON file |
-| `--endpoint <url>` | all | Override the endpoint env variable |
-| `--timeout-ms <n>` | all | HTTP request timeout (default 30000); for subscriptions, stop after this long (exit 0) |
-| `--max-events <n>` | subscriptions | Stop after N events (exit 0) |
-| `--all` | paginated queries (§4.10) | Fetch every page; NDJSON output |
-| `--max-pages <n>` | paginated queries, with `--all` | Stop after N pages (exit 0) |
-| `--confirm` | destructive mutations | Required in non-interactive mode (§4.6) |
-| `--interactive` | all | Force interactive mode (TTY only) |
-| `--pretty` | all | Indented JSON on stdout |
-| `--raw` | queries, mutations | Print the full GraphQL response (`{ data, errors, extensions }`) instead of `data` |
-| `-h`, `--help` / `--version` | all | Help / version |
+| Flag                         | Applies to                      | Meaning                                                                                |
+| ---------------------------- | ------------------------------- | -------------------------------------------------------------------------------------- |
+| `--vars-file <path>`         | all                             | Read variables from a JSON file                                                        |
+| `--endpoint <url>`           | all                             | Override the endpoint env variable                                                     |
+| `--timeout-ms <n>`           | all                             | HTTP request timeout (default 30000); for subscriptions, stop after this long (exit 0) |
+| `--max-events <n>`           | subscriptions                   | Stop after N events (exit 0)                                                           |
+| `--all`                      | paginated queries (§4.10)       | Fetch every page; NDJSON output                                                        |
+| `--max-pages <n>`            | paginated queries, with `--all` | Stop after N pages (exit 0)                                                            |
+| `--confirm`                  | destructive mutations           | Required in non-interactive mode (§4.6)                                                |
+| `--interactive`              | all                             | Force interactive mode (TTY only)                                                      |
+| `--pretty`                   | all                             | Indented JSON on stdout                                                                |
+| `--raw`                      | queries, mutations              | Print the full GraphQL response (`{ data, errors, extensions }`) instead of `data`     |
+| `-h`, `--help` / `--version` | all                             | Help / version                                                                         |
 
 **Why `--input` is gone.** Legacy registered `--input` as the variables-file flag and then **overwrote it** with any GraphQL argument named `input`, which every DAL `create*` and `update*` mutation has. So `ds-cli create-item --input payload.json` sent the string `"payload.json"` as the `input` argument. Revision 1 repeated that example. In revision 2, `--input` is the `input` argument's own flag, and the variables file is `--vars-file`.
 
 ### 4.2 Argument values
 
-| GraphQL type | Flag syntax | Coercion and checks |
-| ------------ | ----------- | ------------------- |
-| `String`, `ID` | `--name Ada` | As-is |
-| `Int` | `--limit 50` | Integer within the 32-bit signed range; otherwise exit 2. Legacy sent `parseInt` output without range checks. |
-| `Float` | `--price 9.5` | Finite number |
-| `Boolean` | `--include-deleted`, `--include-deleted=false`, `--no-include-deleted` | Boolean |
-| Enum | `--status ACTIVE` | Must be a schema value; otherwise exit 2 listing the allowed values |
-| Custom scalar | `--since 2026-01-01T00:00:00Z` | Passed as a string, or parsed as JSON when the SDK's `scalarWireFormats` marks the scalar `json` (SDK §6; recorded in `ArgDescriptor.scalarWire` at generate time). Then validated with the SDK's `safeParseGraphqlScalar` (§3.5); failure exits 3 before any request. |
-| List | `--ids a --ids b` or `--ids '["a","b"]'` | Repeatable flag, or one JSON array. Each element is coerced as above. |
-| Input object | `--filter '{"name":"x"}'` or `--filter @filter.json` | JSON, or `@<path>` to read a file; then L3 validation (§3.5) |
-| Explicit `null` | Only through `--vars-file` or stdin JSON | Flags never produce `null`, which avoids ambiguity with the string `"null"` |
+| GraphQL type    | Flag syntax                                                            | Coercion and checks                                                                                                                                                                                                                                                    |
+| --------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `String`, `ID`  | `--name Ada`                                                           | As-is                                                                                                                                                                                                                                                                  |
+| `Int`           | `--limit 50`                                                           | Integer within the 32-bit signed range; otherwise exit 2. Legacy sent `parseInt` output without range checks.                                                                                                                                                          |
+| `Float`         | `--price 9.5`                                                          | Finite number                                                                                                                                                                                                                                                          |
+| `Boolean`       | `--include-deleted`, `--include-deleted=false`, `--no-include-deleted` | Boolean                                                                                                                                                                                                                                                                |
+| Enum            | `--status ACTIVE`                                                      | Must be a schema value; otherwise exit 2 listing the allowed values                                                                                                                                                                                                    |
+| Custom scalar   | `--since 2026-01-01T00:00:00Z`                                         | Passed as a string, or parsed as JSON when the SDK's `scalarWireFormats` marks the scalar `json` (SDK §6; recorded in `ArgDescriptor.scalarWire` at generate time). Then validated with the SDK's `safeParseGraphqlScalar` (§3.5); failure exits 3 before any request. |
+| List            | `--ids a --ids b` or `--ids '["a","b"]'`                               | Repeatable flag, or one JSON array. Each element is coerced as above.                                                                                                                                                                                                  |
+| Input object    | `--filter '{"name":"x"}'` or `--filter @filter.json`                   | JSON, or `@<path>` to read a file; then L3 validation (§3.5)                                                                                                                                                                                                           |
+| Explicit `null` | Only through `--vars-file` or stdin JSON                               | Flags never produce `null`, which avoids ambiguity with the string `"null"`                                                                                                                                                                                            |
 
 ### 4.3 Variable sources and precedence
 
@@ -429,14 +465,14 @@ The precedence is **`--vars-file` < stdin JSON < flags**, which is legacy's docu
 
 ### 4.4 Output and exit codes
 
-| Outcome | stdout | stderr | Exit |
-| ------- | ------ | ------ | ---- |
-| Success | `data` as one JSON line (`--pretty` indents; `--raw` prints the whole response) | empty | **0** |
-| GraphQL `errors` (including partial data) | `data` if present | `{"error":"graphql","errors":[…]}` | **1** |
-| Usage error (unknown command or flag, bad value, missing required argument, destructive without `--confirm`, no endpoint) | empty | `{"error":"usage","message":…}` | **2** |
-| Pre-flight validation failed (no request sent) | empty | `{"error":"validation","issues":[…]}` | **3** |
-| Transport failure (network, timeout, non-2xx HTTP, non-JSON body, SSE stream error) | empty | `{"error":"transport","status":…,"message":…}` | **4** |
-| Mutation payload reports user errors (DAL `userErrors` non-empty) | `data` | `{"error":"userErrors","userErrors":[…]}` | **5** |
+| Outcome                                                                                                                   | stdout                                                                          | stderr                                         | Exit  |
+| ------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | ---------------------------------------------- | ----- |
+| Success                                                                                                                   | `data` as one JSON line (`--pretty` indents; `--raw` prints the whole response) | empty                                          | **0** |
+| GraphQL `errors` (including partial data)                                                                                 | `data` if present                                                               | `{"error":"graphql","errors":[…]}`             | **1** |
+| Usage error (unknown command or flag, bad value, missing required argument, destructive without `--confirm`, no endpoint) | empty                                                                           | `{"error":"usage","message":…}`                | **2** |
+| Pre-flight validation failed (no request sent)                                                                            | empty                                                                           | `{"error":"validation","issues":[…]}`          | **3** |
+| Transport failure (network, timeout, non-2xx HTTP, non-JSON body, SSE stream error)                                       | empty                                                                           | `{"error":"transport","status":…,"message":…}` | **4** |
+| Mutation payload reports user errors (DAL `userErrors` non-empty)                                                         | `data`                                                                          | `{"error":"userErrors","userErrors":[…]}`      | **5** |
 
 - **One mapping, from the SDK's error normaliser.** The runtime passes every response through `normalizeGraphqlResult` and every thrown error through `toGraphqlRequestError` (SDK §3.8.1), then maps `kind`: `graphql` → 1, `validation` → 3, `transport` → 4, `userErrors` → 5. Usage errors (2) are raised by the CLI itself before any request. Apps that use the SDK see the same classification the CLI reports.
 - **stderr is always one JSON object per line,** so agents can parse it reliably.
@@ -463,9 +499,9 @@ A mutation is **destructive** when its field name matches `guard.destructive` (D
 
 ```yaml
 transport:
-  httpUrlEnv: GRAPHQL_HTTP_URL     # default; set per service when several CLIs share a shell
-  defaultUrl: http://localhost:4000/graphql   # optional; omit for production CLIs
-  tokenEnv: GRAPHQL_TOKEN          # optional; sent as "Authorization: Bearer <token>"
+  httpUrlEnv: GRAPHQL_HTTP_URL # default; set per service when several CLIs share a shell
+  defaultUrl: http://localhost:4000/graphql # optional; omit for production CLIs
+  tokenEnv: GRAPHQL_TOKEN # optional; sent as "Authorization: Bearer <token>"
   headersEnv: GRAPHQL_HEADERS_JSON # optional; JSON object of extra headers
 ```
 
@@ -477,11 +513,11 @@ transport:
 
 ### 4.8 Command catalog for agents
 
-| Command | Output |
-| ------- | ------ |
-| `<bin> commands --json` | Array of `{ command, kind, field, description, deprecated, destructive, paginated, args: [{ flag, graphqlType, required, enumValues }] }` |
-| `<bin> describe <cmd> --json` | One command's descriptor, including `followUps` (which command and flags fetch each stub, §3.3), plus a JSON Schema for each input-object argument, produced with Zod 4's `z.toJSONSchema()` from the SDK's L3 schema |
-| `<bin> help` / `<bin> <cmd> -h` | Human help text, from the same catalog |
+| Command                         | Output                                                                                                                                                                                                                |
+| ------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `<bin> commands --json`         | Array of `{ command, kind, field, description, deprecated, destructive, paginated, args: [{ flag, graphqlType, required, enumValues }] }`                                                                             |
+| `<bin> describe <cmd> --json`   | One command's descriptor, including `followUps` (which command and flags fetch each stub, §3.3), plus a JSON Schema for each input-object argument, produced with Zod 4's `z.toJSONSchema()` from the SDK's L3 schema |
+| `<bin> help` / `<bin> <cmd> -h` | Human help text, from the same catalog                                                                                                                                                                                |
 
 This replaces scraping help text, which legacy offered as the only discovery path. JSON Schema output for recursive inputs (`z.lazy`) is a C-P2 check (R-C06).
 
@@ -493,15 +529,15 @@ One HTTP POST per query or mutation, and one SSE stream per subscription. No cac
 
 Commands for Relay root connections (SDK §3.8.2; on the DAL, every `*Connection` query) are marked `paginated` in the catalog and accept `--all`.
 
-| Aspect | Behavior |
-| ------ | -------- |
-| Without `--all` | One request; output is the single page (`nodes` + `pageInfo`), as today. The caller can pass `--after "$END_CURSOR"` itself. |
-| With `--all` | The runtime calls the SDK's `iterateConnection` through `@corpdk/graphql-dsl`, with the same validated arguments on every page. Each node is printed as one NDJSON line on stdout as soon as its page arrives. |
-| Page size | `--first` (or `--last`) when given; otherwise `pagination.defaultPageSize` from `cli.config.yaml` (default 50). |
-| Start and direction | `--after` sets the starting cursor. `--last` / `--before` page backward. `--first` together with `--last` exits 2. |
-| Stopping | End of the connection, `--max-pages`, `--timeout-ms` (total), or SIGINT/SIGTERM. All exit 0. |
-| Errors mid-walk | Lines already printed stay on stdout; the error goes to stderr and the exit code follows §4.4. A repeated cursor from the server is a `transport`-kind protocol error (exit 4). |
-| `--all` on a non-paginated command | Exit 2 |
+| Aspect                             | Behavior                                                                                                                                                                                                       |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Without `--all`                    | One request; output is the single page (`nodes` + `pageInfo`), as today. The caller can pass `--after "$END_CURSOR"` itself.                                                                                   |
+| With `--all`                       | The runtime calls the SDK's `iterateConnection` through `@corpdk/graphql-dsl`, with the same validated arguments on every page. Each node is printed as one NDJSON line on stdout as soon as its page arrives. |
+| Page size                          | `--first` (or `--last`) when given; otherwise `pagination.defaultPageSize` from `cli.config.yaml` (default 50).                                                                                                |
+| Start and direction                | `--after` sets the starting cursor. `--last` / `--before` page backward. `--first` together with `--last` exits 2.                                                                                             |
+| Stopping                           | End of the connection, `--max-pages`, `--timeout-ms` (total), or SIGINT/SIGTERM. All exit 0.                                                                                                                   |
+| Errors mid-walk                    | Lines already printed stay on stdout; the error goes to stderr and the exit code follows §4.4. A repeated cursor from the server is a `transport`-kind protocol error (exit 4).                                |
+| `--all` on a non-paginated command | Exit 2                                                                                                                                                                                                         |
 
 This is a query loop, not a retry: each page is one request, and nothing is cached between runs (§4.9).
 
@@ -546,11 +582,11 @@ The engine and `graphql-cli-core` publish to npmjs in the **lockstep CalVer set*
 
 ### 6.2 Commands and flags
 
-| Command | Does | Touches |
-| ------- | ---- | ------- |
-| `init [dir]` | Copy `canonical/`, write `cli.config.yaml` and `package.json`, then `generate` (skipped with `--defer-generate`). Also exported as `runInit(options)` for `create-ds`. | Whole package (empty target only) |
-| `generate [dir]` | Read the SDK snapshot → extract operations → selections + catalog (+ man/texi) | `src/generated/**` |
-| `upgrade [dir]` | Overwrite `cli.ts`, `tsconfig.json`, `.env.example`; merge `package.json` (including the `@corpdk/graphql-cli-core` range) and `cli.config.yaml` | Canonical files only; never `src/extensions/**`. Runtime fixes do not need `upgrade`; they arrive with a `graphql-cli-core` version bump. |
+| Command          | Does                                                                                                                                                                   | Touches                                                                                                                                   |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `init [dir]`     | Copy `canonical/`, write `cli.config.yaml` and `package.json`, then `generate` (skipped with `--defer-generate`). Also exported as `runInit(options)` for `create-ds`. | Whole package (empty target only)                                                                                                         |
+| `generate [dir]` | Read the SDK snapshot → extract operations → selections + catalog (+ man/texi)                                                                                         | `src/generated/**`                                                                                                                        |
+| `upgrade [dir]`  | Overwrite `cli.ts`, `tsconfig.json`, `.env.example`; merge `package.json` (including the `@corpdk/graphql-cli-core` range) and `cli.config.yaml`                       | Canonical files only; never `src/extensions/**`. Runtime fixes do not need `upgrade`; they arrive with a `graphql-cli-core` version bump. |
 
 ```text
 create-graphql-cli <init|generate|upgrade> [directory] [options]
@@ -581,12 +617,12 @@ It writes a header in `src/generated/commands.ts` recording the snapshot's SHA-2
 
 ### 6.4 Exit codes (engine)
 
-| Code | Meaning |
-| ---- | ------- |
-| 0 | Success |
-| 1 | SDK missing or stale (no snapshot, no `./validation`, input- or scalar-registry mismatch), invalid config, or drift under `--check` |
-| 2 | Usage error |
-| 3 | Tool failure (install, `tsc` in `init`) |
+| Code | Meaning                                                                                                                             |
+| ---- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| 0    | Success                                                                                                                             |
+| 1    | SDK missing or stale (no snapshot, no `./validation`, input- or scalar-registry mismatch), invalid config, or drift under `--check` |
+| 2    | Usage error                                                                                                                         |
+| 3    | Tool failure (install, `tsc` in `init`)                                                                                             |
 
 ---
 
@@ -598,8 +634,8 @@ package: "@corpdk/ds-cli"
 bin: ds-cli
 
 sdk:
-  package: "@corpdk/ds-sdk"   # npm name the runtime imports
-  path: ../ds-sdk             # where generate reads the snapshot and registry
+  package: "@corpdk/ds-sdk" # npm name the runtime imports
+  path: ../ds-sdk # where generate reads the snapshot and registry
 
 transport:
   httpUrlEnv: GRAPHQL_HTTP_URL
@@ -656,7 +692,10 @@ man:
     "graphql": "^16.13.2",
     "zod": "^4.3.6"
   },
-  "devDependencies": { "@corpdk/create-graphql-cli": "workspace:*", "typescript": "^6.0.2" },
+  "devDependencies": {
+    "@corpdk/create-graphql-cli": "workspace:*",
+    "typescript": "^6.0.2"
+  },
   "scripts": {
     "cli:codegen": "create-graphql-cli generate .",
     "cli:check": "create-graphql-cli generate . --check",
@@ -667,12 +706,12 @@ man:
 
 `"private": true` and the placeholder version apply to the in-repo sample only (§2.2). The canonical template for other services omits both and sets no registry.
 
-| Dependency | Why |
-| ---------- | --- |
-| SDK (`@corpdk/ds-sdk` or the service's SDK) | L2 `build*` + selection types, L1 `Types`, L3 `./validation` |
-| `graphql` | Peer of the SDK (`parse` inside `build*`) |
-| `zod` | Peer of the SDK's `./validation` entry (optional on the SDK; required here) |
-| `@corpdk/graphql-cli-core` | The whole runtime (`runCli`), including interactive mode (`@clack/prompts` comes in through it) and the SDK response helpers (`@corpdk/graphql-dsl` comes in through it) |
+| Dependency                                  | Why                                                                                                                                                                      |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| SDK (`@corpdk/ds-sdk` or the service's SDK) | L2 `build*` + selection types, L1 `Types`, L3 `./validation`                                                                                                             |
+| `graphql`                                   | Peer of the SDK (`parse` inside `build*`)                                                                                                                                |
+| `zod`                                       | Peer of the SDK's `./validation` entry (optional on the SDK; required here)                                                                                              |
+| `@corpdk/graphql-cli-core`                  | The whole runtime (`runCli`), including interactive mode (`@clack/prompts` comes in through it) and the SDK response helpers (`@corpdk/graphql-dsl` comes in through it) |
 
 **Forbidden:** Apollo, urql, `graphql-request`, `graphql-sse`, `graphql-ws`, `@corpdk/codegen-cli`.
 
@@ -680,15 +719,15 @@ man:
 
 ## 9. Monorepo integration and migration
 
-| Area | Change | Phase |
-| ---- | ------ | ----- |
-| `templates/{ds,ds-no-sql,ds-cdb,ds-mongo,ds-ddb,ds-file}/codegen.ts` + `engines/create-ds/canonical/codegen.ts` | Remove the `../ds-cli/src/generated/` preset target. The SDK's `../ds-sdk` target is removed earlier, in SDK P2 (SDK §9.1). After both, only the resolver-types target remains. | C-P3 |
-| Those seven `package.json` files | Drop `@corpdk/codegen-cli` | C-P3 |
-| `turbo.json` | `codegen.dependsOn`: drop `@corpdk/codegen-cli#build`. `codegen.outputs`: drop `../ds-cli/src/generated/**`. Add `@corpdk/ds-cli#build` → `dependsOn: ["^build"]`; the SDK is a workspace dependency. | C-P3 |
-| `templates/ds/Dockerfile`, `engines/create-ds/canonical/Dockerfile` | Remove the `libraries/codegen-cli` and `templates/ds-cli` `COPY` lines and the `codegen-cli` build step | C-P3 |
-| `templates/ds-cli` | Replace with `init` output; `private: true`; drop the Artifactory `publishConfig` (§2.2) | C-P3 |
-| `engines/create-ds` | `--with-cli` on `init`; `upgrade` drops `@corpdk/codegen-cli` and guides migration ([doc 15](15-create-ds-generator-integration.md)) | C-P3 (upgrade) / C-P4 (`--with-cli`) |
-| `.github/scripts/publish-ds-automation.sh` | Add `@corpdk/graphql-cli-core` (after `@corpdk/graphql-input-zod`, which it depends on for types) and `@corpdk/create-graphql-cli` to `PUBLISH_ORDER`, build and test filters, and `ci.yml` `publish-paths` globs. Remove `@corpdk/codegen-cli` after its deprecation release (§2.5.1). | C-P1 / C-P4 / after C-P3 |
+| Area                                                                                                            | Change                                                                                                                                                                                                                                                                                  | Phase                                |
+| --------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------ |
+| `templates/{ds,ds-no-sql,ds-cdb,ds-mongo,ds-ddb,ds-file}/codegen.ts` + `engines/create-ds/canonical/codegen.ts` | Remove the `../ds-cli/src/generated/` preset target. The SDK's `../ds-sdk` target is removed earlier, in SDK P2 (SDK §9.1). After both, only the resolver-types target remains.                                                                                                         | C-P3                                 |
+| Those seven `package.json` files                                                                                | Drop `@corpdk/codegen-cli`                                                                                                                                                                                                                                                              | C-P3                                 |
+| `turbo.json`                                                                                                    | `codegen.dependsOn`: drop `@corpdk/codegen-cli#build`. `codegen.outputs`: drop `../ds-cli/src/generated/**`. Add `@corpdk/ds-cli#build` → `dependsOn: ["^build"]`; the SDK is a workspace dependency.                                                                                   | C-P3                                 |
+| `templates/ds/Dockerfile`, `engines/create-ds/canonical/Dockerfile`                                             | Remove the `libraries/codegen-cli` and `templates/ds-cli` `COPY` lines and the `codegen-cli` build step                                                                                                                                                                                 | C-P3                                 |
+| `templates/ds-cli`                                                                                              | Replace with `init` output; `private: true`; drop the Artifactory `publishConfig` (§2.2)                                                                                                                                                                                                | C-P3                                 |
+| `engines/create-ds`                                                                                             | `--with-cli` on `init`; `upgrade` drops `@corpdk/codegen-cli` and guides migration ([doc 15](15-create-ds-generator-integration.md))                                                                                                                                                    | C-P3 (upgrade) / C-P4 (`--with-cli`) |
+| `.github/scripts/publish-ds-automation.sh`                                                                      | Add `@corpdk/graphql-cli-core` (after `@corpdk/graphql-input-zod`, which it depends on for types) and `@corpdk/create-graphql-cli` to `PUBLISH_ORDER`, build and test filters, and `ci.yml` `publish-paths` globs. Remove `@corpdk/codegen-cli` after its deprecation release (§2.5.1). | C-P1 / C-P4 / after C-P3             |
 
 `create-app` is **out of scope**: it is frozen and outdated, and this design makes no changes to it.
 
@@ -698,14 +737,14 @@ man:
 
 The CLI phases are prefixed **C-** and depend on the SDK phases ([SDK §13](13-graphql-sdk-generator.md#13-implementation-phases)).
 
-| Phase | Deliverable | Needs | Docs updated in the same PR |
-| ----- | ----------- | ----- | --------------------------- |
-| **C-P0** | This design (rev 6) | n/a | `docs/00-index.md`, `docs/developer/README.md` |
-| **B0** | Package bootstrap for `graphql-cli-core` and `create-graphql-cli`, together with the SDK and DS packages ([doc 15 §4.4](15-create-ds-generator-integration.md#44-package-bootstrap-phase-b0)) | C-P0 | `docs/admin/04-npm-publish-ds-automation.md` |
-| **C-P1** | `libraries/graphql-cli-core/codegen`: extraction, relation-ids emitter (§3.3), naming and collisions (§3.6), catalog emitter, man/texi port, unit tests on the DAL schema. Added to the lockstep publish set (trust already configured in B0). | SDK P1a (`graphql-input-zod`, which `graphql-cli-core` depends on for types) | `libraries/graphql-cli-core/README.md`; `CLAUDE.md`; `docs/developer/01-monorepo-overview.md`; `docs/admin/04-npm-publish-ds-automation.md` |
-| **C-P2** | `@corpdk/graphql-cli-core` runtime entry (`runCli`, §4, §5, including `--all` and the normaliser exit mapping) + `engines/create-graphql-cli` with the binding-only canonical | SDK P1a (L3), P1b (DSL `build*`, response helpers), P1c (`create-graphql-sdk`, whose output `generate` reads), DS-P0b (`engine-kit`) | `engines/create-graphql-cli/README.md`; `CLAUDE.md` |
-| **C-P3** | Dogfood `templates/ds-cli` from `templates/ds-sdk`; remove the `../ds-cli` preset target and `@corpdk/codegen-cli` (§9); Docker; Turbo; `create-ds upgrade` removal rules (doc 15 DS-P2); **publish `@corpdk/create-graphql-cli`** (lockstep, after `engine-kit` and `graphql-cli-core`; first real release over the B0 placeholder, R-C11) so the `create-ds --with-cli` release that ships alongside points at a published engine | SDK P2 | `CLAUDE.md` (ds-cli row, `codegen-cli` row, Docker notes, "private sample" exception); `docs/admin/02-docker-deployment.md`; `docs/developer/ds-automation-upgrades.md` (migration note); `libraries/codegen-cli/README.md` (deprecation) |
-| **C-P4** | `create-graphql-cli` already published in C-P3 (rev 5); deprecate `@corpdk/codegen-cli` on npm | SDK P4 | `docs/admin/04-npm-publish-ds-automation.md`; `libraries/codegen-cli/README.md` (deprecation notice) |
+| Phase    | Deliverable                                                                                                                                                                                                                                                                                                                                                                                                                         | Needs                                                                                                                                | Docs updated in the same PR                                                                                                                                                                                                               |
+| -------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **C-P0** | This design (rev 6)                                                                                                                                                                                                                                                                                                                                                                                                                 | n/a                                                                                                                                  | `docs/00-index.md`, `docs/developer/README.md`                                                                                                                                                                                            |
+| **B0**   | Package bootstrap for `graphql-cli-core` and `create-graphql-cli`, together with the SDK and DS packages ([doc 15 §4.4](15-create-ds-generator-integration.md#44-package-bootstrap-phase-b0))                                                                                                                                                                                                                                       | C-P0                                                                                                                                 | `docs/admin/04-npm-publish-ds-automation.md`                                                                                                                                                                                              |
+| **C-P1** | `libraries/graphql-cli-core/codegen`: extraction, relation-ids emitter (§3.3), naming and collisions (§3.6), catalog emitter, man/texi port, unit tests on the DAL schema. Added to the lockstep publish set (trust already configured in B0).                                                                                                                                                                                      | SDK P1a (`graphql-input-zod`, which `graphql-cli-core` depends on for types)                                                         | `libraries/graphql-cli-core/README.md`; `CLAUDE.md`; `docs/developer/01-monorepo-overview.md`; `docs/admin/04-npm-publish-ds-automation.md`                                                                                               |
+| **C-P2** | `@corpdk/graphql-cli-core` runtime entry (`runCli`, §4, §5, including `--all` and the normaliser exit mapping) + `engines/create-graphql-cli` with the binding-only canonical                                                                                                                                                                                                                                                       | SDK P1a (L3), P1b (DSL `build*`, response helpers), P1c (`create-graphql-sdk`, whose output `generate` reads), DS-P0b (`engine-kit`) | `engines/create-graphql-cli/README.md`; `CLAUDE.md`                                                                                                                                                                                       |
+| **C-P3** | Dogfood `templates/ds-cli` from `templates/ds-sdk`; remove the `../ds-cli` preset target and `@corpdk/codegen-cli` (§9); Docker; Turbo; `create-ds upgrade` removal rules (doc 15 DS-P2); **publish `@corpdk/create-graphql-cli`** (lockstep, after `engine-kit` and `graphql-cli-core`; first real release over the B0 placeholder, R-C11) so the `create-ds --with-cli` release that ships alongside points at a published engine | SDK P2                                                                                                                               | `CLAUDE.md` (ds-cli row, `codegen-cli` row, Docker notes, "private sample" exception); `docs/admin/02-docker-deployment.md`; `docs/developer/ds-automation-upgrades.md` (migration note); `libraries/codegen-cli/README.md` (deprecation) |
+| **C-P4** | `create-graphql-cli` already published in C-P3 (rev 5); deprecate `@corpdk/codegen-cli` on npm                                                                                                                                                                                                                                                                                                                                      | SDK P4                                                                                                                               | `docs/admin/04-npm-publish-ds-automation.md`; `libraries/codegen-cli/README.md` (deprecation notice)                                                                                                                                      |
 
 Man and info output ship in C-P1/C-P2, not in a separate optional phase as revision 1 had it. The emitters already exist and only need porting.
 
@@ -713,45 +752,45 @@ Man and info output ship in C-P1/C-P2, not in a separate optional phase as revis
 
 ## 11. Feature comparison: legacy vs target
 
-| Area | Legacy (`codegen-cli` → `ds-cli`) | Target |
-| ---- | -------------------------------- | ------ |
-| Schema | DS `codegen.ts` sibling path | SDK snapshot (one schema for SDK and CLI) |
-| Documents | Depth-6 strings (491 KB in a 2026-10-05 copy, 152 ops) | Relation-ids selections over the SDK DSL; about 40 KB for today's 166 ops |
-| Runtime | Regenerated monolith copied into every CLI | Written once in `@corpdk/graphql-cli-core`; each CLI is a binding + generated catalog |
-| Flags | camelCase argument names; `--input` collides with `input` args | kebab-case (+ camelCase alias); reserved flags; collision rules |
-| Coercion | `Int`/`Float` via `parseInt`/`parseFloat`; lists and input objects passed as strings | Typed coercion for every GraphQL type (§4.2) |
-| Validation | None | SDK L3 before any request (§3.5) |
-| Auth | None | Bearer token + header JSON from env; header-provider hook |
-| Exit codes | 1 for everything | 0–5 (§4.4) |
-| Discovery | Help text | `commands --json`, `describe --json` with JSON Schema and stub follow-ups |
-| Related objects | Expanded to depth 6 | Stubs that match the lookup command's flags (§3.3) |
-| Paging | One page per call; cursors handled by the caller | `--all` / `--max-pages` NDJSON walk (§4.10) |
-| Safety | None | Destructive-operation guard |
-| Interactive | None | TTY-only `@clack/prompts` |
-| Subscriptions | SSE | SSE; NDJSON; `--max-events` / `--timeout-ms` |
-| Endpoint env | `DS_HTTP_URL` | `GRAPHQL_HTTP_URL` (configurable per service) |
+| Area            | Legacy (`codegen-cli` → `ds-cli`)                                                    | Target                                                                                |
+| --------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------- |
+| Schema          | DS `codegen.ts` sibling path                                                         | SDK snapshot (one schema for SDK and CLI)                                             |
+| Documents       | Depth-6 strings (491 KB in a 2026-10-05 copy, 152 ops)                               | Relation-ids selections over the SDK DSL; about 40 KB for today's 166 ops             |
+| Runtime         | Regenerated monolith copied into every CLI                                           | Written once in `@corpdk/graphql-cli-core`; each CLI is a binding + generated catalog |
+| Flags           | camelCase argument names; `--input` collides with `input` args                       | kebab-case (+ camelCase alias); reserved flags; collision rules                       |
+| Coercion        | `Int`/`Float` via `parseInt`/`parseFloat`; lists and input objects passed as strings | Typed coercion for every GraphQL type (§4.2)                                          |
+| Validation      | None                                                                                 | SDK L3 before any request (§3.5)                                                      |
+| Auth            | None                                                                                 | Bearer token + header JSON from env; header-provider hook                             |
+| Exit codes      | 1 for everything                                                                     | 0–5 (§4.4)                                                                            |
+| Discovery       | Help text                                                                            | `commands --json`, `describe --json` with JSON Schema and stub follow-ups             |
+| Related objects | Expanded to depth 6                                                                  | Stubs that match the lookup command's flags (§3.3)                                    |
+| Paging          | One page per call; cursors handled by the caller                                     | `--all` / `--max-pages` NDJSON walk (§4.10)                                           |
+| Safety          | None                                                                                 | Destructive-operation guard                                                           |
+| Interactive     | None                                                                                 | TTY-only `@clack/prompts`                                                             |
+| Subscriptions   | SSE                                                                                  | SSE; NDJSON; `--max-events` / `--timeout-ms`                                          |
+| Endpoint env    | `DS_HTTP_URL`                                                                        | `GRAPHQL_HTTP_URL` (configurable per service)                                         |
 
 ---
 
 ## 12. Testing and CI
 
-| Check | Where |
-| ----- | ----- |
-| Selection emitter: the §3.3.3 table as golden tests; every DAL operation's document passes `graphql.validate`; a size budget (fail if any document exceeds 4 KB on the DAL schema) | `libraries/graphql-cli-core` |
-| Lookup rule (§3.3): fixtures with a non-`id` key (`project(slug:)`), a composite key, two lookups for one type (choice order and `selection.lookup`), a type reachable only via Relay `node(id:)`, a type with no lookup (embedded), a forced stub, a nested connection (skipped), and an invalid `lookup` entry (exit 1); `followUps` match the stubs | `libraries/graphql-cli-core` |
-| Collision rules: Query/Mutation name clash, reserved command names, argument-vs-reserved-flag clash | `libraries/graphql-cli-core` |
-| Manual-variant smoke: generate from the `templates/ds-no-sql` multi-file schema through a temporary SDK; `tsc --noEmit` | CI |
-| Flag parsing table (§4.2), precedence (§4.3), every exit code (§4.4) | `graphql-cli-core` runtime tests |
-| **No-request guarantee:** validation failure (3), usage errors (2), and destructive without `--confirm` (2) make zero `fetch` calls (fetch is stubbed to fail the test) | `graphql-cli-core` runtime tests |
-| `--all`: stub server with three pages prints every node once as NDJSON; `--max-pages`; backward walk; repeated cursor → exit 4; mid-walk GraphQL error keeps printed lines and exits 1; `--all` on a non-paginated command → exit 2 | `graphql-cli-core` runtime tests |
-| Exit codes come from the SDK normaliser: one case per `kind` | `graphql-cli-core` runtime tests |
-| Interactive mode never starts with non-TTY stdin/stdout or with `CI` set | `graphql-cli-core` runtime tests |
-| End to end against a running `templates/ds` (docker compose): query, create mutation, `userErrors` path (exit 5), connection pagination (`--all` over a seeded table larger than one page), union bulk result, subscription with `--max-events` | CI job |
-| `describe --json` produces valid JSON Schema for every DAL input, including recursive filters | `graphql-cli-core` runtime tests |
-| `generate --check` detects SDK snapshot drift | engine tests |
-| Generated `templates/ds-cli` `tsc` passes (`satisfies Selections.*` catches schema drift) | CI |
-| Sample-never-published guard for `templates/ds-cli` (same as SDK §11) | CI |
-| Secrets never printed: transport error output with a token set contains no token | `graphql-cli-core` runtime tests |
+| Check                                                                                                                                                                                                                                                                                                                                                  | Where                            |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------- |
+| Selection emitter: the §3.3.3 table as golden tests; every DAL operation's document passes `graphql.validate`; a size budget (fail if any document exceeds 4 KB on the DAL schema)                                                                                                                                                                     | `libraries/graphql-cli-core`     |
+| Lookup rule (§3.3): fixtures with a non-`id` key (`project(slug:)`), a composite key, two lookups for one type (choice order and `selection.lookup`), a type reachable only via Relay `node(id:)`, a type with no lookup (embedded), a forced stub, a nested connection (skipped), and an invalid `lookup` entry (exit 1); `followUps` match the stubs | `libraries/graphql-cli-core`     |
+| Collision rules: Query/Mutation name clash, reserved command names, argument-vs-reserved-flag clash                                                                                                                                                                                                                                                    | `libraries/graphql-cli-core`     |
+| Manual-variant smoke: generate from the `templates/ds-no-sql` multi-file schema through a temporary SDK; `tsc --noEmit`                                                                                                                                                                                                                                | CI                               |
+| Flag parsing table (§4.2), precedence (§4.3), every exit code (§4.4)                                                                                                                                                                                                                                                                                   | `graphql-cli-core` runtime tests |
+| **No-request guarantee:** validation failure (3), usage errors (2), and destructive without `--confirm` (2) make zero `fetch` calls (fetch is stubbed to fail the test)                                                                                                                                                                                | `graphql-cli-core` runtime tests |
+| `--all`: stub server with three pages prints every node once as NDJSON; `--max-pages`; backward walk; repeated cursor → exit 4; mid-walk GraphQL error keeps printed lines and exits 1; `--all` on a non-paginated command → exit 2                                                                                                                    | `graphql-cli-core` runtime tests |
+| Exit codes come from the SDK normaliser: one case per `kind`                                                                                                                                                                                                                                                                                           | `graphql-cli-core` runtime tests |
+| Interactive mode never starts with non-TTY stdin/stdout or with `CI` set                                                                                                                                                                                                                                                                               | `graphql-cli-core` runtime tests |
+| End to end against a running `templates/ds` (docker compose): query, create mutation, `userErrors` path (exit 5), connection pagination (`--all` over a seeded table larger than one page), union bulk result, subscription with `--max-events`                                                                                                        | CI job                           |
+| `describe --json` produces valid JSON Schema for every DAL input, including recursive filters                                                                                                                                                                                                                                                          | `graphql-cli-core` runtime tests |
+| `generate --check` detects SDK snapshot drift                                                                                                                                                                                                                                                                                                          | engine tests                     |
+| Generated `templates/ds-cli` `tsc` passes (`satisfies Selections.*` catches schema drift)                                                                                                                                                                                                                                                              | CI                               |
+| Sample-never-published guard for `templates/ds-cli` (same as SDK §11)                                                                                                                                                                                                                                                                                  | CI                               |
+| Secrets never printed: transport error output with a token set contains no token                                                                                                                                                                                                                                                                       | `graphql-cli-core` runtime tests |
 
 ---
 
@@ -778,27 +817,27 @@ Man and info output ship in C-P1/C-P2, not in a separate optional phase as revis
 
 ## 14. Decisions
 
-| Topic | Decision |
-| ----- | -------- |
-| Engine binary | `create-graphql-cli` |
-| Schema source | The SDK snapshot only; no CLI-level schema sources |
-| Emit model | One emit: typed selection objects + runtime `build*` (no v1 bridge strings, no v2 builder calls) |
-| Runtime packaging | Shared runtime in `@corpdk/graphql-cli-core` (entry `.`), generator at `./codegen`; generated CLIs contain a binding, a catalog, and user extensions only |
-| Custom-scalar arguments | Validated with the SDK's `scalarZodSchemas` / `safeParseGraphqlScalar` (SDK rev 7) |
-| Selection policy | relation-ids with the lookup rule: stubs are the lookup query's required arguments; types without a lookup are embedded; root connections select `nodes`; nested connections skipped; union fragments (§3.3) |
-| Paging | `--all` / `--max-pages` over Relay root connections, using the SDK paginator (§4.10) |
-| Error classification | The SDK error normaliser; kinds map to exit codes 1, 3, 4, 5 (§4.4) |
-| Variables file flag | `--vars-file` (`--input` belongs to the `input` argument) |
-| Exit codes | 0 ok, 1 GraphQL errors, 2 usage, 3 validation, 4 transport, 5 user errors |
-| Auth | v1: Bearer token + header JSON from env; header-provider hook |
-| Interactive | TTY-only and never with `CI` set |
-| Destructive guard | `--confirm` required non-interactively; patterns configurable |
-| Endpoint env | `GRAPHQL_HTTP_URL` by default, configurable per service; `--endpoint` override |
-| Zod | Direct dependency of the CLI (optional peer on the SDK) |
-| `templates/ds-cli` | Private sample, never published (it depends on the private `templates/ds-sdk`) |
-| Publishing | `graphql-cli-core` + `create-graphql-cli` in the lockstep npmjs set; `@corpdk/codegen-cli` deprecated after C-P3 |
-| Builds | `tsc`, not tsup |
-| Dependency policy | SDK §16 applies; no new third-party packages beyond those already audited (`graphql`, `zod`, `@clack/prompts`, `yaml`) |
+| Topic                   | Decision                                                                                                                                                                                                     |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Engine binary           | `create-graphql-cli`                                                                                                                                                                                         |
+| Schema source           | The SDK snapshot only; no CLI-level schema sources                                                                                                                                                           |
+| Emit model              | One emit: typed selection objects + runtime `build*` (no v1 bridge strings, no v2 builder calls)                                                                                                             |
+| Runtime packaging       | Shared runtime in `@corpdk/graphql-cli-core` (entry `.`), generator at `./codegen`; generated CLIs contain a binding, a catalog, and user extensions only                                                    |
+| Custom-scalar arguments | Validated with the SDK's `scalarZodSchemas` / `safeParseGraphqlScalar` (SDK rev 7)                                                                                                                           |
+| Selection policy        | relation-ids with the lookup rule: stubs are the lookup query's required arguments; types without a lookup are embedded; root connections select `nodes`; nested connections skipped; union fragments (§3.3) |
+| Paging                  | `--all` / `--max-pages` over Relay root connections, using the SDK paginator (§4.10)                                                                                                                         |
+| Error classification    | The SDK error normaliser; kinds map to exit codes 1, 3, 4, 5 (§4.4)                                                                                                                                          |
+| Variables file flag     | `--vars-file` (`--input` belongs to the `input` argument)                                                                                                                                                    |
+| Exit codes              | 0 ok, 1 GraphQL errors, 2 usage, 3 validation, 4 transport, 5 user errors                                                                                                                                    |
+| Auth                    | v1: Bearer token + header JSON from env; header-provider hook                                                                                                                                                |
+| Interactive             | TTY-only and never with `CI` set                                                                                                                                                                             |
+| Destructive guard       | `--confirm` required non-interactively; patterns configurable                                                                                                                                                |
+| Endpoint env            | `GRAPHQL_HTTP_URL` by default, configurable per service; `--endpoint` override                                                                                                                               |
+| Zod                     | Direct dependency of the CLI (optional peer on the SDK)                                                                                                                                                      |
+| `templates/ds-cli`      | Private sample, never published (it depends on the private `templates/ds-sdk`)                                                                                                                               |
+| Publishing              | `graphql-cli-core` + `create-graphql-cli` in the lockstep npmjs set; `@corpdk/codegen-cli` deprecated after C-P3                                                                                             |
+| Builds                  | `tsc`, not tsup                                                                                                                                                                                              |
+| Dependency policy       | SDK §16 applies; no new third-party packages beyond those already audited (`graphql`, `zod`, `@clack/prompts`, `yaml`)                                                                                       |
 
 ---
 
@@ -816,32 +855,32 @@ Same conventions as [SDK §17](13-graphql-sdk-generator.md#17-remaining-work-reg
 
 **Owners** (interim, assigned 2026-11-12):
 
-| Package | Owner |
-| ------- | ----- |
+| Package                      | Owner        |
+| ---------------------------- | ------------ |
 | `libraries/graphql-cli-core` | Debraj Kundu |
 | `engines/create-graphql-cli` | Debraj Kundu |
 
-| ID | Item | Phase | Done when | Status |
-| -- | ---- | ----- | --------- | ------ |
-| R-C01 | Port the relation-ids prototype (Appendix B) into `graphql-cli-core` with golden tests | C-P1 | §12 emitter checks green on the DAL schema | Open |
-| R-C02 | Port man/texi emitters; remove `DS_HTTP_URL` / `DS_WS_URL` text | C-P1 | Generated man page names the configured env variable only | Open |
-| R-C03 | Selection objects type-check with `satisfies Selections.*` against SDK L2 types, including union fragments (`on_<Type>`) and connection `nodes` | C-P2 (fixture SDK) / C-P3 (`templates/ds-cli`) | Fixture SDK `tsc` green in C-P2; `templates/ds-cli` `tsc` green in C-P3; depends on SDK R-05 to R-08 | Open |
-| R-C04 | `build*` composition at runtime: `__args` with validated variables + generated selection, including scalar-root fields with arguments (`hello(name)`, SDK R-34) | C-P2 (fixture SDK) / C-P3 (E2E) | Runtime tests against a fixture SDK in C-P2; E2E suite green in C-P3 | Open |
-| R-C05 | GraphQL-over-SSE client: `next` / `complete` / error events, abort on SIGINT, `--max-events`, `--timeout-ms` | C-P2 (stub server) / C-P3 (E2E) | Stub-server tests green in C-P2; E2E subscription test green in C-P3 | Open |
-| R-C06 | `z.toJSONSchema()` output for recursive `z.lazy` inputs (DAL filters) | C-P2 | Valid JSON Schema for every DAL input | Open |
-| R-C07 | Header-provider extension hook and token redaction | C-P2 | §12 secrets test green | Open |
-| R-C08 | CLI decoupling PR: `../ds-cli` preset target out of seven `codegen.ts`, `@corpdk/codegen-cli` out of seven `package.json`, `turbo.json` (`codegen` `dependsOn` and outputs), two Dockerfiles | C-P3 | §13 decoupling criterion green | Open |
-| R-C09 | `templates/ds-cli` private sample + CI guard | C-P3 | Guard green | Open |
-| R-C10 | Top-level custom-scalar arguments validated with the SDK's `scalarZodSchemas` / `safeParseGraphqlScalar` (decided rev 3; needs SDK R-32) | C-P2 | Invalid `--since` value exits 3 with no request, in the runtime tests | Open |
-| R-C11 | Publish pipeline: `graphql-cli-core` (C-P1, after `graphql-input-zod`), `create-graphql-cli` (C-P3), including the per-package maps in `verify_version` / `verify_dist_types`, test filters, the workflow release-notes table, and `paths`. Package creation, the manual publish, and trusted publishing are done once in B0 (doc 15 R-D17). Remove `codegen-cli` after deprecation. | B0 (trust) / C-P1 / C-P3; order per [doc 15 §4.3](15-create-ds-generator-integration.md#43-dependencies-and-publishing-canonical-publish-order) | Publish-order guard green; first real releases publish from CI with provenance | Open |
-| R-C12 | `npm deprecate @corpdk/codegen-cli` and the final README notice; delete `libraries/codegen-cli` a quarter later | After C-P3 | npm shows the deprecation; no in-repo references | Open |
-| R-C13 | ~~`create-app` scaffolds `ds-cli` from the engine canonical~~ | — | — | Dropped (2026-11-13): `create-app` is frozen and out of scope |
-| R-C14 | Docs per phase (§10), including `CLAUDE.md`'s `ds-cli` / `codegen-cli` rows and the "only workspace root is private" exception for both samples. Also stale: `docs/architecture/03-data-service-design.md` (codegen-cli preset section), `docs/developer/11-ds-subscription-sse.md`, `templates/ds/codegen.ts` header comment | C-P1 to C-P4 | Docs Update Rule satisfied | Open |
-| R-C15 | Assign owners for `graphql-cli-core` and `create-graphql-cli` | Before C-P1 | Owners table filled | Done (2026-11-12) |
-| R-C17 | Lookup stub rule (§3.3) in the selection emitter, with `selection.lookup`, `followUps`, and the §12 lookup fixtures; re-run the DAL golden comparison | C-P1 | DAL golden output identical to Appendix B; §12 lookup row green | Open |
-| R-C18 | `--all` / `--max-pages` (§4.10) on top of SDK R-40 | C-P2 (stub server) / C-P3 (E2E) | §12 `--all` rows green; E2E paging test green | Open |
-| R-C19 | Exit codes derived from the SDK normaliser (SDK R-39) | C-P2 | §12 normaliser-mapping row green | Open |
-| R-C16 | `runCli` structural `SdkBindings` type: any `create-graphql-sdk` output binds without casts; `@clack/prompts` is loaded only on interactive start | C-P2 | Binding type test green; a non-interactive run does not load `@clack/prompts` (module-load test) | Open |
+| ID    | Item                                                                                                                                                                                                                                                                                                                                                                                 | Phase                                                                                                                                           | Done when                                                                                            | Status                                                        |
+| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| R-C01 | Port the relation-ids prototype (Appendix B) into `graphql-cli-core` with golden tests                                                                                                                                                                                                                                                                                               | C-P1                                                                                                                                            | §12 emitter checks green on the DAL schema                                                           | Open                                                          |
+| R-C02 | Port man/texi emitters; remove `DS_HTTP_URL` / `DS_WS_URL` text                                                                                                                                                                                                                                                                                                                      | C-P1                                                                                                                                            | Generated man page names the configured env variable only                                            | Open                                                          |
+| R-C03 | Selection objects type-check with `satisfies Selections.*` against SDK L2 types, including union fragments (`on_<Type>`) and connection `nodes`                                                                                                                                                                                                                                      | C-P2 (fixture SDK) / C-P3 (`templates/ds-cli`)                                                                                                  | Fixture SDK `tsc` green in C-P2; `templates/ds-cli` `tsc` green in C-P3; depends on SDK R-05 to R-08 | Open                                                          |
+| R-C04 | `build*` composition at runtime: `__args` with validated variables + generated selection, including scalar-root fields with arguments (`hello(name)`, SDK R-34)                                                                                                                                                                                                                      | C-P2 (fixture SDK) / C-P3 (E2E)                                                                                                                 | Runtime tests against a fixture SDK in C-P2; E2E suite green in C-P3                                 | Open                                                          |
+| R-C05 | GraphQL-over-SSE client: `next` / `complete` / error events, abort on SIGINT, `--max-events`, `--timeout-ms`                                                                                                                                                                                                                                                                         | C-P2 (stub server) / C-P3 (E2E)                                                                                                                 | Stub-server tests green in C-P2; E2E subscription test green in C-P3                                 | Open                                                          |
+| R-C06 | `z.toJSONSchema()` output for recursive `z.lazy` inputs (DAL filters)                                                                                                                                                                                                                                                                                                                | C-P2                                                                                                                                            | Valid JSON Schema for every DAL input                                                                | Open                                                          |
+| R-C07 | Header-provider extension hook and token redaction                                                                                                                                                                                                                                                                                                                                   | C-P2                                                                                                                                            | §12 secrets test green                                                                               | Open                                                          |
+| R-C08 | CLI decoupling PR: `../ds-cli` preset target out of seven `codegen.ts`, `@corpdk/codegen-cli` out of seven `package.json`, `turbo.json` (`codegen` `dependsOn` and outputs), two Dockerfiles                                                                                                                                                                                         | C-P3                                                                                                                                            | §13 decoupling criterion green                                                                       | Open                                                          |
+| R-C09 | `templates/ds-cli` private sample + CI guard                                                                                                                                                                                                                                                                                                                                         | C-P3                                                                                                                                            | Guard green                                                                                          | Open                                                          |
+| R-C10 | Top-level custom-scalar arguments validated with the SDK's `scalarZodSchemas` / `safeParseGraphqlScalar` (decided rev 3; needs SDK R-32)                                                                                                                                                                                                                                             | C-P2                                                                                                                                            | Invalid `--since` value exits 3 with no request, in the runtime tests                                | Open                                                          |
+| R-C11 | Publish pipeline: `graphql-cli-core` (C-P1, after `graphql-input-zod`), `create-graphql-cli` (C-P3), including the per-package maps in `verify_version` / `verify_dist_types`, test filters, the workflow release-notes table, and `paths`. Package creation, the manual publish, and trusted publishing are done once in B0 (doc 15 R-D17). Remove `codegen-cli` after deprecation. | B0 (trust) / C-P1 / C-P3; order per [doc 15 §4.3](15-create-ds-generator-integration.md#43-dependencies-and-publishing-canonical-publish-order) | Publish-order guard green; first real releases publish from CI with provenance                       | Open                                                          |
+| R-C12 | `npm deprecate @corpdk/codegen-cli` and the final README notice; delete `libraries/codegen-cli` a quarter later                                                                                                                                                                                                                                                                      | After C-P3                                                                                                                                      | npm shows the deprecation; no in-repo references                                                     | Open                                                          |
+| R-C13 | ~~`create-app` scaffolds `ds-cli` from the engine canonical~~                                                                                                                                                                                                                                                                                                                        | —                                                                                                                                               | —                                                                                                    | Dropped (2026-11-13): `create-app` is frozen and out of scope |
+| R-C14 | Docs per phase (§10), including `CLAUDE.md`'s `ds-cli` / `codegen-cli` rows and the "only workspace root is private" exception for both samples. Also stale: `docs/architecture/03-data-service-design.md` (codegen-cli preset section), `docs/developer/11-ds-subscription-sse.md`, `templates/ds/codegen.ts` header comment                                                        | C-P1 to C-P4                                                                                                                                    | Docs Update Rule satisfied                                                                           | Open                                                          |
+| R-C15 | Assign owners for `graphql-cli-core` and `create-graphql-cli`                                                                                                                                                                                                                                                                                                                        | Before C-P1                                                                                                                                     | Owners table filled                                                                                  | Done (2026-11-12)                                             |
+| R-C17 | Lookup stub rule (§3.3) in the selection emitter, with `selection.lookup`, `followUps`, and the §12 lookup fixtures; re-run the DAL golden comparison                                                                                                                                                                                                                                | C-P1                                                                                                                                            | DAL golden output identical to Appendix B; §12 lookup row green                                      | Open                                                          |
+| R-C18 | `--all` / `--max-pages` (§4.10) on top of SDK R-40                                                                                                                                                                                                                                                                                                                                   | C-P2 (stub server) / C-P3 (E2E)                                                                                                                 | §12 `--all` rows green; E2E paging test green                                                        | Open                                                          |
+| R-C19 | Exit codes derived from the SDK normaliser (SDK R-39)                                                                                                                                                                                                                                                                                                                                | C-P2                                                                                                                                            | §12 normaliser-mapping row green                                                                     | Open                                                          |
+| R-C16 | `runCli` structural `SdkBindings` type: any `create-graphql-sdk` output binds without casts; `@clack/prompts` is loaded only on interactive start                                                                                                                                                                                                                                    | C-P2                                                                                                                                            | Binding type test green; a non-interactive run does not load `@clack/prompts` (module-load test)     | Open                                                          |
 
 ---
 
@@ -849,33 +888,33 @@ Same conventions as [SDK §17](13-graphql-sdk-generator.md#17-remaining-work-reg
 
 Revision 1 was checked against the SDK design rev 6, `libraries/codegen-cli/src` (857 lines), the generated DAL schema (`templates/ds/src/generated/generated-schema.ts`: 62 queries, 91 mutations, 13 subscriptions), the repo wiring (`turbo.json`, Dockerfiles, `create-app`, `create-ds`, the publish script), and npm.
 
-| # | Severity | Gap in revision 1 | Resolution |
-| - | -------- | ----------------- | ---------- |
-| 1 | Blocker | Relation-ids assumed every operation returns an entity. On DAL wrappers it selected `userErrors { id }` (dropping `message`/`code`/`field`, because `MutationUserError.id` is nullable), lost `pageInfo` and edges on connections, and had no rule for union roots (`Bulk*Result`) | Entity/wrapper definitions, transparent wrappers, connection `nodes`, union fragments; proven on all 166 operations (§3.3, Appendix B) |
-| 2 | Blocker | `--input` is both the variables-file flag and every DAL `input` argument; legacy overwrote the flag, and rev 1's own example (`create-item --input payload.json`) hit it | `--vars-file`; reserved-flag table; collision rule (§4.1) |
-| 3 | Blocker | Built on SDK rev 1: `buildgql` API (`query("Hello", ($, q) => …)`), validators from the SDK root, "SDK ships zod", publishable `ds-sdk` | SDK rev 6 DSL (`build*` + selection objects), `@corpdk/ds-sdk/validation`, Zod as a direct CLI dependency, private samples (§2.2, §3.2, §3.5) |
-| 4 | Blocker | `templates/ds-cli` (Artifactory) would depend on the never-published `templates/ds-sdk` | `templates/ds-cli` is a private sample too (§2.2) |
-| 5 | High | Emit v1 (strings) / v2 (builder calls) split adds a throwaway milestone | One emit: selection objects + runtime `build*` (§3.2) |
-| 6 | High | CLI could use its own schema source, diverging from the SDK's types and validators | SDK snapshot only (§2.1) |
-| 7 | High | Migration covered `templates/ds/codegen.ts` only; missed five DS variants, the `create-ds` canonical, seven `package.json` files, `turbo.json` (`codegen` depends on `@corpdk/codegen-cli#build`), two Dockerfiles, `create-app`, and the publish script | §9 table; joint PR with SDK P3 (`create-app` later declared frozen and out of scope, rev 4); the rev 2 "joint PR with SDK P3" was superseded in rev 4 (SDK P2 removes `../ds-sdk`, C-P3 removes `../ds-cli`) |
-| 8 | High | Argument coercion unspecified for lists, enums, input-object flags, nulls, `Int` range; legacy passed lists and objects as strings | §4.2 |
-| 9 | High | No exit-code contract; partial data and DAL `userErrors` unhandled | §4.4 (codes 0–5) |
-| 10 | High | Auth deferred to v1.1; legacy sends no auth headers | Bearer + header JSON + provider hook in v1 (§4.7) |
-| 11 | High | Bare invocation launches interactive mode even in CI or with piped stdin (would hang) | TTY-only; `CI` disables (§5) |
-| 12 | High | No machine-readable catalog for the LLM/automation goal | `commands --json`, `describe --json` with JSON Schema (§4.8) |
-| 13 | High | No guard on destructive operations (DAL has `bulkDelete*ByFilter`) for an LLM-facing CLI | `--confirm` guard (§4.6) |
-| 14 | Medium | `include`/`exclude` semantics undefined; example `"*_connection"` cannot match camelCase DAL fields; warn threshold 50 always fires on the DAL's 166 operations | Field-name globs, documented semantics, `warnAbove: 200` (§3.6) |
-| 15 | Medium | Command-name collisions across root types and with built-in commands undefined | Deterministic prefixes (§3.6) |
-| 16 | Medium | Endpoint env "fixed in v1" yet configurable; multiple CLIs in one shell would share `GRAPHQL_HTTP_URL` | Configurable per service + `--endpoint` (§4.7) |
-| 17 | Medium | SDK prerequisite named rev 1 paths (`schema/` + `src/gql/`); no detection of a CLI left behind its SDK | Snapshot + registry reads; `generate --check` hash (§6.3) |
-| 18 | Medium | `@corpdk/codegen-cli` deprecation plan said "optional"; it is published (2026.10.0-alpha.13) | `npm deprecate` + publish-order removal (§2.5.1) |
-| 19 | Medium | `--name` defaulted to the CorpDK scope; `--sdk` defaulted to `../ds-sdk` | Both required (§6.2) |
-| 20 | Medium | Man/texi both "move in P1" and "optional P6"; `man.enabled: true` by default | Ported in C-P1 (§10) |
-| 21 | Medium | No testing plan, docs-update steps, dependency check, or remaining-work register; phases not linked to SDK phases | §10, §12, §15, §16 |
-| 22 | Low | Stale cross-links into SDK rev 1 anchors (`#4-input-validation…`, `#42-target…`, `#22-schema-input…`) | Re-pointed to rev 6 sections |
-| 23 | Low | Example `hello` arg shown as `String!`; the schema has `hello(name: String)` | Examples use real DAL fields |
-| 24 | Medium | (rev 2) Runtime copied into every generated CLI (about ten files); fixes needed `upgrade` per package | Rev 3: shared runtime in `@corpdk/graphql-cli-core`; generated CLI is a binding + catalog (§2.5, §3.1) |
-| 25 | Medium | (rev 2) Top-level custom-scalar arguments validated only by the server | Rev 3: SDK `scalarZodSchemas` / `safeParseGraphqlScalar` (§3.5) |
+| #   | Severity | Gap in revision 1                                                                                                                                                                                                                                                                  | Resolution                                                                                                                                                                                                   |
+| --- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1   | Blocker  | Relation-ids assumed every operation returns an entity. On DAL wrappers it selected `userErrors { id }` (dropping `message`/`code`/`field`, because `MutationUserError.id` is nullable), lost `pageInfo` and edges on connections, and had no rule for union roots (`Bulk*Result`) | Entity/wrapper definitions, transparent wrappers, connection `nodes`, union fragments; proven on all 166 operations (§3.3, Appendix B)                                                                       |
+| 2   | Blocker  | `--input` is both the variables-file flag and every DAL `input` argument; legacy overwrote the flag, and rev 1's own example (`create-item --input payload.json`) hit it                                                                                                           | `--vars-file`; reserved-flag table; collision rule (§4.1)                                                                                                                                                    |
+| 3   | Blocker  | Built on SDK rev 1: `buildgql` API (`query("Hello", ($, q) => …)`), validators from the SDK root, "SDK ships zod", publishable `ds-sdk`                                                                                                                                            | SDK rev 6 DSL (`build*` + selection objects), `@corpdk/ds-sdk/validation`, Zod as a direct CLI dependency, private samples (§2.2, §3.2, §3.5)                                                                |
+| 4   | Blocker  | `templates/ds-cli` (Artifactory) would depend on the never-published `templates/ds-sdk`                                                                                                                                                                                            | `templates/ds-cli` is a private sample too (§2.2)                                                                                                                                                            |
+| 5   | High     | Emit v1 (strings) / v2 (builder calls) split adds a throwaway milestone                                                                                                                                                                                                            | One emit: selection objects + runtime `build*` (§3.2)                                                                                                                                                        |
+| 6   | High     | CLI could use its own schema source, diverging from the SDK's types and validators                                                                                                                                                                                                 | SDK snapshot only (§2.1)                                                                                                                                                                                     |
+| 7   | High     | Migration covered `templates/ds/codegen.ts` only; missed five DS variants, the `create-ds` canonical, seven `package.json` files, `turbo.json` (`codegen` depends on `@corpdk/codegen-cli#build`), two Dockerfiles, `create-app`, and the publish script                           | §9 table; joint PR with SDK P3 (`create-app` later declared frozen and out of scope, rev 4); the rev 2 "joint PR with SDK P3" was superseded in rev 4 (SDK P2 removes `../ds-sdk`, C-P3 removes `../ds-cli`) |
+| 8   | High     | Argument coercion unspecified for lists, enums, input-object flags, nulls, `Int` range; legacy passed lists and objects as strings                                                                                                                                                 | §4.2                                                                                                                                                                                                         |
+| 9   | High     | No exit-code contract; partial data and DAL `userErrors` unhandled                                                                                                                                                                                                                 | §4.4 (codes 0–5)                                                                                                                                                                                             |
+| 10  | High     | Auth deferred to v1.1; legacy sends no auth headers                                                                                                                                                                                                                                | Bearer + header JSON + provider hook in v1 (§4.7)                                                                                                                                                            |
+| 11  | High     | Bare invocation launches interactive mode even in CI or with piped stdin (would hang)                                                                                                                                                                                              | TTY-only; `CI` disables (§5)                                                                                                                                                                                 |
+| 12  | High     | No machine-readable catalog for the LLM/automation goal                                                                                                                                                                                                                            | `commands --json`, `describe --json` with JSON Schema (§4.8)                                                                                                                                                 |
+| 13  | High     | No guard on destructive operations (DAL has `bulkDelete*ByFilter`) for an LLM-facing CLI                                                                                                                                                                                           | `--confirm` guard (§4.6)                                                                                                                                                                                     |
+| 14  | Medium   | `include`/`exclude` semantics undefined; example `"*_connection"` cannot match camelCase DAL fields; warn threshold 50 always fires on the DAL's 166 operations                                                                                                                    | Field-name globs, documented semantics, `warnAbove: 200` (§3.6)                                                                                                                                              |
+| 15  | Medium   | Command-name collisions across root types and with built-in commands undefined                                                                                                                                                                                                     | Deterministic prefixes (§3.6)                                                                                                                                                                                |
+| 16  | Medium   | Endpoint env "fixed in v1" yet configurable; multiple CLIs in one shell would share `GRAPHQL_HTTP_URL`                                                                                                                                                                             | Configurable per service + `--endpoint` (§4.7)                                                                                                                                                               |
+| 17  | Medium   | SDK prerequisite named rev 1 paths (`schema/` + `src/gql/`); no detection of a CLI left behind its SDK                                                                                                                                                                             | Snapshot + registry reads; `generate --check` hash (§6.3)                                                                                                                                                    |
+| 18  | Medium   | `@corpdk/codegen-cli` deprecation plan said "optional"; it is published (2026.10.0-alpha.13)                                                                                                                                                                                       | `npm deprecate` + publish-order removal (§2.5.1)                                                                                                                                                             |
+| 19  | Medium   | `--name` defaulted to the CorpDK scope; `--sdk` defaulted to `../ds-sdk`                                                                                                                                                                                                           | Both required (§6.2)                                                                                                                                                                                         |
+| 20  | Medium   | Man/texi both "move in P1" and "optional P6"; `man.enabled: true` by default                                                                                                                                                                                                       | Ported in C-P1 (§10)                                                                                                                                                                                         |
+| 21  | Medium   | No testing plan, docs-update steps, dependency check, or remaining-work register; phases not linked to SDK phases                                                                                                                                                                  | §10, §12, §15, §16                                                                                                                                                                                           |
+| 22  | Low      | Stale cross-links into SDK rev 1 anchors (`#4-input-validation…`, `#42-target…`, `#22-schema-input…`)                                                                                                                                                                              | Re-pointed to rev 6 sections                                                                                                                                                                                 |
+| 23  | Low      | Example `hello` arg shown as `String!`; the schema has `hello(name: String)`                                                                                                                                                                                                       | Examples use real DAL fields                                                                                                                                                                                 |
+| 24  | Medium   | (rev 2) Runtime copied into every generated CLI (about ten files); fixes needed `upgrade` per package                                                                                                                                                                              | Rev 3: shared runtime in `@corpdk/graphql-cli-core`; generated CLI is a binding + catalog (§2.5, §3.1)                                                                                                       |
+| 25  | Medium   | (rev 2) Top-level custom-scalar arguments validated only by the server                                                                                                                                                                                                             | Rev 3: SDK `scalarZodSchemas` / `safeParseGraphqlScalar` (§3.5)                                                                                                                                              |
 
 ---
 

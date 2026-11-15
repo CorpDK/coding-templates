@@ -12,21 +12,21 @@ Codegen reads **Drizzle** `index()`, `uniqueIndex()`, and primary-key definition
 
 ### Columns validated
 
-| Source | Table | Columns |
-| ------ | ----- | ------- |
-| Scalar filters | Entity | Every **filterable** scalar ([`filterableColumns`](../../libraries/dal-codegen/src/generators/schema-utils.ts) — business fields; excludes server-managed audit/soft-delete and FK scalars omitted from GraphQL output) |
-| M:1 / 1:1 owner | Entity | **Owner FK** columns on relations used in nested filters |
-| One-to-many association | **Child** entity | **Child FK** referencing the parent |
-| Many-to-many association | **Join** table | Both **join-table FK** columns |
+| Source                   | Table            | Columns                                                                                                                                                                                                                 |
+| ------------------------ | ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Scalar filters           | Entity           | Every **filterable** scalar ([`filterableColumns`](../../libraries/dal-codegen/src/generators/schema-utils.ts) — business fields; excludes server-managed audit/soft-delete and FK scalars omitted from GraphQL output) |
+| M:1 / 1:1 owner          | Entity           | **Owner FK** columns on relations used in nested filters                                                                                                                                                                |
+| One-to-many association  | **Child** entity | **Child FK** referencing the parent                                                                                                                                                                                     |
+| Many-to-many association | **Join** table   | Both **join-table FK** columns                                                                                                                                                                                          |
 
 Sort-column checks from [Phase 3](dal-phase3.md) are unchanged: default mode warns on `createdAt` / `updatedAt`; **`strict: true`** errors on any sort column except `id`.
 
 ## Severity and exit codes
 
-| Mode | Filter gaps | Sort gaps (non-`id`) |
-| ---- | ----------- | --------------------- |
+| Mode                          | Filter gaps               | Sort gaps (non-`id`)                                      |
+| ----------------------------- | ------------------------- | --------------------------------------------------------- |
 | **Default** (`strict: false`) | **WARN** (`FILTER_INDEX`) | **WARN** (`SORT_INDEX`) on `createdAt` / `updatedAt` only |
-| **`strict: true`** | **ERROR** | **ERROR** (`SORT_INDEX`) on all columns except `id` |
+| **`strict: true`**            | **ERROR**                 | **ERROR** (`SORT_INDEX`) on all columns except `id`       |
 
 Exit code **1** when any **error**-severity violation is present (including `SCHEMA_LOAD` and design rules from Phase 3).
 

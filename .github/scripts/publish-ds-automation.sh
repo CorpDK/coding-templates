@@ -25,6 +25,13 @@ fi
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "${ROOT}"
 
+echo "Verifying DS automation publish order…"
+pnpm --filter @corpdk/engine-kit build
+pnpm --filter @corpdk/engine-kit test
+node "${ROOT}/libraries/engine-kit/dist/bin/check-publish-order.js"
+pnpm --filter @corpdk/create-ds build
+node "${ROOT}/engines/create-ds/dist/scripts/check-canonical.js"
+
 # Canonical order: docs/developer/15-create-ds-generator-integration.md §4.3
 PUBLISH_ORDER=(
   "@corpdk/graphql-dsl"
