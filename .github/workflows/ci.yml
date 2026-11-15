@@ -51,26 +51,28 @@ jobs:
               - ".github/scripts/lockstep-calver.sh"
               - ".github/scripts/ci-quality-lockstep-package.sh"
               - ".github/scripts/ci-quality-ds-template.sh"
+              - ".github/scripts/ci-lockstep-quality-matrix.sh"
+
+  lockstep-quality-matrix:
+    name: Lockstep quality matrix
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.emit.outputs.packages }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: emit
+        run: |
+          chmod +x .github/scripts/ci-lockstep-quality-matrix.sh
+          echo "packages=$(.github/scripts/ci-lockstep-quality-matrix.sh)" >> "${GITHUB_OUTPUT}"
 
   quality:
     name: Monorepo quality (${{ matrix.package }})
+    needs: [lockstep-quality-matrix]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - package: "@corpdk/graphql-dsl"
-          - package: "@corpdk/scalar-zod"
-          - package: "@corpdk/dal-core"
-          - package: "@corpdk/pub-sub"
-          - package: "@corpdk/graphql-input-zod"
-          - package: "@corpdk/dal-codegen"
-          - package: "@corpdk/engine-kit"
-          - package: "@corpdk/graphql-cli-core"
-          - package: "@corpdk/create-graphql-sdk"
-          - package: "@corpdk/create-graphql-cli"
-          - package: "@corpdk/codegen-cli"
-          - package: "@corpdk/create-ds"
+        package: ${{ fromJson(needs.lockstep-quality-matrix.outputs.packages) }}
     steps:
       - uses: actions/checkout@v4
 
