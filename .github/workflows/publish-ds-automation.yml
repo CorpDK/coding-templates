@@ -4,7 +4,7 @@ name: Publish DS automation (npm)
 # Templates stay on Artifactory — see docs/admin/04-npm-publish-ds-automation.md
 #
 # Live publish: workflow_dispatch on main (dry_run false), npm Trusted Publishing (OIDC).
-# Monorepo CI dispatches this workflow after quality + Sonar (same SHA) — not workflow_call
+# Monorepo CI dispatches this workflow after quality + Sonar — not workflow_call
 # (npm trusted publishers match this workflow filename, not ci.yml).
 # CI creates git tag ds-automation/v<CalVer> and GitHub Release after npm publish.
 # PR validation: Monorepo CI dispatches dry_run true on the PR head SHA.
