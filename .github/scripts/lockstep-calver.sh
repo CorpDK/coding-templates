@@ -59,12 +59,12 @@ if [[ -z "${LOCKSTEP_CALVER_SOURCED:-}" ]]; then
   }
 
   # Echo "changed" if any lockstep package version differs between git_ref and worktree.
-  # Echo "unchanged" if all readable pairs match.
+  # Echo "unchanged" if every prior version was read and all match the worktree.
   # Echo "unreadable" if git_ref is set but at least one prior version could not be read.
   lockstep_calver_compare() {
     local git_ref="${1:-}"
-    local status="unchanged"
     local any_prev_readable=false
+    local any_prev_unreadable=false
 
     if [[ -z "${git_ref}" ]]; then
       echo "unchanged"
@@ -82,15 +82,17 @@ if [[ -z "${LOCKSTEP_CALVER_SOURCED:-}" ]]; then
           echo "changed"
           return 0
         fi
+      else
+        any_prev_unreadable=true
       fi
     done
 
-    if [[ "${any_prev_readable}" == "false" ]]; then
+    if [[ "${any_prev_readable}" == "false" || "${any_prev_unreadable}" == "true" ]]; then
       echo "unreadable"
       return 0
     fi
 
-    echo "${status}"
+    echo "unchanged"
   }
 
   # Canonical release CalVer: dal-core on worktree (publish script asserts all packages match).
