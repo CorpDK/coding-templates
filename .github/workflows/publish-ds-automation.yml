@@ -3,7 +3,7 @@ name: Publish DS automation (npm)
 # Lockstep CalVer release for @corpdk DAL tooling on npmjs (public).
 # Templates stay on Artifactory — see docs/admin/04-npm-publish-ds-automation.md
 #
-# Live publish: push to main only (CalVer bump in dal-core), npm Trusted Publishing (OIDC).
+# Live publish: push to main when any lockstep package CalVer changes, npm Trusted Publishing (OIDC).
 # CI creates git tag ds-automation/v<CalVer> and GitHub Release after npm publish.
 # PRs and workflow_dispatch (dry-run default) validate build/tests/packaging without upload.
 
@@ -59,23 +59,28 @@ jobs:
           if [[ "${event}" == "pull_request" ]]; then
             echo "Pull request — dry-run only."
           elif [[ "${event}" == "push" && "${ref}" == "refs/heads/main" ]]; then
-            curr="$(node -p "require('./libraries/dal-core/package.json').version")"
+            # shellcheck source=lockstep-calver.sh
+            source .github/scripts/lockstep-calver.sh
+            curr="$(lockstep_canonical_version)"
             before="${{ github.event.before }}"
-            prev=""
             if [[ -n "${before}" && "${before}" != "0000000000000000000000000000000000000000" ]]; then
               git fetch --depth=1 origin "${before}" 2>/dev/null || true
-              prev="$(git show "${before}:libraries/dal-core/package.json" 2>/dev/null \
-                | node -p "JSON.parse(require('fs').readFileSync(0,'utf8')).version" \
-                || true)"
             fi
-            if [[ -n "${prev}" && "${prev}" == "${curr}" ]]; then
-              echo "Main push with unchanged CalVer (${curr}); skipping (no live publish)."
+            compare=""
+            if [[ -n "${before}" && "${before}" != "0000000000000000000000000000000000000000" ]]; then
+              compare="$(lockstep_calver_compare "${before}")"
+            fi
+            if [[ "${compare}" == "unchanged" ]]; then
+              echo "Main push with unchanged lockstep CalVer (${curr}); skipping (no live publish)."
               run_job="false"
-            elif [[ -n "${before}" && "${before}" != "0000000000000000000000000000000000000000" && -z "${prev}" ]]; then
-              echo "Main push: could not read previous CalVer at ${before}; dry-run only (fail closed)."
+            elif [[ "${compare}" == "unreadable" ]]; then
+              echo "Main push: could not read previous lockstep CalVer at ${before}; dry-run only (fail closed)."
+            elif [[ "${compare}" == "changed" ]]; then
+              live="true"
+              echo "Main push with lockstep CalVer bump — live publish (${curr})."
             else
               live="true"
-              echo "Main push with CalVer ${prev:-<none>} → ${curr} — live publish."
+              echo "Main push (${before:-<none>} → HEAD) — live publish (${curr}); no prior CalVer compare."
             fi
           elif [[ "${event}" == "workflow_dispatch" ]]; then
             if [[ "${ref}" != "refs/heads/main" ]]; then

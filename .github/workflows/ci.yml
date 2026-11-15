@@ -45,6 +45,7 @@ jobs:
               - ".github/workflows/publish-ds-automation.yml"
               - ".github/workflows/ci.yml"
               - ".github/scripts/publish-ds-automation.sh"
+              - ".github/scripts/lockstep-calver.sh"
 
   # Parallel quality groups (replaces the former single sequential DAL workflow job).
   # | group          | Packages / scope |
@@ -53,7 +54,7 @@ jobs:
   # | pub-sub        | @corpdk/pub-sub build + test |
   # | dal-codegen    | @corpdk/dal-codegen build + test |
   # | ds-template    | @corpdk/ds turbo build + entity:lint |
-  # | publish-stack  | turbo build for remaining lockstep npm packages |
+  # | publish-stack  | turbo build + engine-kit/create-ds tests for remaining lockstep packages |
   quality:
     name: Monorepo quality (${{ matrix.group }})
     runs-on: ubuntu-latest
@@ -122,6 +123,9 @@ jobs:
             --filter=@corpdk/create-graphql-cli \
             --filter=@corpdk/codegen-cli \
             --filter=@corpdk/create-ds
+          pnpm --filter @corpdk/engine-kit test
+          pnpm --filter @corpdk/create-ds test
+          node engines/create-ds/dist/scripts/check-canonical.js
 
   sonar:
     name: SonarQube Analysis
