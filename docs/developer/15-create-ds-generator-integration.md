@@ -206,7 +206,8 @@ pnpm --filter "<cli-name>..." build            # cli:codegen + tsc, after the SD
 
 **Publish-order guard** (CI, used by SDK R-20, CLI R-C11, R-D05, R-D10):
 
-- the script derives a topological order from each listed package's `dependencies` on other `@corpdk/*` packages;
+- [`PUBLISH_ORDER`](../../.github/scripts/lockstep-calver.sh) lives in [`.github/scripts/lockstep-calver.sh`](../../.github/scripts/lockstep-calver.sh) (sourced by the publish script and main publish workflow).
+- the guard derives a topological order from each listed package's `dependencies` on other `@corpdk/*` packages;
 - it fails if `PUBLISH_ORDER` disagrees with that order;
 - it fails if any listed package has no trusted-publisher entry.
 
@@ -237,7 +238,7 @@ npm trusted publishing can only be configured for a package that already exists 
    - Minimal `src/` compiled by `tsc` (phase constants / empty barrels until the implementation phase).
    - `README.md` linking to the design doc; `LICENSE` (MIT). `graphql-dsl` gets genql's notice in P1b, when upstream code arrives.
 
-   The same PR adds all seven to [`PUBLISH_ORDER`](../../.github/scripts/publish-ds-automation.sh), [Monorepo CI `publish-paths` filters](../../.github/workflows/ci.yml) (same globs as the lockstep set), and the admin trusted-publisher table slots. CI dry-run on the PR must build all twelve packages and emit the declaration paths the publish script checks (§4.3).
+   The same PR adds all seven to [`PUBLISH_ORDER`](../../.github/scripts/lockstep-calver.sh), [Monorepo CI `publish-paths` filters](../../.github/workflows/ci.yml) (same globs as the lockstep set), and the admin trusted-publisher table slots. CI dry-run on the PR must build all twelve packages and emit the declaration paths the publish script checks (§4.3).
 
 2. **Merge** to `main` (workflow file on default branch before trust setup).
 3. **Maintainer registry setup** from a local terminal (2FA; not OIDC): run [`scripts/npm-b0-bootstrap.sh`](../../scripts/npm-b0-bootstrap.sh) per [admin — Generator B0](../../admin/04-npm-publish-ds-automation.md#generator-family--package-bootstrap-phase-b0). It publishes each of the seven at the lockstep CalVer with dist-tag **`bootstrap`**, deprecates that version with the placeholder message, configures `npm trust github` for `publish-ds-automation.yml`, and verifies registry + trust. Manual per-package steps are listed there if the script cannot run.
