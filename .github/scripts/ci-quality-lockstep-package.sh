@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Monorepo CI quality for one lockstep @corpdk package (or @corpdk/ds template integration).
+# Monorepo CI quality for one lockstep npm package in PUBLISH_ORDER.
 # Usage: ci-quality-lockstep-package.sh <@corpdk/package-name>
 set -euo pipefail
 
@@ -11,13 +11,6 @@ fi
 FILTER="$1"
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "${ROOT}"
-
-if [[ "${FILTER}" == "@corpdk/ds" ]]; then
-  # DS template (not npm-published): turbo build chain + entity design lint
-  pnpm turbo run build --filter=@corpdk/ds
-  pnpm --filter @corpdk/ds entity:lint
-  exit 0
-fi
 
 # shellcheck source=lockstep-calver.sh
 source "${ROOT}/.github/scripts/lockstep-calver.sh"

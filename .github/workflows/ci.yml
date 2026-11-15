@@ -2,6 +2,9 @@ name: Monorepo CI
 
 # Orchestrates quality (parallel), Sonar, and npm publish on the same commit SHA.
 # pull_request for PR branches; push only on main (avoids duplicate runs per commit).
+#
+# Quality: 12 parallel jobs — one per lockstep npm package (PUBLISH_ORDER in lockstep-calver.sh).
+# quality-ds-template: templates/ds integration (not npm-published; not in PUBLISH_ORDER).
 on:
   push:
     branches:
@@ -47,8 +50,8 @@ jobs:
               - ".github/scripts/publish-ds-automation.sh"
               - ".github/scripts/lockstep-calver.sh"
               - ".github/scripts/ci-quality-lockstep-package.sh"
+              - ".github/scripts/ci-quality-ds-template.sh"
 
-  # One parallel job per lockstep npm package (PUBLISH_ORDER in lockstep-calver.sh) plus @corpdk/ds template.
   quality:
     name: Monorepo quality (${{ matrix.package }})
     runs-on: ubuntu-latest
@@ -68,7 +71,6 @@ jobs:
           - package: "@corpdk/create-graphql-cli"
           - package: "@corpdk/codegen-cli"
           - package: "@corpdk/create-ds"
-          - package: "@corpdk/ds"
     steps:
       - uses: actions/checkout@v4
 
@@ -86,9 +88,29 @@ jobs:
           chmod +x .github/scripts/ci-quality-lockstep-package.sh
           .github/scripts/ci-quality-lockstep-package.sh '${{ matrix.package }}'
 
+  quality-ds-template:
+    name: Monorepo quality (ds template)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: DS template quality
+        run: |
+          chmod +x .github/scripts/ci-quality-ds-template.sh
+          .github/scripts/ci-quality-ds-template.sh
+
   sonar:
     name: SonarQube Analysis
-    needs: quality
+    needs: [quality, quality-ds-template]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -122,9 +144,10 @@ jobs:
 
   publish:
     name: Publish DS automation (npm)
-    needs: [quality, sonar, publish-paths]
+    needs: [quality, quality-ds-template, sonar, publish-paths]
     if: |
       needs.quality.result == 'success' &&
+      needs.quality-ds-template.result == 'success' &&
       needs.sonar.result == 'success' &&
       needs.publish-paths.outputs.matched == 'true' &&
       (github.event_name == 'push' || github.event_name == 'pull_request')
