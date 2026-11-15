@@ -1,6 +1,6 @@
 name: Monorepo CI
 
-# Orchestrates quality (parallel), Sonar, and npm publish on the same commit SHA.
+# Orchestrates quality (parallel), Sonar, then dispatches npm publish as a separate workflow (same SHA).
 # pull_request for PR branches; push only on main (avoids duplicate runs per commit).
 #
 # Quality: 12 parallel jobs — one per lockstep npm package (PUBLISH_ORDER in lockstep-calver.sh).
@@ -149,8 +149,8 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
 
-  publish:
-    name: Publish DS automation (npm)
+  publish-dispatch:
+    name: Dispatch Publish DS automation (npm)
     needs: [quality, quality-templates, sonar, publish-paths]
     if: |
       needs.quality.result == 'success' &&
@@ -158,10 +158,80 @@ jobs:
       needs.sonar.result == 'success' &&
       needs.publish-paths.outputs.matched == 'true' &&
       (github.event_name == 'push' || github.event_name == 'pull_request')
+    runs-on: ubuntu-latest
     permissions:
-      contents: write
-      id-token: write
-    uses: ./.github/workflows/publish-ds-automation.yml
-    secrets: inherit
-    with:
-      trigger_event: ${{ github.event_name }}
+      actions: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Resolve publish workflow dispatch
+        id: dispatch
+        run: |
+          # shellcheck source=lockstep-calver.sh
+          source .github/scripts/lockstep-calver.sh
+          trigger="false"
+          dry_run="true"
+          ref="${GITHUB_SHA}"
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            ref="${{ github.event.pull_request.head.sha }}"
+            trigger="true"
+            dry_run="true"
+            echo "Pull request — dispatch publish dry-run at ${ref}."
+          elif [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
+            before="${{ github.event.before }}"
+            if [[ -n "${before}" && "${before}" != "0000000000000000000000000000000000000000" ]]; then
+              git fetch --depth=1 origin "${before}" 2>/dev/null || true
+            fi
+            compare=""
+            if [[ -n "${before}" && "${before}" != "0000000000000000000000000000000000000000" ]]; then
+              compare="$(lockstep_calver_compare "${before}")"
+            fi
+            curr="$(lockstep_canonical_version)"
+            case "${compare}" in
+              unchanged)
+                echo "Main push with unchanged lockstep CalVer (${curr}); skip publish workflow."
+                trigger="false"
+                ;;
+              unreadable)
+                echo "Main push: prior lockstep CalVer unreadable; dispatch publish dry-run only."
+                trigger="true"
+                dry_run="true"
+                ;;
+              changed)
+                echo "Main push with lockstep CalVer bump — dispatch live publish (${curr})."
+                trigger="true"
+                dry_run="false"
+                ;;
+              *)
+                echo "Main push (${before:-<none>} → HEAD) — dispatch live publish (${curr})."
+                trigger="true"
+                dry_run="false"
+                ;;
+            esac
+          else
+            echo "Unsupported ref for publish dispatch; skipping."
+            trigger="false"
+          fi
+          echo "trigger=${trigger}" >> "${GITHUB_OUTPUT}"
+          echo "dry_run=${dry_run}" >> "${GITHUB_OUTPUT}"
+          echo "ref=${ref}" >> "${GITHUB_OUTPUT}"
+
+      - name: Dispatch publish-ds-automation.yml
+        if: steps.dispatch.outputs.trigger == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="$(node -p "require('./libraries/dal-core/package.json').version")"
+          gh workflow run publish-ds-automation.yml \
+            --repo "${GITHUB_REPOSITORY}" \
+            --ref "${{ steps.dispatch.outputs.ref }}" \
+            -f "dry_run=${{ steps.dispatch.outputs.dry_run }}" \
+            -f "version=${version}"
+          echo "Dispatched publish-ds-automation.yml at ${{ steps.dispatch.outputs.ref }} (dry_run=${{ steps.dispatch.outputs.dry_run }}, version=${version})."
+
+      - name: Publish workflow not required
+        if: steps.dispatch.outputs.trigger != 'true'
+        run: echo "No publish workflow dispatch for this commit."

@@ -3,19 +3,13 @@ name: Publish DS automation (npm)
 # Lockstep CalVer release for @corpdk DAL tooling on npmjs (public).
 # Templates stay on Artifactory — see docs/admin/04-npm-publish-ds-automation.md
 #
-# Live publish: push to main when any lockstep package CalVer changes, npm Trusted Publishing (OIDC).
+# Live publish: workflow_dispatch on main (dry_run false), npm Trusted Publishing (OIDC).
+# Monorepo CI dispatches this workflow after quality + Sonar (same SHA) — not workflow_call
+# (npm trusted publishers match this workflow filename, not ci.yml).
 # CI creates git tag ds-automation/v<CalVer> and GitHub Release after npm publish.
-# PRs and workflow_dispatch (dry-run default) validate build/tests/packaging without upload.
+# PR validation: Monorepo CI dispatches dry_run true on the PR head SHA.
 
-# Live publish on main: invoked only from Monorepo CI after quality + Sonar succeed (same SHA).
-# Manual dry-run / break-glass live: workflow_dispatch on main.
 on:
-  workflow_call:
-    inputs:
-      trigger_event:
-        description: Upstream CI event (push or pull_request)
-        required: true
-        type: string
   workflow_dispatch:
     inputs:
       dry_run:
@@ -45,56 +39,26 @@ jobs:
 
       # Gate before pnpm/setup-node so early skip does not run setup-node post-cache
       # (pnpm install never runs → cache paths missing → job failure on skip).
-      - name: Gate workflow (CalVer bump / ref)
+      - name: Gate workflow (dispatch mode)
         id: gate
         run: |
           run_job="true"
           live="false"
-          event="${{ github.event_name }}"
-          if [[ "${event}" == "workflow_call" ]]; then
-            event="${{ inputs.trigger_event }}"
-          fi
           ref="${{ github.ref }}"
 
-          if [[ "${event}" == "pull_request" ]]; then
-            echo "Pull request — dry-run only."
-          elif [[ "${event}" == "push" && "${ref}" == "refs/heads/main" ]]; then
-            # shellcheck source=lockstep-calver.sh
-            source .github/scripts/lockstep-calver.sh
-            curr="$(lockstep_canonical_version)"
-            before="${{ github.event.before }}"
-            if [[ -n "${before}" && "${before}" != "0000000000000000000000000000000000000000" ]]; then
-              git fetch --depth=1 origin "${before}" 2>/dev/null || true
-            fi
-            compare=""
-            if [[ -n "${before}" && "${before}" != "0000000000000000000000000000000000000000" ]]; then
-              compare="$(lockstep_calver_compare "${before}")"
-            fi
-            if [[ "${compare}" == "unchanged" ]]; then
-              echo "Main push with unchanged lockstep CalVer (${curr}); skipping (no live publish)."
-              run_job="false"
-            elif [[ "${compare}" == "unreadable" ]]; then
-              echo "Main push: could not read previous lockstep CalVer at ${before}; dry-run only (fail closed)."
-            elif [[ "${compare}" == "changed" ]]; then
-              live="true"
-              echo "Main push with lockstep CalVer bump — live publish (${curr})."
-            else
-              live="true"
-              echo "Main push (${before:-<none>} → HEAD) — live publish (${curr}); no prior CalVer compare."
-            fi
-          elif [[ "${event}" == "workflow_dispatch" ]]; then
+          if [[ "${{ github.event_name }}" != "workflow_dispatch" ]]; then
+            echo "Only workflow_dispatch is supported; skipping."
+            run_job="false"
+          elif [[ "${{ inputs.dry_run }}" == "false" ]]; then
             if [[ "${ref}" != "refs/heads/main" ]]; then
-              echo "workflow_dispatch is only supported on refs/heads/main; skipping."
+              echo "Live publish requires refs/heads/main; skipping."
               run_job="false"
-            elif [[ "${{ inputs.dry_run }}" == "false" ]]; then
-              live="true"
-              echo "Manual dispatch on main — live publish."
             else
-              echo "Manual dispatch on main — dry-run."
+              live="true"
+              echo "Live publish (workflow_dispatch, dry_run=false)."
             fi
           else
-            echo "Unsupported event ${event}; skipping."
-            run_job="false"
+            echo "Dry-run publish (workflow_dispatch, dry_run=true)."
           fi
 
           echo "run=${run_job}" >> "$GITHUB_OUTPUT"
