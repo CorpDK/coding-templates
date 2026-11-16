@@ -233,6 +233,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           watch_sha="${{ steps.dispatch.outputs.watch_sha }}"
+          dispatch_not_before="$(($(date -u +%s) - 5))"
           gh workflow run publish-ds-automation.yml \
             --repo "${GITHUB_REPOSITORY}" \
             --ref "${{ steps.dispatch.outputs.workflow_ref }}" \
@@ -245,15 +246,17 @@ jobs:
               --workflow=publish-ds-automation.yml \
               --limit 20 \
               --json databaseId,headSha,status,createdAt \
-              --jq "[.[] | select(.headSha == \"${watch_sha}\")][0].databaseId // empty")"
+              --jq --arg sha "${watch_sha}" --argjson epoch "${dispatch_not_before}" \
+              '[.[] | select(.headSha == $sha and ((.createdAt | fromdateiso8601) >= $epoch))][0].databaseId // empty')"
             if [[ -z "${run_id}" ]]; then
               run_id="$(gh run list \
                 --repo "${GITHUB_REPOSITORY}" \
                 --workflow=publish-ds-automation.yml \
                 --commit "${watch_sha}" \
-                --limit 1 \
-                --json databaseId \
-                --jq '.[0].databaseId // empty')"
+                --limit 10 \
+                --json databaseId,createdAt \
+                --jq --argjson epoch "${dispatch_not_before}" \
+                '[.[] | select((.createdAt | fromdateiso8601) >= $epoch)][0].databaseId // empty')"
             fi
             if [[ -n "${run_id}" ]]; then
               break
