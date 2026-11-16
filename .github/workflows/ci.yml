@@ -169,6 +169,12 @@ jobs:
 
       - name: Resolve publish workflow dispatch
         id: dispatch
+        env:
+          CI_EVENT_NAME: ${{ github.event_name }}
+          CI_GITHUB_REF: ${{ github.ref }}
+          CI_PUSH_BEFORE: ${{ github.event.before }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
         run: |
           # shellcheck source=lockstep-calver.sh
           source .github/scripts/lockstep-calver.sh
@@ -176,14 +182,14 @@ jobs:
           dry_run="true"
           watch_sha="${GITHUB_SHA}"
           workflow_ref="${GITHUB_SHA}"
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-            watch_sha="${{ github.event.pull_request.head.sha }}"
-            workflow_ref="${{ github.event.pull_request.head.ref }}"
+          if [[ "${CI_EVENT_NAME}" == "pull_request" ]]; then
+            watch_sha="${PR_HEAD_SHA}"
+            workflow_ref="${PR_HEAD_REF}"
             trigger="true"
             dry_run="true"
             echo "Pull request — publish dry-run on branch ${workflow_ref} (commit ${watch_sha})."
-          elif [[ "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
-            before="${{ github.event.before }}"
+          elif [[ "${CI_EVENT_NAME}" == "push" && "${CI_GITHUB_REF}" == "refs/heads/main" ]]; then
+            before="${CI_PUSH_BEFORE}"
             if [[ -n "${before}" && "${before}" != "0000000000000000000000000000000000000000" ]]; then
               git fetch --depth=1 origin "${before}" 2>/dev/null || true
             fi
@@ -217,7 +223,7 @@ jobs:
             echo "Unsupported ref for publish dispatch; skipping."
             trigger="false"
           fi
-          if [[ "${trigger}" == "true" && "${{ github.event_name }}" == "push" && "${{ github.ref }}" == "refs/heads/main" ]]; then
+          if [[ "${trigger}" == "true" && "${CI_EVENT_NAME}" == "push" && "${CI_GITHUB_REF}" == "refs/heads/main" ]]; then
             workflow_ref="main"
           fi
           echo "trigger=${trigger}" >> "${GITHUB_OUTPUT}"
