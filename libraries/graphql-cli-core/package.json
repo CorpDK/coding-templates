@@ -1,6 +1,6 @@
 {
   "name": "@corpdk/graphql-cli-core",
-  "version": "2026.10.0-alpha.15",
+  "version": "2026.10.0-alpha.16",
   "description": "GraphQL automation CLI runtime and codegen",
   "type": "module",
   "license": "MIT",
