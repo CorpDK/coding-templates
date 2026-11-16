@@ -1,6 +1,6 @@
 name: Monorepo CI
 
-# Orchestrates quality (parallel), Sonar, and npm publish on the same commit SHA.
+# Orchestrates quality (parallel), Sonar, then dispatches npm publish as a separate workflow (same SHA).
 # pull_request for PR branches; push only on main (avoids duplicate runs per commit).
 #
 # Quality: 12 parallel jobs — one per lockstep npm package (PUBLISH_ORDER in lockstep-calver.sh).
@@ -149,8 +149,8 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}
 
-  publish:
-    name: Publish DS automation (npm)
+  publish-dispatch:
+    name: Dispatch Publish DS automation (npm)
     needs: [quality, quality-templates, sonar, publish-paths]
     if: |
       needs.quality.result == 'success' &&
@@ -158,10 +158,164 @@ jobs:
       needs.sonar.result == 'success' &&
       needs.publish-paths.outputs.matched == 'true' &&
       (github.event_name == 'push' || github.event_name == 'pull_request')
+    runs-on: ubuntu-latest
     permissions:
-      contents: write
-      id-token: write
-    uses: ./.github/workflows/publish-ds-automation.yml
-    secrets: inherit
-    with:
-      trigger_event: ${{ github.event_name }}
+      actions: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Resolve publish workflow dispatch
+        id: dispatch
+        env:
+          CI_EVENT_NAME: ${{ github.event_name }}
+          CI_GITHUB_REF: ${{ github.ref }}
+          CI_PUSH_BEFORE: ${{ github.event.before }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
+        run: |
+          # shellcheck source=lockstep-calver.sh
+          source .github/scripts/lockstep-calver.sh
+          trigger="false"
+          dry_run="true"
+          watch_sha="${GITHUB_SHA}"
+          workflow_ref="${GITHUB_SHA}"
+          if [[ "${CI_EVENT_NAME}" == "pull_request" ]]; then
+            watch_sha="${PR_HEAD_SHA}"
+            workflow_ref="${PR_HEAD_REF}"
+            trigger="true"
+            dry_run="true"
+            echo "Pull request — publish dry-run on branch ${workflow_ref} (commit ${watch_sha})."
+          elif [[ "${CI_EVENT_NAME}" == "push" && "${CI_GITHUB_REF}" == "refs/heads/main" ]]; then
+            before="${CI_PUSH_BEFORE}"
+            if [[ -n "${before}" && "${before}" != "0000000000000000000000000000000000000000" ]]; then
+              git fetch --depth=1 origin "${before}" 2>/dev/null || true
+            fi
+            compare=""
+            if [[ -n "${before}" && "${before}" != "0000000000000000000000000000000000000000" ]]; then
+              compare="$(lockstep_calver_compare "${before}")"
+            fi
+            curr="$(lockstep_canonical_version)"
+            case "${compare}" in
+              unchanged)
+                echo "Main push with unchanged lockstep CalVer (${curr}); skip publish workflow."
+                trigger="false"
+                ;;
+              unreadable)
+                echo "Main push: prior lockstep CalVer unreadable; dispatch publish dry-run only."
+                trigger="true"
+                dry_run="true"
+                ;;
+              changed)
+                echo "Main push with lockstep CalVer bump — dispatch live publish (${curr})."
+                trigger="true"
+                dry_run="false"
+                ;;
+              *)
+                echo "Main push (${before:-<none>} → HEAD) — dispatch live publish (${curr})."
+                trigger="true"
+                dry_run="false"
+                ;;
+            esac
+          else
+            echo "Unsupported ref for publish dispatch; skipping."
+            trigger="false"
+          fi
+          if [[ "${trigger}" == "true" && "${CI_EVENT_NAME}" == "push" && "${CI_GITHUB_REF}" == "refs/heads/main" ]]; then
+            workflow_ref="main"
+          fi
+          echo "trigger=${trigger}" >> "${GITHUB_OUTPUT}"
+          echo "dry_run=${dry_run}" >> "${GITHUB_OUTPUT}"
+          echo "workflow_ref=${workflow_ref}" >> "${GITHUB_OUTPUT}"
+          echo "watch_sha=${watch_sha}" >> "${GITHUB_OUTPUT}"
+
+      - name: Dispatch publish-ds-automation.yml
+        if: |
+          steps.dispatch.outputs.trigger == 'true' &&
+          (github.event_name != 'pull_request' || github.event.pull_request.head.repo.fork == false)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          watch_sha="${{ steps.dispatch.outputs.watch_sha }}"
+          dispatch_not_before="$(($(date -u +%s) - 5))"
+          gh workflow run publish-ds-automation.yml \
+            --repo "${GITHUB_REPOSITORY}" \
+            --ref "${{ steps.dispatch.outputs.workflow_ref }}" \
+            -f "dry_run=${{ steps.dispatch.outputs.dry_run }}" \
+            -f "checkout_sha=${watch_sha}"
+          run_id=""
+          for _ in $(seq 1 45); do
+            run_id="$(gh run list \
+              --repo "${GITHUB_REPOSITORY}" \
+              --workflow=publish-ds-automation.yml \
+              --limit 20 \
+              --json databaseId,headSha,status,createdAt \
+              | jq --arg sha "${watch_sha}" --argjson epoch "${dispatch_not_before}" \
+                '[.[] | select(.headSha == $sha and ((.createdAt | fromdateiso8601) >= $epoch))][0].databaseId // empty')"
+            if [[ -z "${run_id}" ]]; then
+              run_id="$(gh run list \
+                --repo "${GITHUB_REPOSITORY}" \
+                --workflow=publish-ds-automation.yml \
+                --commit "${watch_sha}" \
+                --limit 10 \
+                --json databaseId,createdAt \
+                | jq --argjson epoch "${dispatch_not_before}" \
+                  '[.[] | select((.createdAt | fromdateiso8601) >= $epoch)][0].databaseId // empty')"
+            fi
+            if [[ -n "${run_id}" ]]; then
+              break
+            fi
+            sleep 2
+          done
+          if [[ -z "${run_id}" ]]; then
+            echo "No publish workflow run found for commit ${watch_sha}" >&2
+            exit 1
+          fi
+          gh run watch "${run_id}" --repo "${GITHUB_REPOSITORY}" --exit-status
+          echo "Publish workflow ${run_id} completed for commit ${watch_sha} (dry_run=${{ steps.dispatch.outputs.dry_run }})."
+
+      - uses: actions/checkout@v4
+        if: |
+          steps.dispatch.outputs.trigger == 'true' &&
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.fork == true
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - uses: pnpm/action-setup@v4
+        if: |
+          steps.dispatch.outputs.trigger == 'true' &&
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.fork == true
+
+      - uses: actions/setup-node@v4
+        if: |
+          steps.dispatch.outputs.trigger == 'true' &&
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.fork == true
+        with:
+          node-version: "24"
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+        if: |
+          steps.dispatch.outputs.trigger == 'true' &&
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.fork == true
+
+      - name: Fork PR publish dry-run (inline)
+        if: |
+          steps.dispatch.outputs.trigger == 'true' &&
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.fork == true
+        run: |
+          version="$(node -p "require('./libraries/dal-core/package.json').version")"
+          chmod +x .github/scripts/publish-ds-automation.sh
+          .github/scripts/publish-ds-automation.sh "${version}" --dry-run
+          echo "Fork pull request publish dry-run succeeded at ${{ github.event.pull_request.head.sha }}."
+
+      - name: Publish workflow not required
+        if: steps.dispatch.outputs.trigger != 'true'
+        run: echo "No publish workflow dispatch for this commit."
