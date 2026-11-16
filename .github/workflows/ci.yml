@@ -232,20 +232,29 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          watch_sha="${{ steps.dispatch.outputs.watch_sha }}"
           gh workflow run publish-ds-automation.yml \
             --repo "${GITHUB_REPOSITORY}" \
             --ref "${{ steps.dispatch.outputs.workflow_ref }}" \
-            -f "dry_run=${{ steps.dispatch.outputs.dry_run }}"
-          watch_sha="${{ steps.dispatch.outputs.watch_sha }}"
+            -f "dry_run=${{ steps.dispatch.outputs.dry_run }}" \
+            -f "checkout_sha=${watch_sha}"
           run_id=""
           for _ in $(seq 1 45); do
             run_id="$(gh run list \
               --repo "${GITHUB_REPOSITORY}" \
               --workflow=publish-ds-automation.yml \
-              --commit "${watch_sha}" \
-              --limit 1 \
-              --json databaseId \
-              --jq '.[0].databaseId // empty')"
+              --limit 20 \
+              --json databaseId,headSha,status,createdAt \
+              --jq "[.[] | select(.headSha == \"${watch_sha}\")][0].databaseId // empty")"
+            if [[ -z "${run_id}" ]]; then
+              run_id="$(gh run list \
+                --repo "${GITHUB_REPOSITORY}" \
+                --workflow=publish-ds-automation.yml \
+                --commit "${watch_sha}" \
+                --limit 1 \
+                --json databaseId \
+                --jq '.[0].databaseId // empty')"
+            fi
             if [[ -n "${run_id}" ]]; then
               break
             fi

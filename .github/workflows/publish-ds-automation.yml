@@ -16,8 +16,12 @@ on:
         description: Use npm publish --dry-run (no upload). Live publish only on main with dry_run false.
         type: boolean
         default: true
+      checkout_sha:
+        description: Commit to build/publish (Monorepo CI passes orchestrator SHA). Omit for manual dispatch on current ref tip.
+        required: false
+        type: string
       version:
-        description: CalVer to verify (defaults to libraries/dal-core/package.json on checked-out ref)
+        description: CalVer override (manual workflow_dispatch only; Monorepo CI reads libraries/dal-core from pinned checkout)
         required: false
         type: string
 
@@ -35,6 +39,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.checkout_sha || github.sha }}
           fetch-depth: 2
 
       # Gate before pnpm/setup-node so early skip does not run setup-node post-cache
