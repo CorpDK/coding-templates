@@ -252,8 +252,8 @@ jobs:
               --workflow=publish-ds-automation.yml \
               --limit 20 \
               --json databaseId,headSha,status,createdAt \
-              --jq --arg sha "${watch_sha}" --argjson epoch "${dispatch_not_before}" \
-              '[.[] | select(.headSha == $sha and ((.createdAt | fromdateiso8601) >= $epoch))][0].databaseId // empty')"
+              | jq --arg sha "${watch_sha}" --argjson epoch "${dispatch_not_before}" \
+                '[.[] | select(.headSha == $sha and ((.createdAt | fromdateiso8601) >= $epoch))][0].databaseId // empty')"
             if [[ -z "${run_id}" ]]; then
               run_id="$(gh run list \
                 --repo "${GITHUB_REPOSITORY}" \
@@ -261,8 +261,8 @@ jobs:
                 --commit "${watch_sha}" \
                 --limit 10 \
                 --json databaseId,createdAt \
-                --jq --argjson epoch "${dispatch_not_before}" \
-                '[.[] | select((.createdAt | fromdateiso8601) >= $epoch)][0].databaseId // empty')"
+                | jq --argjson epoch "${dispatch_not_before}" \
+                  '[.[] | select((.createdAt | fromdateiso8601) >= $epoch)][0].databaseId // empty')"
             fi
             if [[ -n "${run_id}" ]]; then
               break
