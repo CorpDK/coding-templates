@@ -1,6 +1,6 @@
 {
   "name": "@corpdk/create-graphql-cli",
-  "version": "2026.10.0-alpha.15",
+  "version": "2026.10.0-alpha.16",
   "description": "Scaffold and upgrade graphql-cli packages",
   "type": "module",
   "license": "MIT",
