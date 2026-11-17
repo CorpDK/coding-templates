@@ -16,7 +16,7 @@ Add Vitest (and `@testing-library/react` where components need it) to the two mo
 
 ### 2. CalVer graduation (alpha → stable)
 
-**Status:** In progress — npm **DS automation lockstep set** (twelve packages; see [04-npm-publish-ds-automation.md § Package set](../admin/04-npm-publish-ds-automation.md#package-set-npmjs)) is on **`2026.10.0-alpha.16`** (`latest` with provenance after PR #40); seven generator scaffolds beyond P1a + `engine-kit` remain stub until Wave 2+. Automated publish on `main` when **any** lockstep package CalVer bumps ([04-npm-publish-ds-automation.md](../admin/04-npm-publish-ds-automation.md)). Other publishable `@corpdk/*` (e.g. `@corpdk/ui-core`) remain on **`2026.10.0-alpha.1`** until the next lockstep bump. Stable `2026.10.0` (or the next calendar period) not released yet.
+**Status:** In progress — npm **DS automation lockstep set** (twelve packages; see [04-npm-publish-ds-automation.md § Package set](../admin/04-npm-publish-ds-automation.md#package-set-npmjs)) is on **`2026.10.0-alpha.16`** (`latest` with provenance after PR #40); four generator scaffolds (`graphql-dsl`, `graphql-cli-core`, `create-graphql-sdk`, `create-graphql-cli`) remain stub until Wave 2+. Automated publish on `main` when **any** lockstep package CalVer bumps ([04-npm-publish-ds-automation.md](../admin/04-npm-publish-ds-automation.md)). Other publishable `@corpdk/*` (e.g. `@corpdk/ui-core`) remain on **`2026.10.0-alpha.1`** until the next lockstep bump. Stable `2026.10.0` (or the next calendar period) not released yet.
 
 Graduate to stable CalVer (`YYYY.MM.MICRO`, Limitless rules in [02-monorepo-design.md](../architecture/02-monorepo-design.md)) when public APIs for the npm set and UI libraries stabilize.
 

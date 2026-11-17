@@ -2,7 +2,7 @@
 
 Living execution plan for the SDK, CLI, and DS-generator designs ([13](13-graphql-sdk-generator.md), [14](14-graphql-cli-generator.md), [15](15-create-ds-generator-integration.md)). **B0, design merges, and Wave 1 are complete** on `main` (`2a00576`).
 
-**Status:** **Wave 1 complete** — P1a ([#35](https://github.com/CorpDK/coding-templates/pull/35)), DS-P0b ([#36](https://github.com/CorpDK/coding-templates/pull/36)), Monorepo CI ([#37](https://github.com/CorpDK/coding-templates/pull/37)), lockstep quality + CalVer gate ([#38](https://github.com/CorpDK/coding-templates/pull/38)), OIDC-safe publish dispatch ([#39](https://github.com/CorpDK/coding-templates/pull/39)), live lockstep **`2026.10.0-alpha.16`** ([#40](https://github.com/CorpDK/coding-templates/pull/40)). **Wave 2 (current):** P1b `graphql-dsl`, C-P1 `graphql-cli-core` — seven generator npm names beyond P1a + `engine-kit` remain scaffold/stub until those phases land.
+**Status:** **Wave 1 complete** — P1a ([#35](https://github.com/CorpDK/coding-templates/pull/35)), DS-P0b ([#36](https://github.com/CorpDK/coding-templates/pull/36)), Monorepo CI ([#37](https://github.com/CorpDK/coding-templates/pull/37)), lockstep quality + CalVer gate ([#38](https://github.com/CorpDK/coding-templates/pull/38)), OIDC-safe publish dispatch ([#39](https://github.com/CorpDK/coding-templates/pull/39)), live lockstep **`2026.10.0-alpha.16`** ([#40](https://github.com/CorpDK/coding-templates/pull/40)). **Wave 2 (current):** P1b `graphql-dsl`, C-P1 `graphql-cli-core` — four generator npm names remain scaffold/stub (`graphql-dsl`, `graphql-cli-core`, `create-graphql-sdk`, `create-graphql-cli`) until those phases land.
 
 ---
 
@@ -10,7 +10,7 @@ Living execution plan for the SDK, CLI, and DS-generator designs ([13](13-graphq
 
 | Milestone | Evidence |
 | --------- | -------- |
-| Cross-design docs at rev 12 / 6 / 6 | `docs/developer/13–15` on `main` |
+| Cross-design docs at rev 13 / 6 / 6 | `docs/developer/13–15` on `main` |
 | Seven npm placeholders + lockstep CalVer | Workspace packages; `PUBLISH_ORDER` in [04-npm-publish-ds-automation.md](../admin/04-npm-publish-ds-automation.md) |
 | Manual B0 bootstrap + GitHub trusted publishing | `scripts/npm-b0-bootstrap.sh`, admin doc § Generator B0 |
 | **Wave 1 implementation** | `scalar-zod`, `graphql-input-zod`, `dal-codegen` wiring (P1a); `engine-kit` + `create-ds` refactor (DS-P0b) |
@@ -41,7 +41,6 @@ flowchart TB
   DS-P0b --> P1c
   P1a --> P1b
   P1a --> C-P1
-  DS-P0b --> P1c
   P1b --> P2
   P1c --> P2
   P1b --> C-P2
@@ -112,7 +111,7 @@ Canonical **publish order** remains [doc 15 §4.3](15-create-ds-generator-integr
 
 ### DS-P0b — merged ([#36](https://github.com/CorpDK/coding-templates/pull/36), `8c7f13e`)
 
-- [x] `@corpdk/engine-kit` implements §11.3 modules with tests (20 vitest).
+- [x] `@corpdk/engine-kit` implements §11.3 modules with tests (23 vitest).
 - [x] `create-ds` refactor: §11.5 exit codes, strict flags, `tsc` build, `runInit`/`runUpgrade` exports.
 - [x] Fixture/comparison tests (gate-added; R-D11 intent).
 - [x] Publish-order guard + canonical drift in publish pipeline / `check-ds-publish-order`.
@@ -146,7 +145,7 @@ Canonical **publish order** remains [doc 15 §4.3](15-create-ds-generator-integr
 
 ## References
 
-- Registers: SDK [§17](13-graphql-sdk-generator.md#17-remaining-work-register), CLI [§16](14-graphql-cli-generator.md), DS [§12](15-create-ds-generator-integration.md#12-remaining-work-register)
+- Registers: SDK [§17](13-graphql-sdk-generator.md#17-remaining-work-register), CLI [§16](14-graphql-cli-generator.md#16-remaining-work-register), DS [§12](15-create-ds-generator-integration.md#12-remaining-work-register)
 - Coding standards: [08-coding-guidelines.md](08-coding-guidelines.md)
 - Publish: [04-npm-publish-ds-automation.md](../admin/04-npm-publish-ds-automation.md)
 
