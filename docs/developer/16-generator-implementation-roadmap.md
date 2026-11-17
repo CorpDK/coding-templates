@@ -8,15 +8,15 @@ Living execution plan for the SDK, CLI, and DS-generator designs ([13](13-graphq
 
 ## Achieved (through Wave 1 + publish train)
 
-| Milestone | Evidence |
-| --------- | -------- |
-| Cross-design docs at rev 13 / 6 / 6 | `docs/developer/13–15` on `main` |
-| Seven npm placeholders + lockstep CalVer | Workspace packages; `PUBLISH_ORDER` in [04-npm-publish-ds-automation.md](../admin/04-npm-publish-ds-automation.md) |
-| Manual B0 bootstrap + GitHub trusted publishing | `scripts/npm-b0-bootstrap.sh`, admin doc § Generator B0 |
-| **Wave 1 implementation** | `scalar-zod`, `graphql-input-zod`, `dal-codegen` wiring (P1a); `engine-kit` + `create-ds` refactor (DS-P0b) |
-| **Monorepo CI** | Orchestrated Monorepo quality (12 lockstep packages + `quality-templates`), Sonar, publish dispatch on the same SHA |
-| **Lockstep npm `latest`** | All twelve `@corpdk/*` DS automation packages at **`2026.10.0-alpha.16`** with provenance (publish run after #40) |
-| Typed scaffolds for remaining phases | Stub `src/` on generator packages not yet implemented (P1b, P1c, P2, C-P1–C-P3) |
+| Milestone                                       | Evidence                                                                                                            |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| Cross-design docs at rev 13 / 6 / 6             | `docs/developer/13–15` on `main`                                                                                    |
+| Seven npm placeholders + lockstep CalVer        | Workspace packages; `PUBLISH_ORDER` in [04-npm-publish-ds-automation.md](../admin/04-npm-publish-ds-automation.md)  |
+| Manual B0 bootstrap + GitHub trusted publishing | `scripts/npm-b0-bootstrap.sh`, admin doc § Generator B0                                                             |
+| **Wave 1 implementation**                       | `scalar-zod`, `graphql-input-zod`, `dal-codegen` wiring (P1a); `engine-kit` + `create-ds` refactor (DS-P0b)         |
+| **Monorepo CI**                                 | Orchestrated Monorepo quality (12 lockstep packages + `quality-templates`), Sonar, publish dispatch on the same SHA |
+| **Lockstep npm `latest`**                       | All twelve `@corpdk/*` DS automation packages at **`2026.10.0-alpha.16`** with provenance (publish run after #40)   |
+| Typed scaffolds for remaining phases            | Stub `src/` on generator packages not yet implemented (P1b, P1c, P2, C-P1–C-P3)                                     |
 
 **Still legacy until later phases:** `templates/ds-sdk` (`client-preset`), `templates/ds-cli` (`@corpdk/codegen-cli` preset). **`create-ds` uses `@corpdk/engine-kit`** after DS-P0b (#36).
 
@@ -59,32 +59,32 @@ Canonical **publish order** remains [doc 15 §4.3](15-create-ds-generator-integr
 
 ### Wave 1 (complete) — parallel tracks
 
-| Track | Phase | Packages | Primary registers / gates |
-| ----- | ----- | -------- | ------------------------- |
-| A | **DS-P0b** | `engine-kit`, `create-ds` | R-D10, R-D11, R-D13–R-D15; [§11.3–§11.5](15-create-ds-generator-integration.md#113-corpdkengine-kit) |
-| B | **SDK P1a** | `scalar-zod`, `graphql-input-zod`, `dal-codegen`, `dal-core` | R-09, R-10, R-35, R-37; R-D07; [SDK §13 P1a](13-graphql-sdk-generator.md#13-implementation-phases) |
+| Track | Phase       | Packages                                                     | Primary registers / gates                                                                            |
+| ----- | ----------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| A     | **DS-P0b**  | `engine-kit`, `create-ds`                                    | R-D10, R-D11, R-D13–R-D15; [§11.3–§11.5](15-create-ds-generator-integration.md#113-corpdkengine-kit) |
+| B     | **SDK P1a** | `scalar-zod`, `graphql-input-zod`, `dal-codegen`, `dal-core` | R-09, R-10, R-35, R-37; R-D07; [SDK §13 P1a](13-graphql-sdk-generator.md#13-implementation-phases)   |
 
 **No cross-track merge dependency** until Wave 3 (P1c needs DS-P0b).
 
 ### Wave 2 (current) — after P1a on `main`
 
-| Phase | Depends on | Notes |
-| ----- | ---------- | ----- |
-| **P1b** | P1a | Single PR per design (DSL coupling); fork `genql` @ `15f27b9`, L1 `FieldsSelection`, aliases/directives/`define*`, §3.8 helpers |
-| **C-P1** | P1a | `graphql-cli-core` codegen port from `codegen-cli`; R-C01, R-C02, R-C17 |
+| Phase    | Depends on | Notes                                                                                                                           |
+| -------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| **P1b**  | P1a        | Single PR per design (DSL coupling); fork `genql` @ `15f27b9`, L1 `FieldsSelection`, aliases/directives/`define*`, §3.8 helpers |
+| **C-P1** | P1a        | `graphql-cli-core` codegen port from `codegen-cli`; R-C01, R-C02, R-C17                                                         |
 
 ### Wave 3 — engines
 
-| Phase | Gates |
-| ----- | ----- |
-| **P1c** | DS-P0b + P1a (+ P1b for realistic codegen) |
-| **C-P2** | DS-P0b, P1a, P1b, P1c, C-P1 |
+| Phase    | Gates                                      |
+| -------- | ------------------------------------------ |
+| **P1c**  | DS-P0b + P1a (+ P1b for realistic codegen) |
+| **C-P2** | DS-P0b, P1a, P1b, P1c, C-P1                |
 
 ### Wave 4 — integration releases (coordinate, do not split)
 
-| Release train | Phases bundled |
-| ------------- | -------------- |
-| SDK + DS SDK path | **P2** + **DS-P1** (drop `client-preset`, private `templates/ds-sdk`, `--with-sdk`, publish `create-graphql-sdk`) |
+| Release train     | Phases bundled                                                                                                           |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| SDK + DS SDK path | **P2** + **DS-P1** (drop `client-preset`, private `templates/ds-sdk`, `--with-sdk`, publish `create-graphql-sdk`)        |
 | CLI + DS CLI path | **C-P3** + **DS-P2** (drop `codegen-cli` preset, private `templates/ds-cli`, `--with-cli`, publish `create-graphql-cli`) |
 
 ### Later
@@ -97,13 +97,13 @@ Canonical **publish order** remains [doc 15 §4.3](15-create-ds-generator-integr
 
 ## Parallelism rules
 
-| Safe in parallel | Must stay sequential |
-| ---------------- | -------------------- |
-| DS-P0b ∥ P1a (Wave 1) | P1b after P1a |
-| P1b ∥ C-P1 (Wave 2) | P1c after DS-P0b |
-| Per-package unit tests inside each PR | P2 + DS-P1 one PR / one release |
-| | C-P3 + DS-P2 one PR / one release |
-| | P1b not split across PRs (design) |
+| Safe in parallel                      | Must stay sequential              |
+| ------------------------------------- | --------------------------------- |
+| DS-P0b ∥ P1a (Wave 1)                 | P1b after P1a                     |
+| P1b ∥ C-P1 (Wave 2)                   | P1c after DS-P0b                  |
+| Per-package unit tests inside each PR | P2 + DS-P1 one PR / one release   |
+|                                       | C-P3 + DS-P2 one PR / one release |
+|                                       | P1b not split across PRs (design) |
 
 ---
 
@@ -130,14 +130,14 @@ Canonical **publish order** remains [doc 15 §4.3](15-create-ds-generator-integr
 
 ## Shipped merges (Wave 1 + CI / publish train)
 
-| PR | Topic | Merge SHA |
-| -- | ----- | --------- |
-| [#37](https://github.com/CorpDK/coding-templates/pull/37) | Monorepo CI / quality matrix foundations | `a1300243` |
-| [#35](https://github.com/CorpDK/coding-templates/pull/35) | SDK **P1a** (`scalar-zod`, `graphql-input-zod`, `dal-codegen` wire) | `393c093` |
-| [#36](https://github.com/CorpDK/coding-templates/pull/36) | **DS-P0b** (`engine-kit`, `create-ds` refactor) | `8c7f13e` |
-| [#38](https://github.com/CorpDK/coding-templates/pull/38) | Lockstep 12-package quality matrix, CalVer gate, `quality-templates` | `084931a` |
-| [#39](https://github.com/CorpDK/coding-templates/pull/39) | Publish via `gh workflow run` + `checkout_sha` (npm OIDC fix) | `bdb5a0d` |
-| [#40](https://github.com/CorpDK/coding-templates/pull/40) | Lockstep **2026.10.0-alpha.16** bump + live publish | `2a00576` |
+| PR                                                        | Topic                                                                | Merge SHA  |
+| --------------------------------------------------------- | -------------------------------------------------------------------- | ---------- |
+| [#37](https://github.com/CorpDK/coding-templates/pull/37) | Monorepo CI / quality matrix foundations                             | `a1300243` |
+| [#35](https://github.com/CorpDK/coding-templates/pull/35) | SDK **P1a** (`scalar-zod`, `graphql-input-zod`, `dal-codegen` wire)  | `393c093`  |
+| [#36](https://github.com/CorpDK/coding-templates/pull/36) | **DS-P0b** (`engine-kit`, `create-ds` refactor)                      | `8c7f13e`  |
+| [#38](https://github.com/CorpDK/coding-templates/pull/38) | Lockstep 12-package quality matrix, CalVer gate, `quality-templates` | `084931a`  |
+| [#39](https://github.com/CorpDK/coding-templates/pull/39) | Publish via `gh workflow run` + `checkout_sha` (npm OIDC fix)        | `bdb5a0d`  |
+| [#40](https://github.com/CorpDK/coding-templates/pull/40) | Lockstep **2026.10.0-alpha.16** bump + live publish                  | `2a00576`  |
 
 **Ship policy:** run **`no-mistakes axi run`** with intent text for the phase when a branch is ready; **no-mistakes** owns push and PR creation (do not run `gh pr create` from implementation threads unless explicitly requested).
 

@@ -33,6 +33,7 @@ Welcome to the coding-templates documentation! This monorepo provides production
 - [GraphQL SDK generator (design)](developer/13-graphql-sdk-generator.md) — `@corpdk/create-graphql-sdk`; publishable client SDK from SDL or `typeDefs`; output `templates/ds-sdk`
 - [GraphQL CLI generator (design)](developer/14-graphql-cli-generator.md) — `@corpdk/create-graphql-cli`; automation CLI wrapping the SDK; dogfood `templates/ds-cli` (private sample); replaces the DS `codegen.ts` → `@corpdk/codegen-cli` preset
 - [DS generator integration (design)](developer/15-create-ds-generator-integration.md) — `create-ds` changes to scaffold and upgrade DS + SDK + CLI with the new generators (`create-app` frozen, out of scope)
+- [Generator implementation roadmap](developer/16-generator-implementation-roadmap.md) — Wave 1 complete; Wave 2 current (execution plan for docs 13–15)
 - [UI Architecture](developer/05-ui-architecture.md) — UI template state and app-level config
 - [UI Status Dashboard](developer/06-ui-status.md) — living capability matrix across all UI packages
 - [Git Conventions](developer/07-git-conventions.md) — Conventional Commits format and examples
