@@ -10,20 +10,20 @@ These **twelve** DS automation packages ship together on [npmjs](https://www.npm
 
 When [Monorepo CI](.github/workflows/ci.yml) finishes Monorepo quality (twelve lockstep packages), `quality-templates`, and Sonar on a commit that matches the publish path filter, it dispatches [**Publish DS automation (npm)**](.github/workflows/publish-ds-automation.yml) via `workflow_dispatch` (`checkout_sha` = the orchestrator commit; pull-request dry-run; on `main`, live publish only when **any** lockstep package CalVer changes vs the merge parent).
 
-| Package | Path | Registry |
-| --- | --- | --- |
-| `@corpdk/graphql-dsl` | `libraries/graphql-dsl` | npm (public) |
-| `@corpdk/scalar-zod` | `libraries/scalar-zod` | npm (public) |
-| `@corpdk/dal-core` | `libraries/dal-core` | npm (public) |
-| `@corpdk/pub-sub` | `libraries/pub-sub` | npm (public) |
-| `@corpdk/graphql-input-zod` | `libraries/graphql-input-zod` | npm (public) |
-| `@corpdk/dal-codegen` | `libraries/dal-codegen` | npm (public) |
-| `@corpdk/engine-kit` | `libraries/engine-kit` | npm (public) |
-| `@corpdk/graphql-cli-core` | `libraries/graphql-cli-core` | npm (public) |
-| `@corpdk/create-graphql-sdk` | `engines/create-graphql-sdk` | npm (public) |
-| `@corpdk/create-graphql-cli` | `engines/create-graphql-cli` | npm (public) |
-| `@corpdk/codegen-cli` | `libraries/codegen-cli` | npm (public) |
-| `@corpdk/create-ds` | `engines/create-ds` | npm (public) |
+| Package                      | Path                          | Registry     |
+| ---------------------------- | ----------------------------- | ------------ |
+| `@corpdk/graphql-dsl`        | `libraries/graphql-dsl`       | npm (public) |
+| `@corpdk/scalar-zod`         | `libraries/scalar-zod`        | npm (public) |
+| `@corpdk/dal-core`           | `libraries/dal-core`          | npm (public) |
+| `@corpdk/pub-sub`            | `libraries/pub-sub`           | npm (public) |
+| `@corpdk/graphql-input-zod`  | `libraries/graphql-input-zod` | npm (public) |
+| `@corpdk/dal-codegen`        | `libraries/dal-codegen`       | npm (public) |
+| `@corpdk/engine-kit`         | `libraries/engine-kit`        | npm (public) |
+| `@corpdk/graphql-cli-core`   | `libraries/graphql-cli-core`  | npm (public) |
+| `@corpdk/create-graphql-sdk` | `engines/create-graphql-sdk`  | npm (public) |
+| `@corpdk/create-graphql-cli` | `engines/create-graphql-cli`  | npm (public) |
+| `@corpdk/codegen-cli`        | `libraries/codegen-cli`       | npm (public) |
+| `@corpdk/create-ds`          | `engines/create-ds`           | npm (public) |
 
 Other workspace packages (`engines/create-app`, `packages/ui-*`, `packages/eslint-config`, `templates/*`) are used from this monorepo or from a private Artifactory registry when your team publishes them — they are not part of the npm DS automation release.
 
