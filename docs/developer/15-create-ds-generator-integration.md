@@ -6,7 +6,7 @@ Design for the changes the **DS generator** (`@corpdk/create-ds`) needs, so it s
 
 **Depends on:**
 
-- [13-graphql-sdk-generator.md](13-graphql-sdk-generator.md) (SDK design, rev 12)
+- [13-graphql-sdk-generator.md](13-graphql-sdk-generator.md) (SDK design, rev 13)
 - [14-graphql-cli-generator.md](14-graphql-cli-generator.md) (CLI design, rev 6)
 
 **Related:** [ds-automation-upgrades.md](ds-automation-upgrades.md) · [04-npm-publish-ds-automation.md](../admin/04-npm-publish-ds-automation.md)

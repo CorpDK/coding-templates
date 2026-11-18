@@ -33,6 +33,7 @@ Welcome to the coding-templates documentation! This monorepo provides production
 - [GraphQL SDK generator (design)](developer/13-graphql-sdk-generator.md) — `@corpdk/create-graphql-sdk`; publishable client SDK from SDL or `typeDefs`; output `templates/ds-sdk`
 - [GraphQL CLI generator (design)](developer/14-graphql-cli-generator.md) — `@corpdk/create-graphql-cli`; automation CLI wrapping the SDK; dogfood `templates/ds-cli` (private sample); replaces the DS `codegen.ts` → `@corpdk/codegen-cli` preset
 - [DS generator integration (design)](developer/15-create-ds-generator-integration.md) — `create-ds` changes to scaffold and upgrade DS + SDK + CLI with the new generators (`create-app` frozen, out of scope)
+- [Generator implementation roadmap](developer/16-generator-implementation-roadmap.md) — Wave 1 complete; Wave 2 current (execution plan for docs 13–15)
 - [UI Architecture](developer/05-ui-architecture.md) — UI template state and app-level config
 - [UI Status Dashboard](developer/06-ui-status.md) — living capability matrix across all UI packages
 - [Git Conventions](developer/07-git-conventions.md) — Conventional Commits format and examples
@@ -58,20 +59,24 @@ Welcome to the coding-templates documentation! This monorepo provides production
 
 ### Common Tasks
 
-| Task                                | Documentation                                                        |
-| ----------------------------------- | -------------------------------------------------------------------- |
-| **Set up a new project**            | [Interactive Mode](user/02-interactive-mode.md)                      |
-| **Scaffold / upgrade a DS**         | [DS automation upgrades](developer/ds-automation-upgrades.md)        |
-| **Release DS automation to npm**    | [npm — DS automation publish](admin/04-npm-publish-ds-automation.md) |
-| **Configure environment**           | [Environment Variables](admin/01-environment-variables.md)           |
-| **Deploy with Docker**              | [Docker Deployment](admin/02-docker-deployment.md)                   |
-| **DS health / tracing / input Zod** | [DS observability](developer/12-ds-observability.md)                 |
-| **Add a GraphQL entity**            | [Repository Pattern](developer/03-repository-pattern.md)             |
-| **Design a DAL entity**             | [DAL Entity Design](developer/dal-entity-design.md)                  |
-| **Add a subscription**              | [PubSub Internals](developer/04-pubsub-internals.md)                 |
-| **Choose a DS variant**             | [Data Service Design](architecture/03-data-service-design.md)        |
-| **Write a commit message**          | [Git Conventions](developer/07-git-conventions.md)                   |
-| **Check UI package status**         | [UI Status Dashboard](developer/06-ui-status.md)                     |
+| Task                                  | Documentation                                                                        |
+| ------------------------------------- | ------------------------------------------------------------------------------------ |
+| **Set up a new project**              | [Interactive Mode](user/02-interactive-mode.md)                                      |
+| **Scaffold / upgrade a DS**           | [DS automation upgrades](developer/ds-automation-upgrades.md)                        |
+| **Release DS automation to npm**      | [npm — DS automation publish](admin/04-npm-publish-ds-automation.md)                 |
+| **Configure environment**             | [Environment Variables](admin/01-environment-variables.md)                           |
+| **Deploy with Docker**                | [Docker Deployment](admin/02-docker-deployment.md)                                   |
+| **DS health / tracing / input Zod**   | [DS observability](developer/12-ds-observability.md)                                 |
+| **SDK / CLI / generator roadmap**     | [Generator implementation roadmap](developer/16-generator-implementation-roadmap.md) |
+| **GraphQL SDK generator design**      | [GraphQL SDK generator (design)](developer/13-graphql-sdk-generator.md)              |
+| **GraphQL CLI generator design**      | [GraphQL CLI generator (design)](developer/14-graphql-cli-generator.md)              |
+| **`create-ds` generator integration** | [DS generator integration (design)](developer/15-create-ds-generator-integration.md) |
+| **Add a GraphQL entity**              | [Repository Pattern](developer/03-repository-pattern.md)                             |
+| **Design a DAL entity**               | [DAL Entity Design](developer/dal-entity-design.md)                                  |
+| **Add a subscription**                | [PubSub Internals](developer/04-pubsub-internals.md)                                 |
+| **Choose a DS variant**               | [Data Service Design](architecture/03-data-service-design.md)                        |
+| **Write a commit message**            | [Git Conventions](developer/07-git-conventions.md)                                   |
+| **Check UI package status**           | [UI Status Dashboard](developer/06-ui-status.md)                                     |
 
 ---
 
@@ -102,34 +107,39 @@ Welcome to the coding-templates documentation! This monorepo provides production
 
 ## 🗂️ Complete File Listing
 
-| File                                                                                          | Description                        |
-| --------------------------------------------------------------------------------------------- | ---------------------------------- |
-| [00-index.md](00-index.md)                                                                    | This navigation index              |
-| [10-contributing.md](10-contributing.md)                                                      | Contributing guidelines            |
-| [admin/01-environment-variables.md](admin/01-environment-variables.md)                        | Env var reference per package      |
-| [admin/02-docker-deployment.md](admin/02-docker-deployment.md)                                | Docker build and deploy            |
-| [admin/03-pubsub-redis.md](admin/03-pubsub-redis.md)                                          | Redis transport config             |
-| [architecture/01-system-overview.md](architecture/01-system-overview.md)                      | Component topology                 |
-| [architecture/02-monorepo-design.md](architecture/02-monorepo-design.md)                      | Workspace design                   |
-| [architecture/03-data-service-design.md](architecture/03-data-service-design.md)              | DS variant rationale               |
-| [architecture/04-ui-package-design.md](architecture/04-ui-package-design.md)                  | UI package design                  |
-| [architecture/05-technology-decisions.md](architecture/05-technology-decisions.md)            | Technology ADRs                    |
-| [architecture/06-package-dependencies.md](architecture/06-package-dependencies.md)            | Dependency versions                |
-| [developer/01-monorepo-overview.md](developer/01-monorepo-overview.md)                        | Repo layout and scripts            |
-| [developer/02-graphql-schema.md](developer/02-graphql-schema.md)                              | SDL conventions                    |
-| [developer/03-repository-pattern.md](developer/03-repository-pattern.md)                      | Repository interface               |
-| [developer/04-pubsub-internals.md](developer/04-pubsub-internals.md)                          | PubSub wiring                      |
-| [developer/11-ds-subscription-sse.md](developer/11-ds-subscription-sse.md)                    | All DS templates SSE subscriptions |
-| [developer/05-ui-architecture.md](developer/05-ui-architecture.md)                            | UI template state                  |
-| [developer/06-ui-status.md](developer/06-ui-status.md)                                        | Capability matrix                  |
-| [developer/07-git-conventions.md](developer/07-git-conventions.md)                            | Commit format                      |
-| [developer/08-coding-guidelines.md](developer/08-coding-guidelines.md)                        | Code style guide                   |
-| [developer/09-enhancement-backlog.md](developer/09-enhancement-backlog.md)                    | Open UI + `templates/ds` backlog   |
-| [developer/dal-entity-design.md](developer/dal-entity-design.md)                              | DAL Drizzle entity design          |
-| [developer/dal-pg-type-mapping.md](developer/dal-pg-type-mapping.md)                          | PG → GraphQL type mapping          |
-| [developer/graphql-dal-requirements.md](developer/graphql-dal-requirements.md)                | GraphQL DAL requirements           |
-| [developer/ds-automation-upgrades.md](developer/ds-automation-upgrades.md)                    | `create-ds` init / upgrade         |
-| [developer/dal-phase2.md](developer/dal-phase2.md) … [dal-phase5.md](developer/dal-phase5.md) | DAL phase delivery notes           |
+| File                                                                                                 | Description                                 |
+| ---------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| [00-index.md](00-index.md)                                                                           | This navigation index                       |
+| [10-contributing.md](10-contributing.md)                                                             | Contributing guidelines                     |
+| [admin/01-environment-variables.md](admin/01-environment-variables.md)                               | Env var reference per package               |
+| [admin/02-docker-deployment.md](admin/02-docker-deployment.md)                                       | Docker build and deploy                     |
+| [admin/03-pubsub-redis.md](admin/03-pubsub-redis.md)                                                 | Redis transport config                      |
+| [architecture/01-system-overview.md](architecture/01-system-overview.md)                             | Component topology                          |
+| [architecture/02-monorepo-design.md](architecture/02-monorepo-design.md)                             | Workspace design                            |
+| [architecture/03-data-service-design.md](architecture/03-data-service-design.md)                     | DS variant rationale                        |
+| [architecture/04-ui-package-design.md](architecture/04-ui-package-design.md)                         | UI package design                           |
+| [architecture/05-technology-decisions.md](architecture/05-technology-decisions.md)                   | Technology ADRs                             |
+| [architecture/06-package-dependencies.md](architecture/06-package-dependencies.md)                   | Dependency versions                         |
+| [developer/01-monorepo-overview.md](developer/01-monorepo-overview.md)                               | Repo layout and scripts                     |
+| [developer/02-graphql-schema.md](developer/02-graphql-schema.md)                                     | SDL conventions                             |
+| [developer/03-repository-pattern.md](developer/03-repository-pattern.md)                             | Repository interface                        |
+| [developer/04-pubsub-internals.md](developer/04-pubsub-internals.md)                                 | PubSub wiring                               |
+| [developer/11-ds-subscription-sse.md](developer/11-ds-subscription-sse.md)                           | All DS templates SSE subscriptions          |
+| [developer/12-ds-observability.md](developer/12-ds-observability.md)                                 | Health probe, OTLP tracing, input Zod       |
+| [developer/13-graphql-sdk-generator.md](developer/13-graphql-sdk-generator.md)                       | SDK generator design (`create-graphql-sdk`) |
+| [developer/14-graphql-cli-generator.md](developer/14-graphql-cli-generator.md)                       | CLI generator design (`create-graphql-cli`) |
+| [developer/15-create-ds-generator-integration.md](developer/15-create-ds-generator-integration.md)   | `create-ds` + SDK/CLI generator integration |
+| [developer/16-generator-implementation-roadmap.md](developer/16-generator-implementation-roadmap.md) | Generator waves, dependencies, merge status |
+| [developer/05-ui-architecture.md](developer/05-ui-architecture.md)                                   | UI template state                           |
+| [developer/06-ui-status.md](developer/06-ui-status.md)                                               | Capability matrix                           |
+| [developer/07-git-conventions.md](developer/07-git-conventions.md)                                   | Commit format                               |
+| [developer/08-coding-guidelines.md](developer/08-coding-guidelines.md)                               | Code style guide                            |
+| [developer/09-enhancement-backlog.md](developer/09-enhancement-backlog.md)                           | Open UI + `templates/ds` backlog            |
+| [developer/dal-entity-design.md](developer/dal-entity-design.md)                                     | DAL Drizzle entity design                   |
+| [developer/dal-pg-type-mapping.md](developer/dal-pg-type-mapping.md)                                 | PG → GraphQL type mapping                   |
+| [developer/graphql-dal-requirements.md](developer/graphql-dal-requirements.md)                       | GraphQL DAL requirements                    |
+| [developer/ds-automation-upgrades.md](developer/ds-automation-upgrades.md)                           | `create-ds` init / upgrade                  |
+| [developer/dal-phase2.md](developer/dal-phase2.md) … [dal-phase5.md](developer/dal-phase5.md)        | DAL phase delivery notes                    |
 
 ---
 
@@ -145,4 +155,4 @@ Welcome to the coding-templates documentation! This monorepo provides production
 
 **Related**: [CLAUDE.md](../CLAUDE.md) | [Contributing](10-contributing.md)
 
-**Last updated**: October 6, 2026
+**Last updated**: November 18, 2026
