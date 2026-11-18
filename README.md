@@ -37,3 +37,4 @@ MIT — see [LICENSE](LICENSE). Use, modify, and redistribute freely; retain the
 - [Admin Guide](docs/admin/01-environment-variables.md) — environment variables, Docker, PubSub/Redis
 - [Architecture](docs/architecture/01-system-overview.md) — system design, decisions, and rationale
 - [Developer Guide](docs/developer/01-monorepo-overview.md) — patterns, conventions, and coding standards
+- [Generator implementation roadmap](docs/developer/16-generator-implementation-roadmap.md) — Wave 1 complete; Wave 2 execution plan (SDK, CLI, `create-ds` generators)
