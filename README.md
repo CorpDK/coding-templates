@@ -8,7 +8,7 @@ Run `pnpm create-app` to scaffold a full-stack project, or `pnpm create-ds init`
 
 These **twelve** DS automation packages ship together on [npmjs](https://www.npmjs.org/) (public, lockstep CalVer, e.g. **`2026.10.0-alpha.16`**). Order matches [`PUBLISH_ORDER`](.github/scripts/lockstep-calver.sh). See [npm publish — DS automation](docs/admin/04-npm-publish-ds-automation.md).
 
-After Monorepo CI quality and Sonar succeed on a commit, [Monorepo CI](.github/workflows/ci.yml) dispatches [**Publish DS automation (npm)**](.github/workflows/publish-ds-automation.yml) via `workflow_dispatch` (`checkout_sha` = the orchestrator commit).
+When [Monorepo CI](.github/workflows/ci.yml) finishes Monorepo quality (twelve lockstep packages), `quality-templates`, and Sonar on a commit that matches the publish path filter, it dispatches [**Publish DS automation (npm)**](.github/workflows/publish-ds-automation.yml) via `workflow_dispatch` (`checkout_sha` = the orchestrator commit; pull-request dry-run; on `main`, live publish only when **any** lockstep package CalVer changes vs the merge parent).
 
 | Package | Path | Registry |
 | --- | --- | --- |
@@ -37,4 +37,3 @@ MIT — see [LICENSE](LICENSE). Use, modify, and redistribute freely; retain the
 - [Admin Guide](docs/admin/01-environment-variables.md) — environment variables, Docker, PubSub/Redis
 - [Architecture](docs/architecture/01-system-overview.md) — system design, decisions, and rationale
 - [Developer Guide](docs/developer/01-monorepo-overview.md) — patterns, conventions, and coding standards
-- [Generator implementation roadmap](docs/developer/16-generator-implementation-roadmap.md) — Wave 1 complete; Wave 2 execution plan (SDK, CLI, `create-ds` generators)
