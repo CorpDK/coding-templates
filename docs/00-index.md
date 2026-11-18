@@ -67,6 +67,10 @@ Welcome to the coding-templates documentation! This monorepo provides production
 | **Configure environment**           | [Environment Variables](admin/01-environment-variables.md)           |
 | **Deploy with Docker**              | [Docker Deployment](admin/02-docker-deployment.md)                   |
 | **DS health / tracing / input Zod** | [DS observability](developer/12-ds-observability.md)                 |
+| **SDK / CLI / generator roadmap**   | [Generator implementation roadmap](developer/16-generator-implementation-roadmap.md) |
+| **GraphQL SDK generator design**    | [GraphQL SDK generator (design)](developer/13-graphql-sdk-generator.md) |
+| **GraphQL CLI generator design**    | [GraphQL CLI generator (design)](developer/14-graphql-cli-generator.md) |
+| **`create-ds` generator integration** | [DS generator integration (design)](developer/15-create-ds-generator-integration.md) |
 | **Add a GraphQL entity**            | [Repository Pattern](developer/03-repository-pattern.md)             |
 | **Design a DAL entity**             | [DAL Entity Design](developer/dal-entity-design.md)                  |
 | **Add a subscription**              | [PubSub Internals](developer/04-pubsub-internals.md)                 |
@@ -121,6 +125,11 @@ Welcome to the coding-templates documentation! This monorepo provides production
 | [developer/03-repository-pattern.md](developer/03-repository-pattern.md)                      | Repository interface               |
 | [developer/04-pubsub-internals.md](developer/04-pubsub-internals.md)                          | PubSub wiring                      |
 | [developer/11-ds-subscription-sse.md](developer/11-ds-subscription-sse.md)                    | All DS templates SSE subscriptions |
+| [developer/12-ds-observability.md](developer/12-ds-observability.md)                          | Health probe, OTLP tracing, input Zod |
+| [developer/13-graphql-sdk-generator.md](developer/13-graphql-sdk-generator.md)               | SDK generator design (`create-graphql-sdk`) |
+| [developer/14-graphql-cli-generator.md](developer/14-graphql-cli-generator.md)               | CLI generator design (`create-graphql-cli`) |
+| [developer/15-create-ds-generator-integration.md](developer/15-create-ds-generator-integration.md) | `create-ds` + SDK/CLI generator integration |
+| [developer/16-generator-implementation-roadmap.md](developer/16-generator-implementation-roadmap.md) | Generator waves, dependencies, merge status |
 | [developer/05-ui-architecture.md](developer/05-ui-architecture.md)                            | UI template state                  |
 | [developer/06-ui-status.md](developer/06-ui-status.md)                                        | Capability matrix                  |
 | [developer/07-git-conventions.md](developer/07-git-conventions.md)                            | Commit format                      |
@@ -146,4 +155,4 @@ Welcome to the coding-templates documentation! This monorepo provides production
 
 **Related**: [CLAUDE.md](../CLAUDE.md) | [Contributing](10-contributing.md)
 
-**Last updated**: October 6, 2026
+**Last updated**: November 18, 2026
