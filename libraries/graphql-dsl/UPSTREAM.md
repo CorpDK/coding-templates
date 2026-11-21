@@ -65,7 +65,9 @@ with only mechanical ESM/import edits until rewritten. **Fork-owned** code under
 | `libraries/graphql-dsl/src/runtime/linkTypeMap.ts`                            |
 | `libraries/graphql-dsl/src/runtime/types.ts`                                  |
 
-**Tests:** `libraries/graphql-dsl/test` is registered in `sonar.tests`.
+**Tests:** `libraries/graphql-dsl/test` is registered in `sonar.tests`. R-42
+`scripts/check-self-contained.mjs` and `test/helpers/*` are excluded from the
+Sonar coverage denominator (CI runs the script; helpers are test-only utilities).
 
 ## Quarterly review
 

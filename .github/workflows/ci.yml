@@ -275,7 +275,24 @@ jobs:
             echo "No publish workflow run found for commit ${watch_sha}" >&2
             exit 1
           fi
-          gh run watch "${run_id}" --repo "${GITHUB_REPOSITORY}" --exit-status
+          while true; do
+            run_json="$(gh api "repos/${GITHUB_REPOSITORY}/actions/runs/${run_id}" 2>/dev/null || true)"
+            if [[ -z "${run_json}" ]]; then
+              sleep 3
+              continue
+            fi
+            status="$(jq -r '.status' <<<"${run_json}")"
+            conclusion="$(jq -r '.conclusion // empty' <<<"${run_json}")"
+            if [[ "${status}" == "completed" ]]; then
+              if [[ "${conclusion}" != "success" ]]; then
+                echo "Publish workflow ${run_id} completed with conclusion=${conclusion}" >&2
+                gh run view "${run_id}" --repo "${GITHUB_REPOSITORY}" --log-failed >&2 || true
+                exit 1
+              fi
+              break
+            fi
+            sleep 3
+          done
           echo "Publish workflow ${run_id} completed for commit ${watch_sha} (dry_run=${{ steps.dispatch.outputs.dry_run }})."
 
       - uses: actions/checkout@v4
