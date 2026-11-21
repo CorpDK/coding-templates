@@ -26,13 +26,7 @@ import type { OperationKind } from "./types.js";
 import { isConnectionField } from "./lookup-index.js";
 import { emitSelectionForOperation } from "./selection.js";
 
-const BUILTIN_SCALARS = new Set([
-  "String",
-  "Int",
-  "Float",
-  "Boolean",
-  "ID",
-]);
+const BUILTIN_SCALARS = new Set(["String", "Int", "Float", "Boolean", "ID"]);
 
 function graphqlTypeString(type: GraphQLInputType): string {
   if (isNonNullType(type)) return `${graphqlTypeString(type.ofType)}!`;
@@ -40,16 +34,15 @@ function graphqlTypeString(type: GraphQLInputType): string {
   return (type as { name: string }).name;
 }
 
-function describeArg(
-  arg: GraphQLArgument,
-  warnings: string[],
-): ArgDescriptor {
+function describeArg(arg: GraphQLArgument, warnings: string[]): ArgDescriptor {
   const named = getNamedType(arg.type);
   let kind: ArgDescriptor["kind"] = "scalar";
   if (isEnumType(named)) kind = "enum";
   else if (isInputObjectType(named)) kind = "input";
 
-  const list = isListType(arg.type) || (isNonNullType(arg.type) && isListType(arg.type.ofType));
+  const list =
+    isListType(arg.type) ||
+    (isNonNullType(arg.type) && isListType(arg.type.ofType));
 
   const flag = resolveReservedArgFlag(arg.name, warnings);
 
@@ -60,7 +53,7 @@ function describeArg(
     kind,
     list: Boolean(
       isListType(arg.type) ||
-        (isNonNullType(arg.type) && isListType(arg.type.ofType)),
+      (isNonNullType(arg.type) && isListType(arg.type.ofType)),
     ),
     required: isNonNullType(arg.type),
     description: arg.description ?? undefined,
@@ -171,14 +164,17 @@ export function extractOperations(
       const argWarnings: string[] = [];
       const args = field.args.map((a) => describeArg(a, argWarnings));
 
-      const { selection: sel, followUps, warnings: selWarnings } =
-        emitSelectionForOperation(
-          schema,
-          lookupIndex,
-          fieldName,
-          field.type,
-          selection,
-        );
+      const {
+        selection: sel,
+        followUps,
+        warnings: selWarnings,
+      } = emitSelectionForOperation(
+        schema,
+        lookupIndex,
+        fieldName,
+        field.type,
+        selection,
+      );
 
       const destructive =
         kind === "mutation" &&
@@ -186,11 +182,7 @@ export function extractOperations(
 
       const paginated =
         kind === "query"
-          ? detectPagination(
-              schema,
-              field,
-              selection.connection ?? "nodes",
-            )
+          ? detectPagination(schema, field, selection.connection ?? "nodes")
           : undefined;
 
       ops.push({

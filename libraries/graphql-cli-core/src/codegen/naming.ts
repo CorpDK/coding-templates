@@ -31,11 +31,7 @@ export const RESERVED_FLAGS = new Set([
   "h",
 ]);
 
-const DEFAULT_DESTRUCTIVE = [
-  "delete*",
-  "bulkDelete*",
-  "bulkUpdate*ByFilter",
-];
+const DEFAULT_DESTRUCTIVE = ["delete*", "bulkDelete*", "bulkUpdate*ByFilter"];
 
 export function globMatch(pattern: string, value: string): boolean {
   const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, String.raw`\$&`);
@@ -94,7 +90,10 @@ export function resolveCommandNames(
     };
 
     if (group.length === 1) {
-      assign(group[0].kind, guardReserved(kebab, group[0].kind, field, warnings));
+      assign(
+        group[0].kind,
+        guardReserved(kebab, group[0].kind, field, warnings),
+      );
       continue;
     }
 

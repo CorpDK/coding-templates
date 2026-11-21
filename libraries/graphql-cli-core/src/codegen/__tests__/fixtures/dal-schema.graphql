@@ -7,25 +7,37 @@ type AuditEvent {
   """
   action: String!
 
-  """Row creation time (UTC)."""
+  """
+  Row creation time (UTC).
+  """
   createdAt: DateTime!
 
-  """Actor ID from request context; never client-supplied."""
+  """
+  Actor ID from request context; never client-supplied.
+  """
   createdBy: String!
 
-  """Surrogate primary key."""
+  """
+  Surrogate primary key.
+  """
   id: ID!
 
-  """Serialized event payload (plain text; not JSON column)."""
+  """
+  Serialized event payload (plain text; not JSON column).
+  """
   payload: String!
 }
 
-"""Aggregate metrics for AuditEvent."""
+"""
+Aggregate metrics for AuditEvent.
+"""
 type AuditEventAggregate {
   count: Int!
 }
 
-"""Change notification payload for auditEvent subscriptions."""
+"""
+Change notification payload for auditEvent subscriptions.
+"""
 type AuditEventChangeEvent {
   count: Int!
   ids: [ID!]!
@@ -33,96 +45,138 @@ type AuditEventChangeEvent {
   operation: ChangeOperation!
 }
 
-"""Relay-style connection for paginated auditEvents queries."""
+"""
+Relay-style connection for paginated auditEvents queries.
+"""
 type AuditEventConnection {
   edges: [AuditEventEdge!]!
   nodes: [AuditEvent!]!
   pageInfo: PageInfo!
 }
 
-"""Input for creating a new AuditEvent."""
+"""
+Input for creating a new AuditEvent.
+"""
 input AuditEventCreateInput {
   """
   Action verb describing the audited event (e.g. ITEM_CREATED). Validation: max length 128.
   """
   action: String!
 
-  """Serialized event payload (plain text; not JSON column)."""
+  """
+  Serialized event payload (plain text; not JSON column).
+  """
   payload: String!
 }
 
-"""Edge wrapper for AuditEvent connection pagination."""
+"""
+Edge wrapper for AuditEvent connection pagination.
+"""
 type AuditEventEdge {
   cursor: String!
   node: AuditEvent!
 }
 
-"""Sortable fields on AuditEvent."""
+"""
+Sortable fields on AuditEvent.
+"""
 enum AuditEventField {
   """
   Action verb describing the audited event (e.g. ITEM_CREATED). Validation: max length 128.
   """
   ACTION
 
-  """Row creation time (UTC)."""
+  """
+  Row creation time (UTC).
+  """
   CREATED_AT
 
-  """Actor ID from request context; never client-supplied."""
+  """
+  Actor ID from request context; never client-supplied.
+  """
   CREATED_BY
 
-  """Surrogate primary key."""
+  """
+  Surrogate primary key.
+  """
   ID
 
-  """Serialized event payload (plain text; not JSON column)."""
+  """
+  Serialized event payload (plain text; not JSON column).
+  """
   PAYLOAD
 }
 
-"""Filter criteria for AuditEvent queries and mutations."""
+"""
+Filter criteria for AuditEvent queries and mutations.
+"""
 input AuditEventFilter {
   """
   Action verb describing the audited event (e.g. ITEM_CREATED). Validation: max length 128.
   """
   action: StringFilter
 
-  """All nested filters must match."""
+  """
+  All nested filters must match.
+  """
   and: [AuditEventFilter!]
 
-  """Surrogate primary key."""
+  """
+  Surrogate primary key.
+  """
   id: IDFilter
 
-  """Negates the nested filter."""
+  """
+  Negates the nested filter.
+  """
   not: AuditEventFilter
 
-  """At least one nested filter must match."""
+  """
+  At least one nested filter must match.
+  """
   or: [AuditEventFilter!]
 
-  """Serialized event payload (plain text; not JSON column)."""
+  """
+  Serialized event payload (plain text; not JSON column).
+  """
   payload: StringFilter
 }
 
-"""Bulk create/update success payload for AuditEvent."""
+"""
+Bulk create/update success payload for AuditEvent.
+"""
 type AuditEventListPayload {
   items: [AuditEvent!]!
 }
 
-"""Sort specification for AuditEvent list queries."""
+"""
+Sort specification for AuditEvent list queries.
+"""
 input AuditEventSortInput {
-  """Sort direction; defaults to ascending."""
+  """
+  Sort direction; defaults to ascending.
+  """
   direction: SortDirection = ASC
   field: AuditEventField!
 }
 
-"""Signed 64-bit integer serialized as a decimal string."""
+"""
+Signed 64-bit integer serialized as a decimal string.
+"""
 scalar BigInt
 
-"""Filter operators for bigint columns."""
+"""
+Filter operators for bigint columns.
+"""
 input BigIntFilter {
   eq: BigInt
   gt: BigInt
   gte: BigInt
   in: [BigInt!]
 
-  """True = IS NULL; false = IS NOT NULL; nullable columns only."""
+  """
+  True = IS NULL; false = IS NOT NULL; nullable columns only.
+  """
   isNull: Boolean
   lt: BigInt
   lte: BigInt
@@ -130,188 +184,308 @@ input BigIntFilter {
   notIn: [BigInt!]
 }
 
-"""Filter operators for boolean columns."""
+"""
+Filter operators for boolean columns.
+"""
 input BooleanFilter {
   eq: Boolean
 }
 
-"""Bulk create result for AuditEvent."""
+"""
+Bulk create result for AuditEvent.
+"""
 union BulkCreateAuditEventResult = AuditEventListPayload | BulkMutationResult
 
-"""Bulk create result for Category."""
+"""
+Bulk create result for Category.
+"""
 union BulkCreateCategoryResult = BulkMutationResult | CategoryListPayload
 
-"""Bulk create result for ItemDetail."""
+"""
+Bulk create result for ItemDetail.
+"""
 union BulkCreateItemDetailResult = BulkMutationResult | ItemDetailListPayload
 
-"""Bulk create result for Item."""
+"""
+Bulk create result for Item.
+"""
 union BulkCreateItemResult = BulkMutationResult | ItemListPayload
 
-"""Bulk create result for ItemTag."""
+"""
+Bulk create result for ItemTag.
+"""
 union BulkCreateItemTagResult = BulkMutationResult | ItemTagListPayload
 
-"""Bulk create result for Label."""
+"""
+Bulk create result for Label.
+"""
 union BulkCreateLabelResult = BulkMutationResult | LabelListPayload
 
-"""Bulk create result for OrderLine."""
+"""
+Bulk create result for OrderLine.
+"""
 union BulkCreateOrderLineResult = BulkMutationResult | OrderLineListPayload
 
-"""Bulk create result for Order."""
+"""
+Bulk create result for Order.
+"""
 union BulkCreateOrderResult = BulkMutationResult | OrderListPayload
 
-"""Bulk create result for ScalarSpecimen."""
-union BulkCreateScalarSpecimenResult = BulkMutationResult | ScalarSpecimenListPayload
+"""
+Bulk create result for ScalarSpecimen.
+"""
+union BulkCreateScalarSpecimenResult =
+  | BulkMutationResult
+  | ScalarSpecimenListPayload
 
-"""Bulk create result for Tag."""
+"""
+Bulk create result for Tag.
+"""
 union BulkCreateTagResult = BulkMutationResult | TagListPayload
 
-"""Bulk create result for UserLabel."""
+"""
+Bulk create result for UserLabel.
+"""
 union BulkCreateUserLabelResult = BulkMutationResult | UserLabelListPayload
 
-"""Bulk create result for User."""
+"""
+Bulk create result for User.
+"""
 union BulkCreateUserResult = BulkMutationResult | UserListPayload
 
-"""Bulk delete success count for AuditEvent."""
+"""
+Bulk delete success count for AuditEvent.
+"""
 type BulkDeleteAuditEventCountPayload {
   count: Int!
 }
 
-"""Bulk delete result for AuditEvent."""
-union BulkDeleteAuditEventResult = BulkDeleteAuditEventCountPayload | BulkMutationResult
+"""
+Bulk delete result for AuditEvent.
+"""
+union BulkDeleteAuditEventResult =
+  | BulkDeleteAuditEventCountPayload
+  | BulkMutationResult
 
-"""Bulk delete success count for Category."""
+"""
+Bulk delete success count for Category.
+"""
 type BulkDeleteCategoryCountPayload {
   count: Int!
 }
 
-"""Bulk delete result for Category."""
-union BulkDeleteCategoryResult = BulkDeleteCategoryCountPayload | BulkMutationResult
+"""
+Bulk delete result for Category.
+"""
+union BulkDeleteCategoryResult =
+  | BulkDeleteCategoryCountPayload
+  | BulkMutationResult
 
-"""Bulk delete success count for Item."""
+"""
+Bulk delete success count for Item.
+"""
 type BulkDeleteItemCountPayload {
   count: Int!
 }
 
-"""Bulk delete success count for ItemDetail."""
+"""
+Bulk delete success count for ItemDetail.
+"""
 type BulkDeleteItemDetailCountPayload {
   count: Int!
 }
 
-"""Bulk delete result for ItemDetail."""
-union BulkDeleteItemDetailResult = BulkDeleteItemDetailCountPayload | BulkMutationResult
+"""
+Bulk delete result for ItemDetail.
+"""
+union BulkDeleteItemDetailResult =
+  | BulkDeleteItemDetailCountPayload
+  | BulkMutationResult
 
-"""Bulk delete result for Item."""
+"""
+Bulk delete result for Item.
+"""
 union BulkDeleteItemResult = BulkDeleteItemCountPayload | BulkMutationResult
 
-"""Bulk delete success count for ItemTag."""
+"""
+Bulk delete success count for ItemTag.
+"""
 type BulkDeleteItemTagCountPayload {
   count: Int!
 }
 
-"""Bulk delete result for ItemTag."""
-union BulkDeleteItemTagResult = BulkDeleteItemTagCountPayload | BulkMutationResult
+"""
+Bulk delete result for ItemTag.
+"""
+union BulkDeleteItemTagResult =
+  | BulkDeleteItemTagCountPayload
+  | BulkMutationResult
 
-"""Bulk delete success count for Label."""
+"""
+Bulk delete success count for Label.
+"""
 type BulkDeleteLabelCountPayload {
   count: Int!
 }
 
-"""Bulk delete result for Label."""
+"""
+Bulk delete result for Label.
+"""
 union BulkDeleteLabelResult = BulkDeleteLabelCountPayload | BulkMutationResult
 
-"""Bulk delete success count for Order."""
+"""
+Bulk delete success count for Order.
+"""
 type BulkDeleteOrderCountPayload {
   count: Int!
 }
 
-"""Bulk delete success count for OrderLine."""
+"""
+Bulk delete success count for OrderLine.
+"""
 type BulkDeleteOrderLineCountPayload {
   count: Int!
 }
 
-"""Bulk delete result for OrderLine."""
-union BulkDeleteOrderLineResult = BulkDeleteOrderLineCountPayload | BulkMutationResult
+"""
+Bulk delete result for OrderLine.
+"""
+union BulkDeleteOrderLineResult =
+  | BulkDeleteOrderLineCountPayload
+  | BulkMutationResult
 
-"""Bulk delete result for Order."""
+"""
+Bulk delete result for Order.
+"""
 union BulkDeleteOrderResult = BulkDeleteOrderCountPayload | BulkMutationResult
 
-"""Bulk delete success count for ScalarSpecimen."""
+"""
+Bulk delete success count for ScalarSpecimen.
+"""
 type BulkDeleteScalarSpecimenCountPayload {
   count: Int!
 }
 
-"""Bulk delete result for ScalarSpecimen."""
-union BulkDeleteScalarSpecimenResult = BulkDeleteScalarSpecimenCountPayload | BulkMutationResult
+"""
+Bulk delete result for ScalarSpecimen.
+"""
+union BulkDeleteScalarSpecimenResult =
+  | BulkDeleteScalarSpecimenCountPayload
+  | BulkMutationResult
 
-"""Bulk delete success count for Tag."""
+"""
+Bulk delete success count for Tag.
+"""
 type BulkDeleteTagCountPayload {
   count: Int!
 }
 
-"""Bulk delete result for Tag."""
+"""
+Bulk delete result for Tag.
+"""
 union BulkDeleteTagResult = BulkDeleteTagCountPayload | BulkMutationResult
 
-"""Bulk delete success count for User."""
+"""
+Bulk delete success count for User.
+"""
 type BulkDeleteUserCountPayload {
   count: Int!
 }
 
-"""Bulk delete success count for UserLabel."""
+"""
+Bulk delete success count for UserLabel.
+"""
 type BulkDeleteUserLabelCountPayload {
   count: Int!
 }
 
-"""Bulk delete result for UserLabel."""
-union BulkDeleteUserLabelResult = BulkDeleteUserLabelCountPayload | BulkMutationResult
+"""
+Bulk delete result for UserLabel.
+"""
+union BulkDeleteUserLabelResult =
+  | BulkDeleteUserLabelCountPayload
+  | BulkMutationResult
 
-"""Bulk delete result for User."""
+"""
+Bulk delete result for User.
+"""
 union BulkDeleteUserResult = BulkDeleteUserCountPayload | BulkMutationResult
 
-"""Partial or failed bulk mutation outcome with per-row errors."""
+"""
+Partial or failed bulk mutation outcome with per-row errors.
+"""
 type BulkMutationResult {
   failureCount: Int!
   successCount: Int!
   userErrors: [MutationUserError!]!
 }
 
-"""Bulk update result for Category."""
+"""
+Bulk update result for Category.
+"""
 union BulkUpdateCategoryResult = BulkMutationResult | CategoryListPayload
 
-"""Bulk update result for ItemDetail."""
+"""
+Bulk update result for ItemDetail.
+"""
 union BulkUpdateItemDetailResult = BulkMutationResult | ItemDetailListPayload
 
-"""Bulk update result for Item."""
+"""
+Bulk update result for Item.
+"""
 union BulkUpdateItemResult = BulkMutationResult | ItemListPayload
 
-"""Bulk update result for ItemTag."""
+"""
+Bulk update result for ItemTag.
+"""
 union BulkUpdateItemTagResult = BulkMutationResult | ItemTagListPayload
 
-"""Bulk update result for Label."""
+"""
+Bulk update result for Label.
+"""
 union BulkUpdateLabelResult = BulkMutationResult | LabelListPayload
 
-"""Bulk update result for OrderLine."""
+"""
+Bulk update result for OrderLine.
+"""
 union BulkUpdateOrderLineResult = BulkMutationResult | OrderLineListPayload
 
-"""Bulk update result for Order."""
+"""
+Bulk update result for Order.
+"""
 union BulkUpdateOrderResult = BulkMutationResult | OrderListPayload
 
-"""Bulk update result for ScalarSpecimen."""
-union BulkUpdateScalarSpecimenResult = BulkMutationResult | ScalarSpecimenListPayload
+"""
+Bulk update result for ScalarSpecimen.
+"""
+union BulkUpdateScalarSpecimenResult =
+  | BulkMutationResult
+  | ScalarSpecimenListPayload
 
-"""Bulk update result for UserLabel."""
+"""
+Bulk update result for UserLabel.
+"""
 union BulkUpdateUserLabelResult = BulkMutationResult | UserLabelListPayload
 
-"""Bulk update result for User."""
+"""
+Bulk update result for User.
+"""
 union BulkUpdateUserResult = BulkMutationResult | UserListPayload
 
-"""IPv4 or IPv6 network in CIDR notation (PostgreSQL cidr)."""
+"""
+IPv4 or IPv6 network in CIDR notation (PostgreSQL cidr).
+"""
 scalar CIDR
 
-"""Filter operators for cidr columns."""
+"""
+Filter operators for cidr columns.
+"""
 input CIDRFilter {
   eq: CIDR
 
-  """True = IS NULL; false = IS NOT NULL; nullable columns only."""
+  """
+  True = IS NULL; false = IS NOT NULL; nullable columns only.
+  """
   isNull: Boolean
   neq: CIDR
 }
@@ -320,40 +494,62 @@ input CIDRFilter {
 Static product categories; hard-deleted when removed (no soft-delete retention).
 """
 type Category {
-  """Row creation time (UTC)."""
+  """
+  Row creation time (UTC).
+  """
   createdAt: DateTime!
 
-  """Actor ID from request context; never client-supplied."""
+  """
+  Actor ID from request context; never client-supplied.
+  """
   createdBy: String!
 
-  """Optional longer description of the category."""
+  """
+  Optional longer description of the category.
+  """
   description: String
 
-  """Surrogate primary key."""
+  """
+  Surrogate primary key.
+  """
   id: ID!
 
-  """Whether the category is visible to customers."""
+  """
+  Whether the category is visible to customers.
+  """
   isVisible: Boolean!
 
-  """Navigate to related Item."""
+  """
+  Navigate to related Item.
+  """
   items: [Item!]!
 
-  """Unique category label shown in navigation. Validation: max length 128."""
+  """
+  Unique category label shown in navigation. Validation: max length 128.
+  """
   name: String!
 
-  """Last update time (UTC)."""
+  """
+  Last update time (UTC).
+  """
   updatedAt: DateTime!
 
-  """Actor ID from request context on last update."""
+  """
+  Actor ID from request context on last update.
+  """
   updatedBy: String!
 }
 
-"""Aggregate metrics for Category."""
+"""
+Aggregate metrics for Category.
+"""
 type CategoryAggregate {
   count: Int!
 }
 
-"""Change notification payload for category subscriptions."""
+"""
+Change notification payload for category subscriptions.
+"""
 type CategoryChangeEvent {
   count: Int!
   ids: [ID!]!
@@ -361,205 +557,301 @@ type CategoryChangeEvent {
   operation: ChangeOperation!
 }
 
-"""Relay-style connection for paginated categories queries."""
+"""
+Relay-style connection for paginated categories queries.
+"""
 type CategoryConnection {
   edges: [CategoryEdge!]!
   nodes: [Category!]!
   pageInfo: PageInfo!
 }
 
-"""Input for creating a new Category."""
+"""
+Input for creating a new Category.
+"""
 input CategoryCreateInput {
-  """Optional longer description of the category."""
+  """
+  Optional longer description of the category.
+  """
   description: String
 
-  """Whether the category is visible to customers."""
+  """
+  Whether the category is visible to customers.
+  """
   isVisible: Boolean
 
-  """Unique category label shown in navigation. Validation: max length 128."""
+  """
+  Unique category label shown in navigation. Validation: max length 128.
+  """
   name: String!
 }
 
-"""Edge wrapper for Category connection pagination."""
+"""
+Edge wrapper for Category connection pagination.
+"""
 type CategoryEdge {
   cursor: String!
   node: Category!
 }
 
-"""Sortable fields on Category."""
+"""
+Sortable fields on Category.
+"""
 enum CategoryField {
-  """Row creation time (UTC)."""
+  """
+  Row creation time (UTC).
+  """
   CREATED_AT
 
-  """Actor ID from request context; never client-supplied."""
+  """
+  Actor ID from request context; never client-supplied.
+  """
   CREATED_BY
 
-  """Optional longer description of the category."""
+  """
+  Optional longer description of the category.
+  """
   DESCRIPTION
 
-  """Surrogate primary key."""
+  """
+  Surrogate primary key.
+  """
   ID
 
-  """Whether the category is visible to customers."""
+  """
+  Whether the category is visible to customers.
+  """
   IS_VISIBLE
 
-  """Unique category label shown in navigation. Validation: max length 128."""
+  """
+  Unique category label shown in navigation. Validation: max length 128.
+  """
   NAME
 
-  """Last update time (UTC)."""
+  """
+  Last update time (UTC).
+  """
   UPDATED_AT
 
-  """Actor ID from request context on last update."""
+  """
+  Actor ID from request context on last update.
+  """
   UPDATED_BY
 }
 
-"""Filter criteria for Category queries and mutations."""
+"""
+Filter criteria for Category queries and mutations.
+"""
 input CategoryFilter {
-  """All nested filters must match."""
+  """
+  All nested filters must match.
+  """
   and: [CategoryFilter!]
 
-  """Optional longer description of the category."""
+  """
+  Optional longer description of the category.
+  """
   description: StringFilter
 
-  """Surrogate primary key."""
+  """
+  Surrogate primary key.
+  """
   id: IDFilter
 
-  """Whether the category is visible to customers."""
+  """
+  Whether the category is visible to customers.
+  """
   isVisible: BooleanFilter
 
-  """Association filter on items."""
+  """
+  Association filter on items.
+  """
   items: ItemAssociationFilter
 
-  """Unique category label shown in navigation. Validation: max length 128."""
+  """
+  Unique category label shown in navigation. Validation: max length 128.
+  """
   name: StringFilter
 
-  """Negates the nested filter."""
+  """
+  Negates the nested filter.
+  """
   not: CategoryFilter
 
-  """At least one nested filter must match."""
+  """
+  At least one nested filter must match.
+  """
   or: [CategoryFilter!]
 }
 
-"""Bulk create/update success payload for Category."""
+"""
+Bulk create/update success payload for Category.
+"""
 type CategoryListPayload {
   items: [Category!]!
 }
 
-"""Sort specification for Category list queries."""
+"""
+Sort specification for Category list queries.
+"""
 input CategorySortInput {
-  """Sort direction; defaults to ascending."""
+  """
+  Sort direction; defaults to ascending.
+  """
   direction: SortDirection = ASC
   field: CategoryField!
 }
 
-"""Single row update entry for bulk update."""
+"""
+Single row update entry for bulk update.
+"""
 input CategoryUpdateEntry {
   id: ID!
   input: CategoryUpdateInput!
 }
 
-"""Input for updating an existing Category; all fields optional."""
+"""
+Input for updating an existing Category; all fields optional.
+"""
 input CategoryUpdateInput {
-  """Optional longer description of the category."""
+  """
+  Optional longer description of the category.
+  """
   description: String
 
-  """Whether the category is visible to customers."""
+  """
+  Whether the category is visible to customers.
+  """
   isVisible: Boolean
 
-  """Unique category label shown in navigation. Validation: max length 128."""
+  """
+  Unique category label shown in navigation. Validation: max length 128.
+  """
   name: String
 }
 
-"""Lifecycle operation for subscription change events."""
+"""
+Lifecycle operation for subscription change events.
+"""
 enum ChangeOperation {
   CREATED
   DELETED
   UPDATED
 }
 
-"""Result of createAuditEvent mutation."""
+"""
+Result of createAuditEvent mutation.
+"""
 type CreateAuditEventPayload {
   auditEvent: AuditEvent
   userErrors: [MutationUserError!]!
 }
 
-"""Result of createCategory mutation."""
+"""
+Result of createCategory mutation.
+"""
 type CreateCategoryPayload {
   category: Category
   userErrors: [MutationUserError!]!
 }
 
-"""Result of createItemDetail mutation."""
+"""
+Result of createItemDetail mutation.
+"""
 type CreateItemDetailPayload {
   itemDetail: ItemDetail
   userErrors: [MutationUserError!]!
 }
 
-"""Result of createItem mutation."""
+"""
+Result of createItem mutation.
+"""
 type CreateItemPayload {
   item: Item
   userErrors: [MutationUserError!]!
 }
 
-"""Result of createItemTag mutation."""
+"""
+Result of createItemTag mutation.
+"""
 type CreateItemTagPayload {
   itemTag: ItemTag
   userErrors: [MutationUserError!]!
 }
 
-"""Result of createLabel mutation."""
+"""
+Result of createLabel mutation.
+"""
 type CreateLabelPayload {
   label: Label
   userErrors: [MutationUserError!]!
 }
 
-"""Result of createOrderLine mutation."""
+"""
+Result of createOrderLine mutation.
+"""
 type CreateOrderLinePayload {
   orderLine: OrderLine
   userErrors: [MutationUserError!]!
 }
 
-"""Result of createOrder mutation."""
+"""
+Result of createOrder mutation.
+"""
 type CreateOrderPayload {
   order: Order
   userErrors: [MutationUserError!]!
 }
 
-"""Result of createScalarSpecimen mutation."""
+"""
+Result of createScalarSpecimen mutation.
+"""
 type CreateScalarSpecimenPayload {
   scalarSpecimen: ScalarSpecimen
   userErrors: [MutationUserError!]!
 }
 
-"""Result of createTag mutation."""
+"""
+Result of createTag mutation.
+"""
 type CreateTagPayload {
   tag: Tag
   userErrors: [MutationUserError!]!
 }
 
-"""Result of createUserLabel mutation."""
+"""
+Result of createUserLabel mutation.
+"""
 type CreateUserLabelPayload {
   userErrors: [MutationUserError!]!
   userLabel: UserLabel
 }
 
-"""Result of createUser mutation."""
+"""
+Result of createUser mutation.
+"""
 type CreateUserPayload {
   user: User
   userErrors: [MutationUserError!]!
 }
 
-"""ISO-8601 calendar date (YYYY-MM-DD)."""
+"""
+ISO-8601 calendar date (YYYY-MM-DD).
+"""
 scalar Date
 
-"""Filter operators for date columns."""
+"""
+Filter operators for date columns.
+"""
 input DateFilter {
   eq: Date
   gt: Date
   gte: Date
   in: [Date!]
 
-  """True = IS NULL; false = IS NOT NULL; nullable columns only."""
+  """
+  True = IS NULL; false = IS NOT NULL; nullable columns only.
+  """
   isNull: Boolean
   lt: Date
   lte: Date
@@ -567,17 +859,23 @@ input DateFilter {
   notIn: [Date!]
 }
 
-"""ISO-8601 UTC timestamp with milliseconds."""
+"""
+ISO-8601 UTC timestamp with milliseconds.
+"""
 scalar DateTime
 
-"""Filter operators for timestamptz columns."""
+"""
+Filter operators for timestamptz columns.
+"""
 input DateTimeFilter {
   eq: DateTime
   gt: DateTime
   gte: DateTime
   in: [DateTime!]
 
-  """True = IS NULL; false = IS NOT NULL; nullable columns only."""
+  """
+  True = IS NULL; false = IS NOT NULL; nullable columns only.
+  """
   isNull: Boolean
   lt: DateTime
   lte: DateTime
@@ -585,17 +883,23 @@ input DateTimeFilter {
   notIn: [DateTime!]
 }
 
-"""Arbitrary-precision decimal serialized as a string."""
+"""
+Arbitrary-precision decimal serialized as a string.
+"""
 scalar Decimal
 
-"""Filter operators for decimal columns."""
+"""
+Filter operators for decimal columns.
+"""
 input DecimalFilter {
   eq: Decimal
   gt: Decimal
   gte: Decimal
   in: [Decimal!]
 
-  """True = IS NULL; false = IS NOT NULL; nullable columns only."""
+  """
+  True = IS NULL; false = IS NOT NULL; nullable columns only.
+  """
   isNull: Boolean
   lt: Decimal
   lte: Decimal
@@ -603,89 +907,119 @@ input DecimalFilter {
   notIn: [Decimal!]
 }
 
-"""Result of deleteAuditEvent mutation."""
+"""
+Result of deleteAuditEvent mutation.
+"""
 type DeleteAuditEventPayload {
   success: Boolean!
   userErrors: [MutationUserError!]!
 }
 
-"""Result of deleteCategory mutation."""
+"""
+Result of deleteCategory mutation.
+"""
 type DeleteCategoryPayload {
   success: Boolean!
   userErrors: [MutationUserError!]!
 }
 
-"""Result of deleteItemDetail mutation."""
+"""
+Result of deleteItemDetail mutation.
+"""
 type DeleteItemDetailPayload {
   success: Boolean!
   userErrors: [MutationUserError!]!
 }
 
-"""Result of deleteItem mutation."""
+"""
+Result of deleteItem mutation.
+"""
 type DeleteItemPayload {
   success: Boolean!
   userErrors: [MutationUserError!]!
 }
 
-"""Result of deleteItemTag mutation."""
+"""
+Result of deleteItemTag mutation.
+"""
 type DeleteItemTagPayload {
   success: Boolean!
   userErrors: [MutationUserError!]!
 }
 
-"""Result of deleteLabel mutation."""
+"""
+Result of deleteLabel mutation.
+"""
 type DeleteLabelPayload {
   success: Boolean!
   userErrors: [MutationUserError!]!
 }
 
-"""Result of deleteOrderLine mutation."""
+"""
+Result of deleteOrderLine mutation.
+"""
 type DeleteOrderLinePayload {
   success: Boolean!
   userErrors: [MutationUserError!]!
 }
 
-"""Result of deleteOrder mutation."""
+"""
+Result of deleteOrder mutation.
+"""
 type DeleteOrderPayload {
   success: Boolean!
   userErrors: [MutationUserError!]!
 }
 
-"""Result of deleteScalarSpecimen mutation."""
+"""
+Result of deleteScalarSpecimen mutation.
+"""
 type DeleteScalarSpecimenPayload {
   success: Boolean!
   userErrors: [MutationUserError!]!
 }
 
-"""Result of deleteTag mutation."""
+"""
+Result of deleteTag mutation.
+"""
 type DeleteTagPayload {
   success: Boolean!
   userErrors: [MutationUserError!]!
 }
 
-"""Result of deleteUserLabel mutation."""
+"""
+Result of deleteUserLabel mutation.
+"""
 type DeleteUserLabelPayload {
   success: Boolean!
   userErrors: [MutationUserError!]!
 }
 
-"""Result of deleteUser mutation."""
+"""
+Result of deleteUser mutation.
+"""
 type DeleteUserPayload {
   success: Boolean!
   userErrors: [MutationUserError!]!
 }
 
-"""IEEE 754 binary64 floating-point (PostgreSQL double precision)."""
+"""
+IEEE 754 binary64 floating-point (PostgreSQL double precision).
+"""
 scalar Double
 
-"""Filter operators for double precision columns."""
+"""
+Filter operators for double precision columns.
+"""
 input DoubleFilter {
   eq: Double
   gt: Double
   gte: Double
   in: [Double!]
 
-  """True = IS NULL; false = IS NOT NULL; nullable columns only."""
+  """
+  True = IS NULL; false = IS NOT NULL; nullable columns only.
+  """
   isNull: Boolean
   lt: Double
   lte: Double
@@ -693,14 +1027,18 @@ input DoubleFilter {
   notIn: [Double!]
 }
 
-"""Filter operators for real (binary32) columns."""
+"""
+Filter operators for real (binary32) columns.
+"""
 input FloatFilter {
   eq: Float
   gt: Float
   gte: Float
   in: [Float!]
 
-  """True = IS NULL; false = IS NOT NULL; nullable columns only."""
+  """
+  True = IS NULL; false = IS NOT NULL; nullable columns only.
+  """
   isNull: Boolean
   lt: Float
   lte: Float
@@ -708,7 +1046,9 @@ input FloatFilter {
   notIn: [Float!]
 }
 
-"""Filter operators for UUID primary keys and foreign keys."""
+"""
+Filter operators for UUID primary keys and foreign keys.
+"""
 input IDFilter {
   eq: ID
   in: [ID!]
@@ -721,16 +1061,22 @@ A field whose value is either an IPv4 or IPv6 address: https://en.wikipedia.org/
 """
 scalar IP
 
-"""Filter operators for inet columns."""
+"""
+Filter operators for inet columns.
+"""
 input IPFilter {
   eq: IP
 
-  """True = IS NULL; false = IS NOT NULL; nullable columns only."""
+  """
+  True = IS NULL; false = IS NOT NULL; nullable columns only.
+  """
   isNull: Boolean
   neq: IP
 }
 
-"""Case-insensitive text (PostgreSQL citext) on wire as string."""
+"""
+Case-insensitive text (PostgreSQL citext) on wire as string.
+"""
 scalar InsensitiveString
 
 """
@@ -740,21 +1086,27 @@ input InsensitiveStringFilter {
   eq: InsensitiveString
   in: [InsensitiveString!]
 
-  """True = IS NULL; false = IS NOT NULL; nullable columns only."""
+  """
+  True = IS NULL; false = IS NOT NULL; nullable columns only.
+  """
   isNull: Boolean
   like: InsensitiveString
   neq: InsensitiveString
   notIn: [InsensitiveString!]
 }
 
-"""Filter operators for integer columns."""
+"""
+Filter operators for integer columns.
+"""
 input IntFilter {
   eq: Int
   gt: Int
   gte: Int
   in: [Int!]
 
-  """True = IS NULL; false = IS NOT NULL; nullable columns only."""
+  """
+  True = IS NULL; false = IS NOT NULL; nullable columns only.
+  """
   isNull: Boolean
   lt: Int
   lte: Int
@@ -762,17 +1114,23 @@ input IntFilter {
   notIn: [Int!]
 }
 
-"""Duration as signed milliseconds."""
+"""
+Duration as signed milliseconds.
+"""
 scalar IntervalMs
 
-"""Filter operators for interval columns."""
+"""
+Filter operators for interval columns.
+"""
 input IntervalMsFilter {
   eq: IntervalMs
   gt: IntervalMs
   gte: IntervalMs
   in: [IntervalMs!]
 
-  """True = IS NULL; false = IS NOT NULL; nullable columns only."""
+  """
+  True = IS NULL; false = IS NOT NULL; nullable columns only.
+  """
   isNull: Boolean
   lt: IntervalMs
   lte: IntervalMs
@@ -784,64 +1142,102 @@ input IntervalMsFilter {
 Customer-facing catalog items; soft-deleted rows retained per retention policy.
 """
 type Item {
-  """Navigate to related Category."""
+  """
+  Navigate to related Category.
+  """
   category: Category!
 
-  """Row creation time (UTC)."""
+  """
+  Row creation time (UTC).
+  """
   createdAt: DateTime!
 
-  """Actor ID from request context; never client-supplied."""
+  """
+  Actor ID from request context; never client-supplied.
+  """
   createdBy: String!
 
-  """Optional longer description of the item."""
+  """
+  Optional longer description of the item.
+  """
   description: String
 
-  """Navigate to related ItemDetail."""
+  """
+  Navigate to related ItemDetail.
+  """
   detail: ItemDetail
 
-  """Whether the item has file attachments in object storage."""
+  """
+  Whether the item has file attachments in object storage.
+  """
   hasAttachments: Boolean!
 
-  """Surrogate primary key."""
+  """
+  Surrogate primary key.
+  """
   id: ID!
 
-  """Whether the item is currently active."""
+  """
+  Whether the item is currently active.
+  """
   isActive: Boolean!
 
-  """Navigate to related ItemTag."""
+  """
+  Navigate to related ItemTag.
+  """
   itemTags: [ItemTag!]!
 
-  """Display name of the item. Validation: max length 255."""
+  """
+  Display name of the item. Validation: max length 255.
+  """
   name: String!
 
-  """Navigate to related OrderLine."""
+  """
+  Navigate to related OrderLine.
+  """
   orderLines: [OrderLine!]!
 
-  """Last update time (UTC)."""
+  """
+  Last update time (UTC).
+  """
   updatedAt: DateTime!
 
-  """Actor ID from request context on last update."""
+  """
+  Actor ID from request context on last update.
+  """
   updatedBy: String!
 }
 
-"""Aggregate metrics for Item."""
+"""
+Aggregate metrics for Item.
+"""
 type ItemAggregate {
   count: Int!
 }
 
-"""Association filter for items (one-to-many)."""
+"""
+Association filter for items (one-to-many).
+"""
 input ItemAssociationFilter {
-  """All related rows match."""
+  """
+  All related rows match.
+  """
   every: ItemFilter
 
-  """No related rows match."""
+  """
+  No related rows match.
+  """
   none: ItemFilter
 
-  """At least one related row matches."""
+  """
+  At least one related row matches.
+  """
   some: ItemFilter
 }
 
-"""Change notification payload for item subscriptions."""
+"""
+Change notification payload for item subscriptions.
+"""
 type ItemChangeEvent {
   count: Int!
   ids: [ID!]!
@@ -849,28 +1245,42 @@ type ItemChangeEvent {
   operation: ChangeOperation!
 }
 
-"""Relay-style connection for paginated items queries."""
+"""
+Relay-style connection for paginated items queries.
+"""
 type ItemConnection {
   edges: [ItemEdge!]!
   nodes: [Item!]!
   pageInfo: PageInfo!
 }
 
-"""Input for creating a new Item."""
+"""
+Input for creating a new Item.
+"""
 input ItemCreateInput {
-  """FK to categories.id — parent category (M:1)."""
+  """
+  FK to categories.id — parent category (M:1).
+  """
   categoryId: ID!
 
-  """Optional longer description of the item."""
+  """
+  Optional longer description of the item.
+  """
   description: String
 
-  """Whether the item has file attachments in object storage."""
+  """
+  Whether the item has file attachments in object storage.
+  """
   hasAttachments: Boolean
 
-  """Whether the item is currently active."""
+  """
+  Whether the item is currently active.
+  """
   isActive: Boolean
 
-  """Display name of the item. Validation: max length 255."""
+  """
+  Display name of the item. Validation: max length 255.
+  """
   name: String!
 }
 
@@ -878,37 +1288,57 @@ input ItemCreateInput {
 Optional extended specifications for a catalog item (1:1 dependent); hard delete.
 """
 type ItemDetail {
-  """Row creation time (UTC)."""
+  """
+  Row creation time (UTC).
+  """
   createdAt: DateTime!
 
-  """Actor ID from request context; never client-supplied."""
+  """
+  Actor ID from request context; never client-supplied.
+  """
   createdBy: String!
 
-  """Surrogate primary key."""
+  """
+  Surrogate primary key.
+  """
   id: ID!
 
-  """Navigate to related Item."""
+  """
+  Navigate to related Item.
+  """
   item: Item!
 
-  """Technical specifications (plain text; not JSON)."""
+  """
+  Technical specifications (plain text; not JSON).
+  """
   specifications: String
 
-  """Last update time (UTC)."""
+  """
+  Last update time (UTC).
+  """
   updatedAt: DateTime!
 
-  """Actor ID from request context on last update."""
+  """
+  Actor ID from request context on last update.
+  """
   updatedBy: String!
 
-  """Warranty and support notes for the item."""
+  """
+  Warranty and support notes for the item.
+  """
   warrantyNotes: String
 }
 
-"""Aggregate metrics for ItemDetail."""
+"""
+Aggregate metrics for ItemDetail.
+"""
 type ItemDetailAggregate {
   count: Int!
 }
 
-"""Change notification payload for itemDetail subscriptions."""
+"""
+Change notification payload for itemDetail subscriptions.
+"""
 type ItemDetailChangeEvent {
   count: Int!
   ids: [ID!]!
@@ -916,192 +1346,306 @@ type ItemDetailChangeEvent {
   operation: ChangeOperation!
 }
 
-"""Relay-style connection for paginated itemDetails queries."""
+"""
+Relay-style connection for paginated itemDetails queries.
+"""
 type ItemDetailConnection {
   edges: [ItemDetailEdge!]!
   nodes: [ItemDetail!]!
   pageInfo: PageInfo!
 }
 
-"""Input for creating a new ItemDetail."""
+"""
+Input for creating a new ItemDetail.
+"""
 input ItemDetailCreateInput {
-  """FK to items.id — enforces 1:1 via unique index (dependent side)."""
+  """
+  FK to items.id — enforces 1:1 via unique index (dependent side).
+  """
   itemId: ID!
 
-  """Technical specifications (plain text; not JSON)."""
+  """
+  Technical specifications (plain text; not JSON).
+  """
   specifications: String
 
-  """Warranty and support notes for the item."""
+  """
+  Warranty and support notes for the item.
+  """
   warrantyNotes: String
 }
 
-"""Edge wrapper for ItemDetail connection pagination."""
+"""
+Edge wrapper for ItemDetail connection pagination.
+"""
 type ItemDetailEdge {
   cursor: String!
   node: ItemDetail!
 }
 
-"""Sortable fields on ItemDetail."""
+"""
+Sortable fields on ItemDetail.
+"""
 enum ItemDetailField {
-  """Row creation time (UTC)."""
+  """
+  Row creation time (UTC).
+  """
   CREATED_AT
 
-  """Actor ID from request context; never client-supplied."""
+  """
+  Actor ID from request context; never client-supplied.
+  """
   CREATED_BY
 
-  """Surrogate primary key."""
+  """
+  Surrogate primary key.
+  """
   ID
 
-  """Technical specifications (plain text; not JSON)."""
+  """
+  Technical specifications (plain text; not JSON).
+  """
   SPECIFICATIONS
 
-  """Last update time (UTC)."""
+  """
+  Last update time (UTC).
+  """
   UPDATED_AT
 
-  """Actor ID from request context on last update."""
+  """
+  Actor ID from request context on last update.
+  """
   UPDATED_BY
 
-  """Warranty and support notes for the item."""
+  """
+  Warranty and support notes for the item.
+  """
   WARRANTY_NOTES
 }
 
-"""Filter criteria for ItemDetail queries and mutations."""
+"""
+Filter criteria for ItemDetail queries and mutations.
+"""
 input ItemDetailFilter {
-  """All nested filters must match."""
+  """
+  All nested filters must match.
+  """
   and: [ItemDetailFilter!]
 
-  """Surrogate primary key."""
+  """
+  Surrogate primary key.
+  """
   id: IDFilter
 
-  """Filter via item relation."""
+  """
+  Filter via item relation.
+  """
   item: ItemFilter
 
-  """Negates the nested filter."""
+  """
+  Negates the nested filter.
+  """
   not: ItemDetailFilter
 
-  """At least one nested filter must match."""
+  """
+  At least one nested filter must match.
+  """
   or: [ItemDetailFilter!]
 
-  """Technical specifications (plain text; not JSON)."""
+  """
+  Technical specifications (plain text; not JSON).
+  """
   specifications: StringFilter
 
-  """Warranty and support notes for the item."""
+  """
+  Warranty and support notes for the item.
+  """
   warrantyNotes: StringFilter
 }
 
-"""Bulk create/update success payload for ItemDetail."""
+"""
+Bulk create/update success payload for ItemDetail.
+"""
 type ItemDetailListPayload {
   items: [ItemDetail!]!
 }
 
-"""Sort specification for ItemDetail list queries."""
+"""
+Sort specification for ItemDetail list queries.
+"""
 input ItemDetailSortInput {
-  """Sort direction; defaults to ascending."""
+  """
+  Sort direction; defaults to ascending.
+  """
   direction: SortDirection = ASC
   field: ItemDetailField!
 }
 
-"""Single row update entry for bulk update."""
+"""
+Single row update entry for bulk update.
+"""
 input ItemDetailUpdateEntry {
   id: ID!
   input: ItemDetailUpdateInput!
 }
 
-"""Input for updating an existing ItemDetail; all fields optional."""
+"""
+Input for updating an existing ItemDetail; all fields optional.
+"""
 input ItemDetailUpdateInput {
-  """FK to items.id — enforces 1:1 via unique index (dependent side)."""
+  """
+  FK to items.id — enforces 1:1 via unique index (dependent side).
+  """
   itemId: ID
 
-  """Technical specifications (plain text; not JSON)."""
+  """
+  Technical specifications (plain text; not JSON).
+  """
   specifications: String
 
-  """Warranty and support notes for the item."""
+  """
+  Warranty and support notes for the item.
+  """
   warrantyNotes: String
 }
 
-"""Edge wrapper for Item connection pagination."""
+"""
+Edge wrapper for Item connection pagination.
+"""
 type ItemEdge {
   cursor: String!
   node: Item!
 }
 
-"""Sortable fields on Item."""
+"""
+Sortable fields on Item.
+"""
 enum ItemField {
-  """Row creation time (UTC)."""
+  """
+  Row creation time (UTC).
+  """
   CREATED_AT
 
-  """Actor ID from request context; never client-supplied."""
+  """
+  Actor ID from request context; never client-supplied.
+  """
   CREATED_BY
 
-  """Optional longer description of the item."""
+  """
+  Optional longer description of the item.
+  """
   DESCRIPTION
 
-  """Whether the item has file attachments in object storage."""
+  """
+  Whether the item has file attachments in object storage.
+  """
   HAS_ATTACHMENTS
 
-  """Surrogate primary key."""
+  """
+  Surrogate primary key.
+  """
   ID
 
-  """Whether the item is currently active."""
+  """
+  Whether the item is currently active.
+  """
   IS_ACTIVE
 
-  """Display name of the item. Validation: max length 255."""
+  """
+  Display name of the item. Validation: max length 255.
+  """
   NAME
 
-  """Last update time (UTC)."""
+  """
+  Last update time (UTC).
+  """
   UPDATED_AT
 
-  """Actor ID from request context on last update."""
+  """
+  Actor ID from request context on last update.
+  """
   UPDATED_BY
 }
 
-"""Filter criteria for Item queries and mutations."""
+"""
+Filter criteria for Item queries and mutations.
+"""
 input ItemFilter {
-  """All nested filters must match."""
+  """
+  All nested filters must match.
+  """
   and: [ItemFilter!]
 
-  """Filter via category relation."""
+  """
+  Filter via category relation.
+  """
   category: CategoryFilter
 
-  """Optional longer description of the item."""
+  """
+  Optional longer description of the item.
+  """
   description: StringFilter
 
-  """Filter via detail relation."""
+  """
+  Filter via detail relation.
+  """
   detail: ItemDetailFilter
 
-  """Whether the item has file attachments in object storage."""
+  """
+  Whether the item has file attachments in object storage.
+  """
   hasAttachments: BooleanFilter
 
-  """Surrogate primary key."""
+  """
+  Surrogate primary key.
+  """
   id: IDFilter
 
-  """Whether the item is currently active."""
+  """
+  Whether the item is currently active.
+  """
   isActive: BooleanFilter
 
-  """Association filter on itemTags."""
+  """
+  Association filter on itemTags.
+  """
   itemTags: ItemTagAssociationFilter
 
-  """Display name of the item. Validation: max length 255."""
+  """
+  Display name of the item. Validation: max length 255.
+  """
   name: StringFilter
 
-  """Negates the nested filter."""
+  """
+  Negates the nested filter.
+  """
   not: ItemFilter
 
-  """At least one nested filter must match."""
+  """
+  At least one nested filter must match.
+  """
   or: [ItemFilter!]
 
-  """Association filter on orderLines."""
+  """
+  Association filter on orderLines.
+  """
   orderLines: OrderLineAssociationFilter
 }
 
-"""Bulk create/update success payload for Item."""
+"""
+Bulk create/update success payload for Item.
+"""
 type ItemListPayload {
   items: [Item!]!
 }
 
-"""Sort specification for Item list queries."""
+"""
+Sort specification for Item list queries.
+"""
 input ItemSortInput {
-  """Sort direction; defaults to ascending."""
+  """
+  Sort direction; defaults to ascending.
+  """
   direction: SortDirection = ASC
   field: ItemField!
 }
@@ -1115,46 +1659,72 @@ type ItemTag {
   """
   assignedAt: DateTime!
 
-  """Row creation time (UTC)."""
+  """
+  Row creation time (UTC).
+  """
   createdAt: DateTime!
 
-  """Actor ID from request context; never client-supplied."""
+  """
+  Actor ID from request context; never client-supplied.
+  """
   createdBy: String!
 
-  """Surrogate primary key."""
+  """
+  Surrogate primary key.
+  """
   id: ID!
 
-  """Navigate to related Item."""
+  """
+  Navigate to related Item.
+  """
   item: Item!
 
-  """Navigate to related Tag."""
+  """
+  Navigate to related Tag.
+  """
   tag: Tag!
 
-  """Last update time (UTC)."""
+  """
+  Last update time (UTC).
+  """
   updatedAt: DateTime!
 
-  """Actor ID from request context on last update."""
+  """
+  Actor ID from request context on last update.
+  """
   updatedBy: String!
 }
 
-"""Aggregate metrics for ItemTag."""
+"""
+Aggregate metrics for ItemTag.
+"""
 type ItemTagAggregate {
   count: Int!
 }
 
-"""Association filter for itemTags (one-to-many)."""
+"""
+Association filter for itemTags (one-to-many).
+"""
 input ItemTagAssociationFilter {
-  """All related rows match."""
+  """
+  All related rows match.
+  """
   every: ItemTagFilter
 
-  """No related rows match."""
+  """
+  No related rows match.
+  """
   none: ItemTagFilter
 
-  """At least one related row matches."""
+  """
+  At least one related row matches.
+  """
   some: ItemTagFilter
 }
 
-"""Change notification payload for itemTag subscriptions."""
+"""
+Change notification payload for itemTag subscriptions.
+"""
 type ItemTagChangeEvent {
   count: Int!
   ids: [ID!]!
@@ -1162,59 +1732,85 @@ type ItemTagChangeEvent {
   operation: ChangeOperation!
 }
 
-"""Relay-style connection for paginated itemTags queries."""
+"""
+Relay-style connection for paginated itemTags queries.
+"""
 type ItemTagConnection {
   edges: [ItemTagEdge!]!
   nodes: [ItemTag!]!
   pageInfo: PageInfo!
 }
 
-"""Input for creating a new ItemTag."""
+"""
+Input for creating a new ItemTag.
+"""
 input ItemTagCreateInput {
   """
   UTC instant when this tag was assigned to the item (enriched junction field).
   """
   assignedAt: DateTime
 
-  """FK to items.id."""
+  """
+  FK to items.id.
+  """
   itemId: ID!
 
-  """FK to tags.id."""
+  """
+  FK to tags.id.
+  """
   tagId: ID!
 }
 
-"""Edge wrapper for ItemTag connection pagination."""
+"""
+Edge wrapper for ItemTag connection pagination.
+"""
 type ItemTagEdge {
   cursor: String!
   node: ItemTag!
 }
 
-"""Sortable fields on ItemTag."""
+"""
+Sortable fields on ItemTag.
+"""
 enum ItemTagField {
   """
   UTC instant when this tag was assigned to the item (enriched junction field).
   """
   ASSIGNED_AT
 
-  """Row creation time (UTC)."""
+  """
+  Row creation time (UTC).
+  """
   CREATED_AT
 
-  """Actor ID from request context; never client-supplied."""
+  """
+  Actor ID from request context; never client-supplied.
+  """
   CREATED_BY
 
-  """Surrogate primary key."""
+  """
+  Surrogate primary key.
+  """
   ID
 
-  """Last update time (UTC)."""
+  """
+  Last update time (UTC).
+  """
   UPDATED_AT
 
-  """Actor ID from request context on last update."""
+  """
+  Actor ID from request context on last update.
+  """
   UPDATED_BY
 }
 
-"""Filter criteria for ItemTag queries and mutations."""
+"""
+Filter criteria for ItemTag queries and mutations.
+"""
 input ItemTagFilter {
-  """All nested filters must match."""
+  """
+  All nested filters must match.
+  """
   and: [ItemTagFilter!]
 
   """
@@ -1222,75 +1818,113 @@ input ItemTagFilter {
   """
   assignedAt: DateTimeFilter
 
-  """Surrogate primary key."""
+  """
+  Surrogate primary key.
+  """
   id: IDFilter
 
-  """Filter via item relation."""
+  """
+  Filter via item relation.
+  """
   item: ItemFilter
 
-  """Negates the nested filter."""
+  """
+  Negates the nested filter.
+  """
   not: ItemTagFilter
 
-  """At least one nested filter must match."""
+  """
+  At least one nested filter must match.
+  """
   or: [ItemTagFilter!]
 
-  """Filter via tag relation."""
+  """
+  Filter via tag relation.
+  """
   tag: TagFilter
 }
 
-"""Bulk create/update success payload for ItemTag."""
+"""
+Bulk create/update success payload for ItemTag.
+"""
 type ItemTagListPayload {
   items: [ItemTag!]!
 }
 
-"""Sort specification for ItemTag list queries."""
+"""
+Sort specification for ItemTag list queries.
+"""
 input ItemTagSortInput {
-  """Sort direction; defaults to ascending."""
+  """
+  Sort direction; defaults to ascending.
+  """
   direction: SortDirection = ASC
   field: ItemTagField!
 }
 
-"""Single row update entry for bulk update."""
+"""
+Single row update entry for bulk update.
+"""
 input ItemTagUpdateEntry {
   id: ID!
   input: ItemTagUpdateInput!
 }
 
-"""Input for updating an existing ItemTag; all fields optional."""
+"""
+Input for updating an existing ItemTag; all fields optional.
+"""
 input ItemTagUpdateInput {
   """
   UTC instant when this tag was assigned to the item (enriched junction field).
   """
   assignedAt: DateTime
 
-  """FK to items.id."""
+  """
+  FK to items.id.
+  """
   itemId: ID
 
-  """FK to tags.id."""
+  """
+  FK to tags.id.
+  """
   tagId: ID
 }
 
-"""Single row update entry for bulk update."""
+"""
+Single row update entry for bulk update.
+"""
 input ItemUpdateEntry {
   id: ID!
   input: ItemUpdateInput!
 }
 
-"""Input for updating an existing Item; all fields optional."""
+"""
+Input for updating an existing Item; all fields optional.
+"""
 input ItemUpdateInput {
-  """FK to categories.id — parent category (M:1)."""
+  """
+  FK to categories.id — parent category (M:1).
+  """
   categoryId: ID
 
-  """Optional longer description of the item."""
+  """
+  Optional longer description of the item.
+  """
   description: String
 
-  """Whether the item has file attachments in object storage."""
+  """
+  Whether the item has file attachments in object storage.
+  """
   hasAttachments: Boolean
 
-  """Whether the item is currently active."""
+  """
+  Whether the item is currently active.
+  """
   isActive: Boolean
 
-  """Display name of the item. Validation: max length 255."""
+  """
+  Display name of the item. Validation: max length 255.
+  """
   name: String
 }
 
@@ -1298,46 +1932,72 @@ input ItemUpdateInput {
 User label names for pure M:N junction navigation (distinct from item \`tags\`).
 """
 type Label {
-  """Row creation time (UTC)."""
+  """
+  Row creation time (UTC).
+  """
   createdAt: DateTime!
 
-  """Actor ID from request context; never client-supplied."""
+  """
+  Actor ID from request context; never client-supplied.
+  """
   createdBy: String!
 
-  """Surrogate primary key."""
+  """
+  Surrogate primary key.
+  """
   id: ID!
 
-  """Unique label text. Validation: max length 64."""
+  """
+  Unique label text. Validation: max length 64.
+  """
   label: String!
 
-  """Last update time (UTC)."""
+  """
+  Last update time (UTC).
+  """
   updatedAt: DateTime!
 
-  """Actor ID from request context on last update."""
+  """
+  Actor ID from request context on last update.
+  """
   updatedBy: String!
 
-  """Navigate to related User."""
+  """
+  Navigate to related User.
+  """
   users: [User!]!
 }
 
-"""Aggregate metrics for Label."""
+"""
+Aggregate metrics for Label.
+"""
 type LabelAggregate {
   count: Int!
 }
 
-"""Association filter for labels (many-to-many)."""
+"""
+Association filter for labels (many-to-many).
+"""
 input LabelAssociationFilter {
-  """All related rows match."""
+  """
+  All related rows match.
+  """
   every: LabelFilter
 
-  """No related rows match."""
+  """
+  No related rows match.
+  """
   none: LabelFilter
 
-  """At least one related row matches."""
+  """
+  At least one related row matches.
+  """
   some: LabelFilter
 }
 
-"""Change notification payload for label subscriptions."""
+"""
+Change notification payload for label subscriptions.
+"""
 type LabelChangeEvent {
   count: Int!
   ids: [ID!]!
@@ -1345,88 +2005,136 @@ type LabelChangeEvent {
   operation: ChangeOperation!
 }
 
-"""Relay-style connection for paginated labels queries."""
+"""
+Relay-style connection for paginated labels queries.
+"""
 type LabelConnection {
   edges: [LabelEdge!]!
   nodes: [Label!]!
   pageInfo: PageInfo!
 }
 
-"""Input for creating a new Label."""
+"""
+Input for creating a new Label.
+"""
 input LabelCreateInput {
-  """Unique label text. Validation: max length 64."""
+  """
+  Unique label text. Validation: max length 64.
+  """
   label: String!
 }
 
-"""Edge wrapper for Label connection pagination."""
+"""
+Edge wrapper for Label connection pagination.
+"""
 type LabelEdge {
   cursor: String!
   node: Label!
 }
 
-"""Sortable fields on Label."""
+"""
+Sortable fields on Label.
+"""
 enum LabelField {
-  """Row creation time (UTC)."""
+  """
+  Row creation time (UTC).
+  """
   CREATED_AT
 
-  """Actor ID from request context; never client-supplied."""
+  """
+  Actor ID from request context; never client-supplied.
+  """
   CREATED_BY
 
-  """Surrogate primary key."""
+  """
+  Surrogate primary key.
+  """
   ID
 
-  """Unique label text. Validation: max length 64."""
+  """
+  Unique label text. Validation: max length 64.
+  """
   LABEL
 
-  """Last update time (UTC)."""
+  """
+  Last update time (UTC).
+  """
   UPDATED_AT
 
-  """Actor ID from request context on last update."""
+  """
+  Actor ID from request context on last update.
+  """
   UPDATED_BY
 }
 
-"""Filter criteria for Label queries and mutations."""
+"""
+Filter criteria for Label queries and mutations.
+"""
 input LabelFilter {
-  """All nested filters must match."""
+  """
+  All nested filters must match.
+  """
   and: [LabelFilter!]
 
-  """Surrogate primary key."""
+  """
+  Surrogate primary key.
+  """
   id: IDFilter
 
-  """Unique label text. Validation: max length 64."""
+  """
+  Unique label text. Validation: max length 64.
+  """
   label: StringFilter
 
-  """Negates the nested filter."""
+  """
+  Negates the nested filter.
+  """
   not: LabelFilter
 
-  """At least one nested filter must match."""
+  """
+  At least one nested filter must match.
+  """
   or: [LabelFilter!]
 
-  """Association filter on users."""
+  """
+  Association filter on users.
+  """
   users: UserAssociationFilter
 }
 
-"""Bulk create/update success payload for Label."""
+"""
+Bulk create/update success payload for Label.
+"""
 type LabelListPayload {
   items: [Label!]!
 }
 
-"""Sort specification for Label list queries."""
+"""
+Sort specification for Label list queries.
+"""
 input LabelSortInput {
-  """Sort direction; defaults to ascending."""
+  """
+  Sort direction; defaults to ascending.
+  """
   direction: SortDirection = ASC
   field: LabelField!
 }
 
-"""Single row update entry for bulk update."""
+"""
+Single row update entry for bulk update.
+"""
 input LabelUpdateEntry {
   id: ID!
   input: LabelUpdateInput!
 }
 
-"""Input for updating an existing Label; all fields optional."""
+"""
+Input for updating an existing Label; all fields optional.
+"""
 input LabelUpdateInput {
-  """Unique label text. Validation: max length 64."""
+  """
+  Unique label text. Validation: max length 64.
+  """
   label: String
 }
 
@@ -1435,297 +2143,652 @@ A field whose value is a IEEE 802 48-bit MAC address: https://en.wikipedia.org/w
 """
 scalar MAC
 
-"""Filter operators for macaddr columns."""
+"""
+Filter operators for macaddr columns.
+"""
 input MACFilter {
   eq: MAC
 
-  """True = IS NULL; false = IS NOT NULL; nullable columns only."""
+  """
+  True = IS NULL; false = IS NOT NULL; nullable columns only.
+  """
   isNull: Boolean
   neq: MAC
 }
 
-"""Entry points for data mutations that trigger side effects."""
+"""
+Entry points for data mutations that trigger side effects.
+"""
 type Mutation {
-  """Bulk create auditEvents."""
-  bulkCreateAuditEvent(atomic: Boolean, inputs: [AuditEventCreateInput!]!): BulkCreateAuditEventResult!
+  """
+  Bulk create auditEvents.
+  """
+  bulkCreateAuditEvent(
+    atomic: Boolean
+    inputs: [AuditEventCreateInput!]!
+  ): BulkCreateAuditEventResult!
 
-  """Bulk create categories."""
-  bulkCreateCategory(atomic: Boolean, inputs: [CategoryCreateInput!]!): BulkCreateCategoryResult!
+  """
+  Bulk create categories.
+  """
+  bulkCreateCategory(
+    atomic: Boolean
+    inputs: [CategoryCreateInput!]!
+  ): BulkCreateCategoryResult!
 
-  """Bulk create items."""
-  bulkCreateItem(atomic: Boolean, inputs: [ItemCreateInput!]!): BulkCreateItemResult!
+  """
+  Bulk create items.
+  """
+  bulkCreateItem(
+    atomic: Boolean
+    inputs: [ItemCreateInput!]!
+  ): BulkCreateItemResult!
 
-  """Bulk create itemDetails."""
-  bulkCreateItemDetail(atomic: Boolean, inputs: [ItemDetailCreateInput!]!): BulkCreateItemDetailResult!
+  """
+  Bulk create itemDetails.
+  """
+  bulkCreateItemDetail(
+    atomic: Boolean
+    inputs: [ItemDetailCreateInput!]!
+  ): BulkCreateItemDetailResult!
 
-  """Bulk create itemTags."""
-  bulkCreateItemTag(atomic: Boolean, inputs: [ItemTagCreateInput!]!): BulkCreateItemTagResult!
+  """
+  Bulk create itemTags.
+  """
+  bulkCreateItemTag(
+    atomic: Boolean
+    inputs: [ItemTagCreateInput!]!
+  ): BulkCreateItemTagResult!
 
-  """Bulk create labels."""
-  bulkCreateLabel(atomic: Boolean, inputs: [LabelCreateInput!]!): BulkCreateLabelResult!
+  """
+  Bulk create labels.
+  """
+  bulkCreateLabel(
+    atomic: Boolean
+    inputs: [LabelCreateInput!]!
+  ): BulkCreateLabelResult!
 
-  """Bulk create orders."""
-  bulkCreateOrder(atomic: Boolean, inputs: [OrderCreateInput!]!): BulkCreateOrderResult!
+  """
+  Bulk create orders.
+  """
+  bulkCreateOrder(
+    atomic: Boolean
+    inputs: [OrderCreateInput!]!
+  ): BulkCreateOrderResult!
 
-  """Bulk create orderLines."""
-  bulkCreateOrderLine(atomic: Boolean, inputs: [OrderLineCreateInput!]!): BulkCreateOrderLineResult!
+  """
+  Bulk create orderLines.
+  """
+  bulkCreateOrderLine(
+    atomic: Boolean
+    inputs: [OrderLineCreateInput!]!
+  ): BulkCreateOrderLineResult!
 
-  """Bulk create scalarSpecimens."""
-  bulkCreateScalarSpecimen(atomic: Boolean, inputs: [ScalarSpecimenCreateInput!]!): BulkCreateScalarSpecimenResult!
+  """
+  Bulk create scalarSpecimens.
+  """
+  bulkCreateScalarSpecimen(
+    atomic: Boolean
+    inputs: [ScalarSpecimenCreateInput!]!
+  ): BulkCreateScalarSpecimenResult!
 
-  """Bulk create tags."""
-  bulkCreateTag(atomic: Boolean, inputs: [TagCreateInput!]!): BulkCreateTagResult!
+  """
+  Bulk create tags.
+  """
+  bulkCreateTag(
+    atomic: Boolean
+    inputs: [TagCreateInput!]!
+  ): BulkCreateTagResult!
 
-  """Bulk create users."""
-  bulkCreateUser(atomic: Boolean, inputs: [UserCreateInput!]!): BulkCreateUserResult!
+  """
+  Bulk create users.
+  """
+  bulkCreateUser(
+    atomic: Boolean
+    inputs: [UserCreateInput!]!
+  ): BulkCreateUserResult!
 
-  """Bulk create userLabels."""
-  bulkCreateUserLabel(atomic: Boolean, inputs: [UserLabelCreateInput!]!): BulkCreateUserLabelResult!
+  """
+  Bulk create userLabels.
+  """
+  bulkCreateUserLabel(
+    atomic: Boolean
+    inputs: [UserLabelCreateInput!]!
+  ): BulkCreateUserLabelResult!
 
-  """Bulk delete auditEvents by ID list."""
-  bulkDeleteAuditEvent(atomic: Boolean, ids: [ID!]!): BulkDeleteAuditEventResult!
+  """
+  Bulk delete auditEvents by ID list.
+  """
+  bulkDeleteAuditEvent(
+    atomic: Boolean
+    ids: [ID!]!
+  ): BulkDeleteAuditEventResult!
 
-  """Bulk delete auditEvents matching filter (always atomic)."""
-  bulkDeleteAuditEventByFilter(confirmDeleteAll: Boolean, filter: AuditEventFilter!): BulkMutationResult!
+  """
+  Bulk delete auditEvents matching filter (always atomic).
+  """
+  bulkDeleteAuditEventByFilter(
+    confirmDeleteAll: Boolean
+    filter: AuditEventFilter!
+  ): BulkMutationResult!
 
-  """Bulk delete categories by ID list."""
+  """
+  Bulk delete categories by ID list.
+  """
   bulkDeleteCategory(atomic: Boolean, ids: [ID!]!): BulkDeleteCategoryResult!
 
-  """Bulk delete categories matching filter (always atomic)."""
-  bulkDeleteCategoryByFilter(confirmDeleteAll: Boolean, filter: CategoryFilter!): BulkMutationResult!
+  """
+  Bulk delete categories matching filter (always atomic).
+  """
+  bulkDeleteCategoryByFilter(
+    confirmDeleteAll: Boolean
+    filter: CategoryFilter!
+  ): BulkMutationResult!
 
-  """Bulk delete items by ID list."""
+  """
+  Bulk delete items by ID list.
+  """
   bulkDeleteItem(atomic: Boolean, ids: [ID!]!): BulkDeleteItemResult!
 
-  """Bulk delete items matching filter (always atomic)."""
-  bulkDeleteItemByFilter(confirmDeleteAll: Boolean, filter: ItemFilter!): BulkMutationResult!
+  """
+  Bulk delete items matching filter (always atomic).
+  """
+  bulkDeleteItemByFilter(
+    confirmDeleteAll: Boolean
+    filter: ItemFilter!
+  ): BulkMutationResult!
 
-  """Bulk delete itemDetails by ID list."""
-  bulkDeleteItemDetail(atomic: Boolean, ids: [ID!]!): BulkDeleteItemDetailResult!
+  """
+  Bulk delete itemDetails by ID list.
+  """
+  bulkDeleteItemDetail(
+    atomic: Boolean
+    ids: [ID!]!
+  ): BulkDeleteItemDetailResult!
 
-  """Bulk delete itemDetails matching filter (always atomic)."""
-  bulkDeleteItemDetailByFilter(confirmDeleteAll: Boolean, filter: ItemDetailFilter!): BulkMutationResult!
+  """
+  Bulk delete itemDetails matching filter (always atomic).
+  """
+  bulkDeleteItemDetailByFilter(
+    confirmDeleteAll: Boolean
+    filter: ItemDetailFilter!
+  ): BulkMutationResult!
 
-  """Bulk delete itemTags by ID list."""
+  """
+  Bulk delete itemTags by ID list.
+  """
   bulkDeleteItemTag(atomic: Boolean, ids: [ID!]!): BulkDeleteItemTagResult!
 
-  """Bulk delete itemTags matching filter (always atomic)."""
-  bulkDeleteItemTagByFilter(confirmDeleteAll: Boolean, filter: ItemTagFilter!): BulkMutationResult!
+  """
+  Bulk delete itemTags matching filter (always atomic).
+  """
+  bulkDeleteItemTagByFilter(
+    confirmDeleteAll: Boolean
+    filter: ItemTagFilter!
+  ): BulkMutationResult!
 
-  """Bulk delete labels by ID list."""
+  """
+  Bulk delete labels by ID list.
+  """
   bulkDeleteLabel(atomic: Boolean, ids: [ID!]!): BulkDeleteLabelResult!
 
-  """Bulk delete labels matching filter (always atomic)."""
-  bulkDeleteLabelByFilter(confirmDeleteAll: Boolean, filter: LabelFilter!): BulkMutationResult!
+  """
+  Bulk delete labels matching filter (always atomic).
+  """
+  bulkDeleteLabelByFilter(
+    confirmDeleteAll: Boolean
+    filter: LabelFilter!
+  ): BulkMutationResult!
 
-  """Bulk delete orders by ID list."""
+  """
+  Bulk delete orders by ID list.
+  """
   bulkDeleteOrder(atomic: Boolean, ids: [ID!]!): BulkDeleteOrderResult!
 
-  """Bulk delete orders matching filter (always atomic)."""
-  bulkDeleteOrderByFilter(confirmDeleteAll: Boolean, filter: OrderFilter!): BulkMutationResult!
+  """
+  Bulk delete orders matching filter (always atomic).
+  """
+  bulkDeleteOrderByFilter(
+    confirmDeleteAll: Boolean
+    filter: OrderFilter!
+  ): BulkMutationResult!
 
-  """Bulk delete orderLines by ID list."""
+  """
+  Bulk delete orderLines by ID list.
+  """
   bulkDeleteOrderLine(atomic: Boolean, ids: [ID!]!): BulkDeleteOrderLineResult!
 
-  """Bulk delete orderLines matching filter (always atomic)."""
-  bulkDeleteOrderLineByFilter(confirmDeleteAll: Boolean, filter: OrderLineFilter!): BulkMutationResult!
+  """
+  Bulk delete orderLines matching filter (always atomic).
+  """
+  bulkDeleteOrderLineByFilter(
+    confirmDeleteAll: Boolean
+    filter: OrderLineFilter!
+  ): BulkMutationResult!
 
-  """Bulk delete scalarSpecimens by ID list."""
-  bulkDeleteScalarSpecimen(atomic: Boolean, ids: [ID!]!): BulkDeleteScalarSpecimenResult!
+  """
+  Bulk delete scalarSpecimens by ID list.
+  """
+  bulkDeleteScalarSpecimen(
+    atomic: Boolean
+    ids: [ID!]!
+  ): BulkDeleteScalarSpecimenResult!
 
-  """Bulk delete scalarSpecimens matching filter (always atomic)."""
-  bulkDeleteScalarSpecimenByFilter(confirmDeleteAll: Boolean, filter: ScalarSpecimenFilter!): BulkMutationResult!
+  """
+  Bulk delete scalarSpecimens matching filter (always atomic).
+  """
+  bulkDeleteScalarSpecimenByFilter(
+    confirmDeleteAll: Boolean
+    filter: ScalarSpecimenFilter!
+  ): BulkMutationResult!
 
-  """Bulk delete tags by ID list."""
+  """
+  Bulk delete tags by ID list.
+  """
   bulkDeleteTag(atomic: Boolean, ids: [ID!]!): BulkDeleteTagResult!
 
-  """Bulk delete tags matching filter (always atomic)."""
-  bulkDeleteTagByFilter(confirmDeleteAll: Boolean, filter: TagFilter!): BulkMutationResult!
+  """
+  Bulk delete tags matching filter (always atomic).
+  """
+  bulkDeleteTagByFilter(
+    confirmDeleteAll: Boolean
+    filter: TagFilter!
+  ): BulkMutationResult!
 
-  """Bulk delete users by ID list."""
+  """
+  Bulk delete users by ID list.
+  """
   bulkDeleteUser(atomic: Boolean, ids: [ID!]!): BulkDeleteUserResult!
 
-  """Bulk delete users matching filter (always atomic)."""
-  bulkDeleteUserByFilter(confirmDeleteAll: Boolean, filter: UserFilter!): BulkMutationResult!
+  """
+  Bulk delete users matching filter (always atomic).
+  """
+  bulkDeleteUserByFilter(
+    confirmDeleteAll: Boolean
+    filter: UserFilter!
+  ): BulkMutationResult!
 
-  """Bulk delete userLabels by ID list."""
+  """
+  Bulk delete userLabels by ID list.
+  """
   bulkDeleteUserLabel(atomic: Boolean, ids: [ID!]!): BulkDeleteUserLabelResult!
 
-  """Bulk delete userLabels matching filter (always atomic)."""
-  bulkDeleteUserLabelByFilter(confirmDeleteAll: Boolean, filter: UserLabelFilter!): BulkMutationResult!
+  """
+  Bulk delete userLabels matching filter (always atomic).
+  """
+  bulkDeleteUserLabelByFilter(
+    confirmDeleteAll: Boolean
+    filter: UserLabelFilter!
+  ): BulkMutationResult!
 
-  """Bulk update categories by ID list."""
-  bulkUpdateCategory(atomic: Boolean, updates: [CategoryUpdateEntry!]!): BulkUpdateCategoryResult!
+  """
+  Bulk update categories by ID list.
+  """
+  bulkUpdateCategory(
+    atomic: Boolean
+    updates: [CategoryUpdateEntry!]!
+  ): BulkUpdateCategoryResult!
 
-  """Bulk update categories matching filter (always atomic)."""
-  bulkUpdateCategoryByFilter(confirmUpdateAll: Boolean, filter: CategoryFilter!, input: CategoryUpdateInput!): BulkMutationResult!
+  """
+  Bulk update categories matching filter (always atomic).
+  """
+  bulkUpdateCategoryByFilter(
+    confirmUpdateAll: Boolean
+    filter: CategoryFilter!
+    input: CategoryUpdateInput!
+  ): BulkMutationResult!
 
-  """Bulk update items by ID list."""
-  bulkUpdateItem(atomic: Boolean, updates: [ItemUpdateEntry!]!): BulkUpdateItemResult!
+  """
+  Bulk update items by ID list.
+  """
+  bulkUpdateItem(
+    atomic: Boolean
+    updates: [ItemUpdateEntry!]!
+  ): BulkUpdateItemResult!
 
-  """Bulk update items matching filter (always atomic)."""
-  bulkUpdateItemByFilter(confirmUpdateAll: Boolean, filter: ItemFilter!, input: ItemUpdateInput!): BulkMutationResult!
+  """
+  Bulk update items matching filter (always atomic).
+  """
+  bulkUpdateItemByFilter(
+    confirmUpdateAll: Boolean
+    filter: ItemFilter!
+    input: ItemUpdateInput!
+  ): BulkMutationResult!
 
-  """Bulk update itemDetails by ID list."""
-  bulkUpdateItemDetail(atomic: Boolean, updates: [ItemDetailUpdateEntry!]!): BulkUpdateItemDetailResult!
+  """
+  Bulk update itemDetails by ID list.
+  """
+  bulkUpdateItemDetail(
+    atomic: Boolean
+    updates: [ItemDetailUpdateEntry!]!
+  ): BulkUpdateItemDetailResult!
 
-  """Bulk update itemDetails matching filter (always atomic)."""
-  bulkUpdateItemDetailByFilter(confirmUpdateAll: Boolean, filter: ItemDetailFilter!, input: ItemDetailUpdateInput!): BulkMutationResult!
+  """
+  Bulk update itemDetails matching filter (always atomic).
+  """
+  bulkUpdateItemDetailByFilter(
+    confirmUpdateAll: Boolean
+    filter: ItemDetailFilter!
+    input: ItemDetailUpdateInput!
+  ): BulkMutationResult!
 
-  """Bulk update itemTags by ID list."""
-  bulkUpdateItemTag(atomic: Boolean, updates: [ItemTagUpdateEntry!]!): BulkUpdateItemTagResult!
+  """
+  Bulk update itemTags by ID list.
+  """
+  bulkUpdateItemTag(
+    atomic: Boolean
+    updates: [ItemTagUpdateEntry!]!
+  ): BulkUpdateItemTagResult!
 
-  """Bulk update itemTags matching filter (always atomic)."""
-  bulkUpdateItemTagByFilter(confirmUpdateAll: Boolean, filter: ItemTagFilter!, input: ItemTagUpdateInput!): BulkMutationResult!
+  """
+  Bulk update itemTags matching filter (always atomic).
+  """
+  bulkUpdateItemTagByFilter(
+    confirmUpdateAll: Boolean
+    filter: ItemTagFilter!
+    input: ItemTagUpdateInput!
+  ): BulkMutationResult!
 
-  """Bulk update labels by ID list."""
-  bulkUpdateLabel(atomic: Boolean, updates: [LabelUpdateEntry!]!): BulkUpdateLabelResult!
+  """
+  Bulk update labels by ID list.
+  """
+  bulkUpdateLabel(
+    atomic: Boolean
+    updates: [LabelUpdateEntry!]!
+  ): BulkUpdateLabelResult!
 
-  """Bulk update labels matching filter (always atomic)."""
-  bulkUpdateLabelByFilter(confirmUpdateAll: Boolean, filter: LabelFilter!, input: LabelUpdateInput!): BulkMutationResult!
+  """
+  Bulk update labels matching filter (always atomic).
+  """
+  bulkUpdateLabelByFilter(
+    confirmUpdateAll: Boolean
+    filter: LabelFilter!
+    input: LabelUpdateInput!
+  ): BulkMutationResult!
 
-  """Bulk update orders by ID list."""
-  bulkUpdateOrder(atomic: Boolean, updates: [OrderUpdateEntry!]!): BulkUpdateOrderResult!
+  """
+  Bulk update orders by ID list.
+  """
+  bulkUpdateOrder(
+    atomic: Boolean
+    updates: [OrderUpdateEntry!]!
+  ): BulkUpdateOrderResult!
 
-  """Bulk update orders matching filter (always atomic)."""
-  bulkUpdateOrderByFilter(confirmUpdateAll: Boolean, filter: OrderFilter!, input: OrderUpdateInput!): BulkMutationResult!
+  """
+  Bulk update orders matching filter (always atomic).
+  """
+  bulkUpdateOrderByFilter(
+    confirmUpdateAll: Boolean
+    filter: OrderFilter!
+    input: OrderUpdateInput!
+  ): BulkMutationResult!
 
-  """Bulk update orderLines by ID list."""
-  bulkUpdateOrderLine(atomic: Boolean, updates: [OrderLineUpdateEntry!]!): BulkUpdateOrderLineResult!
+  """
+  Bulk update orderLines by ID list.
+  """
+  bulkUpdateOrderLine(
+    atomic: Boolean
+    updates: [OrderLineUpdateEntry!]!
+  ): BulkUpdateOrderLineResult!
 
-  """Bulk update orderLines matching filter (always atomic)."""
-  bulkUpdateOrderLineByFilter(confirmUpdateAll: Boolean, filter: OrderLineFilter!, input: OrderLineUpdateInput!): BulkMutationResult!
+  """
+  Bulk update orderLines matching filter (always atomic).
+  """
+  bulkUpdateOrderLineByFilter(
+    confirmUpdateAll: Boolean
+    filter: OrderLineFilter!
+    input: OrderLineUpdateInput!
+  ): BulkMutationResult!
 
-  """Bulk update scalarSpecimens by ID list."""
-  bulkUpdateScalarSpecimen(atomic: Boolean, updates: [ScalarSpecimenUpdateEntry!]!): BulkUpdateScalarSpecimenResult!
+  """
+  Bulk update scalarSpecimens by ID list.
+  """
+  bulkUpdateScalarSpecimen(
+    atomic: Boolean
+    updates: [ScalarSpecimenUpdateEntry!]!
+  ): BulkUpdateScalarSpecimenResult!
 
-  """Bulk update scalarSpecimens matching filter (always atomic)."""
-  bulkUpdateScalarSpecimenByFilter(confirmUpdateAll: Boolean, filter: ScalarSpecimenFilter!, input: ScalarSpecimenUpdateInput!): BulkMutationResult!
+  """
+  Bulk update scalarSpecimens matching filter (always atomic).
+  """
+  bulkUpdateScalarSpecimenByFilter(
+    confirmUpdateAll: Boolean
+    filter: ScalarSpecimenFilter!
+    input: ScalarSpecimenUpdateInput!
+  ): BulkMutationResult!
 
-  """Bulk update users by ID list."""
-  bulkUpdateUser(atomic: Boolean, updates: [UserUpdateEntry!]!): BulkUpdateUserResult!
+  """
+  Bulk update users by ID list.
+  """
+  bulkUpdateUser(
+    atomic: Boolean
+    updates: [UserUpdateEntry!]!
+  ): BulkUpdateUserResult!
 
-  """Bulk update users matching filter (always atomic)."""
-  bulkUpdateUserByFilter(confirmUpdateAll: Boolean, filter: UserFilter!, input: UserUpdateInput!): BulkMutationResult!
+  """
+  Bulk update users matching filter (always atomic).
+  """
+  bulkUpdateUserByFilter(
+    confirmUpdateAll: Boolean
+    filter: UserFilter!
+    input: UserUpdateInput!
+  ): BulkMutationResult!
 
-  """Bulk update userLabels by ID list."""
-  bulkUpdateUserLabel(atomic: Boolean, updates: [UserLabelUpdateEntry!]!): BulkUpdateUserLabelResult!
+  """
+  Bulk update userLabels by ID list.
+  """
+  bulkUpdateUserLabel(
+    atomic: Boolean
+    updates: [UserLabelUpdateEntry!]!
+  ): BulkUpdateUserLabelResult!
 
-  """Bulk update userLabels matching filter (always atomic)."""
-  bulkUpdateUserLabelByFilter(confirmUpdateAll: Boolean, filter: UserLabelFilter!, input: UserLabelUpdateInput!): BulkMutationResult!
+  """
+  Bulk update userLabels matching filter (always atomic).
+  """
+  bulkUpdateUserLabelByFilter(
+    confirmUpdateAll: Boolean
+    filter: UserLabelFilter!
+    input: UserLabelUpdateInput!
+  ): BulkMutationResult!
 
-  """Creates a new AuditEvent."""
+  """
+  Creates a new AuditEvent.
+  """
   createAuditEvent(input: AuditEventCreateInput!): CreateAuditEventPayload!
 
-  """Creates a new Category."""
+  """
+  Creates a new Category.
+  """
   createCategory(input: CategoryCreateInput!): CreateCategoryPayload!
 
-  """Creates a new Item."""
+  """
+  Creates a new Item.
+  """
   createItem(input: ItemCreateInput!): CreateItemPayload!
 
-  """Creates a new ItemDetail."""
+  """
+  Creates a new ItemDetail.
+  """
   createItemDetail(input: ItemDetailCreateInput!): CreateItemDetailPayload!
 
-  """Creates a new ItemTag."""
+  """
+  Creates a new ItemTag.
+  """
   createItemTag(input: ItemTagCreateInput!): CreateItemTagPayload!
 
-  """Creates a new Label."""
+  """
+  Creates a new Label.
+  """
   createLabel(input: LabelCreateInput!): CreateLabelPayload!
 
-  """Creates a new Order."""
+  """
+  Creates a new Order.
+  """
   createOrder(input: OrderCreateInput!): CreateOrderPayload!
 
-  """Creates a new OrderLine."""
+  """
+  Creates a new OrderLine.
+  """
   createOrderLine(input: OrderLineCreateInput!): CreateOrderLinePayload!
 
-  """Creates a new ScalarSpecimen."""
-  createScalarSpecimen(input: ScalarSpecimenCreateInput!): CreateScalarSpecimenPayload!
+  """
+  Creates a new ScalarSpecimen.
+  """
+  createScalarSpecimen(
+    input: ScalarSpecimenCreateInput!
+  ): CreateScalarSpecimenPayload!
 
-  """Creates a new Tag."""
+  """
+  Creates a new Tag.
+  """
   createTag(input: TagCreateInput!): CreateTagPayload!
 
-  """Creates a new User."""
+  """
+  Creates a new User.
+  """
   createUser(input: UserCreateInput!): CreateUserPayload!
 
-  """Creates a new UserLabel."""
+  """
+  Creates a new UserLabel.
+  """
   createUserLabel(input: UserLabelCreateInput!): CreateUserLabelPayload!
 
-  """Deletes an AuditEvent by ID."""
+  """
+  Deletes an AuditEvent by ID.
+  """
   deleteAuditEvent(id: ID!): DeleteAuditEventPayload!
 
-  """Deletes a Category by ID."""
+  """
+  Deletes a Category by ID.
+  """
   deleteCategory(id: ID!): DeleteCategoryPayload!
 
-  """Deletes an Item by ID."""
+  """
+  Deletes an Item by ID.
+  """
   deleteItem(id: ID!): DeleteItemPayload!
 
-  """Deletes an ItemDetail by ID."""
+  """
+  Deletes an ItemDetail by ID.
+  """
   deleteItemDetail(id: ID!): DeleteItemDetailPayload!
 
-  """Deletes an ItemTag by ID."""
+  """
+  Deletes an ItemTag by ID.
+  """
   deleteItemTag(id: ID!): DeleteItemTagPayload!
 
-  """Deletes a Label by ID."""
+  """
+  Deletes a Label by ID.
+  """
   deleteLabel(id: ID!): DeleteLabelPayload!
 
-  """Deletes an Order by ID."""
+  """
+  Deletes an Order by ID.
+  """
   deleteOrder(id: ID!): DeleteOrderPayload!
 
-  """Deletes an OrderLine by ID."""
+  """
+  Deletes an OrderLine by ID.
+  """
   deleteOrderLine(id: ID!): DeleteOrderLinePayload!
 
-  """Deletes a ScalarSpecimen by ID."""
+  """
+  Deletes a ScalarSpecimen by ID.
+  """
   deleteScalarSpecimen(id: ID!): DeleteScalarSpecimenPayload!
 
-  """Deletes a Tag by ID."""
+  """
+  Deletes a Tag by ID.
+  """
   deleteTag(id: ID!): DeleteTagPayload!
 
-  """Deletes a User by ID."""
+  """
+  Deletes a User by ID.
+  """
   deleteUser(id: ID!): DeleteUserPayload!
 
-  """Deletes a UserLabel by ID."""
+  """
+  Deletes a UserLabel by ID.
+  """
   deleteUserLabel(id: ID!): DeleteUserLabelPayload!
 
   """
   Sends a ping with a custom message and broadcasts it to all pingSent subscribers. Use this to verify end-to-end real-time connectivity.
   """
   ping(
-    """The message payload to broadcast to all active subscribers."""
+    """
+    The message payload to broadcast to all active subscribers.
+    """
     message: String!
   ): PingResult!
 
-  """Updates an existing Category by ID."""
+  """
+  Updates an existing Category by ID.
+  """
   updateCategory(id: ID!, input: CategoryUpdateInput!): UpdateCategoryPayload!
 
-  """Updates an existing Item by ID."""
+  """
+  Updates an existing Item by ID.
+  """
   updateItem(id: ID!, input: ItemUpdateInput!): UpdateItemPayload!
 
-  """Updates an existing ItemDetail by ID."""
-  updateItemDetail(id: ID!, input: ItemDetailUpdateInput!): UpdateItemDetailPayload!
+  """
+  Updates an existing ItemDetail by ID.
+  """
+  updateItemDetail(
+    id: ID!
+    input: ItemDetailUpdateInput!
+  ): UpdateItemDetailPayload!
 
-  """Updates an existing ItemTag by ID."""
+  """
+  Updates an existing ItemTag by ID.
+  """
   updateItemTag(id: ID!, input: ItemTagUpdateInput!): UpdateItemTagPayload!
 
-  """Updates an existing Label by ID."""
+  """
+  Updates an existing Label by ID.
+  """
   updateLabel(id: ID!, input: LabelUpdateInput!): UpdateLabelPayload!
 
-  """Updates an existing Order by ID."""
+  """
+  Updates an existing Order by ID.
+  """
   updateOrder(id: ID!, input: OrderUpdateInput!): UpdateOrderPayload!
 
-  """Updates an existing OrderLine by ID."""
-  updateOrderLine(id: ID!, input: OrderLineUpdateInput!): UpdateOrderLinePayload!
+  """
+  Updates an existing OrderLine by ID.
+  """
+  updateOrderLine(
+    id: ID!
+    input: OrderLineUpdateInput!
+  ): UpdateOrderLinePayload!
 
-  """Updates an existing ScalarSpecimen by ID."""
-  updateScalarSpecimen(id: ID!, input: ScalarSpecimenUpdateInput!): UpdateScalarSpecimenPayload!
+  """
+  Updates an existing ScalarSpecimen by ID.
+  """
+  updateScalarSpecimen(
+    id: ID!
+    input: ScalarSpecimenUpdateInput!
+  ): UpdateScalarSpecimenPayload!
 
-  """Updates an existing User by ID."""
+  """
+  Updates an existing User by ID.
+  """
   updateUser(id: ID!, input: UserUpdateInput!): UpdateUserPayload!
 
-  """Updates an existing UserLabel by ID."""
-  updateUserLabel(id: ID!, input: UserLabelUpdateInput!): UpdateUserLabelPayload!
+  """
+  Updates an existing UserLabel by ID.
+  """
+  updateUserLabel(
+    id: ID!
+    input: UserLabelUpdateInput!
+  ): UpdateUserLabelPayload!
 }
 
-"""Field-level validation or business rule failure on a mutation."""
+"""
+Field-level validation or business rule failure on a mutation.
+"""
 type MutationUserError {
   code: String
   field: [String!]
@@ -1737,10 +2800,14 @@ type MutationUserError {
 Customer purchase orders; soft-deleted rows retained per retention policy.
 """
 type Order {
-  """Row creation time (UTC)."""
+  """
+  Row creation time (UTC).
+  """
   createdAt: DateTime!
 
-  """Actor ID from request context; never client-supplied."""
+  """
+  Actor ID from request context; never client-supplied.
+  """
   createdBy: String!
 
   """
@@ -1748,46 +2815,72 @@ type Order {
   """
   customerName: String!
 
-  """Surrogate primary key."""
+  """
+  Surrogate primary key.
+  """
   id: ID!
 
-  """Navigate to related OrderLine."""
+  """
+  Navigate to related OrderLine.
+  """
   lines: [OrderLine!]!
 
-  """Optional order notes from the customer."""
+  """
+  Optional order notes from the customer.
+  """
   notes: String
 
-  """Lifecycle state: PENDING → IN_PROGRESS → COMPLETED or CANCELLED."""
+  """
+  Lifecycle state: PENDING → IN_PROGRESS → COMPLETED or CANCELLED.
+  """
   status: OrderStatus!
 
-  """Last update time (UTC)."""
+  """
+  Last update time (UTC).
+  """
   updatedAt: DateTime!
 
-  """Actor ID from request context on last update."""
+  """
+  Actor ID from request context on last update.
+  """
   updatedBy: String!
 
-  """Navigate to related User."""
+  """
+  Navigate to related User.
+  """
   user: User!
 }
 
-"""Aggregate metrics for Order."""
+"""
+Aggregate metrics for Order.
+"""
 type OrderAggregate {
   count: Int!
 }
 
-"""Association filter for orders (one-to-many)."""
+"""
+Association filter for orders (one-to-many).
+"""
 input OrderAssociationFilter {
-  """All related rows match."""
+  """
+  All related rows match.
+  """
   every: OrderFilter
 
-  """No related rows match."""
+  """
+  No related rows match.
+  """
   none: OrderFilter
 
-  """At least one related row matches."""
+  """
+  At least one related row matches.
+  """
   some: OrderFilter
 }
 
-"""Change notification payload for order subscriptions."""
+"""
+Change notification payload for order subscriptions.
+"""
 type OrderChangeEvent {
   count: Int!
   ids: [ID!]!
@@ -1795,24 +2888,32 @@ type OrderChangeEvent {
   operation: ChangeOperation!
 }
 
-"""Relay-style connection for paginated orders queries."""
+"""
+Relay-style connection for paginated orders queries.
+"""
 type OrderConnection {
   edges: [OrderEdge!]!
   nodes: [Order!]!
   pageInfo: PageInfo!
 }
 
-"""Input for creating a new Order."""
+"""
+Input for creating a new Order.
+"""
 input OrderCreateInput {
   """
   PII: customer display name snapshot at order time (may differ from users.name). Validation: max length 255.
   """
   customerName: String!
 
-  """Optional order notes from the customer."""
+  """
+  Optional order notes from the customer.
+  """
   notes: String
 
-  """Lifecycle state: PENDING → IN_PROGRESS → COMPLETED or CANCELLED."""
+  """
+  Lifecycle state: PENDING → IN_PROGRESS → COMPLETED or CANCELLED.
+  """
   status: OrderStatus = PENDING
 
   """
@@ -1821,18 +2922,26 @@ input OrderCreateInput {
   userId: ID!
 }
 
-"""Edge wrapper for Order connection pagination."""
+"""
+Edge wrapper for Order connection pagination.
+"""
 type OrderEdge {
   cursor: String!
   node: Order!
 }
 
-"""Sortable fields on Order."""
+"""
+Sortable fields on Order.
+"""
 enum OrderField {
-  """Row creation time (UTC)."""
+  """
+  Row creation time (UTC).
+  """
   CREATED_AT
 
-  """Actor ID from request context; never client-supplied."""
+  """
+  Actor ID from request context; never client-supplied.
+  """
   CREATED_BY
 
   """
@@ -1840,25 +2949,39 @@ enum OrderField {
   """
   CUSTOMER_NAME
 
-  """Surrogate primary key."""
+  """
+  Surrogate primary key.
+  """
   ID
 
-  """Optional order notes from the customer."""
+  """
+  Optional order notes from the customer.
+  """
   NOTES
 
-  """Lifecycle state: PENDING → IN_PROGRESS → COMPLETED or CANCELLED."""
+  """
+  Lifecycle state: PENDING → IN_PROGRESS → COMPLETED or CANCELLED.
+  """
   STATUS
 
-  """Last update time (UTC)."""
+  """
+  Last update time (UTC).
+  """
   UPDATED_AT
 
-  """Actor ID from request context on last update."""
+  """
+  Actor ID from request context on last update.
+  """
   UPDATED_BY
 }
 
-"""Filter criteria for Order queries and mutations."""
+"""
+Filter criteria for Order queries and mutations.
+"""
 input OrderFilter {
-  """All nested filters must match."""
+  """
+  All nested filters must match.
+  """
   and: [OrderFilter!]
 
   """
@@ -1866,25 +2989,39 @@ input OrderFilter {
   """
   customerName: StringFilter
 
-  """Surrogate primary key."""
+  """
+  Surrogate primary key.
+  """
   id: IDFilter
 
-  """Association filter on lines."""
+  """
+  Association filter on lines.
+  """
   lines: OrderLineAssociationFilter
 
-  """Negates the nested filter."""
+  """
+  Negates the nested filter.
+  """
   not: OrderFilter
 
-  """Optional order notes from the customer."""
+  """
+  Optional order notes from the customer.
+  """
   notes: StringFilter
 
-  """At least one nested filter must match."""
+  """
+  At least one nested filter must match.
+  """
   or: [OrderFilter!]
 
-  """Lifecycle state: PENDING → IN_PROGRESS → COMPLETED or CANCELLED."""
+  """
+  Lifecycle state: PENDING → IN_PROGRESS → COMPLETED or CANCELLED.
+  """
   status: OrderStatusFilter
 
-  """Filter via user relation."""
+  """
+  Filter via user relation.
+  """
   user: UserFilter
 }
 
@@ -1892,25 +3029,39 @@ input OrderFilter {
 One catalog item per line on an order (1:M order → lines; each line → one item); hard-deleted when removed.
 """
 type OrderLine {
-  """Row creation time (UTC)."""
+  """
+  Row creation time (UTC).
+  """
   createdAt: DateTime!
 
-  """Actor ID from request context; never client-supplied."""
+  """
+  Actor ID from request context; never client-supplied.
+  """
   createdBy: String!
 
-  """Optional line-level description."""
+  """
+  Optional line-level description.
+  """
   description: String
 
-  """Surrogate primary key."""
+  """
+  Surrogate primary key.
+  """
   id: ID!
 
-  """Navigate to related Item."""
+  """
+  Navigate to related Item.
+  """
   item: Item!
 
-  """Navigate to related Order."""
+  """
+  Navigate to related Order.
+  """
   order: Order!
 
-  """Units ordered for this line (default 1). Validation: must be > 0."""
+  """
+  Units ordered for this line (default 1). Validation: must be > 0.
+  """
   quantity: Int!
 
   """
@@ -1918,31 +3069,47 @@ type OrderLine {
   """
   sku: String!
 
-  """Last update time (UTC)."""
+  """
+  Last update time (UTC).
+  """
   updatedAt: DateTime!
 
-  """Actor ID from request context on last update."""
+  """
+  Actor ID from request context on last update.
+  """
   updatedBy: String!
 }
 
-"""Aggregate metrics for OrderLine."""
+"""
+Aggregate metrics for OrderLine.
+"""
 type OrderLineAggregate {
   count: Int!
 }
 
-"""Association filter for orderLines (one-to-many)."""
+"""
+Association filter for orderLines (one-to-many).
+"""
 input OrderLineAssociationFilter {
-  """All related rows match."""
+  """
+  All related rows match.
+  """
   every: OrderLineFilter
 
-  """No related rows match."""
+  """
+  No related rows match.
+  """
   none: OrderLineFilter
 
-  """At least one related row matches."""
+  """
+  At least one related row matches.
+  """
   some: OrderLineFilter
 }
 
-"""Change notification payload for orderLine subscriptions."""
+"""
+Change notification payload for orderLine subscriptions.
+"""
 type OrderLineChangeEvent {
   count: Int!
   ids: [ID!]!
@@ -1950,16 +3117,22 @@ type OrderLineChangeEvent {
   operation: ChangeOperation!
 }
 
-"""Relay-style connection for paginated orderLines queries."""
+"""
+Relay-style connection for paginated orderLines queries.
+"""
 type OrderLineConnection {
   edges: [OrderLineEdge!]!
   nodes: [OrderLine!]!
   pageInfo: PageInfo!
 }
 
-"""Input for creating a new OrderLine."""
+"""
+Input for creating a new OrderLine.
+"""
 input OrderLineCreateInput {
-  """Optional line-level description."""
+  """
+  Optional line-level description.
+  """
   description: String
 
   """
@@ -1967,10 +3140,14 @@ input OrderLineCreateInput {
   """
   itemId: ID!
 
-  """FK to orders.id — parent order (M:1 from line perspective)."""
+  """
+  FK to orders.id — parent order (M:1 from line perspective).
+  """
   orderId: ID!
 
-  """Units ordered for this line (default 1). Validation: must be > 0."""
+  """
+  Units ordered for this line (default 1). Validation: must be > 0.
+  """
   quantity: Int
 
   """
@@ -1979,27 +3156,41 @@ input OrderLineCreateInput {
   sku: String!
 }
 
-"""Edge wrapper for OrderLine connection pagination."""
+"""
+Edge wrapper for OrderLine connection pagination.
+"""
 type OrderLineEdge {
   cursor: String!
   node: OrderLine!
 }
 
-"""Sortable fields on OrderLine."""
+"""
+Sortable fields on OrderLine.
+"""
 enum OrderLineField {
-  """Row creation time (UTC)."""
+  """
+  Row creation time (UTC).
+  """
   CREATED_AT
 
-  """Actor ID from request context; never client-supplied."""
+  """
+  Actor ID from request context; never client-supplied.
+  """
   CREATED_BY
 
-  """Optional line-level description."""
+  """
+  Optional line-level description.
+  """
   DESCRIPTION
 
-  """Surrogate primary key."""
+  """
+  Surrogate primary key.
+  """
   ID
 
-  """Units ordered for this line (default 1). Validation: must be > 0."""
+  """
+  Units ordered for this line (default 1). Validation: must be > 0.
+  """
   QUANTITY
 
   """
@@ -2007,37 +3198,59 @@ enum OrderLineField {
   """
   SKU
 
-  """Last update time (UTC)."""
+  """
+  Last update time (UTC).
+  """
   UPDATED_AT
 
-  """Actor ID from request context on last update."""
+  """
+  Actor ID from request context on last update.
+  """
   UPDATED_BY
 }
 
-"""Filter criteria for OrderLine queries and mutations."""
+"""
+Filter criteria for OrderLine queries and mutations.
+"""
 input OrderLineFilter {
-  """All nested filters must match."""
+  """
+  All nested filters must match.
+  """
   and: [OrderLineFilter!]
 
-  """Optional line-level description."""
+  """
+  Optional line-level description.
+  """
   description: StringFilter
 
-  """Surrogate primary key."""
+  """
+  Surrogate primary key.
+  """
   id: IDFilter
 
-  """Filter via item relation."""
+  """
+  Filter via item relation.
+  """
   item: ItemFilter
 
-  """Negates the nested filter."""
+  """
+  Negates the nested filter.
+  """
   not: OrderLineFilter
 
-  """At least one nested filter must match."""
+  """
+  At least one nested filter must match.
+  """
   or: [OrderLineFilter!]
 
-  """Filter via order relation."""
+  """
+  Filter via order relation.
+  """
   order: OrderFilter
 
-  """Units ordered for this line (default 1). Validation: must be > 0."""
+  """
+  Units ordered for this line (default 1). Validation: must be > 0.
+  """
   quantity: IntFilter
 
   """
@@ -2046,27 +3259,39 @@ input OrderLineFilter {
   sku: StringFilter
 }
 
-"""Bulk create/update success payload for OrderLine."""
+"""
+Bulk create/update success payload for OrderLine.
+"""
 type OrderLineListPayload {
   items: [OrderLine!]!
 }
 
-"""Sort specification for OrderLine list queries."""
+"""
+Sort specification for OrderLine list queries.
+"""
 input OrderLineSortInput {
-  """Sort direction; defaults to ascending."""
+  """
+  Sort direction; defaults to ascending.
+  """
   direction: SortDirection = ASC
   field: OrderLineField!
 }
 
-"""Single row update entry for bulk update."""
+"""
+Single row update entry for bulk update.
+"""
 input OrderLineUpdateEntry {
   id: ID!
   input: OrderLineUpdateInput!
 }
 
-"""Input for updating an existing OrderLine; all fields optional."""
+"""
+Input for updating an existing OrderLine; all fields optional.
+"""
 input OrderLineUpdateInput {
-  """Optional line-level description."""
+  """
+  Optional line-level description.
+  """
   description: String
 
   """
@@ -2074,10 +3299,14 @@ input OrderLineUpdateInput {
   """
   itemId: ID
 
-  """FK to orders.id — parent order (M:1 from line perspective)."""
+  """
+  FK to orders.id — parent order (M:1 from line perspective).
+  """
   orderId: ID
 
-  """Units ordered for this line (default 1). Validation: must be > 0."""
+  """
+  Units ordered for this line (default 1). Validation: must be > 0.
+  """
   quantity: Int
 
   """
@@ -2086,19 +3315,27 @@ input OrderLineUpdateInput {
   sku: String
 }
 
-"""Bulk create/update success payload for Order."""
+"""
+Bulk create/update success payload for Order.
+"""
 type OrderListPayload {
   items: [Order!]!
 }
 
-"""Sort specification for Order list queries."""
+"""
+Sort specification for Order list queries.
+"""
 input OrderSortInput {
-  """Sort direction; defaults to ascending."""
+  """
+  Sort direction; defaults to ascending.
+  """
   direction: SortDirection = ASC
   field: OrderField!
 }
 
-"""Enum values for OrderStatus."""
+"""
+Enum values for OrderStatus.
+"""
 enum OrderStatus {
   CANCELLED
   COMPLETED
@@ -2106,34 +3343,46 @@ enum OrderStatus {
   PENDING
 }
 
-"""Filter operators for OrderStatus enum columns."""
+"""
+Filter operators for OrderStatus enum columns.
+"""
 input OrderStatusFilter {
   eq: OrderStatus
   in: [OrderStatus!]
 
-  """True = IS NULL; false = IS NOT NULL; nullable columns only."""
+  """
+  True = IS NULL; false = IS NOT NULL; nullable columns only.
+  """
   isNull: Boolean
   neq: OrderStatus
   notIn: [OrderStatus!]
 }
 
-"""Single row update entry for bulk update."""
+"""
+Single row update entry for bulk update.
+"""
 input OrderUpdateEntry {
   id: ID!
   input: OrderUpdateInput!
 }
 
-"""Input for updating an existing Order; all fields optional."""
+"""
+Input for updating an existing Order; all fields optional.
+"""
 input OrderUpdateInput {
   """
   PII: customer display name snapshot at order time (may differ from users.name). Validation: max length 255.
   """
   customerName: String
 
-  """Optional order notes from the customer."""
+  """
+  Optional order notes from the customer.
+  """
   notes: String
 
-  """Lifecycle state: PENDING → IN_PROGRESS → COMPLETED or CANCELLED."""
+  """
+  Lifecycle state: PENDING → IN_PROGRESS → COMPLETED or CANCELLED.
+  """
   status: OrderStatus
 
   """
@@ -2142,7 +3391,9 @@ input OrderUpdateInput {
   userId: ID
 }
 
-"""Relay pagination metadata."""
+"""
+Relay pagination metadata.
+"""
 type PageInfo {
   endCursor: String
   hasNextPage: Boolean!
@@ -2154,332 +3405,588 @@ type PageInfo {
 Result returned by the ping mutation and emitted on the pingSent subscription.
 """
 type PingResult {
-  """The message that was sent with the ping."""
+  """
+  The message that was sent with the ping.
+  """
   message: String!
 
-  """ISO-8601 timestamp of when the ping was processed."""
+  """
+  ISO-8601 timestamp of when the ping was processed.
+  """
   timestamp: String!
 }
 
-"""Entry points for read-only data fetching."""
+"""
+Entry points for read-only data fetching.
+"""
 type Query {
-  """Returns a single auditEvent by ID."""
+  """
+  Returns a single auditEvent by ID.
+  """
   auditEvent(id: ID!): AuditEvent
 
-  """Aggregate metrics for auditEvents matching the filter."""
+  """
+  Aggregate metrics for auditEvents matching the filter.
+  """
   auditEventAggregate(filter: AuditEventFilter): AuditEventAggregate!
 
-  """Relay connection for paginated auditEvents queries."""
-  auditEventConnection(after: String, before: String, filter: AuditEventFilter, first: Int, last: Int, sort: [AuditEventSortInput!]): AuditEventConnection!
+  """
+  Relay connection for paginated auditEvents queries.
+  """
+  auditEventConnection(
+    after: String
+    before: String
+    filter: AuditEventFilter
+    first: Int
+    last: Int
+    sort: [AuditEventSortInput!]
+  ): AuditEventConnection!
 
-  """Returns auditEvents matching the filter."""
-  auditEvents(filter: AuditEventFilter, limit: Int = 100, sort: [AuditEventSortInput!]): [AuditEvent!]!
+  """
+  Returns auditEvents matching the filter.
+  """
+  auditEvents(
+    filter: AuditEventFilter
+    limit: Int = 100
+    sort: [AuditEventSortInput!]
+  ): [AuditEvent!]!
 
-  """Count of auditEvents matching the filter."""
+  """
+  Count of auditEvents matching the filter.
+  """
   auditEventsCount(filter: AuditEventFilter): Int!
 
-  """Returns categories matching the filter."""
-  categories(filter: CategoryFilter, limit: Int = 100, sort: [CategorySortInput!]): [Category!]!
+  """
+  Returns categories matching the filter.
+  """
+  categories(
+    filter: CategoryFilter
+    limit: Int = 100
+    sort: [CategorySortInput!]
+  ): [Category!]!
 
-  """Count of categories matching the filter."""
+  """
+  Count of categories matching the filter.
+  """
   categoriesCount(filter: CategoryFilter): Int!
 
-  """Returns a single category by ID."""
+  """
+  Returns a single category by ID.
+  """
   category(id: ID!): Category
 
-  """Aggregate metrics for categories matching the filter."""
+  """
+  Aggregate metrics for categories matching the filter.
+  """
   categoryAggregate(filter: CategoryFilter): CategoryAggregate!
 
-  """Relay connection for paginated categories queries."""
-  categoryConnection(after: String, before: String, filter: CategoryFilter, first: Int, last: Int, sort: [CategorySortInput!]): CategoryConnection!
+  """
+  Relay connection for paginated categories queries.
+  """
+  categoryConnection(
+    after: String
+    before: String
+    filter: CategoryFilter
+    first: Int
+    last: Int
+    sort: [CategorySortInput!]
+  ): CategoryConnection!
 
   """
   Returns a personalised greeting. Omit name to receive the default greeting.
   """
   hello(
-    """Optional name to include in the greeting."""
+    """
+    Optional name to include in the greeting.
+    """
     name: String
   ): String!
 
-  """Returns a single item by ID."""
+  """
+  Returns a single item by ID.
+  """
   item(
     id: ID!
 
-    """When true, include soft-deleted rows."""
+    """
+    When true, include soft-deleted rows.
+    """
     includeDeleted: Boolean
   ): Item
 
-  """Aggregate metrics for items matching the filter."""
+  """
+  Aggregate metrics for items matching the filter.
+  """
   itemAggregate(
     filter: ItemFilter
 
-    """When true, include soft-deleted rows."""
+    """
+    When true, include soft-deleted rows.
+    """
     includeDeleted: Boolean
   ): ItemAggregate!
 
-  """Relay connection for paginated items queries."""
+  """
+  Relay connection for paginated items queries.
+  """
   itemConnection(
     after: String
     before: String
     filter: ItemFilter
     first: Int
 
-    """When true, include soft-deleted rows."""
+    """
+    When true, include soft-deleted rows.
+    """
     includeDeleted: Boolean
     last: Int
     sort: [ItemSortInput!]
   ): ItemConnection!
 
-  """Returns a single itemDetail by ID."""
+  """
+  Returns a single itemDetail by ID.
+  """
   itemDetail(id: ID!): ItemDetail
 
-  """Aggregate metrics for itemDetails matching the filter."""
+  """
+  Aggregate metrics for itemDetails matching the filter.
+  """
   itemDetailAggregate(filter: ItemDetailFilter): ItemDetailAggregate!
 
-  """Relay connection for paginated itemDetails queries."""
-  itemDetailConnection(after: String, before: String, filter: ItemDetailFilter, first: Int, last: Int, sort: [ItemDetailSortInput!]): ItemDetailConnection!
+  """
+  Relay connection for paginated itemDetails queries.
+  """
+  itemDetailConnection(
+    after: String
+    before: String
+    filter: ItemDetailFilter
+    first: Int
+    last: Int
+    sort: [ItemDetailSortInput!]
+  ): ItemDetailConnection!
 
-  """Returns itemDetails matching the filter."""
-  itemDetails(filter: ItemDetailFilter, limit: Int = 100, sort: [ItemDetailSortInput!]): [ItemDetail!]!
+  """
+  Returns itemDetails matching the filter.
+  """
+  itemDetails(
+    filter: ItemDetailFilter
+    limit: Int = 100
+    sort: [ItemDetailSortInput!]
+  ): [ItemDetail!]!
 
-  """Count of itemDetails matching the filter."""
+  """
+  Count of itemDetails matching the filter.
+  """
   itemDetailsCount(filter: ItemDetailFilter): Int!
 
-  """Returns a single itemTag by ID."""
+  """
+  Returns a single itemTag by ID.
+  """
   itemTag(id: ID!): ItemTag
 
-  """Aggregate metrics for itemTags matching the filter."""
+  """
+  Aggregate metrics for itemTags matching the filter.
+  """
   itemTagAggregate(filter: ItemTagFilter): ItemTagAggregate!
 
-  """Relay connection for paginated itemTags queries."""
-  itemTagConnection(after: String, before: String, filter: ItemTagFilter, first: Int, last: Int, sort: [ItemTagSortInput!]): ItemTagConnection!
+  """
+  Relay connection for paginated itemTags queries.
+  """
+  itemTagConnection(
+    after: String
+    before: String
+    filter: ItemTagFilter
+    first: Int
+    last: Int
+    sort: [ItemTagSortInput!]
+  ): ItemTagConnection!
 
-  """Returns itemTags matching the filter."""
-  itemTags(filter: ItemTagFilter, limit: Int = 100, sort: [ItemTagSortInput!]): [ItemTag!]!
+  """
+  Returns itemTags matching the filter.
+  """
+  itemTags(
+    filter: ItemTagFilter
+    limit: Int = 100
+    sort: [ItemTagSortInput!]
+  ): [ItemTag!]!
 
-  """Count of itemTags matching the filter."""
+  """
+  Count of itemTags matching the filter.
+  """
   itemTagsCount(filter: ItemTagFilter): Int!
 
-  """Returns items matching the filter."""
+  """
+  Returns items matching the filter.
+  """
   items(
     filter: ItemFilter
 
-    """When true, include soft-deleted rows."""
+    """
+    When true, include soft-deleted rows.
+    """
     includeDeleted: Boolean
     limit: Int = 100
     sort: [ItemSortInput!]
   ): [Item!]!
 
-  """Count of items matching the filter."""
+  """
+  Count of items matching the filter.
+  """
   itemsCount(
     filter: ItemFilter
 
-    """When true, include soft-deleted rows."""
+    """
+    When true, include soft-deleted rows.
+    """
     includeDeleted: Boolean
   ): Int!
 
-  """Returns a single label by ID."""
+  """
+  Returns a single label by ID.
+  """
   label(id: ID!): Label
 
-  """Aggregate metrics for labels matching the filter."""
+  """
+  Aggregate metrics for labels matching the filter.
+  """
   labelAggregate(filter: LabelFilter): LabelAggregate!
 
-  """Relay connection for paginated labels queries."""
-  labelConnection(after: String, before: String, filter: LabelFilter, first: Int, last: Int, sort: [LabelSortInput!]): LabelConnection!
+  """
+  Relay connection for paginated labels queries.
+  """
+  labelConnection(
+    after: String
+    before: String
+    filter: LabelFilter
+    first: Int
+    last: Int
+    sort: [LabelSortInput!]
+  ): LabelConnection!
 
-  """Returns labels matching the filter."""
-  labels(filter: LabelFilter, limit: Int = 100, sort: [LabelSortInput!]): [Label!]!
+  """
+  Returns labels matching the filter.
+  """
+  labels(
+    filter: LabelFilter
+    limit: Int = 100
+    sort: [LabelSortInput!]
+  ): [Label!]!
 
-  """Count of labels matching the filter."""
+  """
+  Count of labels matching the filter.
+  """
   labelsCount(filter: LabelFilter): Int!
 
-  """Returns a single order by ID."""
+  """
+  Returns a single order by ID.
+  """
   order(
     id: ID!
 
-    """When true, include soft-deleted rows."""
+    """
+    When true, include soft-deleted rows.
+    """
     includeDeleted: Boolean
   ): Order
 
-  """Aggregate metrics for orders matching the filter."""
+  """
+  Aggregate metrics for orders matching the filter.
+  """
   orderAggregate(
     filter: OrderFilter
 
-    """When true, include soft-deleted rows."""
+    """
+    When true, include soft-deleted rows.
+    """
     includeDeleted: Boolean
   ): OrderAggregate!
 
-  """Relay connection for paginated orders queries."""
+  """
+  Relay connection for paginated orders queries.
+  """
   orderConnection(
     after: String
     before: String
     filter: OrderFilter
     first: Int
 
-    """When true, include soft-deleted rows."""
+    """
+    When true, include soft-deleted rows.
+    """
     includeDeleted: Boolean
     last: Int
     sort: [OrderSortInput!]
   ): OrderConnection!
 
-  """Returns a single orderLine by ID."""
+  """
+  Returns a single orderLine by ID.
+  """
   orderLine(id: ID!): OrderLine
 
-  """Aggregate metrics for orderLines matching the filter."""
+  """
+  Aggregate metrics for orderLines matching the filter.
+  """
   orderLineAggregate(filter: OrderLineFilter): OrderLineAggregate!
 
-  """Relay connection for paginated orderLines queries."""
-  orderLineConnection(after: String, before: String, filter: OrderLineFilter, first: Int, last: Int, sort: [OrderLineSortInput!]): OrderLineConnection!
+  """
+  Relay connection for paginated orderLines queries.
+  """
+  orderLineConnection(
+    after: String
+    before: String
+    filter: OrderLineFilter
+    first: Int
+    last: Int
+    sort: [OrderLineSortInput!]
+  ): OrderLineConnection!
 
-  """Returns orderLines matching the filter."""
-  orderLines(filter: OrderLineFilter, limit: Int = 100, sort: [OrderLineSortInput!]): [OrderLine!]!
+  """
+  Returns orderLines matching the filter.
+  """
+  orderLines(
+    filter: OrderLineFilter
+    limit: Int = 100
+    sort: [OrderLineSortInput!]
+  ): [OrderLine!]!
 
-  """Count of orderLines matching the filter."""
+  """
+  Count of orderLines matching the filter.
+  """
   orderLinesCount(filter: OrderLineFilter): Int!
 
-  """Returns orders matching the filter."""
+  """
+  Returns orders matching the filter.
+  """
   orders(
     filter: OrderFilter
 
-    """When true, include soft-deleted rows."""
+    """
+    When true, include soft-deleted rows.
+    """
     includeDeleted: Boolean
     limit: Int = 100
     sort: [OrderSortInput!]
   ): [Order!]!
 
-  """Count of orders matching the filter."""
+  """
+  Count of orders matching the filter.
+  """
   ordersCount(
     filter: OrderFilter
 
-    """When true, include soft-deleted rows."""
+    """
+    When true, include soft-deleted rows.
+    """
     includeDeleted: Boolean
   ): Int!
 
-  """Returns a single scalarSpecimen by ID."""
+  """
+  Returns a single scalarSpecimen by ID.
+  """
   scalarSpecimen(id: ID!): ScalarSpecimen
 
-  """Aggregate metrics for scalarSpecimens matching the filter."""
-  scalarSpecimenAggregate(filter: ScalarSpecimenFilter): ScalarSpecimenAggregate!
+  """
+  Aggregate metrics for scalarSpecimens matching the filter.
+  """
+  scalarSpecimenAggregate(
+    filter: ScalarSpecimenFilter
+  ): ScalarSpecimenAggregate!
 
-  """Relay connection for paginated scalarSpecimens queries."""
-  scalarSpecimenConnection(after: String, before: String, filter: ScalarSpecimenFilter, first: Int, last: Int, sort: [ScalarSpecimenSortInput!]): ScalarSpecimenConnection!
+  """
+  Relay connection for paginated scalarSpecimens queries.
+  """
+  scalarSpecimenConnection(
+    after: String
+    before: String
+    filter: ScalarSpecimenFilter
+    first: Int
+    last: Int
+    sort: [ScalarSpecimenSortInput!]
+  ): ScalarSpecimenConnection!
 
-  """Returns scalarSpecimens matching the filter."""
-  scalarSpecimens(filter: ScalarSpecimenFilter, limit: Int = 100, sort: [ScalarSpecimenSortInput!]): [ScalarSpecimen!]!
+  """
+  Returns scalarSpecimens matching the filter.
+  """
+  scalarSpecimens(
+    filter: ScalarSpecimenFilter
+    limit: Int = 100
+    sort: [ScalarSpecimenSortInput!]
+  ): [ScalarSpecimen!]!
 
-  """Count of scalarSpecimens matching the filter."""
+  """
+  Count of scalarSpecimens matching the filter.
+  """
   scalarSpecimensCount(filter: ScalarSpecimenFilter): Int!
 
-  """Returns the current server health status and a server-side timestamp."""
+  """
+  Returns the current server health status and a server-side timestamp.
+  """
   status: ServerStatus!
 
-  """Returns a single tag by ID."""
+  """
+  Returns a single tag by ID.
+  """
   tag(
     id: ID!
 
-    """When true, include soft-deleted rows."""
+    """
+    When true, include soft-deleted rows.
+    """
     includeDeleted: Boolean
   ): Tag
 
-  """Aggregate metrics for tags matching the filter."""
+  """
+  Aggregate metrics for tags matching the filter.
+  """
   tagAggregate(
     filter: TagFilter
 
-    """When true, include soft-deleted rows."""
+    """
+    When true, include soft-deleted rows.
+    """
     includeDeleted: Boolean
   ): TagAggregate!
 
-  """Relay connection for paginated tags queries."""
+  """
+  Relay connection for paginated tags queries.
+  """
   tagConnection(
     after: String
     before: String
     filter: TagFilter
     first: Int
 
-    """When true, include soft-deleted rows."""
+    """
+    When true, include soft-deleted rows.
+    """
     includeDeleted: Boolean
     last: Int
     sort: [TagSortInput!]
   ): TagConnection!
 
-  """Returns tags matching the filter."""
+  """
+  Returns tags matching the filter.
+  """
   tags(
     filter: TagFilter
 
-    """When true, include soft-deleted rows."""
+    """
+    When true, include soft-deleted rows.
+    """
     includeDeleted: Boolean
     limit: Int = 100
     sort: [TagSortInput!]
   ): [Tag!]!
 
-  """Count of tags matching the filter."""
+  """
+  Count of tags matching the filter.
+  """
   tagsCount(
     filter: TagFilter
 
-    """When true, include soft-deleted rows."""
+    """
+    When true, include soft-deleted rows.
+    """
     includeDeleted: Boolean
   ): Int!
 
-  """Returns a single user by ID."""
+  """
+  Returns a single user by ID.
+  """
   user(id: ID!): User
 
-  """Aggregate metrics for users matching the filter."""
+  """
+  Aggregate metrics for users matching the filter.
+  """
   userAggregate(filter: UserFilter): UserAggregate!
 
-  """Relay connection for paginated users queries."""
-  userConnection(after: String, before: String, filter: UserFilter, first: Int, last: Int, sort: [UserSortInput!]): UserConnection!
+  """
+  Relay connection for paginated users queries.
+  """
+  userConnection(
+    after: String
+    before: String
+    filter: UserFilter
+    first: Int
+    last: Int
+    sort: [UserSortInput!]
+  ): UserConnection!
 
-  """Returns a single userLabel by ID."""
+  """
+  Returns a single userLabel by ID.
+  """
   userLabel(
     id: ID!
 
-    """When true, include soft-deleted rows."""
+    """
+    When true, include soft-deleted rows.
+    """
     includeDeleted: Boolean
   ): UserLabel
 
-  """Aggregate metrics for userLabels matching the filter."""
+  """
+  Aggregate metrics for userLabels matching the filter.
+  """
   userLabelAggregate(
     filter: UserLabelFilter
 
-    """When true, include soft-deleted rows."""
+    """
+    When true, include soft-deleted rows.
+    """
     includeDeleted: Boolean
   ): UserLabelAggregate!
 
-  """Relay connection for paginated userLabels queries."""
+  """
+  Relay connection for paginated userLabels queries.
+  """
   userLabelConnection(
     after: String
     before: String
     filter: UserLabelFilter
     first: Int
 
-    """When true, include soft-deleted rows."""
+    """
+    When true, include soft-deleted rows.
+    """
     includeDeleted: Boolean
     last: Int
     sort: [UserLabelSortInput!]
   ): UserLabelConnection!
 
-  """Returns userLabels matching the filter."""
+  """
+  Returns userLabels matching the filter.
+  """
   userLabels(
     filter: UserLabelFilter
 
-    """When true, include soft-deleted rows."""
+    """
+    When true, include soft-deleted rows.
+    """
     includeDeleted: Boolean
     limit: Int = 100
     sort: [UserLabelSortInput!]
   ): [UserLabel!]!
 
-  """Count of userLabels matching the filter."""
+  """
+  Count of userLabels matching the filter.
+  """
   userLabelsCount(
     filter: UserLabelFilter
 
-    """When true, include soft-deleted rows."""
+    """
+    When true, include soft-deleted rows.
+    """
     includeDeleted: Boolean
   ): Int!
 
-  """Returns users matching the filter."""
+  """
+  Returns users matching the filter.
+  """
   users(filter: UserFilter, limit: Int = 100, sort: [UserSortInput!]): [User!]!
 
-  """Count of users matching the filter."""
+  """
+  Count of users matching the filter.
+  """
   usersCount(filter: UserFilter): Int!
 }
 
@@ -2492,25 +3999,39 @@ type ScalarSpecimen {
   """
   amountDecimal: Decimal!
 
-  """Nullable numeric — \`DecimalFilter.isNull\`."""
+  """
+  Nullable numeric — \`DecimalFilter.isNull\`.
+  """
   amountDecimalOptional: Decimal
 
-  """32-bit quantity — PG \`integer\` → GraphQL \`Int\`."""
+  """
+  32-bit quantity — PG \`integer\` → GraphQL \`Int\`.
+  """
   countInt: Int!
 
-  """Row creation time (UTC) — audit \`timestamptz\` → GraphQL \`DateTime\`."""
+  """
+  Row creation time (UTC) — audit \`timestamptz\` → GraphQL \`DateTime\`.
+  """
   createdAt: DateTime!
 
-  """Actor ID from request context; never client-supplied."""
+  """
+  Actor ID from request context; never client-supplied.
+  """
   createdBy: String!
 
-  """Elapsed duration — PG \`interval\` → GraphQL \`IntervalMs\` (ms on wire)."""
+  """
+  Elapsed duration — PG \`interval\` → GraphQL \`IntervalMs\` (ms on wire).
+  """
   durationMs: IntervalMs!
 
-  """Nullable interval — \`IntervalMsFilter.isNull\`."""
+  """
+  Nullable interval — \`IntervalMsFilter.isNull\`.
+  """
   durationMsOptional: IntervalMs
 
-  """Calendar effective date — PG \`date\` → GraphQL \`Date\`."""
+  """
+  Calendar effective date — PG \`date\` → GraphQL \`Date\`.
+  """
   effectiveOn: Date!
 
   """
@@ -2518,55 +4039,89 @@ type ScalarSpecimen {
   """
   fixedCode: String!
 
-  """Host address — PG \`inet\` → GraphQL \`IP\`."""
+  """
+  Host address — PG \`inet\` → GraphQL \`IP\`.
+  """
   hostIp: IP!
 
-  """Optional host — \`IPFilter.isNull\`."""
+  """
+  Optional host — \`IPFilter.isNull\`.
+  """
   hostIpOptional: IP
 
-  """Surrogate primary key — GraphQL \`ID\`."""
+  """
+  Surrogate primary key — GraphQL \`ID\`.
+  """
   id: ID!
 
-  """Canonical row flag — PG \`boolean\` → GraphQL \`Boolean\`."""
+  """
+  Canonical row flag — PG \`boolean\` → GraphQL \`Boolean\`.
+  """
   isReference: Boolean!
 
-  """Specimen category — Drizzle \`pgEnum\` → GraphQL enum."""
+  """
+  Specimen category — Drizzle \`pgEnum\` → GraphQL enum.
+  """
   kind: ScalarSpecimenKind!
 
-  """Nullable enum — \`<ScalarSpecimenKind>Filter.isNull\`."""
+  """
+  Nullable enum — \`<ScalarSpecimenKind>Filter.isNull\`.
+  """
   kindOptional: ScalarSpecimenKind
 
-  """Routed prefix — PG \`cidr\` → GraphQL \`CIDR\`."""
+  """
+  Routed prefix — PG \`cidr\` → GraphQL \`CIDR\`.
+  """
   networkCidr: CIDR!
 
-  """Optional prefix — \`CIDRFilter.isNull\`."""
+  """
+  Optional prefix — \`CIDRFilter.isNull\`.
+  """
   networkCidrOptional: CIDR
 
-  """NIC hardware address — PG \`macaddr\` → GraphQL \`MAC\`."""
+  """
+  NIC hardware address — PG \`macaddr\` → GraphQL \`MAC\`.
+  """
   nicMac: MAC!
 
-  """Optional MAC — \`MACFilter.isNull\`."""
+  """
+  Optional MAC — \`MACFilter.isNull\`.
+  """
   nicMacOptional: MAC
 
-  """Free-form notes — PG \`text\` → GraphQL \`String\`."""
+  """
+  Free-form notes — PG \`text\` → GraphQL \`String\`.
+  """
   notes: String!
 
-  """Sample instant — PG \`timestamptz\` → GraphQL \`DateTime\`."""
+  """
+  Sample instant — PG \`timestamptz\` → GraphQL \`DateTime\`.
+  """
   observedAt: DateTime!
 
-  """Daily open time — PG \`timetz\` → GraphQL \`TimeTz\`."""
+  """
+  Daily open time — PG \`timetz\` → GraphQL \`TimeTz\`.
+  """
   opensAt: TimeTz!
 
-  """Signed 16-bit counter — PG \`smallint\` → GraphQL \`SmallInt\`."""
+  """
+  Signed 16-bit counter — PG \`smallint\` → GraphQL \`SmallInt\`.
+  """
   rankSmall: SmallInt!
 
-  """IEEE double — PG \`double precision\` → GraphQL \`Double\`."""
+  """
+  IEEE double — PG \`double precision\` → GraphQL \`Double\`.
+  """
   ratioDouble: Double!
 
-  """IEEE single — PG \`real\` → GraphQL \`Float\`."""
+  """
+  IEEE single — PG \`real\` → GraphQL \`Float\`.
+  """
   ratioFloat: Float!
 
-  """Case-insensitive slug — PG \`citext\` → GraphQL \`InsensitiveString\`."""
+  """
+  Case-insensitive slug — PG \`citext\` → GraphQL \`InsensitiveString\`.
+  """
   slugInsensitive: InsensitiveString!
 
   """
@@ -2579,25 +4134,37 @@ type ScalarSpecimen {
   """
   specimenCode: String!
 
-  """64-bit token — PG \`bigint\` → GraphQL \`BigInt\` (string on wire)."""
+  """
+  64-bit token — PG \`bigint\` → GraphQL \`BigInt\` (string on wire).
+  """
   tokenBig: BigInt!
 
-  """Nullable bigint — \`BigIntFilter.isNull\`."""
+  """
+  Nullable bigint — \`BigIntFilter.isNull\`.
+  """
   tokenBigOptional: BigInt
 
-  """Last update time (UTC)."""
+  """
+  Last update time (UTC).
+  """
   updatedAt: DateTime!
 
-  """Actor ID from request context on last update."""
+  """
+  Actor ID from request context on last update.
+  """
   updatedBy: String!
 }
 
-"""Aggregate metrics for ScalarSpecimen."""
+"""
+Aggregate metrics for ScalarSpecimen.
+"""
 type ScalarSpecimenAggregate {
   count: Int!
 }
 
-"""Change notification payload for scalarSpecimen subscriptions."""
+"""
+Change notification payload for scalarSpecimen subscriptions.
+"""
 type ScalarSpecimenChangeEvent {
   count: Int!
   ids: [ID!]!
@@ -2605,33 +4172,47 @@ type ScalarSpecimenChangeEvent {
   operation: ChangeOperation!
 }
 
-"""Relay-style connection for paginated scalarSpecimens queries."""
+"""
+Relay-style connection for paginated scalarSpecimens queries.
+"""
 type ScalarSpecimenConnection {
   edges: [ScalarSpecimenEdge!]!
   nodes: [ScalarSpecimen!]!
   pageInfo: PageInfo!
 }
 
-"""Input for creating a new ScalarSpecimen."""
+"""
+Input for creating a new ScalarSpecimen.
+"""
 input ScalarSpecimenCreateInput {
   """
   Fixed-scale amount — PG \`numeric\` → GraphQL \`Decimal\` (string on wire).
   """
   amountDecimal: Decimal!
 
-  """Nullable numeric — \`DecimalFilter.isNull\`."""
+  """
+  Nullable numeric — \`DecimalFilter.isNull\`.
+  """
   amountDecimalOptional: Decimal
 
-  """32-bit quantity — PG \`integer\` → GraphQL \`Int\`."""
+  """
+  32-bit quantity — PG \`integer\` → GraphQL \`Int\`.
+  """
   countInt: Int!
 
-  """Elapsed duration — PG \`interval\` → GraphQL \`IntervalMs\` (ms on wire)."""
+  """
+  Elapsed duration — PG \`interval\` → GraphQL \`IntervalMs\` (ms on wire).
+  """
   durationMs: IntervalMs!
 
-  """Nullable interval — \`IntervalMsFilter.isNull\`."""
+  """
+  Nullable interval — \`IntervalMsFilter.isNull\`.
+  """
   durationMsOptional: IntervalMs
 
-  """Calendar effective date — PG \`date\` → GraphQL \`Date\`."""
+  """
+  Calendar effective date — PG \`date\` → GraphQL \`Date\`.
+  """
   effectiveOn: Date!
 
   """
@@ -2639,52 +4220,84 @@ input ScalarSpecimenCreateInput {
   """
   fixedCode: String!
 
-  """Host address — PG \`inet\` → GraphQL \`IP\`."""
+  """
+  Host address — PG \`inet\` → GraphQL \`IP\`.
+  """
   hostIp: IP!
 
-  """Optional host — \`IPFilter.isNull\`."""
+  """
+  Optional host — \`IPFilter.isNull\`.
+  """
   hostIpOptional: IP
 
-  """Canonical row flag — PG \`boolean\` → GraphQL \`Boolean\`."""
+  """
+  Canonical row flag — PG \`boolean\` → GraphQL \`Boolean\`.
+  """
   isReference: Boolean
 
-  """Specimen category — Drizzle \`pgEnum\` → GraphQL enum."""
+  """
+  Specimen category — Drizzle \`pgEnum\` → GraphQL enum.
+  """
   kind: ScalarSpecimenKind = REFERENCE
 
-  """Nullable enum — \`<ScalarSpecimenKind>Filter.isNull\`."""
+  """
+  Nullable enum — \`<ScalarSpecimenKind>Filter.isNull\`.
+  """
   kindOptional: ScalarSpecimenKind
 
-  """Routed prefix — PG \`cidr\` → GraphQL \`CIDR\`."""
+  """
+  Routed prefix — PG \`cidr\` → GraphQL \`CIDR\`.
+  """
   networkCidr: CIDR!
 
-  """Optional prefix — \`CIDRFilter.isNull\`."""
+  """
+  Optional prefix — \`CIDRFilter.isNull\`.
+  """
   networkCidrOptional: CIDR
 
-  """NIC hardware address — PG \`macaddr\` → GraphQL \`MAC\`."""
+  """
+  NIC hardware address — PG \`macaddr\` → GraphQL \`MAC\`.
+  """
   nicMac: MAC!
 
-  """Optional MAC — \`MACFilter.isNull\`."""
+  """
+  Optional MAC — \`MACFilter.isNull\`.
+  """
   nicMacOptional: MAC
 
-  """Free-form notes — PG \`text\` → GraphQL \`String\`."""
+  """
+  Free-form notes — PG \`text\` → GraphQL \`String\`.
+  """
   notes: String!
 
-  """Sample instant — PG \`timestamptz\` → GraphQL \`DateTime\`."""
+  """
+  Sample instant — PG \`timestamptz\` → GraphQL \`DateTime\`.
+  """
   observedAt: DateTime!
 
-  """Daily open time — PG \`timetz\` → GraphQL \`TimeTz\`."""
+  """
+  Daily open time — PG \`timetz\` → GraphQL \`TimeTz\`.
+  """
   opensAt: TimeTz!
 
-  """Signed 16-bit counter — PG \`smallint\` → GraphQL \`SmallInt\`."""
+  """
+  Signed 16-bit counter — PG \`smallint\` → GraphQL \`SmallInt\`.
+  """
   rankSmall: SmallInt!
 
-  """IEEE double — PG \`double precision\` → GraphQL \`Double\`."""
+  """
+  IEEE double — PG \`double precision\` → GraphQL \`Double\`.
+  """
   ratioDouble: Double!
 
-  """IEEE single — PG \`real\` → GraphQL \`Float\`."""
+  """
+  IEEE single — PG \`real\` → GraphQL \`Float\`.
+  """
   ratioFloat: Float!
 
-  """Case-insensitive slug — PG \`citext\` → GraphQL \`InsensitiveString\`."""
+  """
+  Case-insensitive slug — PG \`citext\` → GraphQL \`InsensitiveString\`.
+  """
   slugInsensitive: InsensitiveString!
 
   """
@@ -2697,45 +4310,67 @@ input ScalarSpecimenCreateInput {
   """
   specimenCode: String!
 
-  """64-bit token — PG \`bigint\` → GraphQL \`BigInt\` (string on wire)."""
+  """
+  64-bit token — PG \`bigint\` → GraphQL \`BigInt\` (string on wire).
+  """
   tokenBig: BigInt!
 
-  """Nullable bigint — \`BigIntFilter.isNull\`."""
+  """
+  Nullable bigint — \`BigIntFilter.isNull\`.
+  """
   tokenBigOptional: BigInt
 }
 
-"""Edge wrapper for ScalarSpecimen connection pagination."""
+"""
+Edge wrapper for ScalarSpecimen connection pagination.
+"""
 type ScalarSpecimenEdge {
   cursor: String!
   node: ScalarSpecimen!
 }
 
-"""Sortable fields on ScalarSpecimen."""
+"""
+Sortable fields on ScalarSpecimen.
+"""
 enum ScalarSpecimenField {
   """
   Fixed-scale amount — PG \`numeric\` → GraphQL \`Decimal\` (string on wire).
   """
   AMOUNT_DECIMAL
 
-  """Nullable numeric — \`DecimalFilter.isNull\`."""
+  """
+  Nullable numeric — \`DecimalFilter.isNull\`.
+  """
   AMOUNT_DECIMAL_OPTIONAL
 
-  """32-bit quantity — PG \`integer\` → GraphQL \`Int\`."""
+  """
+  32-bit quantity — PG \`integer\` → GraphQL \`Int\`.
+  """
   COUNT_INT
 
-  """Row creation time (UTC) — audit \`timestamptz\` → GraphQL \`DateTime\`."""
+  """
+  Row creation time (UTC) — audit \`timestamptz\` → GraphQL \`DateTime\`.
+  """
   CREATED_AT
 
-  """Actor ID from request context; never client-supplied."""
+  """
+  Actor ID from request context; never client-supplied.
+  """
   CREATED_BY
 
-  """Elapsed duration — PG \`interval\` → GraphQL \`IntervalMs\` (ms on wire)."""
+  """
+  Elapsed duration — PG \`interval\` → GraphQL \`IntervalMs\` (ms on wire).
+  """
   DURATION_MS
 
-  """Nullable interval — \`IntervalMsFilter.isNull\`."""
+  """
+  Nullable interval — \`IntervalMsFilter.isNull\`.
+  """
   DURATION_MS_OPTIONAL
 
-  """Calendar effective date — PG \`date\` → GraphQL \`Date\`."""
+  """
+  Calendar effective date — PG \`date\` → GraphQL \`Date\`.
+  """
   EFFECTIVE_ON
 
   """
@@ -2743,55 +4378,89 @@ enum ScalarSpecimenField {
   """
   FIXED_CODE
 
-  """Host address — PG \`inet\` → GraphQL \`IP\`."""
+  """
+  Host address — PG \`inet\` → GraphQL \`IP\`.
+  """
   HOST_IP
 
-  """Optional host — \`IPFilter.isNull\`."""
+  """
+  Optional host — \`IPFilter.isNull\`.
+  """
   HOST_IP_OPTIONAL
 
-  """Surrogate primary key — GraphQL \`ID\`."""
+  """
+  Surrogate primary key — GraphQL \`ID\`.
+  """
   ID
 
-  """Canonical row flag — PG \`boolean\` → GraphQL \`Boolean\`."""
+  """
+  Canonical row flag — PG \`boolean\` → GraphQL \`Boolean\`.
+  """
   IS_REFERENCE
 
-  """Specimen category — Drizzle \`pgEnum\` → GraphQL enum."""
+  """
+  Specimen category — Drizzle \`pgEnum\` → GraphQL enum.
+  """
   KIND
 
-  """Nullable enum — \`<ScalarSpecimenKind>Filter.isNull\`."""
+  """
+  Nullable enum — \`<ScalarSpecimenKind>Filter.isNull\`.
+  """
   KIND_OPTIONAL
 
-  """Routed prefix — PG \`cidr\` → GraphQL \`CIDR\`."""
+  """
+  Routed prefix — PG \`cidr\` → GraphQL \`CIDR\`.
+  """
   NETWORK_CIDR
 
-  """Optional prefix — \`CIDRFilter.isNull\`."""
+  """
+  Optional prefix — \`CIDRFilter.isNull\`.
+  """
   NETWORK_CIDR_OPTIONAL
 
-  """NIC hardware address — PG \`macaddr\` → GraphQL \`MAC\`."""
+  """
+  NIC hardware address — PG \`macaddr\` → GraphQL \`MAC\`.
+  """
   NIC_MAC
 
-  """Optional MAC — \`MACFilter.isNull\`."""
+  """
+  Optional MAC — \`MACFilter.isNull\`.
+  """
   NIC_MAC_OPTIONAL
 
-  """Free-form notes — PG \`text\` → GraphQL \`String\`."""
+  """
+  Free-form notes — PG \`text\` → GraphQL \`String\`.
+  """
   NOTES
 
-  """Sample instant — PG \`timestamptz\` → GraphQL \`DateTime\`."""
+  """
+  Sample instant — PG \`timestamptz\` → GraphQL \`DateTime\`.
+  """
   OBSERVED_AT
 
-  """Daily open time — PG \`timetz\` → GraphQL \`TimeTz\`."""
+  """
+  Daily open time — PG \`timetz\` → GraphQL \`TimeTz\`.
+  """
   OPENS_AT
 
-  """Signed 16-bit counter — PG \`smallint\` → GraphQL \`SmallInt\`."""
+  """
+  Signed 16-bit counter — PG \`smallint\` → GraphQL \`SmallInt\`.
+  """
   RANK_SMALL
 
-  """IEEE double — PG \`double precision\` → GraphQL \`Double\`."""
+  """
+  IEEE double — PG \`double precision\` → GraphQL \`Double\`.
+  """
   RATIO_DOUBLE
 
-  """IEEE single — PG \`real\` → GraphQL \`Float\`."""
+  """
+  IEEE single — PG \`real\` → GraphQL \`Float\`.
+  """
   RATIO_FLOAT
 
-  """Case-insensitive slug — PG \`citext\` → GraphQL \`InsensitiveString\`."""
+  """
+  Case-insensitive slug — PG \`citext\` → GraphQL \`InsensitiveString\`.
+  """
   SLUG_INSENSITIVE
 
   """
@@ -2804,42 +4473,64 @@ enum ScalarSpecimenField {
   """
   SPECIMEN_CODE
 
-  """64-bit token — PG \`bigint\` → GraphQL \`BigInt\` (string on wire)."""
+  """
+  64-bit token — PG \`bigint\` → GraphQL \`BigInt\` (string on wire).
+  """
   TOKEN_BIG
 
-  """Nullable bigint — \`BigIntFilter.isNull\`."""
+  """
+  Nullable bigint — \`BigIntFilter.isNull\`.
+  """
   TOKEN_BIG_OPTIONAL
 
-  """Last update time (UTC)."""
+  """
+  Last update time (UTC).
+  """
   UPDATED_AT
 
-  """Actor ID from request context on last update."""
+  """
+  Actor ID from request context on last update.
+  """
   UPDATED_BY
 }
 
-"""Filter criteria for ScalarSpecimen queries and mutations."""
+"""
+Filter criteria for ScalarSpecimen queries and mutations.
+"""
 input ScalarSpecimenFilter {
   """
   Fixed-scale amount — PG \`numeric\` → GraphQL \`Decimal\` (string on wire).
   """
   amountDecimal: DecimalFilter
 
-  """Nullable numeric — \`DecimalFilter.isNull\`."""
+  """
+  Nullable numeric — \`DecimalFilter.isNull\`.
+  """
   amountDecimalOptional: DecimalFilter
 
-  """All nested filters must match."""
+  """
+  All nested filters must match.
+  """
   and: [ScalarSpecimenFilter!]
 
-  """32-bit quantity — PG \`integer\` → GraphQL \`Int\`."""
+  """
+  32-bit quantity — PG \`integer\` → GraphQL \`Int\`.
+  """
   countInt: IntFilter
 
-  """Elapsed duration — PG \`interval\` → GraphQL \`IntervalMs\` (ms on wire)."""
+  """
+  Elapsed duration — PG \`interval\` → GraphQL \`IntervalMs\` (ms on wire).
+  """
   durationMs: IntervalMsFilter
 
-  """Nullable interval — \`IntervalMsFilter.isNull\`."""
+  """
+  Nullable interval — \`IntervalMsFilter.isNull\`.
+  """
   durationMsOptional: IntervalMsFilter
 
-  """Calendar effective date — PG \`date\` → GraphQL \`Date\`."""
+  """
+  Calendar effective date — PG \`date\` → GraphQL \`Date\`.
+  """
   effectiveOn: DateFilter
 
   """
@@ -2847,61 +4538,99 @@ input ScalarSpecimenFilter {
   """
   fixedCode: StringFilter
 
-  """Host address — PG \`inet\` → GraphQL \`IP\`."""
+  """
+  Host address — PG \`inet\` → GraphQL \`IP\`.
+  """
   hostIp: IPFilter
 
-  """Optional host — \`IPFilter.isNull\`."""
+  """
+  Optional host — \`IPFilter.isNull\`.
+  """
   hostIpOptional: IPFilter
 
-  """Surrogate primary key — GraphQL \`ID\`."""
+  """
+  Surrogate primary key — GraphQL \`ID\`.
+  """
   id: IDFilter
 
-  """Canonical row flag — PG \`boolean\` → GraphQL \`Boolean\`."""
+  """
+  Canonical row flag — PG \`boolean\` → GraphQL \`Boolean\`.
+  """
   isReference: BooleanFilter
 
-  """Specimen category — Drizzle \`pgEnum\` → GraphQL enum."""
+  """
+  Specimen category — Drizzle \`pgEnum\` → GraphQL enum.
+  """
   kind: ScalarSpecimenKindFilter
 
-  """Nullable enum — \`<ScalarSpecimenKind>Filter.isNull\`."""
+  """
+  Nullable enum — \`<ScalarSpecimenKind>Filter.isNull\`.
+  """
   kindOptional: ScalarSpecimenKindFilter
 
-  """Routed prefix — PG \`cidr\` → GraphQL \`CIDR\`."""
+  """
+  Routed prefix — PG \`cidr\` → GraphQL \`CIDR\`.
+  """
   networkCidr: CIDRFilter
 
-  """Optional prefix — \`CIDRFilter.isNull\`."""
+  """
+  Optional prefix — \`CIDRFilter.isNull\`.
+  """
   networkCidrOptional: CIDRFilter
 
-  """NIC hardware address — PG \`macaddr\` → GraphQL \`MAC\`."""
+  """
+  NIC hardware address — PG \`macaddr\` → GraphQL \`MAC\`.
+  """
   nicMac: MACFilter
 
-  """Optional MAC — \`MACFilter.isNull\`."""
+  """
+  Optional MAC — \`MACFilter.isNull\`.
+  """
   nicMacOptional: MACFilter
 
-  """Negates the nested filter."""
+  """
+  Negates the nested filter.
+  """
   not: ScalarSpecimenFilter
 
-  """Free-form notes — PG \`text\` → GraphQL \`String\`."""
+  """
+  Free-form notes — PG \`text\` → GraphQL \`String\`.
+  """
   notes: StringFilter
 
-  """Sample instant — PG \`timestamptz\` → GraphQL \`DateTime\`."""
+  """
+  Sample instant — PG \`timestamptz\` → GraphQL \`DateTime\`.
+  """
   observedAt: DateTimeFilter
 
-  """Daily open time — PG \`timetz\` → GraphQL \`TimeTz\`."""
+  """
+  Daily open time — PG \`timetz\` → GraphQL \`TimeTz\`.
+  """
   opensAt: TimeTzFilter
 
-  """At least one nested filter must match."""
+  """
+  At least one nested filter must match.
+  """
   or: [ScalarSpecimenFilter!]
 
-  """Signed 16-bit counter — PG \`smallint\` → GraphQL \`SmallInt\`."""
+  """
+  Signed 16-bit counter — PG \`smallint\` → GraphQL \`SmallInt\`.
+  """
   rankSmall: SmallIntFilter
 
-  """IEEE double — PG \`double precision\` → GraphQL \`Double\`."""
+  """
+  IEEE double — PG \`double precision\` → GraphQL \`Double\`.
+  """
   ratioDouble: DoubleFilter
 
-  """IEEE single — PG \`real\` → GraphQL \`Float\`."""
+  """
+  IEEE single — PG \`real\` → GraphQL \`Float\`.
+  """
   ratioFloat: FloatFilter
 
-  """Case-insensitive slug — PG \`citext\` → GraphQL \`InsensitiveString\`."""
+  """
+  Case-insensitive slug — PG \`citext\` → GraphQL \`InsensitiveString\`.
+  """
   slugInsensitive: InsensitiveStringFilter
 
   """
@@ -2914,68 +4643,98 @@ input ScalarSpecimenFilter {
   """
   specimenCode: StringFilter
 
-  """64-bit token — PG \`bigint\` → GraphQL \`BigInt\` (string on wire)."""
+  """
+  64-bit token — PG \`bigint\` → GraphQL \`BigInt\` (string on wire).
+  """
   tokenBig: BigIntFilter
 
-  """Nullable bigint — \`BigIntFilter.isNull\`."""
+  """
+  Nullable bigint — \`BigIntFilter.isNull\`.
+  """
   tokenBigOptional: BigIntFilter
 }
 
-"""Enum values for ScalarSpecimenKind."""
+"""
+Enum values for ScalarSpecimenKind.
+"""
 enum ScalarSpecimenKind {
   EDGE_CASE
   REFERENCE
 }
 
-"""Filter operators for ScalarSpecimenKind enum columns."""
+"""
+Filter operators for ScalarSpecimenKind enum columns.
+"""
 input ScalarSpecimenKindFilter {
   eq: ScalarSpecimenKind
   in: [ScalarSpecimenKind!]
 
-  """True = IS NULL; false = IS NOT NULL; nullable columns only."""
+  """
+  True = IS NULL; false = IS NOT NULL; nullable columns only.
+  """
   isNull: Boolean
   neq: ScalarSpecimenKind
   notIn: [ScalarSpecimenKind!]
 }
 
-"""Bulk create/update success payload for ScalarSpecimen."""
+"""
+Bulk create/update success payload for ScalarSpecimen.
+"""
 type ScalarSpecimenListPayload {
   items: [ScalarSpecimen!]!
 }
 
-"""Sort specification for ScalarSpecimen list queries."""
+"""
+Sort specification for ScalarSpecimen list queries.
+"""
 input ScalarSpecimenSortInput {
-  """Sort direction; defaults to ascending."""
+  """
+  Sort direction; defaults to ascending.
+  """
   direction: SortDirection = ASC
   field: ScalarSpecimenField!
 }
 
-"""Single row update entry for bulk update."""
+"""
+Single row update entry for bulk update.
+"""
 input ScalarSpecimenUpdateEntry {
   id: ID!
   input: ScalarSpecimenUpdateInput!
 }
 
-"""Input for updating an existing ScalarSpecimen; all fields optional."""
+"""
+Input for updating an existing ScalarSpecimen; all fields optional.
+"""
 input ScalarSpecimenUpdateInput {
   """
   Fixed-scale amount — PG \`numeric\` → GraphQL \`Decimal\` (string on wire).
   """
   amountDecimal: Decimal
 
-  """Nullable numeric — \`DecimalFilter.isNull\`."""
+  """
+  Nullable numeric — \`DecimalFilter.isNull\`.
+  """
   amountDecimalOptional: Decimal
 
-  """32-bit quantity — PG \`integer\` → GraphQL \`Int\`."""
+  """
+  32-bit quantity — PG \`integer\` → GraphQL \`Int\`.
+  """
   countInt: Int
 
-  """Elapsed duration — PG \`interval\` → GraphQL \`IntervalMs\` (ms on wire)."""
+  """
+  Elapsed duration — PG \`interval\` → GraphQL \`IntervalMs\` (ms on wire).
+  """
   durationMs: IntervalMs
 
-  """Nullable interval — \`IntervalMsFilter.isNull\`."""
+  """
+  Nullable interval — \`IntervalMsFilter.isNull\`.
+  """
   durationMsOptional: IntervalMs
 
-  """Calendar effective date — PG \`date\` → GraphQL \`Date\`."""
+  """
+  Calendar effective date — PG \`date\` → GraphQL \`Date\`.
+  """
   effectiveOn: Date
 
   """
@@ -2983,52 +4742,84 @@ input ScalarSpecimenUpdateInput {
   """
   fixedCode: String
 
-  """Host address — PG \`inet\` → GraphQL \`IP\`."""
+  """
+  Host address — PG \`inet\` → GraphQL \`IP\`.
+  """
   hostIp: IP
 
-  """Optional host — \`IPFilter.isNull\`."""
+  """
+  Optional host — \`IPFilter.isNull\`.
+  """
   hostIpOptional: IP
 
-  """Canonical row flag — PG \`boolean\` → GraphQL \`Boolean\`."""
+  """
+  Canonical row flag — PG \`boolean\` → GraphQL \`Boolean\`.
+  """
   isReference: Boolean
 
-  """Specimen category — Drizzle \`pgEnum\` → GraphQL enum."""
+  """
+  Specimen category — Drizzle \`pgEnum\` → GraphQL enum.
+  """
   kind: ScalarSpecimenKind
 
-  """Nullable enum — \`<ScalarSpecimenKind>Filter.isNull\`."""
+  """
+  Nullable enum — \`<ScalarSpecimenKind>Filter.isNull\`.
+  """
   kindOptional: ScalarSpecimenKind
 
-  """Routed prefix — PG \`cidr\` → GraphQL \`CIDR\`."""
+  """
+  Routed prefix — PG \`cidr\` → GraphQL \`CIDR\`.
+  """
   networkCidr: CIDR
 
-  """Optional prefix — \`CIDRFilter.isNull\`."""
+  """
+  Optional prefix — \`CIDRFilter.isNull\`.
+  """
   networkCidrOptional: CIDR
 
-  """NIC hardware address — PG \`macaddr\` → GraphQL \`MAC\`."""
+  """
+  NIC hardware address — PG \`macaddr\` → GraphQL \`MAC\`.
+  """
   nicMac: MAC
 
-  """Optional MAC — \`MACFilter.isNull\`."""
+  """
+  Optional MAC — \`MACFilter.isNull\`.
+  """
   nicMacOptional: MAC
 
-  """Free-form notes — PG \`text\` → GraphQL \`String\`."""
+  """
+  Free-form notes — PG \`text\` → GraphQL \`String\`.
+  """
   notes: String
 
-  """Sample instant — PG \`timestamptz\` → GraphQL \`DateTime\`."""
+  """
+  Sample instant — PG \`timestamptz\` → GraphQL \`DateTime\`.
+  """
   observedAt: DateTime
 
-  """Daily open time — PG \`timetz\` → GraphQL \`TimeTz\`."""
+  """
+  Daily open time — PG \`timetz\` → GraphQL \`TimeTz\`.
+  """
   opensAt: TimeTz
 
-  """Signed 16-bit counter — PG \`smallint\` → GraphQL \`SmallInt\`."""
+  """
+  Signed 16-bit counter — PG \`smallint\` → GraphQL \`SmallInt\`.
+  """
   rankSmall: SmallInt
 
-  """IEEE double — PG \`double precision\` → GraphQL \`Double\`."""
+  """
+  IEEE double — PG \`double precision\` → GraphQL \`Double\`.
+  """
   ratioDouble: Double
 
-  """IEEE single — PG \`real\` → GraphQL \`Float\`."""
+  """
+  IEEE single — PG \`real\` → GraphQL \`Float\`.
+  """
   ratioFloat: Float
 
-  """Case-insensitive slug — PG \`citext\` → GraphQL \`InsensitiveString\`."""
+  """
+  Case-insensitive slug — PG \`citext\` → GraphQL \`InsensitiveString\`.
+  """
   slugInsensitive: InsensitiveString
 
   """
@@ -3041,33 +4832,49 @@ input ScalarSpecimenUpdateInput {
   """
   specimenCode: String
 
-  """64-bit token — PG \`bigint\` → GraphQL \`BigInt\` (string on wire)."""
+  """
+  64-bit token — PG \`bigint\` → GraphQL \`BigInt\` (string on wire).
+  """
   tokenBig: BigInt
 
-  """Nullable bigint — \`BigIntFilter.isNull\`."""
+  """
+  Nullable bigint — \`BigIntFilter.isNull\`.
+  """
   tokenBigOptional: BigInt
 }
 
-"""Current health state of the server."""
+"""
+Current health state of the server.
+"""
 type ServerStatus {
-  """True when the server is operating normally."""
+  """
+  True when the server is operating normally.
+  """
   ok: Boolean!
 
-  """ISO-8601 timestamp of when this status was generated."""
+  """
+  ISO-8601 timestamp of when this status was generated.
+  """
   timestamp: String!
 }
 
-"""PostgreSQL smallint (16-bit signed integer)."""
+"""
+PostgreSQL smallint (16-bit signed integer).
+"""
 scalar SmallInt
 
-"""Filter operators for smallint columns."""
+"""
+Filter operators for smallint columns.
+"""
 input SmallIntFilter {
   eq: SmallInt
   gt: SmallInt
   gte: SmallInt
   in: [SmallInt!]
 
-  """True = IS NULL; false = IS NOT NULL; nullable columns only."""
+  """
+  True = IS NULL; false = IS NOT NULL; nullable columns only.
+  """
   isNull: Boolean
   lt: SmallInt
   lte: SmallInt
@@ -3075,21 +4882,29 @@ input SmallIntFilter {
   notIn: [SmallInt!]
 }
 
-"""Ascending or descending sort order."""
+"""
+Ascending or descending sort order.
+"""
 enum SortDirection {
   ASC
   DESC
 }
 
-"""Filter operators for string columns."""
+"""
+Filter operators for string columns.
+"""
 input StringFilter {
   eq: String
   in: [String!]
 
-  """When true, eq/neq/like/in/notIn use case-insensitive matching."""
+  """
+  When true, eq/neq/like/in/notIn use case-insensitive matching.
+  """
   isCaseInsensitive: Boolean
 
-  """True = IS NULL; false = IS NOT NULL; nullable columns only."""
+  """
+  True = IS NULL; false = IS NOT NULL; nullable columns only.
+  """
   isNull: Boolean
   like: String
   neq: String
@@ -3100,28 +4915,44 @@ input StringFilter {
 Real-time event streams over HTTP SSE on /graphql (Accept: text/event-stream).
 """
 type Subscription {
-  """Subscribe to auditEvent create/update/delete events."""
+  """
+  Subscribe to auditEvent create/update/delete events.
+  """
   auditEventChanged(subscribeTo: [ChangeOperation!]): AuditEventChangeEvent!
 
-  """Subscribe to category create/update/delete events."""
+  """
+  Subscribe to category create/update/delete events.
+  """
   categoryChanged(subscribeTo: [ChangeOperation!]): CategoryChangeEvent!
 
-  """Subscribe to item create/update/delete events."""
+  """
+  Subscribe to item create/update/delete events.
+  """
   itemChanged(subscribeTo: [ChangeOperation!]): ItemChangeEvent!
 
-  """Subscribe to itemDetail create/update/delete events."""
+  """
+  Subscribe to itemDetail create/update/delete events.
+  """
   itemDetailChanged(subscribeTo: [ChangeOperation!]): ItemDetailChangeEvent!
 
-  """Subscribe to itemTag create/update/delete events."""
+  """
+  Subscribe to itemTag create/update/delete events.
+  """
   itemTagChanged(subscribeTo: [ChangeOperation!]): ItemTagChangeEvent!
 
-  """Subscribe to label create/update/delete events."""
+  """
+  Subscribe to label create/update/delete events.
+  """
   labelChanged(subscribeTo: [ChangeOperation!]): LabelChangeEvent!
 
-  """Subscribe to order create/update/delete events."""
+  """
+  Subscribe to order create/update/delete events.
+  """
   orderChanged(subscribeTo: [ChangeOperation!]): OrderChangeEvent!
 
-  """Subscribe to orderLine create/update/delete events."""
+  """
+  Subscribe to orderLine create/update/delete events.
+  """
   orderLineChanged(subscribeTo: [ChangeOperation!]): OrderLineChangeEvent!
 
   """
@@ -3129,31 +4960,51 @@ type Subscription {
   """
   pingSent: PingResult!
 
-  """Subscribe to scalarSpecimen create/update/delete events."""
-  scalarSpecimenChanged(subscribeTo: [ChangeOperation!]): ScalarSpecimenChangeEvent!
+  """
+  Subscribe to scalarSpecimen create/update/delete events.
+  """
+  scalarSpecimenChanged(
+    subscribeTo: [ChangeOperation!]
+  ): ScalarSpecimenChangeEvent!
 
-  """Subscribe to tag create/update/delete events."""
+  """
+  Subscribe to tag create/update/delete events.
+  """
   tagChanged(subscribeTo: [ChangeOperation!]): TagChangeEvent!
 
-  """Subscribe to user create/update/delete events."""
+  """
+  Subscribe to user create/update/delete events.
+  """
   userChanged(subscribeTo: [ChangeOperation!]): UserChangeEvent!
 
-  """Subscribe to userLabel create/update/delete events."""
+  """
+  Subscribe to userLabel create/update/delete events.
+  """
   userLabelChanged(subscribeTo: [ChangeOperation!]): UserLabelChangeEvent!
 }
 
-"""Immutable tag labels; append-only audit with soft delete for recovery."""
+"""
+Immutable tag labels; append-only audit with soft delete for recovery.
+"""
 type Tag {
-  """Row creation time (UTC)."""
+  """
+  Row creation time (UTC).
+  """
   createdAt: DateTime!
 
-  """Actor ID from request context; never client-supplied."""
+  """
+  Actor ID from request context; never client-supplied.
+  """
   createdBy: String!
 
-  """Surrogate primary key."""
+  """
+  Surrogate primary key.
+  """
   id: ID!
 
-  """Navigate to related ItemTag."""
+  """
+  Navigate to related ItemTag.
+  """
   itemTags: [ItemTag!]!
 
   """
@@ -3162,12 +5013,16 @@ type Tag {
   label: String!
 }
 
-"""Aggregate metrics for Tag."""
+"""
+Aggregate metrics for Tag.
+"""
 type TagAggregate {
   count: Int!
 }
 
-"""Change notification payload for tag subscriptions."""
+"""
+Change notification payload for tag subscriptions.
+"""
 type TagChangeEvent {
   count: Int!
   ids: [ID!]!
@@ -3175,14 +5030,18 @@ type TagChangeEvent {
   operation: ChangeOperation!
 }
 
-"""Relay-style connection for paginated tags queries."""
+"""
+Relay-style connection for paginated tags queries.
+"""
 type TagConnection {
   edges: [TagEdge!]!
   nodes: [Tag!]!
   pageInfo: PageInfo!
 }
 
-"""Input for creating a new Tag."""
+"""
+Input for creating a new Tag.
+"""
 input TagCreateInput {
   """
   Unique tag label (case-sensitive); 2–30 characters. Validation: max length 30; min length 2.
@@ -3190,21 +5049,31 @@ input TagCreateInput {
   label: String!
 }
 
-"""Edge wrapper for Tag connection pagination."""
+"""
+Edge wrapper for Tag connection pagination.
+"""
 type TagEdge {
   cursor: String!
   node: Tag!
 }
 
-"""Sortable fields on Tag."""
+"""
+Sortable fields on Tag.
+"""
 enum TagField {
-  """Row creation time (UTC)."""
+  """
+  Row creation time (UTC).
+  """
   CREATED_AT
 
-  """Actor ID from request context; never client-supplied."""
+  """
+  Actor ID from request context; never client-supplied.
+  """
   CREATED_BY
 
-  """Surrogate primary key."""
+  """
+  Surrogate primary key.
+  """
   ID
 
   """
@@ -3213,15 +5082,23 @@ enum TagField {
   LABEL
 }
 
-"""Filter criteria for Tag queries and mutations."""
+"""
+Filter criteria for Tag queries and mutations.
+"""
 input TagFilter {
-  """All nested filters must match."""
+  """
+  All nested filters must match.
+  """
   and: [TagFilter!]
 
-  """Surrogate primary key."""
+  """
+  Surrogate primary key.
+  """
   id: IDFilter
 
-  """Association filter on itemTags."""
+  """
+  Association filter on itemTags.
+  """
   itemTags: ItemTagAssociationFilter
 
   """
@@ -3229,36 +5106,52 @@ input TagFilter {
   """
   label: StringFilter
 
-  """Negates the nested filter."""
+  """
+  Negates the nested filter.
+  """
   not: TagFilter
 
-  """At least one nested filter must match."""
+  """
+  At least one nested filter must match.
+  """
   or: [TagFilter!]
 }
 
-"""Bulk create/update success payload for Tag."""
+"""
+Bulk create/update success payload for Tag.
+"""
 type TagListPayload {
   items: [Tag!]!
 }
 
-"""Sort specification for Tag list queries."""
+"""
+Sort specification for Tag list queries.
+"""
 input TagSortInput {
-  """Sort direction; defaults to ascending."""
+  """
+  Sort direction; defaults to ascending.
+  """
   direction: SortDirection = ASC
   field: TagField!
 }
 
-"""ISO-8601 time with timezone offset."""
+"""
+ISO-8601 time with timezone offset.
+"""
 scalar TimeTz
 
-"""Filter operators for timetz columns."""
+"""
+Filter operators for timetz columns.
+"""
 input TimeTzFilter {
   eq: TimeTz
   gt: TimeTz
   gte: TimeTz
   in: [TimeTz!]
 
-  """True = IS NULL; false = IS NOT NULL; nullable columns only."""
+  """
+  True = IS NULL; false = IS NOT NULL; nullable columns only.
+  """
   isNull: Boolean
   lt: TimeTz
   lte: TimeTz
@@ -3266,61 +5159,81 @@ input TimeTzFilter {
   notIn: [TimeTz!]
 }
 
-"""Result of updateCategory mutation."""
+"""
+Result of updateCategory mutation.
+"""
 type UpdateCategoryPayload {
   category: Category
   userErrors: [MutationUserError!]!
 }
 
-"""Result of updateItemDetail mutation."""
+"""
+Result of updateItemDetail mutation.
+"""
 type UpdateItemDetailPayload {
   itemDetail: ItemDetail
   userErrors: [MutationUserError!]!
 }
 
-"""Result of updateItem mutation."""
+"""
+Result of updateItem mutation.
+"""
 type UpdateItemPayload {
   item: Item
   userErrors: [MutationUserError!]!
 }
 
-"""Result of updateItemTag mutation."""
+"""
+Result of updateItemTag mutation.
+"""
 type UpdateItemTagPayload {
   itemTag: ItemTag
   userErrors: [MutationUserError!]!
 }
 
-"""Result of updateLabel mutation."""
+"""
+Result of updateLabel mutation.
+"""
 type UpdateLabelPayload {
   label: Label
   userErrors: [MutationUserError!]!
 }
 
-"""Result of updateOrderLine mutation."""
+"""
+Result of updateOrderLine mutation.
+"""
 type UpdateOrderLinePayload {
   orderLine: OrderLine
   userErrors: [MutationUserError!]!
 }
 
-"""Result of updateOrder mutation."""
+"""
+Result of updateOrder mutation.
+"""
 type UpdateOrderPayload {
   order: Order
   userErrors: [MutationUserError!]!
 }
 
-"""Result of updateScalarSpecimen mutation."""
+"""
+Result of updateScalarSpecimen mutation.
+"""
 type UpdateScalarSpecimenPayload {
   scalarSpecimen: ScalarSpecimen
   userErrors: [MutationUserError!]!
 }
 
-"""Result of updateUserLabel mutation."""
+"""
+Result of updateUserLabel mutation.
+"""
 type UpdateUserLabelPayload {
   userErrors: [MutationUserError!]!
   userLabel: UserLabel
 }
 
-"""Result of updateUser mutation."""
+"""
+Result of updateUser mutation.
+"""
 type UpdateUserPayload {
   user: User
   userErrors: [MutationUserError!]!
@@ -3330,49 +5243,77 @@ type UpdateUserPayload {
 Registered customers who place orders; also participates in M:N labels via userLabels.
 """
 type User {
-  """Row creation time (UTC)."""
+  """
+  Row creation time (UTC).
+  """
   createdAt: DateTime!
 
-  """Actor ID from request context; never client-supplied."""
+  """
+  Actor ID from request context; never client-supplied.
+  """
   createdBy: String!
 
-  """Surrogate primary key."""
+  """
+  Surrogate primary key.
+  """
   id: ID!
 
-  """Navigate to related Label."""
+  """
+  Navigate to related Label.
+  """
   labels: [Label!]!
 
-  """Display name. Validation: max length 64."""
+  """
+  Display name. Validation: max length 64.
+  """
   name: String!
 
-  """Navigate to related Order."""
+  """
+  Navigate to related Order.
+  """
   orders: [Order!]!
 
-  """Last update time (UTC)."""
+  """
+  Last update time (UTC).
+  """
   updatedAt: DateTime!
 
-  """Actor ID from request context on last update."""
+  """
+  Actor ID from request context on last update.
+  """
   updatedBy: String!
 }
 
-"""Aggregate metrics for User."""
+"""
+Aggregate metrics for User.
+"""
 type UserAggregate {
   count: Int!
 }
 
-"""Association filter for users (many-to-many)."""
+"""
+Association filter for users (many-to-many).
+"""
 input UserAssociationFilter {
-  """All related rows match."""
+  """
+  All related rows match.
+  """
   every: UserFilter
 
-  """No related rows match."""
+  """
+  No related rows match.
+  """
   none: UserFilter
 
-  """At least one related row matches."""
+  """
+  At least one related row matches.
+  """
   some: UserFilter
 }
 
-"""Change notification payload for user subscriptions."""
+"""
+Change notification payload for user subscriptions.
+"""
 type UserChangeEvent {
   count: Int!
   ids: [ID!]!
@@ -3380,100 +5321,158 @@ type UserChangeEvent {
   operation: ChangeOperation!
 }
 
-"""Relay-style connection for paginated users queries."""
+"""
+Relay-style connection for paginated users queries.
+"""
 type UserConnection {
   edges: [UserEdge!]!
   nodes: [User!]!
   pageInfo: PageInfo!
 }
 
-"""Input for creating a new User."""
+"""
+Input for creating a new User.
+"""
 input UserCreateInput {
-  """Display name. Validation: max length 64."""
+  """
+  Display name. Validation: max length 64.
+  """
   name: String!
 }
 
-"""Edge wrapper for User connection pagination."""
+"""
+Edge wrapper for User connection pagination.
+"""
 type UserEdge {
   cursor: String!
   node: User!
 }
 
-"""Sortable fields on User."""
+"""
+Sortable fields on User.
+"""
 enum UserField {
-  """Row creation time (UTC)."""
+  """
+  Row creation time (UTC).
+  """
   CREATED_AT
 
-  """Actor ID from request context; never client-supplied."""
+  """
+  Actor ID from request context; never client-supplied.
+  """
   CREATED_BY
 
-  """Surrogate primary key."""
+  """
+  Surrogate primary key.
+  """
   ID
 
-  """Display name. Validation: max length 64."""
+  """
+  Display name. Validation: max length 64.
+  """
   NAME
 
-  """Last update time (UTC)."""
+  """
+  Last update time (UTC).
+  """
   UPDATED_AT
 
-  """Actor ID from request context on last update."""
+  """
+  Actor ID from request context on last update.
+  """
   UPDATED_BY
 }
 
-"""Filter criteria for User queries and mutations."""
+"""
+Filter criteria for User queries and mutations.
+"""
 input UserFilter {
-  """All nested filters must match."""
+  """
+  All nested filters must match.
+  """
   and: [UserFilter!]
 
-  """Surrogate primary key."""
+  """
+  Surrogate primary key.
+  """
   id: IDFilter
 
-  """Association filter on labels."""
+  """
+  Association filter on labels.
+  """
   labels: LabelAssociationFilter
 
-  """Display name. Validation: max length 64."""
+  """
+  Display name. Validation: max length 64.
+  """
   name: StringFilter
 
-  """Negates the nested filter."""
+  """
+  Negates the nested filter.
+  """
   not: UserFilter
 
-  """At least one nested filter must match."""
+  """
+  At least one nested filter must match.
+  """
   or: [UserFilter!]
 
-  """Association filter on orders."""
+  """
+  Association filter on orders.
+  """
   orders: OrderAssociationFilter
 }
 
-"""Pure junction (FKs + audit only) — inferred as M:N User ↔ Label."""
+"""
+Pure junction (FKs + audit only) — inferred as M:N User ↔ Label.
+"""
 type UserLabel {
-  """Row creation time (UTC)."""
+  """
+  Row creation time (UTC).
+  """
   createdAt: DateTime!
 
-  """Actor ID from request context; never client-supplied."""
+  """
+  Actor ID from request context; never client-supplied.
+  """
   createdBy: String!
 
-  """Surrogate primary key."""
+  """
+  Surrogate primary key.
+  """
   id: ID!
 
-  """Navigate to related Label."""
+  """
+  Navigate to related Label.
+  """
   label: Label!
 
-  """Last update time (UTC)."""
+  """
+  Last update time (UTC).
+  """
   updatedAt: DateTime!
 
-  """Actor ID from request context on last update."""
+  """
+  Actor ID from request context on last update.
+  """
   updatedBy: String!
 
-  """Navigate to related User."""
+  """
+  Navigate to related User.
+  """
   user: User!
 }
 
-"""Aggregate metrics for UserLabel."""
+"""
+Aggregate metrics for UserLabel.
+"""
 type UserLabelAggregate {
   count: Int!
 }
 
-"""Change notification payload for userLabel subscriptions."""
+"""
+Change notification payload for userLabel subscriptions.
+"""
 type UserLabelChangeEvent {
   count: Int!
   ids: [ID!]!
@@ -3481,114 +5480,176 @@ type UserLabelChangeEvent {
   operation: ChangeOperation!
 }
 
-"""Relay-style connection for paginated userLabels queries."""
+"""
+Relay-style connection for paginated userLabels queries.
+"""
 type UserLabelConnection {
   edges: [UserLabelEdge!]!
   nodes: [UserLabel!]!
   pageInfo: PageInfo!
 }
 
-"""Input for creating a new UserLabel."""
+"""
+Input for creating a new UserLabel.
+"""
 input UserLabelCreateInput {
-  """FK to labels.id."""
+  """
+  FK to labels.id.
+  """
   labelId: ID!
 
-  """FK to users.id."""
+  """
+  FK to users.id.
+  """
   userId: ID!
 }
 
-"""Edge wrapper for UserLabel connection pagination."""
+"""
+Edge wrapper for UserLabel connection pagination.
+"""
 type UserLabelEdge {
   cursor: String!
   node: UserLabel!
 }
 
-"""Sortable fields on UserLabel."""
+"""
+Sortable fields on UserLabel.
+"""
 enum UserLabelField {
-  """Row creation time (UTC)."""
+  """
+  Row creation time (UTC).
+  """
   CREATED_AT
 
-  """Actor ID from request context; never client-supplied."""
+  """
+  Actor ID from request context; never client-supplied.
+  """
   CREATED_BY
 
-  """Surrogate primary key."""
+  """
+  Surrogate primary key.
+  """
   ID
 
-  """Last update time (UTC)."""
+  """
+  Last update time (UTC).
+  """
   UPDATED_AT
 
-  """Actor ID from request context on last update."""
+  """
+  Actor ID from request context on last update.
+  """
   UPDATED_BY
 }
 
-"""Filter criteria for UserLabel queries and mutations."""
+"""
+Filter criteria for UserLabel queries and mutations.
+"""
 input UserLabelFilter {
-  """All nested filters must match."""
+  """
+  All nested filters must match.
+  """
   and: [UserLabelFilter!]
 
-  """Surrogate primary key."""
+  """
+  Surrogate primary key.
+  """
   id: IDFilter
 
-  """Filter via label relation."""
+  """
+  Filter via label relation.
+  """
   label: LabelFilter
 
-  """Negates the nested filter."""
+  """
+  Negates the nested filter.
+  """
   not: UserLabelFilter
 
-  """At least one nested filter must match."""
+  """
+  At least one nested filter must match.
+  """
   or: [UserLabelFilter!]
 
-  """Filter via user relation."""
+  """
+  Filter via user relation.
+  """
   user: UserFilter
 }
 
-"""Bulk create/update success payload for UserLabel."""
+"""
+Bulk create/update success payload for UserLabel.
+"""
 type UserLabelListPayload {
   items: [UserLabel!]!
 }
 
-"""Sort specification for UserLabel list queries."""
+"""
+Sort specification for UserLabel list queries.
+"""
 input UserLabelSortInput {
-  """Sort direction; defaults to ascending."""
+  """
+  Sort direction; defaults to ascending.
+  """
   direction: SortDirection = ASC
   field: UserLabelField!
 }
 
-"""Single row update entry for bulk update."""
+"""
+Single row update entry for bulk update.
+"""
 input UserLabelUpdateEntry {
   id: ID!
   input: UserLabelUpdateInput!
 }
 
-"""Input for updating an existing UserLabel; all fields optional."""
+"""
+Input for updating an existing UserLabel; all fields optional.
+"""
 input UserLabelUpdateInput {
-  """FK to labels.id."""
+  """
+  FK to labels.id.
+  """
   labelId: ID
 
-  """FK to users.id."""
+  """
+  FK to users.id.
+  """
   userId: ID
 }
 
-"""Bulk create/update success payload for User."""
+"""
+Bulk create/update success payload for User.
+"""
 type UserListPayload {
   items: [User!]!
 }
 
-"""Sort specification for User list queries."""
+"""
+Sort specification for User list queries.
+"""
 input UserSortInput {
-  """Sort direction; defaults to ascending."""
+  """
+  Sort direction; defaults to ascending.
+  """
   direction: SortDirection = ASC
   field: UserField!
 }
 
-"""Single row update entry for bulk update."""
+"""
+Single row update entry for bulk update.
+"""
 input UserUpdateEntry {
   id: ID!
   input: UserUpdateInput!
 }
 
-"""Input for updating an existing User; all fields optional."""
+"""
+Input for updating an existing User; all fields optional.
+"""
 input UserUpdateInput {
-  """Display name. Validation: max length 64."""
+  """
+  Display name. Validation: max length 64.
+  """
   name: String
 }

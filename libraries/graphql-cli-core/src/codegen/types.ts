@@ -104,7 +104,9 @@ export interface RuntimeConfig {
   transport: Required<Pick<TransportConfig, "httpUrlEnv">> &
     Omit<TransportConfig, "httpUrlEnv">;
   guard: GuardConfig;
-  output: Required<Pick<OutputConfig, "userErrorsFields" | "failOnUserErrors">> &
+  output: Required<
+    Pick<OutputConfig, "userErrorsFields" | "failOnUserErrors">
+  > &
     OutputConfig;
   pagination: Required<Pick<PaginationConfig, "defaultPageSize">> &
     PaginationConfig;

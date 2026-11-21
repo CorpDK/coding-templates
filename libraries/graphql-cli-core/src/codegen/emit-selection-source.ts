@@ -1,6 +1,10 @@
 import type { SelectionTree, SelectionValue } from "./types.js";
 
-function serializeValue(key: string, value: SelectionValue, indent: number): string {
+function serializeValue(
+  key: string,
+  value: SelectionValue,
+  indent: number,
+): string {
   const pad = "  ".repeat(indent);
   if (value === true) {
     return `${pad}${key}: true,`;

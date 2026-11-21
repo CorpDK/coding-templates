@@ -18,11 +18,7 @@ import {
 import { emitMan } from "./emit-man.js";
 import { emitTexi } from "./emit-texi.js";
 
-const DEFAULT_DESTRUCTIVE = [
-  "delete*",
-  "bulkDelete*",
-  "bulkUpdate*ByFilter",
-];
+const DEFAULT_DESTRUCTIVE = ["delete*", "bulkDelete*", "bulkUpdate*ByFilter"];
 
 function buildRuntimeConfig(options: EmitCliModulesOptions): RuntimeConfig {
   return {

@@ -6,9 +6,9 @@ Design: [docs/developer/14-graphql-cli-generator.md](../../docs/developer/14-gra
 
 ## Entry points
 
-| Import | Purpose |
-| ------ | ------- |
-| `@corpdk/graphql-cli-core` | `runCli()` runtime (C-P2) |
+| Import                             | Purpose                                             |
+| ---------------------------------- | --------------------------------------------------- |
+| `@corpdk/graphql-cli-core`         | `runCli()` runtime (C-P2)                           |
 | `@corpdk/graphql-cli-core/codegen` | Schema → catalog, relation-ids selections, man/texi |
 
 ## Codegen API (C-P1)

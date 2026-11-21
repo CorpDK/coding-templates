@@ -98,16 +98,16 @@ describe("lookup rule fixtures", () => {
     const names = buildCommandNameMap(schema, []);
     const idx = buildLookupIndex(schema, names, {});
     const q = schema.getQueryType()!.getFields().project;
-    const { selection } = emitSelectionForOperation(schema, idx, "project", q.type);
+    const { selection } = emitSelectionForOperation(
+      schema,
+      idx,
+      "project",
+      q.type,
+    );
     expect(selection).toMatchObject({ slug: true, name: true });
 
     const team = schema.getQueryType()!.getFields().team;
-    const nested = emitSelectionForOperation(
-      schema,
-      idx,
-      "team",
-      team.type,
-    );
+    const nested = emitSelectionForOperation(schema, idx, "team", team.type);
     expect(nested.selection.peer).toMatchObject({ slug: true });
     expect(nested.followUps).toEqual(
       expect.arrayContaining([
@@ -231,9 +231,7 @@ describe("lookup rule fixtures", () => {
     );
     expect(selection.lead).toMatchObject({ id: true, name: true });
     expect(selection.lead).not.toHaveProperty("reports");
-    expect(
-      warnings.some((w) => w.includes("Nested connection")),
-    ).toBe(true);
+    expect(warnings.some((w) => w.includes("Nested connection"))).toBe(true);
   });
 
   it("invalid lookup config throws CodegenError", () => {

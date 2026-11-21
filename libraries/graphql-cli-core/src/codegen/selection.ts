@@ -94,7 +94,10 @@ export function findFocusEntity(
       const nodes = named.getFields().nodes;
       if (nodes) {
         const item = getNamedType(nodes.type);
-        if (isObjectType(item) && isEntityType(schema, item.name, lookupIndex, lookupConfig)) {
+        if (
+          isObjectType(item) &&
+          isEntityType(schema, item.name, lookupIndex, lookupConfig)
+        ) {
           return item.name;
         }
       }
@@ -109,7 +112,8 @@ export function findFocusEntity(
         if (isListType(field.type)) continue;
         const child = getNamedType(field.type);
         if (!isObjectType(child)) continue;
-        if (!isEntityType(schema, child.name, lookupIndex, lookupConfig)) continue;
+        if (!isEntityType(schema, child.name, lookupIndex, lookupConfig))
+          continue;
 
         const typeField =
           child.name.charAt(0).toLowerCase() + child.name.slice(1);
@@ -202,8 +206,7 @@ function selectObject(
     }
   }
 
-  const insideFocus =
-    ctx.insideFocusEntity || typeName === ctx.focusEntity;
+  const insideFocus = ctx.insideFocusEntity || typeName === ctx.focusEntity;
   const childCtx: EmitCtx = {
     ...ctx,
     pathStack: [...ctx.pathStack, typeName],
@@ -254,7 +257,7 @@ function selectObject(
     }
 
     const named = getNamedType(field.type);
-  const list = isListType(field.type);
+    const list = isListType(field.type);
 
     if (isUnionType(named) || isInterfaceType(named)) {
       tree[fieldName] = selectAbstract(
@@ -274,10 +277,7 @@ function selectObject(
     );
 
     if (entity) {
-      const forcedStub = forcedStubFieldsFromConfig(
-        named.name,
-        lookupConfig,
-      );
+      const forcedStub = forcedStubFieldsFromConfig(named.name, lookupConfig);
       const stubFields = resolveEntityStubFields(
         ctx.schema,
         named.name,
@@ -410,8 +410,7 @@ export function emitSelectionForOperation(
     followUps,
     pathStack: [],
     wrapperDepth: 0,
-    insideFocusEntity:
-      isObjectType(named) && focusEntity === named.name,
+    insideFocusEntity: isObjectType(named) && focusEntity === named.name,
     parentPath: "",
   };
 

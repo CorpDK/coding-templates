@@ -48,10 +48,7 @@ export {
   validateLookupConfig,
 } from "./lookup-index.js";
 
-export {
-  emitSelectionForOperation,
-  findFocusEntity,
-} from "./selection.js";
+export { emitSelectionForOperation, findFocusEntity } from "./selection.js";
 
 export { buildOperationDocument, renderSelectionSet } from "./document.js";
 export { extractOperations } from "./extract-operations.js";

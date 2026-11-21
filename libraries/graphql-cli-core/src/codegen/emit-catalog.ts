@@ -1,9 +1,7 @@
 import type { CommandDescriptor } from "./types.js";
 
 export function emitCommandsModule(commands: CommandDescriptor[]): string {
-  const lines: string[] = [
-    "// @generated — do not edit manually",
-  ];
+  const lines: string[] = ["// @generated — do not edit manually"];
   lines.push(
     'import type { CommandDescriptor } from "@corpdk/graphql-cli-core/codegen";',
     "",

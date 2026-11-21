@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { parse, validate } from "graphql";
-import {
-  buildOperationDocument,
-  emitCliModules,
-} from "../index.js";
+import { buildOperationDocument, emitCliModules } from "../index.js";
 import { loadDalSchema } from "./helpers.js";
 
 function cmd(schema: ReturnType<typeof loadDalSchema>, field: string) {
-  const result = emitCliModules(schema, { bin: "ds-cli", man: { enabled: false } });
+  const result = emitCliModules(schema, {
+    bin: "ds-cli",
+    man: { enabled: false },
+  });
   return result.commands.find((c) => c.field === field)!;
 }
 

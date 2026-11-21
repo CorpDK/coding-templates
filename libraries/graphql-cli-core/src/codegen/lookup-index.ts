@@ -42,7 +42,9 @@ function isSingleObjectReturn(
   return null;
 }
 
-function requiredArgs(field: GraphQLField<unknown, unknown>): GraphQLArgument[] {
+function requiredArgs(
+  field: GraphQLField<unknown, unknown>,
+): GraphQLArgument[] {
   return field.args.filter(
     (a) => isNonNullType(a.type) && a.defaultValue === undefined,
   );
@@ -234,7 +236,9 @@ export function validateLookupConfig(
   }
 }
 
-function buildTypeLookups(schema: GraphQLSchema): Map<string, LookupCandidate[]> {
+function buildTypeLookups(
+  schema: GraphQLSchema,
+): Map<string, LookupCandidate[]> {
   const byType = new Map<string, LookupCandidate[]>();
   const query = schema.getQueryType();
   if (!query) return byType;
@@ -328,7 +332,10 @@ export function lookupCommandForType(
   );
 }
 
-export function isConnectionType(typeName: string, schema: GraphQLSchema): boolean {
+export function isConnectionType(
+  typeName: string,
+  schema: GraphQLSchema,
+): boolean {
   const type = schema.getType(typeName);
   if (!isObjectType(type)) return false;
   const fields = type.getFields();
