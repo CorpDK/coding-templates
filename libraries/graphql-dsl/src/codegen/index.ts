@@ -1,1 +1,2 @@
-export const GRAPHQL_DSL_CODEGEN_PHASE = "P1b" as const;
+export { emitDslModules } from "./emitDslModules.js";
+export type { EmitDslModulesOptions, EmitDslModulesResult } from "./types.js";
