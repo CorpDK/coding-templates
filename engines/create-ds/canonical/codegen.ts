@@ -5,6 +5,9 @@ import { graphqlCodegenMappers } from "./src/generated/graphql-codegen.mappers.j
  * Monorepo layout: this DS package must sit beside sibling `ds-sdk` and `ds-cli`
  * packages (`../ds-sdk`, `../ds-cli`). `pnpm codegen` writes SDK and CLI artifacts
  * there. DS-only repos outside this layout must add those packages or adjust paths.
+ *
+ * CLI generation: still uses legacy `@corpdk/codegen-cli` preset (→ `../ds-cli`) until
+ * CLI C-P3. Target: `create-graphql-cli` + `@corpdk/graphql-cli-core/codegen` (doc 14).
  */
 
 const config: CodegenConfig = {
