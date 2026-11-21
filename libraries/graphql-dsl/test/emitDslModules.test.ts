@@ -10,7 +10,7 @@ import { describe, expect, it } from "vitest";
 import { emitDslModules } from "../src/codegen/emitDslModules.js";
 import { generateGraphqlOperation } from "../src/runtime/generateGraphqlOperation.js";
 import { linkTypeMap } from "../src/runtime/linkTypeMap.js";
-import { minimalSchema } from "./fixtures/minimalTypeMap.js";
+import { minimalSchema } from "./fixtures/minimalTypeMap.fixture.js";
 
 function unwrapNamedObject(type: {
   ofType?: unknown;

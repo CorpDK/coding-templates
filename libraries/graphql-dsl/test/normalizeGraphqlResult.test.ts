@@ -39,6 +39,48 @@ describe("normalizeGraphqlResult", () => {
     }
   });
 
+  it("returns success for ordinary query data", () => {
+    const result = normalizeGraphqlResult({
+      data: { hello: "ok" },
+    });
+    expect(result).toEqual({ ok: true, data: { hello: "ok" } });
+    expect(unwrapGraphqlResult({ data: { hello: "ok" } })).toEqual({
+      hello: "ok",
+    });
+  });
+
+  it("maps null data to a transport error", () => {
+    const result = normalizeGraphqlResult({ data: null });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.error.kind).toBe("transport");
+    }
+  });
+
+  it("parses graphql errors and preserves extension codes", () => {
+    const result = normalizeGraphqlResult({
+      data: { createItem: { id: "1" } },
+      errors: [
+        {
+          message: "bad",
+          path: ["createItem", "id"],
+          extensions: { code: "FORBIDDEN" },
+        },
+        "plain",
+      ],
+    });
+    expect(result.ok).toBe(false);
+    if (!result.ok && result.error.kind === "graphql") {
+      expect(result.error.errors[0]?.code).toBe("FORBIDDEN");
+      expect(result.error.errors[1]?.message).toBe("plain");
+    }
+  });
+
+  it("rethrows an existing GraphqlRequestError unchanged", () => {
+    const original = toGraphqlRequestError(new Error("nope"));
+    expect(toGraphqlRequestError(original)).toBe(original);
+  });
+
   it("ignores userErrors under __meta, not under operation root fields", () => {
     const result = normalizeGraphqlResult({
       data: {
