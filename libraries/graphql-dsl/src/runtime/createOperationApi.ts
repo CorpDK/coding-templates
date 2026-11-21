@@ -65,12 +65,7 @@ export function createOperationApi<RootSel, Root extends LinkedType>(
 
     const namedVariables: Record<string, VariableTyping> = {};
     for (const key of Object.keys(vars)) {
-      const placeholder = vars[key]!;
-      namedVariables[key] = {
-        value: undefined,
-        typing: [{ name: key, scalar: [] } as LinkedType, "String"],
-      };
-      void placeholder;
+      namedVariables[key] = { value: undefined };
     }
 
     const selection = options.select(varMap) as Fields;

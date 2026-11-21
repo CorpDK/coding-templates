@@ -26,6 +26,7 @@ export interface IterateConnectionOptions<
   direction?: "forward" | "backward";
   maxPages?: number;
   signal?: AbortSignal;
+  build: (variables: Record<string, unknown>) => GraphqlOperation;
 }
 
 export type ConnectionExec = (op: GraphqlOperation) => Promise<unknown>;
@@ -71,10 +72,8 @@ export async function* iterateConnection<
         ? { first: options.pageSize, after }
         : { last: options.pageSize, before };
 
-    const op: GraphqlOperation = {
-      query: "",
-      variables: { ...options.args, ...paging },
-    };
+    const variables = { ...options.args, ...paging };
+    const op = options.build(variables);
 
     const raw = await exec(op);
     pageNumber++;
@@ -142,7 +141,8 @@ export async function* paginateConnection<
         ? { first: options.pageSize, after }
         : { last: options.pageSize, before };
 
-    const op: GraphqlOperation = { query: "", variables: { ...options.args, ...paging } };
+    const variables = { ...options.args, ...paging };
+    const op = options.build(variables);
     const raw = await exec(op);
     pageNumber++;
 

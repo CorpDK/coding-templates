@@ -52,8 +52,9 @@ import {
   linkTypeMap,
   type FieldsSelection,
   everything,
-  iterateConnection,
-  paginateConnection,
+  iterateConnection as iterateConnectionCore,
+  paginateConnection as paginateConnectionCore,
+  type IterateConnectionOptions as IterateConnectionOptionsCore,
   v,
 } from "@corpdk/graphql-dsl";
 import typeMapJson from "./type-map.js";
@@ -108,16 +109,71 @@ export const defineSubscription = subscriptionApi.define;
 export type SubscriptionResult<S extends SubscriptionSelection> =
   FieldsSelection<${typesNamespace}.Subscription, S>;
 
-export {
-  everything,
-  iterateConnection,
-  paginateConnection,
-  v,
-  type FieldsSelection,
-  type QuerySelection,
-  type MutationSelection,
-  type SubscriptionSelection,
-};
+export type IterateConnectionOptions<
+  Field extends ConnectionField,
+  NodeSel,
+> = Omit<
+  IterateConnectionOptionsCore<Field, Record<string, unknown>, NodeSel>,
+  "build"
+>;
+
+export async function* iterateConnection<
+  Field extends ConnectionField,
+  NodeSel,
+>(
+  exec: Parameters<typeof iterateConnectionCore>[0],
+  options: IterateConnectionOptions<Field, NodeSel> & {
+    args: Record<string, unknown>;
+    select: NodeSel;
+  },
+): AsyncGenerator<unknown> {
+  yield* iterateConnectionCore(exec, {
+    ...options,
+    build: (variables) =>
+      buildQuery({
+        [options.field]: {
+          __args: variables,
+          nodes: options.select,
+          pageInfo: {
+            hasNextPage: true,
+            endCursor: true,
+            hasPreviousPage: true,
+            startCursor: true,
+          },
+        },
+      } as QuerySelection),
+  });
+}
+
+export async function* paginateConnection<
+  Field extends ConnectionField,
+  NodeSel,
+>(
+  exec: Parameters<typeof paginateConnectionCore>[0],
+  options: IterateConnectionOptions<Field, NodeSel> & {
+    args: Record<string, unknown>;
+    select: NodeSel;
+  },
+): AsyncGenerator<import("@corpdk/graphql-dsl").ConnectionPage<unknown>> {
+  yield* paginateConnectionCore(exec, {
+    ...options,
+    build: (variables) =>
+      buildQuery({
+        [options.field]: {
+          __args: variables,
+          nodes: options.select,
+          pageInfo: {
+            hasNextPage: true,
+            endCursor: true,
+            hasPreviousPage: true,
+            startCursor: true,
+          },
+        },
+      } as QuerySelection),
+  });
+}
+
+export { everything, v, type FieldsSelection, type QuerySelection, type MutationSelection, type SubscriptionSelection };
 
 ${connectionUnion}
 `;

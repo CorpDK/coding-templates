@@ -89,7 +89,7 @@ export const objectType = (
         type === ctx.schema.getSubscriptionType())
     ) {
       fieldStrings.push(
-        "__aliases?: { [alias: string]: { [field: string]: boolean | number | object | undefined } }",
+        `__aliases?: { [alias: string]: ExactlyOneField<Omit<${requestTypeName(type)}, "__name" | "__aliases" | "__scalar" | "__typename">> }`,
       );
     }
 

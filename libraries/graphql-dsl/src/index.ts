@@ -14,6 +14,7 @@ export type {
 } from "./runtime/builtOperation.js";
 export { everything } from "./runtime/builtOperation.js";
 export { v, isVariableRef, type VariableRef } from "./runtime/variableRef.js";
+export type { ExactlyOneField } from "./runtime/aliasSelection.js";
 export { createOperationApi } from "./runtime/createOperationApi.js";
 export {
   normalizeGraphqlResult,
@@ -28,6 +29,7 @@ export {
   iterateConnection,
   paginateConnection,
   type ConnectionPage,
+  type ConnectionExec,
   type IterateConnectionOptions,
 } from "./runtime/iterateConnection.js";
 export type {

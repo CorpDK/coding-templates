@@ -16,6 +16,10 @@ export const renderRequestTypes = (
     schema: GraphQLSchema,
     ctx: RenderContext,
 ) => {
+    ctx.addCodeBlock(
+        `import type { ExactlyOneField } from "@corpdk/graphql-dsl";`,
+    )
+
     let typeMap = schema.getTypeMap()
 
     if (ctx.config?.sortProperties) {

@@ -2,7 +2,7 @@ import type { GraphQLSchema } from "graphql";
 import { RenderContext } from "./render/common/RenderContext.js";
 import { renderRequestTypes } from "./render/requestTypes/renderRequestTypes.js";
 import { renderTypeMap } from "./render/typeMap/renderTypeMap.js";
-import { renderBoundIndex, connectionFields } from "./renderBoundIndex.js";
+import { renderBoundIndex } from "./renderBoundIndex.js";
 import type { EmitDslModulesOptions, EmitDslModulesResult } from "./types.js";
 
 export function emitDslModules(
@@ -31,8 +31,6 @@ export function emitDslModules(
     config.typesImport,
     config.typesNamespace ?? "Types",
   );
-
-  void connectionFields(schema);
 
   return { selections, typeMap, index };
 }

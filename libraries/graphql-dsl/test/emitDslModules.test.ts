@@ -1,17 +1,25 @@
+import { parse, validate } from "graphql";
 import { describe, expect, it } from "vitest";
 import { emitDslModules } from "../src/codegen/emitDslModules.js";
+import { generateGraphqlOperation } from "../src/runtime/generateGraphqlOperation.js";
+import { linkTypeMap } from "../src/runtime/linkTypeMap.js";
 import { minimalSchema } from "./fixtures/minimalTypeMap.js";
 
 describe("emitDslModules", () => {
-  it("emits L1-tagged selections and a type map", () => {
+  it("emits a type map that can print a valid operation", () => {
     const out = emitDslModules(minimalSchema, {
       typesImport: "../schema-types.js",
-      customScalars: [],
+      customScalars: ["JSON"],
     });
-    expect(out.selections).toContain("QuerySelection");
-    expect(out.selections).toContain("Types.QueryHelloArgs");
-    expect(out.typeMap).toMatch(/^export default \{/);
-    expect(out.index).toContain("ConnectionField");
-    expect(out.index).toContain("buildQuery");
+    const linked = linkTypeMap(
+      JSON.parse(out.typeMap.replace(/^export default /, "")),
+    );
+    expect(linked.JSON?.name).toBe("JSON");
+
+    const op = generateGraphqlOperation("query", linked.Query!, {
+      hello: { __args: { name: "world" } },
+    });
+    const doc = parse(op.query);
+    expect(validate(minimalSchema, doc)).toEqual([]);
   });
 });

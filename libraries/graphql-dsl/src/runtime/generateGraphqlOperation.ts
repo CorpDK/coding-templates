@@ -15,7 +15,7 @@ export type Request = boolean | number | Fields;
 
 export interface VariableTyping {
   value: unknown;
-  typing: [LinkedType, string];
+  typing?: [LinkedType, string];
 }
 
 export interface Variables {
@@ -57,7 +57,11 @@ function resolveArgValue(
     if (!name) throw new Error("variable reference is missing a name");
     const declared = ctx.namedVariables?.[name];
     if (declared) {
-      assertCompatibleType(declared.typing[1], argTyping[1], name);
+      if (!declared.typing) {
+        declared.typing = argTyping;
+      } else {
+        assertCompatibleType(declared.typing[1], argTyping[1], name);
+      }
       return `$${name}`;
     }
     ctx.variables[name] = { value: undefined, typing: argTyping };
@@ -117,7 +121,15 @@ function directiveCondition(
     const name = cond.name;
     if (!name) throw new Error("directive variable is missing a name");
     if (ctx.namedVariables?.[name]) {
-      assertCompatibleType(ctx.namedVariables[name].typing[1], gqlType, name);
+      const declared = ctx.namedVariables[name];
+      if (!declared.typing) {
+        declared.typing = [
+          { name: "Boolean", scalar: ["Boolean"] } as LinkedType,
+          gqlType,
+        ];
+      } else {
+        assertCompatibleType(declared.typing[1], gqlType, name);
+      }
     } else {
       ctx.variables[name] = {
         value: undefined,
@@ -298,7 +310,14 @@ export const generateGraphqlOperation = (
           .map((name) => {
             const typing =
               declared[name]?.typing ?? hoisted[name]?.typing;
-            if (!typing) throw new Error(`missing type for variable $${name}`);
+            if (!typing) {
+              if (declared[name]) {
+                throw new Error(
+                  `variable \`${name}\` was declared but not used in the operation`,
+                );
+              }
+              throw new Error(`missing type for variable $${name}`);
+            }
             return `$${name}:${typing[1]}`;
           })
           .join(",")})`

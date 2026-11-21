@@ -44,6 +44,14 @@ export const renderTypeMap = (schema: GraphQLSchema, ctx: RenderContext) => {
             }
         })
 
+    for (const name of ctx.config?.customScalars ?? []) {
+        if (result.scalars.includes(name)) continue
+        if (!result.types[name]) {
+            result.scalars.push(name)
+            result.types[name] = {}
+        }
+    }
+
     // change names of query, mutation on schemas that chose different names (hasura)
     const q = schema.getQueryType()
     if (q?.name && q?.name !== 'Query') {
