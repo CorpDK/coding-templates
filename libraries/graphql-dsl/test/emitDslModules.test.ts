@@ -12,6 +12,7 @@ import { generateGraphqlOperation } from "../src/runtime/generateGraphqlOperatio
 import { linkTypeMap } from "../src/runtime/linkTypeMap.js";
 import { minimalSchema } from "./fixtures/minimalTypeMap.fixture.js";
 import {
+  connectionNodeShapesFromIndex,
   exportedConstNames,
   workspaceValueImportsFrom,
 } from "./helpers/parseEmittedTs.js";
@@ -82,8 +83,10 @@ describe("emitDslModules", () => {
       customScalars: [],
     });
 
-    const expectedShape = connectionNodeShapeFromSchema(schema, "books");
-    expect(expectedShape).toBe("edges");
+    expect(connectionNodeShapeFromSchema(schema, "books")).toBe("edges");
+
+    const shapes = connectionNodeShapesFromIndex(out.index);
+    expect(shapes.books).toBe("edges");
 
     const linked = linkTypeMap(
       JSON.parse(out.typeMap.replace(/^export default /, "")),
@@ -91,7 +94,7 @@ describe("emitDslModules", () => {
     const op = generateGraphqlOperation("query", linked.Query!, {
       books: {
         __args: { first: 10 },
-        ...connectionPagingSelection(expectedShape, { id: true }),
+        ...connectionPagingSelection(shapes.books, { id: true }),
       },
     });
     const doc = parse(op.query);

@@ -21,6 +21,23 @@ describe("FieldsSelection alias keys (R-01)", () => {
     expect(row.archived[0]?.id).toBe("a");
     expect(row.items[0]?.id).toBe("b");
   });
+
+  it("gives equal result types for two aliases of one field with different args", () => {
+    type Query = { items: { id: string }[] };
+    type Sel = {
+      __aliases: {
+        limited: { items: { __args: { first: 10 }; id: 1 } };
+        wide: { items: { __args: { first: 100 }; id: 1 } };
+      };
+    };
+    type Result = FieldsSelection<Query, Sel>;
+    type Limited = Result["limited"];
+    type Wide = Result["wide"];
+    const intoWide: Wide = {} as Limited;
+    const intoLimited: Limited = {} as Wide;
+    expect(intoWide).toBeDefined();
+    expect(intoLimited).toBeDefined();
+  });
 });
 
 describe("FieldsSelection over L1-style unions", () => {

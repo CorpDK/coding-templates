@@ -1,15 +1,18 @@
 #!/usr/bin/env node
 /**
  * R-42: fail on real TypeScript imports from other @corpdk/* workspace packages.
- * Emitted template strings may mention @corpdk/graphql-dsl; only line-start imports count.
+ * Emitted template strings may mention @corpdk/graphql-dsl; only AST import/export declarations count.
  */
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createRequire } from "node:module";
+
+const require = createRequire(import.meta.url);
+const ts = require("typescript");
 
 const srcRoot = join(fileURLToPath(new URL(".", import.meta.url)), "../src");
-const IMPORT_LINE =
-  /^\s*import\s+(?:type\s+)?(?:[^"';\n]+)\s+from\s+["']@corpdk\/([^"']+)["']/gm;
+const WORKSPACE_PREFIX = "@corpdk/";
 
 function walk(dir) {
   const out = [];
@@ -22,14 +25,41 @@ function walk(dir) {
   return out;
 }
 
+function moduleSpecifierText(node) {
+  const spec = node.moduleSpecifier;
+  return spec && ts.isStringLiteral(spec) ? spec.text : null;
+}
+
+function collectWorkspaceImports(source, fileName) {
+  const sf = ts.createSourceFile(
+    fileName,
+    source,
+    ts.ScriptTarget.Latest,
+    true,
+  );
+  const specs = [];
+
+  function visit(node) {
+    if (ts.isImportDeclaration(node)) {
+      const text = moduleSpecifierText(node);
+      if (text?.startsWith(WORKSPACE_PREFIX)) specs.push(text);
+    } else if (ts.isExportDeclaration(node) && node.moduleSpecifier) {
+      const text = moduleSpecifierText(node);
+      if (text?.startsWith(WORKSPACE_PREFIX)) specs.push(text);
+    }
+    ts.forEachChild(node, visit);
+  }
+
+  visit(sf);
+  return specs;
+}
+
 let failed = false;
 for (const file of walk(srcRoot)) {
   const rel = file.slice(srcRoot.length + 1);
   const source = readFileSync(file, "utf8");
-  IMPORT_LINE.lastIndex = 0;
-  let match;
-  while ((match = IMPORT_LINE.exec(source)) !== null) {
-    const pkg = match[1];
+  for (const spec of collectWorkspaceImports(source, rel)) {
+    const pkg = spec.slice(WORKSPACE_PREFIX.length);
     console.error(
       `Forbidden @corpdk/${pkg} import in libraries/graphql-dsl/src/${rel}`,
     );
