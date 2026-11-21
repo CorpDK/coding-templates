@@ -36,6 +36,8 @@ const { selections, typeMap, index } = emitDslModules(schema, {
 
 ```bash
 pnpm --filter @corpdk/graphql-dsl build
-pnpm --filter @corpdk/graphql-dsl test
-pnpm --filter @corpdk/graphql-dsl typecheck
+pnpm --filter @corpdk/graphql-dsl test       # vitest (excludes typeSelection.upstream.test.ts)
+pnpm --filter @corpdk/graphql-dsl typecheck  # includes upstream FieldsSelection suite
 ```
+
+Monorepo CI runs R-42 `scripts/check-self-contained.mjs` and `typecheck` on the `@corpdk/graphql-dsl` lockstep quality job (doc 13 §11).
