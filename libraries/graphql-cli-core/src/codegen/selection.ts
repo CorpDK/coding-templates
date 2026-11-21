@@ -201,18 +201,32 @@ function objectSelectionGuard(
   };
 }
 
-function appendOneObjectField(
-  ctx: EmitCtx,
-  childCtx: EmitCtx,
-  tree: SelectionTree,
-  parentPath: string,
-  fieldName: string,
-  field: GraphQLField<unknown, unknown>,
-  atOperationRoot: boolean,
-  connectionRoot: boolean,
-  connectionMode: NonNullable<SelectionConfig["connection"]>,
-  lookupConfig: SelectionConfig["lookup"],
-): void {
+type AppendObjectFieldInput = {
+  ctx: EmitCtx;
+  childCtx: EmitCtx;
+  tree: SelectionTree;
+  parentPath: string;
+  fieldName: string;
+  field: GraphQLField<unknown, unknown>;
+  atOperationRoot: boolean;
+  connectionRoot: boolean;
+  connectionMode: NonNullable<SelectionConfig["connection"]>;
+  lookupConfig: SelectionConfig["lookup"];
+};
+
+function appendOneObjectField(input: AppendObjectFieldInput): void {
+  const {
+    ctx,
+    childCtx,
+    tree,
+    parentPath,
+    fieldName,
+    field,
+    atOperationRoot,
+    connectionRoot,
+    connectionMode,
+    lookupConfig,
+  } = input;
   const fieldPath = parentPath ? `${parentPath}.${fieldName}` : fieldName;
 
   if (skipRelayOpposite(connectionRoot, fieldName, connectionMode)) return;
@@ -294,7 +308,7 @@ function selectObject(
   const connectionMode = ctx.config.connection ?? "nodes";
 
   for (const [fieldName, field] of Object.entries(objectType.getFields())) {
-    appendOneObjectField(
+    appendOneObjectField({
       ctx,
       childCtx,
       tree,
@@ -305,7 +319,7 @@ function selectObject(
       connectionRoot,
       connectionMode,
       lookupConfig,
-    );
+    });
   }
 
   return tree;

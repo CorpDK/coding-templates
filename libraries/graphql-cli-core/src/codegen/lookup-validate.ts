@@ -58,8 +58,8 @@ function validateForcedStubEntry(
 
 export function validateLookupConfig(
   schema: GraphQLSchema,
-  lookupConfig: SelectionConfig["lookup"] = {},
   candidatesByType: Map<string, LookupCandidate[]>,
+  lookupConfig: SelectionConfig["lookup"] = {},
 ): void {
   if (!lookupConfig) return;
   const typeMap = schema.getTypeMap();

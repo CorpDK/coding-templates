@@ -241,7 +241,7 @@ export function validateLookupConfig(
   schema: GraphQLSchema,
   lookupConfig: SelectionConfig["lookup"] = {},
 ): void {
-  runValidateLookupConfig(schema, lookupConfig, buildTypeLookups(schema));
+  runValidateLookupConfig(schema, buildTypeLookups(schema), lookupConfig);
 }
 
 export function isEntityType(
