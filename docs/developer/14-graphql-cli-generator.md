@@ -406,7 +406,7 @@ The DAL server's column-aware rules may be stricter; the server wins at runtime 
   - The same name under two root types: Query keeps the bare name; Mutation gets `mutate-<name>`; Subscription gets `subscribe-<name>`.
   - A name equal to a reserved command (`commands`, `describe`, `interactive`, `help`, `version`) gets a `<kind>-` prefix (`query-describe`).
 - **`followUps` respect `exclude`:** Each `followUps` entry names a lookup command that remains in the generated catalog. Lookup queries filtered out by `exclude` are omitted from `followUps` (same as forced-stub types with no lookup; §3.3 rule 10).
-- **Stub fields vs `followUps` under `exclude`:** Lookup-to-command resolution for `followUps` honors `exclude`. Stub field choice for generated selections still applies the §3.3 lookup rule against the full Query root, so an excluded preferred lookup can leave stub fields that disagree with the flags on a remaining `followUps` entry when another lookup for the same type is still emitted.
+- **Stub fields align with `followUps` under `exclude`:** Stub field choice and lookup-to-command resolution for `followUps` both use the same emitted lookup set after `include` / `exclude`. The §3.3 lookup choice rule runs only on lookups that remain in the generated catalog (`lookupCommandForType`, `resolveEntityStubFields`), so stub fields match the flags on the corresponding `followUps` entry.
 
 ```yaml
 include:
