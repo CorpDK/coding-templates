@@ -60,7 +60,10 @@ export function emitCliModules(
   validateLookupConfig(schema, selection.lookup);
 
   const commandNames = buildCommandNameMap(schema, warnings);
-  const lookupIndex = buildLookupIndex(schema, commandNames, selection.lookup);
+  const lookupIndex = buildLookupIndex(schema, commandNames, selection.lookup, {
+    include: options.include,
+    exclude: options.exclude,
+  });
 
   const extracted = extractOperations(schema, lookupIndex, commandNames, {
     selection,

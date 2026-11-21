@@ -1,4 +1,4 @@
-import type { OperationKind } from "./types.js";
+import type { IncludeExcludeConfig, OperationKind } from "./types.js";
 
 export function toKebabCase(name: string): string {
   return name
@@ -140,4 +140,29 @@ function guardReserved(
 
 export function operationKey(kind: OperationKind, field: string): string {
   return `${kind}:${field}`;
+}
+
+export function fieldIncluded(
+  fieldName: string,
+  kind: OperationKind,
+  include: IncludeExcludeConfig,
+  exclude: IncludeExcludeConfig,
+): boolean {
+  const incList =
+    kind === "query"
+      ? include.queries
+      : kind === "mutation"
+        ? include.mutations
+        : include.subscriptions;
+  const excList =
+    kind === "query"
+      ? exclude.queries
+      : kind === "mutation"
+        ? exclude.mutations
+        : exclude.subscriptions;
+
+  if (excList.some((p) => globMatch(p, fieldName))) return false;
+
+  if (incList.length === 0) return true;
+  return incList.some((p) => globMatch(p, fieldName));
 }

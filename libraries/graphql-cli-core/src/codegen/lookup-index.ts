@@ -21,8 +21,12 @@ import type {
   SelectionConfig,
 } from "./types.js";
 import { CodegenError } from "./types.js";
-import { operationKey, resolveCommandNames, toKebabCase } from "./naming.js";
-import type { OperationKind } from "./types.js";
+import {
+  fieldIncluded,
+  operationKey,
+  resolveCommandNames,
+} from "./naming.js";
+import type { IncludeExcludeConfig, OperationKind } from "./types.js";
 
 function isLeafInput(type: GraphQLInputType): boolean {
   const named = getNamedType(type);
@@ -136,22 +140,37 @@ export function forcedStubFields(
   return null;
 }
 
+function filterEmittedLookups(
+  candidates: LookupCandidate[],
+  commandByField: Map<string, string> | undefined,
+): LookupCandidate[] {
+  if (!commandByField) return candidates;
+  return candidates.filter((c) => commandByField.has(c.fieldName));
+}
+
 function interfaceLookup(
   schema: GraphQLSchema,
   type: GraphQLObjectType,
   byType: Map<string, LookupCandidate[]>,
   lookupConfig: SelectionConfig["lookup"],
+  commandByField?: Map<string, string>,
 ): LookupCandidate | null {
   for (const iface of type.getInterfaces()) {
-    const candidates = byType.get(iface.name);
-    if (candidates && candidates.length > 0) {
+    const candidates = filterEmittedLookups(
+      byType.get(iface.name) ?? [],
+      commandByField,
+    );
+    if (candidates.length > 0) {
       return chooseLookup(iface.name, candidates, lookupConfig);
     }
     if (isInterfaceType(iface)) {
       const impls = schema.getPossibleTypes(iface);
       for (const impl of impls) {
-        const cands = byType.get(impl.name);
-        if (cands && cands.length > 0) {
+        const cands = filterEmittedLookups(
+          byType.get(impl.name) ?? [],
+          commandByField,
+        );
+        if (cands.length > 0) {
           return chooseLookup(impl.name, cands, lookupConfig);
         }
       }
@@ -160,12 +179,25 @@ function interfaceLookup(
   return null;
 }
 
+const EMPTY_INCLUDE_EXCLUDE: IncludeExcludeConfig = {
+  queries: [],
+  mutations: [],
+  subscriptions: [],
+};
+
 export function buildLookupIndex(
   schema: GraphQLSchema,
   commandNames: Map<string, string>,
   lookupConfig: SelectionConfig["lookup"] = {},
+  filter?: {
+    include?: IncludeExcludeConfig;
+    exclude?: IncludeExcludeConfig;
+  },
 ): LookupIndex {
   validateLookupConfig(schema, lookupConfig);
+
+  const include = filter?.include ?? EMPTY_INCLUDE_EXCLUDE;
+  const exclude = filter?.exclude ?? EMPTY_INCLUDE_EXCLUDE;
 
   const byType = new Map<string, LookupCandidate[]>();
   const query = schema.getQueryType();
@@ -182,6 +214,7 @@ export function buildLookupIndex(
   const commandByField = new Map<string, string>();
   if (query) {
     for (const field of Object.values(query.getFields())) {
+      if (!fieldIncluded(field.name, "query", include, exclude)) continue;
       const key = operationKey("query", field.name);
       const cmd = commandNames.get(key);
       if (cmd) commandByField.set(field.name, cmd);
@@ -328,19 +361,26 @@ export function lookupCommandForType(
   lookupIndex: LookupIndex,
   lookupConfig: SelectionConfig["lookup"],
 ): string | null {
-  let candidates = lookupIndex.byType.get(typeName) ?? [];
+  const { commandByField, byType } = lookupIndex;
+  let candidates = filterEmittedLookups(
+    byType.get(typeName) ?? [],
+    commandByField,
+  );
   let chosen = chooseLookup(typeName, candidates, lookupConfig);
   if (!chosen) {
     const type = schema.getType(typeName);
     if (isObjectType(type)) {
-      chosen = interfaceLookup(schema, type, lookupIndex.byType, lookupConfig);
+      chosen = interfaceLookup(
+        schema,
+        type,
+        byType,
+        lookupConfig,
+        commandByField,
+      );
     }
   }
   if (!chosen) return null;
-  return (
-    lookupIndex.commandByField.get(chosen.fieldName) ??
-    toKebabCase(chosen.fieldName)
-  );
+  return commandByField.get(chosen.fieldName) ?? null;
 }
 
 export function isConnectionType(

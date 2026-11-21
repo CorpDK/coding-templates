@@ -17,7 +17,7 @@ import type {
   SelectionConfig,
 } from "./types.js";
 import {
-  globMatch,
+  fieldIncluded,
   isDestructiveMutation,
   operationKey,
   resolveReservedArgFlag,
@@ -77,31 +77,6 @@ function describeArg(arg: GraphQLArgument, warnings: string[]): ArgDescriptor {
   }
 
   return desc;
-}
-
-function fieldIncluded(
-  fieldName: string,
-  kind: OperationKind,
-  include: IncludeExcludeConfig,
-  exclude: IncludeExcludeConfig,
-): boolean {
-  const incList =
-    kind === "query"
-      ? include.queries
-      : kind === "mutation"
-        ? include.mutations
-        : include.subscriptions;
-  const excList =
-    kind === "query"
-      ? exclude.queries
-      : kind === "mutation"
-        ? exclude.mutations
-        : exclude.subscriptions;
-
-  if (excList.some((p) => globMatch(p, fieldName))) return false;
-
-  if (incList.length === 0) return true;
-  return incList.some((p) => globMatch(p, fieldName));
 }
 
 function detectPagination(
