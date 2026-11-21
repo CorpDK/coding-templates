@@ -27,13 +27,6 @@ import {
   lookupCommandForType,
   resolveEntityStubFields,
 } from "./lookup-index.js";
-
-function forcedStubFieldsFromConfig(
-  typeName: string,
-  lookupConfig: SelectionConfig["lookup"],
-): string[] | null {
-  return forcedStubFields(typeName, lookupConfig);
-}
 import { toKebabCase } from "./naming.js";
 
 interface EmitCtx {
@@ -138,7 +131,7 @@ function pushFollowUp(
     ctx.lookupIndex,
     ctx.config.lookup,
   );
-  if (!command) return;
+  if (!command?.trim()) return;
   const flags: Record<string, string> = {};
   for (const f of stubFields) {
     flags[f] = `--${toKebabCase(f)}`;
@@ -277,7 +270,7 @@ function selectObject(
     );
 
     if (entity) {
-      const forcedStub = forcedStubFieldsFromConfig(named.name, lookupConfig);
+      const forcedStub = forcedStubFields(named.name, lookupConfig);
       const stubFields = resolveEntityStubFields(
         ctx.schema,
         named.name,

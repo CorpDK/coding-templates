@@ -7,6 +7,20 @@ import {
 } from "../index.js";
 
 describe("naming collisions", () => {
+  it("prefixes mutation and subscription when both share a field name", () => {
+    const warnings: string[] = [];
+    const names = resolveCommandNames(
+      [
+        { field: "ping", kind: "mutation" },
+        { field: "ping", kind: "subscription" },
+      ],
+      warnings,
+    );
+    expect(names.get("mutation:ping")).toBe("mutate-ping");
+    expect(names.get("subscription:ping")).toBe("subscribe-ping");
+    expect(warnings.length).toBeGreaterThan(0);
+  });
+
   it("prefixes mutation when query shares a field name", () => {
     const warnings: string[] = [];
     const names = resolveCommandNames(

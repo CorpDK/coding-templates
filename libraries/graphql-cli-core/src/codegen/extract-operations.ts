@@ -55,7 +55,7 @@ function describeArg(arg: GraphQLArgument, warnings: string[]): ArgDescriptor {
       isListType(arg.type) ||
       (isNonNullType(arg.type) && isListType(arg.type.ofType)),
     ),
-    required: isNonNullType(arg.type),
+    required: isNonNullType(arg.type) && arg.defaultValue === undefined,
     description: arg.description ?? undefined,
   };
 

@@ -20,5 +20,9 @@ describe("man/texi emitters", () => {
     expect(man).toContain("\\-\\-vars\\-file");
     expect(texi).toContain("--vars-file");
     expect(man).not.toMatch(/\-\-input <file/);
+    expect(man).toMatch(/\.SH ENVIRONMENT/);
+    expect(man).toMatch(/\.SH DESCRIPTION/);
+    expect(texi).toMatch(/@node Environment/);
+    expect(texi).toMatch(/@chapter Overview/);
   });
 });

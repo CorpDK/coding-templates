@@ -7,6 +7,7 @@ import {
   CodegenError,
   validateLookupConfig,
   emitCliModules,
+  extractOperations,
 } from "../index.js";
 
 const COMPOSITE_SDL = `
@@ -74,6 +75,20 @@ type BadgeView { code: String! label: String! }
 `;
 
 describe("lookup rule fixtures", () => {
+  it("args with GraphQL defaults are optional in catalog", () => {
+    const schema = buildSchema(`
+      type Query { item(id: ID!, includeDeleted: Boolean = false): Item }
+      type Item { id: ID! }
+    `);
+    const names = buildCommandNameMap(schema, []);
+    const idx = buildLookupIndex(schema, names, {});
+    const [op] = extractOperations(schema, idx, names, {
+      selection: { policy: "relation-ids" },
+    });
+    const includeDeleted = op.args.find((a) => a.name === "includeDeleted");
+    expect(includeDeleted?.required).toBe(false);
+    expect(includeDeleted?.defaultValue).toBe(false);
+  });
   it("composite key lookup stubs orgId and number", () => {
     const schema = buildSchema(COMPOSITE_SDL);
     const names = buildCommandNameMap(schema, []);
@@ -240,9 +255,61 @@ describe("lookup rule fixtures", () => {
       validateLookupConfig(schema, { User: "missingField" }),
     ).toThrow(CodegenError);
     expect(() =>
+      validateLookupConfig(schema, {
+        User: { fields: ["notAField"] },
+      }),
+    ).toThrow(/field "notAField"/);
+    expect(() =>
       emitCliModules(schema, {
         selection: { policy: "relation-ids", lookup: { Ghost: "nope" } },
       }),
     ).toThrow(CodegenError);
+  });
+
+  it("honors selection.lookup on interface fallback", () => {
+    const SDL = `
+      interface Node { id: ID! }
+      type Query { node(id: ID!): Node legacyNode(id: ID!): Node team: Team }
+      type Team { widget: Widget }
+      type Widget implements Node { id: ID! label: String! }
+    `;
+    const schema = buildSchema(SDL);
+    const names = buildCommandNameMap(schema, []);
+    const idx = buildLookupIndex(schema, names, { Node: "legacyNode" });
+    const team = schema.getQueryType()!.getFields().team;
+    const { followUps } = emitSelectionForOperation(
+      schema,
+      idx,
+      "team",
+      team.type,
+      { policy: "relation-ids", lookup: { Node: "legacyNode" } },
+    );
+    expect(followUps).toEqual([
+      expect.objectContaining({
+        command: "legacy-node",
+        flags: { id: "--id" },
+        path: "widget",
+      }),
+    ]);
+  });
+
+  it("forced stub types without lookup omit followUps", () => {
+    const schema = buildSchema(FORCED_STUB_SDL);
+    const names = buildCommandNameMap(schema, []);
+    const idx = buildLookupIndex(schema, names, {
+      BadgeView: { fields: ["code"] },
+    });
+    const owners = schema.getQueryType()!.getFields().owners;
+    const inner = emitSelectionForOperation(
+      schema,
+      idx,
+      "owners",
+      owners.type,
+      { policy: "relation-ids", lookup: { BadgeView: { fields: ["code"] } } },
+    );
+    expect(inner.followUps.every((f) => f.command.length > 0)).toBe(true);
+    expect(
+      inner.followUps.find((f) => f.type === "BadgeView" && f.path === "member"),
+    ).toBeUndefined();
   });
 });

@@ -83,7 +83,6 @@ export function resolveCommandNames(
 
   for (const [field, group] of byField) {
     const kebab = toKebabCase(field);
-    const kinds = new Set(group.map((g) => g.kind));
 
     const assign = (kind: OperationKind, cmd: string) => {
       result.set(`${kind}:${field}`, cmd);
@@ -97,30 +96,23 @@ export function resolveCommandNames(
       continue;
     }
 
-    if (kinds.size > 1) {
-      warnings.push(
-        `Command name collision for field "${field}" across root types; applying kind prefixes`,
-      );
-      for (const g of group) {
-        if (g.kind === "query") {
-          assign(g.kind, guardReserved(kebab, g.kind, field, warnings));
-        } else if (g.kind === "mutation") {
-          assign(
-            g.kind,
-            guardReserved(`mutate-${kebab}`, g.kind, field, warnings),
-          );
-        } else {
-          assign(
-            g.kind,
-            guardReserved(`subscribe-${kebab}`, g.kind, field, warnings),
-          );
-        }
-      }
-      continue;
-    }
-
+    warnings.push(
+      `Command name collision for field "${field}" across root types; applying kind prefixes`,
+    );
     for (const g of group) {
-      assign(g.kind, guardReserved(kebab, g.kind, field, warnings));
+      if (g.kind === "query") {
+        assign(g.kind, guardReserved(kebab, g.kind, field, warnings));
+      } else if (g.kind === "mutation") {
+        assign(
+          g.kind,
+          guardReserved(`mutate-${kebab}`, g.kind, field, warnings),
+        );
+      } else {
+        assign(
+          g.kind,
+          guardReserved(`subscribe-${kebab}`, g.kind, field, warnings),
+        );
+      }
     }
   }
 

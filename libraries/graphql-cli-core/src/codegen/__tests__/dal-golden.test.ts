@@ -37,6 +37,12 @@ describe("DAL golden selections", () => {
     });
   });
 
+  it("marks arguments with defaults as optional in catalog", () => {
+    const op = cmd(schema, "item");
+    const includeDeleted = op.args.find((a) => a.name === "includeDeleted");
+    expect(includeDeleted?.required).toBe(false);
+  });
+
   it("order selection shape", () => {
     const op = cmd(schema, "order");
     expect(op.selection).toMatchObject({

@@ -140,18 +140,19 @@ function interfaceLookup(
   schema: GraphQLSchema,
   type: GraphQLObjectType,
   byType: Map<string, LookupCandidate[]>,
+  lookupConfig: SelectionConfig["lookup"],
 ): LookupCandidate | null {
   for (const iface of type.getInterfaces()) {
     const candidates = byType.get(iface.name);
     if (candidates && candidates.length > 0) {
-      return chooseLookup(iface.name, candidates, undefined);
+      return chooseLookup(iface.name, candidates, lookupConfig);
     }
     if (isInterfaceType(iface)) {
       const impls = schema.getPossibleTypes(iface);
       for (const impl of impls) {
         const cands = byType.get(impl.name);
         if (cands && cands.length > 0) {
-          return chooseLookup(impl.name, cands, undefined);
+          return chooseLookup(impl.name, cands, lookupConfig);
         }
       }
     }
@@ -264,7 +265,12 @@ export function isEntityType(
   if (candidates && candidates.length > 0) return true;
   const type = schema.getType(typeName);
   if (isObjectType(type)) {
-    const ifaceLookup = interfaceLookup(schema, type, lookupIndex.byType);
+    const ifaceLookup = interfaceLookup(
+      schema,
+      type,
+      lookupIndex.byType,
+      lookupConfig,
+    );
     if (ifaceLookup) return true;
   }
   return false;
@@ -284,7 +290,12 @@ export function resolveEntityStubFields(
   if (!chosen) {
     const type = schema.getType(typeName);
     if (isObjectType(type)) {
-      const iface = interfaceLookup(schema, type, lookupIndex.byType);
+      const iface = interfaceLookup(
+        schema,
+        type,
+        lookupIndex.byType,
+        lookupConfig,
+      );
       if (iface) chosen = iface;
     }
   }
@@ -322,7 +333,7 @@ export function lookupCommandForType(
   if (!chosen) {
     const type = schema.getType(typeName);
     if (isObjectType(type)) {
-      chosen = interfaceLookup(schema, type, lookupIndex.byType);
+      chosen = interfaceLookup(schema, type, lookupIndex.byType, lookupConfig);
     }
   }
   if (!chosen) return null;
