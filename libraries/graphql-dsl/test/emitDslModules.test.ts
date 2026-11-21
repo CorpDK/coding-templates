@@ -110,7 +110,9 @@ describe("emitDslModules", () => {
 
   it("emits query-only index without mutation or subscription builders", () => {
     const schema = buildSchema(/* GraphQL */ `
-      type Query { ping: String! }
+      type Query {
+        ping: String!
+      }
     `);
     const out = emitDslModules(schema, {
       typesImport: "../schema-types.js",

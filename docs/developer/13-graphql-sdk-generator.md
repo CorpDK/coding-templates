@@ -251,12 +251,12 @@ export const { safeParseGraphqlScalar, parseGraphqlScalar } =
 
 The helper logic lives once, in `@corpdk/graphql-input-zod` (§7.4). Each SDK binds it to its generated registries in this one file, so fixes ship as a dependency update instead of a regenerate or `upgrade`.
 
-`build*` and `define*` return `BuiltOperation<R, V>`, which bundles four things:
+`build*` and `define*` return `BuiltOperation<R, V>`, which bundles:
 
-- `document: TypedDocumentNode<R, V>`, parsed once and cached by text;
 - `query`: the printed text, for `fetch` and `graphql-sse`;
 - `variables` (for `build*`);
-- `operationName`.
+- `operationName`;
+- `document?`: optional `TypedDocumentNode<R, V>` when the SDK binds a parsed document (ad-hoc `build*` omits it; Apollo/urql binding is P2, §11).
 
 ### 3.6 Package layout and file ownership
 
@@ -378,15 +378,15 @@ export function isGraphqlRequestError(
 ): value is GraphqlRequestError;
 ```
 
-| Input                                                                                                                                                        | Becomes                                                                                             |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------- |
-| Response with a non-empty `errors` array                                                                                                                     | `graphql`; partial `data` kept                                                                      |
-| Response whose root payload has a non-empty field listed in `userErrorsFields` (DAL: `userErrors`)                                                           | `userErrors`; only root-level payload fields are checked                                            |
-| Both of the above                                                                                                                                            | `graphql` (the server-side failure wins)                                                            |
-| `fetch` rejection, `AbortError`, `TimeoutError`, non-2xx status, unparseable body                                                                            | `transport`, with `status`, `timedOut`, `aborted`                                                   |
-| `GraphqlInputValidationError` from `./validation` (§7.4)                                                                                                     | `validation`, with its `issues`                                                                     |
-| Apollo Client 4 errors (`CombinedGraphQLErrors`, `ServerError`, `ServerParseError`) and urql 5 `CombinedError` (`graphQLErrors`, `networkError`, `response`) | The matching kind, detected structurally by their documented fields. No client package is imported. |
-| Anything else                                                                                                                                                | `transport` with `cause` set (unknown failures are never swallowed)                                 |
+| Input                                                                                                                                                        | Becomes                                                                                                          |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| Response with a non-empty `errors` array                                                                                                                     | `graphql`; partial `data` kept                                                                                   |
+| Response whose root payload has a non-empty field listed in `userErrorsFields` (DAL: `userErrors`)                                                           | `userErrors`; each operation field under `data` is scanned (keys starting with `__`, e.g. `__meta`, are skipped) |
+| Both of the above                                                                                                                                            | `graphql` (the server-side failure wins)                                                                         |
+| `fetch` rejection, `AbortError`, `TimeoutError`, non-2xx status, unparseable body                                                                            | `transport`, with `status`, `timedOut`, `aborted`                                                                |
+| `GraphqlInputValidationError` from `./validation` (§7.4)                                                                                                     | `validation`, with its `issues`                                                                                  |
+| Apollo Client 4 errors (`CombinedGraphQLErrors`, `ServerError`, `ServerParseError`) and urql 5 `CombinedError` (`graphQLErrors`, `networkError`, `response`) | The matching kind, detected structurally by their documented fields. No client package is imported.              |
+| Anything else                                                                                                                                                | `transport` with `cause` set (unknown failures are never swallowed)                                              |
 
 - The kinds map one-to-one to the CLI's exit codes 3, 4, 1, and 5.
 - Each object is a real `Error` with `name = "GraphqlRequestError"` and a stack, so `throw` and logging behave normally.
@@ -788,7 +788,7 @@ libraries/graphql-dsl/
 ```
 
 - **Base:** `remorses/genql` `main` at `15f27b9` (6.3.4 plus 6 unreleased commits).
-- **Published** to npmjs in the lockstep CalVer set, first in `PUBLISH_ORDER` (it has no `@corpdk/*` dependencies; §16.2.1). Runtime peer: `graphql` ^16 || ^17. One types-only dependency: `@graphql-typed-document-node/core` (for `BuiltOperation.document`). No other runtime dependencies.
+- **Published** to npmjs in the lockstep CalVer set, first in `PUBLISH_ORDER` (it has no `@corpdk/*` dependencies; §16.2.1). Runtime peer: `graphql` ^16 || ^17. One types-only dependency: `@graphql-typed-document-node/core` (for optional `BuiltOperation.document`). No other runtime dependencies.
 - **Codegen API** (`@corpdk/graphql-dsl/codegen`, called by `create-graphql-sdk codegen`):
 
   ```ts
@@ -802,7 +802,7 @@ libraries/graphql-dsl/
   ): { selections: string; typeMap: string; index: string }; // src/generated/dsl/{selections,type-map,index}.ts
   ```
 
-  The type map marks Relay connection root fields (§3.8.2), and `index` binds `iterateConnection` / `paginateConnection` to the SDK's `buildQuery` with the `ConnectionField` type.
+  The type map marks Relay connection root fields (§3.8.2), and `index` binds `iterateConnection` / `paginateConnection` to the SDK's `buildQuery` with the `ConnectionField` type. `index` omits mutation/subscription builders and selection re-exports when the schema has no `Mutation` / `Subscription` root. `connectionNodeShapes` records whether each connection pages with `nodes` or `edges.node` (§3.8.2).
 
 - **Divergences from upstream:**
   - transport, CLI, introspection, and own response types removed;

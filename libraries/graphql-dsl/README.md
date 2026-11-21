@@ -18,7 +18,7 @@ Peer: `graphql` ^16 || ^17.
 - `FieldsSelection` — result types over SDK L1 `Types.*`
 - `generateGraphqlOperation` / `linkTypeMap` — print validated operations from selections + type map
 - `defineQuery` / `defineMutation` / `defineSubscription`, `v()`, `everything` — bound in each SDK’s `src/generated/dsl/index.ts`
-- `BuiltOperation`, `ResultOf`, `VariablesOf`
+- `BuiltOperation` (`document` optional until the SDK binds a parsed node), `ResultOf`, `VariablesOf`
 - §3.8 helpers: `normalizeGraphqlResult`, `unwrapGraphqlResult`, `iterateConnection`, `paginateConnection`
 
 ## Codegen (`@corpdk/graphql-dsl/codegen`)

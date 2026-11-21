@@ -58,13 +58,14 @@ type WithDirectiveOptionality<T, D> = D extends
   ? T | undefined
   : T;
 
-type SingleAliasEntry<SRC, Entry> = Entry extends Record<string, unknown>
-  ? {
-      [F in keyof Entry]: F extends keyof SRC
-        ? FieldsSelection<SRC[F], Entry[F]>
-        : never;
-    }[keyof Entry]
-  : never;
+type SingleAliasEntry<SRC, Entry> =
+  Entry extends Record<string, unknown>
+    ? {
+        [F in keyof Entry]: F extends keyof SRC
+          ? FieldsSelection<SRC[F], Entry[F]>
+          : never;
+      }[keyof Entry]
+    : never;
 
 type AliasFields<SRC, DST> = "__aliases" extends keyof DST
   ? NonNullable<DST["__aliases"]> extends Record<string, unknown>
