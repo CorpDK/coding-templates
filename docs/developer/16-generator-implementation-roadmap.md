@@ -16,7 +16,7 @@ Living execution plan for the SDK, CLI, and DS-generator designs ([13](13-graphq
 | **Wave 1 implementation**                       | `scalar-zod`, `graphql-input-zod`, `dal-codegen` wiring (P1a); `engine-kit` + `create-ds` refactor (DS-P0b)           |
 | **Monorepo CI**                                 | Orchestrated Monorepo quality (12 lockstep packages + `quality-templates`), Sonar, publish dispatch on the same SHA   |
 | **Lockstep npm `latest`**                       | All twelve `@corpdk/*` DS automation packages at **`2026.10.0-alpha.16`** with provenance (publish run after #40)     |
-| Typed scaffolds for remaining phases            | Stub `src/` on generator packages not yet implemented (P1b, P1c, P2, C-P2, C-P3)                                      |
+| Typed scaffolds for remaining phases            | Stub `src/` on generator packages not yet implemented (P1c, P2, C-P2, C-P3); `@corpdk/graphql-dsl` implements P1b   |
 | **C-P1 codegen** (`graphql-cli-core`)           | Relation-ids emitter, man/texi, DAL golden tests; R-C01, R-C02, R-C17 closed in [doc 14](14-graphql-cli-generator.md) |
 
 **Still legacy until later phases:** `templates/ds-sdk` (`client-preset`), `templates/ds-cli` (`@corpdk/codegen-cli` preset). **`create-ds` uses `@corpdk/engine-kit`** after DS-P0b (#36).
@@ -32,7 +32,7 @@ flowchart TB
     P1a[P1a scalar-zod + graphql-input-zod + dal-codegen wire]
   end
   subgraph wave2 [Wave 2 — current]
-    P1b[P1b graphql-dsl fork + spike]
+    P1b[P1b graphql-dsl fork]
     C-P1[C-P1 graphql-cli-core codegen]
   end
   P1c[P1c create-graphql-sdk engine]

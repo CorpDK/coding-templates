@@ -12,7 +12,7 @@ Monorepo quality runs **`create-ds`** canonical drift check (`check-canonical`) 
 
 | Order | Package                      | Path                          | Role                                                 |
 | ----- | ---------------------------- | ----------------------------- | ---------------------------------------------------- |
-| 1     | `@corpdk/graphql-dsl`        | `libraries/graphql-dsl`       | Typed selection DSL (SDK L2); scaffold until SDK P1b |
+| 1     | `@corpdk/graphql-dsl`        | `libraries/graphql-dsl`       | Typed selection DSL (SDK L2); P1b implementation     |
 | 2     | `@corpdk/scalar-zod`         | `libraries/scalar-zod`        | Shared scalar rules (SDK P1a)                        |
 | 3     | `@corpdk/dal-core`           | `libraries/dal-core`          | DAL types, filters, scalars, error taxonomy          |
 | 4     | `@corpdk/pub-sub`            | `libraries/pub-sub`           | GraphQL pub/sub factory (DAL DS runtime)             |
@@ -45,7 +45,7 @@ The [GraphQL SDK](../developer/13-graphql-sdk-generator.md), [CLI](../developer/
 | `@corpdk/create-graphql-sdk` | `engines/create-graphql-sdk`  | Same                                                                                               |
 | `@corpdk/create-graphql-cli` | `engines/create-graphql-cli`  | Same                                                                                               |
 
-Scaffolds compile with `tsc` to `dist/` and declare `types` / `exports` (engines use `dist/types-entry.d.ts`; stub `bin` on `create-graphql-*`). Tarballs are phase stubs, not full implementations. **`templates/ds-sdk` and `templates/ds-cli` are not published** and are not part of B0.
+Generator packages compile with `tsc` to `dist/` and declare `types` / `exports` (engines use `dist/types-entry.d.ts`; stub `bin` on `create-graphql-*` until C-P2 / P1c). B0 tarballs were placeholders; **`@corpdk/graphql-dsl`** ships the P1b fork after merge (first real release via R-20). **`graphql-cli-core`**, **`create-graphql-sdk`**, and **`create-graphql-cli`** remain phase stubs until C-P1 / P1c / C-P2. **`templates/ds-sdk` and `templates/ds-cli` are not published** and are not part of B0.
 
 **After the B0 PR merges**, a maintainer completes registry setup **from a local terminal** (npm publish + trust each trigger org 2FA / OTP; **not** OIDC):
 

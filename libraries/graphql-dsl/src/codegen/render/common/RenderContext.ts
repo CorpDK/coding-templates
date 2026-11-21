@@ -39,8 +39,7 @@ export class RenderContext {
     const imports = this.imports[from];
 
     const existing = imports.find(
-      (i) =>
-        (isDefault && i.isDefault) || (!isDefault && i.module === module),
+      (i) => (isDefault && i.isDefault) || (!isDefault && i.module === module),
     );
 
     if (existing) return existing.alias;

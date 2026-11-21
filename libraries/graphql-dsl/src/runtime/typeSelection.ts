@@ -40,9 +40,7 @@ type HasOnFragments<DST> = DST extends object
     : true
   : false;
 
-type HasDirective<D> = D extends
-  | { __include?: unknown }
-  | { __skip?: unknown }
+type HasDirective<D> = D extends { __include?: unknown } | { __skip?: unknown }
   ? true
   : false;
 
@@ -117,15 +115,12 @@ type UnionFromOnFragments<SRC, DST> = UnionOf<
 
 type UnionOf<T> = [T] extends [never] ? never : T extends infer U ? U : never;
 
-type UnionMemberResult<
-  SRC,
-  Member extends string,
-  Sel,
-> = Extract<SRC, { __typename: Member }> extends infer M
-  ? M extends { __typename: Member }
-    ? { __typename: Member } & FieldsSelection<M, Sel>
-    : never
-  : never;
+type UnionMemberResult<SRC, Member extends string, Sel> =
+  Extract<SRC, { __typename: Member }> extends infer M
+    ? M extends { __typename: Member }
+      ? { __typename: Member } & FieldsSelection<M, Sel>
+      : never
+    : never;
 
 type Scalar = string | number | Date | boolean | null | undefined;
 

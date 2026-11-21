@@ -18,17 +18,13 @@ describe("iterateConnection", () => {
     };
 
     const build = (variables: Record<string, unknown>) =>
-      generateGraphqlOperation(
-        "query",
-        minimalTypeMap.Query!,
-        {
-          itemConnection: {
-            __args: variables,
-            nodes: { id: true },
-            pageInfo: { hasNextPage: true, endCursor: true },
-          },
-        } as import("../src/runtime/generateGraphqlOperation.js").Fields,
-      );
+      generateGraphqlOperation("query", minimalTypeMap.Query!, {
+        itemConnection: {
+          __args: variables,
+          nodes: { id: true },
+          pageInfo: { hasNextPage: true, endCursor: true },
+        },
+      } as import("../src/runtime/generateGraphqlOperation.js").Fields);
 
     const pages: unknown[] = [];
     for await (const node of iterateConnection(exec, {

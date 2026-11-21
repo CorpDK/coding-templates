@@ -1,38 +1,50 @@
-import { GraphQLArgument, GraphQLEnumValue, GraphQLField, GraphQLInputField, GraphQLNamedType } from 'graphql'
+import {
+  GraphQLArgument,
+  GraphQLEnumValue,
+  GraphQLField,
+  GraphQLInputField,
+  GraphQLNamedType,
+} from "graphql";
 
+const escapeCommentClose = (s: string) => s.replace(/\*\//g, "*\\/");
 
-const escapeCommentClose = (s: string) => s.replace(/\*\//g, '*\\/')
-
-export const comment = (comment: { text?: string | null; deprecated?: string | null }) => {
-  const lines: string[] = []
+export const comment = (comment: {
+  text?: string | null;
+  deprecated?: string | null;
+}) => {
+  const lines: string[] = [];
 
   if (comment.deprecated) {
-    lines.push(`@deprecated ${escapeCommentClose(comment.deprecated.replace(/\s/g, ' '))}`)
+    lines.push(
+      `@deprecated ${escapeCommentClose(comment.deprecated.replace(/\s/g, " "))}`,
+    );
   }
 
   if (comment.text) {
-    lines.push(...comment.text.split('\n').map(escapeCommentClose))
+    lines.push(...comment.text.split("\n").map(escapeCommentClose));
   }
 
   return lines.length > 0
     ? lines.length === 1
       ? `\n/** ${lines[0]} */\n`
-      : `\n/**\n${lines.map(l => ` * ${l}`).join('\n')}\n */\n`
-    : ''
-}
+      : `\n/**\n${lines.map((l) => ` * ${l}`).join("\n")}\n */\n`
+    : "";
+};
 
 export const typeComment = (type: GraphQLNamedType) =>
   comment({
     text: type.description,
-  })
+  });
 
-export const fieldComment = (field: GraphQLEnumValue | GraphQLField<any, any, any>) =>
+export const fieldComment = (
+  field: GraphQLEnumValue | GraphQLField<any, any, any>,
+) =>
   comment({
     deprecated: field.deprecationReason,
     text: field.description,
-  })
+  });
 
 export const argumentComment = (arg: GraphQLArgument | GraphQLInputField) =>
   comment({
     text: arg.description,
-  })
+  });

@@ -28,10 +28,7 @@ export interface OperationApi<RootSel, Root extends LinkedType> {
   build(
     fields: RootSel & { __name?: string; __aliases?: Record<string, Fields> },
   ): GraphqlOperation;
-  define<
-    V extends Record<string, VariableRef<unknown>>,
-    S extends Fields,
-  >(
+  define<V extends Record<string, VariableRef<unknown>>, S extends Fields>(
     options: DefineOperationOptions<V, S>,
   ): BuiltOperation<unknown, VariablesMap<V>>;
 }

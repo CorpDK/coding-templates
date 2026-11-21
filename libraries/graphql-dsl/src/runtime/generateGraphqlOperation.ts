@@ -133,7 +133,10 @@ function directiveCondition(
     } else {
       ctx.variables[name] = {
         value: undefined,
-        typing: [{ name: "Boolean", scalar: ["Boolean"] } as LinkedType, gqlType],
+        typing: [
+          { name: "Boolean", scalar: ["Boolean"] } as LinkedType,
+          gqlType,
+        ],
       };
     }
     return `$${name}`;
@@ -183,7 +186,11 @@ const parseRequest = (
     return `${argPart}${tail}`;
   }
 
-  if (typeof request === "object" && request !== null && Object.keys(request).length > 0) {
+  if (
+    typeof request === "object" &&
+    request !== null &&
+    Object.keys(request).length > 0
+  ) {
     const fields = request as Fields;
 
     if ("__aliases" in fields && fields.__aliases) {
@@ -308,8 +315,7 @@ export const generateGraphqlOperation = (
     allVarNames.size > 0
       ? `(${[...allVarNames]
           .map((name) => {
-            const typing =
-              declared[name]?.typing ?? hoisted[name]?.typing;
+            const typing = declared[name]?.typing ?? hoisted[name]?.typing;
             if (!typing) {
               if (declared[name]) {
                 throw new Error(

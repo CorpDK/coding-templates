@@ -31,7 +31,10 @@ export interface IterateConnectionOptions<
 
 export type ConnectionExec = (op: GraphqlOperation) => Promise<unknown>;
 
-function connectionShape(data: unknown, field: string): {
+function connectionShape(
+  data: unknown,
+  field: string,
+): {
   nodes?: unknown[];
   edges?: { cursor?: string; node?: unknown }[];
   pageInfo?: PageInfo;
@@ -151,11 +154,9 @@ export async function* paginateConnection<
       throw toGraphqlRequestError(new Error("Response is not a connection"));
     }
 
-    const nodes = (
-      conn.nodes ??
+    const nodes = (conn.nodes ??
       conn.edges?.map((e) => e.node).filter((n) => n !== undefined) ??
-      []
-    ) as Node[];
+      []) as Node[];
 
     yield { nodes, pageInfo: conn.pageInfo, pageNumber };
 

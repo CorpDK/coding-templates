@@ -1,11 +1,11 @@
 # Upstream tracking — `remorses/genql`
 
-| Field | Value |
-| --- | --- |
-| Upstream repo | https://github.com/remorses/genql |
-| Base commit | `15f27b9` (merge PR #202, 6.3.4 + 6 unpublished commits) |
-| Fork package | `@corpdk/graphql-dsl` |
-| License | MIT (genql copyright retained in `LICENSE`) |
+| Field         | Value                                                    |
+| ------------- | -------------------------------------------------------- |
+| Upstream repo | [remorses/genql](https://github.com/remorses/genql)      |
+| Base commit   | `15f27b9` (merge PR #202, 6.3.4 + 6 unpublished commits) |
+| Fork package  | `@corpdk/graphql-dsl`                                    |
+| License       | MIT (genql copyright retained in `LICENSE`)              |
 
 ## Kept from upstream (~1,480 LOC)
 
@@ -22,21 +22,21 @@
 
 ## CorpDK divergences
 
-| Topic | Behavior |
-| --- | --- |
-| ESM | `NodeNext` with explicit `.js` import specifiers |
-| L1 results | `FieldsSelection<SRC,DST>` over SDK `Types.*`, not genql response interfaces |
-| L1 `__args` | Codegen references `Types.<Parent><Field>Args` |
-| Aliases | `__aliases` — one GraphQL field per entry (runtime enforced) |
-| Directives | `@include` / `@skip` via `__include` / `__skip`; optional result fields |
-| Named variables | `define*` + `v<T>()`; **R-04:** mismatch check is **runtime** at operation build (compile-time deferred) |
-| Response helpers | §3.8 error normaliser + connection iterator (transport-free) |
-| Selection suffix | `*Selection` (not `*GenqlSelection`) |
+| Topic            | Behavior                                                                                                 |
+| ---------------- | -------------------------------------------------------------------------------------------------------- |
+| ESM              | `NodeNext` with explicit `.js` import specifiers                                                         |
+| L1 results       | `FieldsSelection<SRC,DST>` over SDK `Types.*`, not genql response interfaces                             |
+| L1 `__args`      | Codegen references `Types.<Parent><Field>Args`                                                           |
+| Aliases          | `__aliases` — one GraphQL field per entry (runtime enforced)                                             |
+| Directives       | `@include` / `@skip` via `__include` / `__skip`; optional result fields                                  |
+| Named variables  | `define*` + `v<T>()`; **R-04:** mismatch check is **runtime** at operation build (compile-time deferred) |
+| Response helpers | §3.8 error normaliser + connection iterator (transport-free)                                             |
+| Selection suffix | `*Selection` (not `*GenqlSelection`)                                                                     |
 
 ## Cherry-pick log
 
-| Date | Upstream | Action |
-| --- | --- | --- |
+| Date       | Upstream  | Action                                          |
+| ---------- | --------- | ----------------------------------------------- |
 | 2026-11-22 | `15f27b9` | Initial fork into `libraries/graphql-dsl` (P1b) |
 
 ## Quarterly review

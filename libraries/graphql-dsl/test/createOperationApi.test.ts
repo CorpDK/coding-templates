@@ -6,11 +6,10 @@ import { minimalSchema, minimalTypeMap } from "./fixtures/minimalTypeMap.js";
 
 describe("createOperationApi define", () => {
   it("declares variables from type-map use sites", () => {
-    const api = createOperationApi(
-      "query",
-      minimalTypeMap.Query!,
-      (op) => ({ ...op, document: op as never }),
-    );
+    const api = createOperationApi("query", minimalTypeMap.Query!, (op) => ({
+      ...op,
+      document: op as never,
+    }));
     const built = api.define({
       name: "ItemsByFilter",
       variables: { filter: v<{ name?: string | null }>() },

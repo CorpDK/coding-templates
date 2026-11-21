@@ -1,6 +1,4 @@
-export function sortKeys<T extends Record<string, unknown>>(
-  obj: T,
-): T {
+export function sortKeys<T extends Record<string, unknown>>(obj: T): T {
   const ordered = {} as T;
   Object.keys(obj ?? {})
     .sort()
@@ -11,5 +9,5 @@ export function sortKeys<T extends Record<string, unknown>>(
 }
 
 export function intersection<T>(a: T[][]): T[] {
-    return a.reduce((p, c) => p.filter((e) => c.includes(e)))
+  return a.reduce((p, c) => p.filter((e) => c.includes(e)));
 }
