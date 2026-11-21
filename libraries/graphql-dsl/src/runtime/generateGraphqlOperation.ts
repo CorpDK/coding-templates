@@ -78,7 +78,7 @@ function assertCompatibleType(
   expected: string,
   varName: string,
 ): void {
-  const normalize = (s: string) => s.replace(/!/g, "").trim();
+  const normalize = (s: string) => s.replaceAll("!", "").trim();
   if (normalize(declared) !== normalize(expected)) {
     throw new Error(
       `variable \`${varName}\` is declared as \`${declared}\` but used where \`${expected}\` is required`,

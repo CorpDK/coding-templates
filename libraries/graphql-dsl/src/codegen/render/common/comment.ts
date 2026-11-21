@@ -6,7 +6,7 @@ import {
   GraphQLNamedType,
 } from "graphql";
 
-const escapeCommentClose = (s: string) => s.replace(/\*\//g, "*\\/");
+const escapeCommentClose = (s: string) => s.replaceAll("*/", String.raw`*\/`);
 
 export const comment = (comment: {
   text?: string | null;

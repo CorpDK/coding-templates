@@ -32,7 +32,7 @@ export const renderTypeMap = (schema: GraphQLSchema, ctx: RenderContext) => {
   Object.keys(schema.getTypeMap())
     .filter((t) => !excludedTypes.includes(t))
     .map((t) => schema.getTypeMap()[t])
-    .map((t) => {
+    .forEach((t) => {
       if (isObjectType(t) || isInterfaceType(t) || isInputObjectType(t))
         result.types[t.name] = objectType(t, ctx);
       else if (isUnionType(t)) result.types[t.name] = unionType(t, ctx);
@@ -105,7 +105,7 @@ export function replaceTypeNamesWithIndexes(
           if (args) {
             res[1] = Object.assign(
               {},
-              ...Object.keys(args || {}).map((k) => {
+              ...Object.keys(args).map((k) => {
                 const arg = args?.[k];
                 if (!arg) {
                   throw new Error(

@@ -44,7 +44,7 @@ export const objectType = (
   }, {});
 
   if (isInterfaceType(type) && ctx.schema) {
-    ctx.schema.getPossibleTypes(type).map((t) => {
+    ctx.schema.getPossibleTypes(type).forEach((t) => {
       if (!isEmpty(typeObj)) {
         typeObj[`on_${t.name}`] = { type: t.name };
       }
