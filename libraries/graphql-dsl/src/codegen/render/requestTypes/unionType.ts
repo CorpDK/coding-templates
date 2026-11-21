@@ -9,7 +9,7 @@ import { requestTypeName } from "./requestTypeName.js";
 export const unionType = (type: GraphQLUnionType, ctx: RenderContext) => {
   let types = [...type.getTypes()];
   if (ctx.config?.sortProperties) {
-    types = types.sort();
+    types = types.sort((a, b) => a.name.localeCompare(b.name));
   }
   const fieldStrings = types.map((t) => `on_${t.name}?:${requestTypeName(t)}`);
 

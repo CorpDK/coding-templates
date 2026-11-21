@@ -1,7 +1,7 @@
 export function sortKeys<T extends Record<string, unknown>>(obj: T): T {
   const ordered = {} as T;
   Object.keys(obj ?? {})
-    .sort()
+    .sort((a, b) => a.localeCompare(b))
     .forEach((key) => {
       ordered[key as keyof T] = obj[key as keyof T];
     });
@@ -9,5 +9,7 @@ export function sortKeys<T extends Record<string, unknown>>(obj: T): T {
 }
 
 export function intersection<T>(a: T[][]): T[] {
-  return a.reduce((p, c) => p.filter((e) => c.includes(e)));
+  const [first, ...rest] = a;
+  if (first === undefined) return [];
+  return rest.reduce((p, c) => p.filter((e) => c.includes(e)), first);
 }

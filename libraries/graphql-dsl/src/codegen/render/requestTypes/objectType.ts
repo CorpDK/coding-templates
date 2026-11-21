@@ -78,7 +78,9 @@ export const objectType = (
       .getPossibleTypes(type)
       .map((t) => `on_${t.name}?: ${requestTypeName(t)}`);
     if (ctx.config?.sortProperties) {
-      interfaceProperties = interfaceProperties.sort();
+      interfaceProperties = interfaceProperties.sort((a, b) =>
+        a.localeCompare(b),
+      );
     }
     fieldStrings = fieldStrings.concat(interfaceProperties);
   }
