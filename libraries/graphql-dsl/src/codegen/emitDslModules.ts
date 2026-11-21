@@ -19,7 +19,6 @@ export function emitDslModules(
   if (config.typesImport) {
     selectionCtx.addImport(config.typesImport, false, config.typesNamespace);
   }
-  selectionCtx.addImport("@corpdk/graphql-dsl", false, "ExactlyOneField", true);
   renderRequestTypes(schema, selectionCtx);
 
   const typeMapCtx = new RenderContext(schema, config);
