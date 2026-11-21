@@ -19,7 +19,7 @@ Monorepo quality runs **`create-ds`** canonical drift check (`check-canonical`) 
 | 5     | `@corpdk/graphql-input-zod`  | `libraries/graphql-input-zod` | Input Zod codegen runtime (SDK P1a)                  |
 | 6     | `@corpdk/dal-codegen`        | `libraries/dal-codegen`       | `dal-codegen` / `dal-entity-lint` CLIs               |
 | 7     | `@corpdk/engine-kit`         | `libraries/engine-kit`        | Shared `create-*` engine kit (DS-P0b)                |
-| 8     | `@corpdk/graphql-cli-core`   | `libraries/graphql-cli-core`  | CLI runtime + codegen; scaffold until CLI C-P1       |
+| 8     | `@corpdk/graphql-cli-core`   | `libraries/graphql-cli-core`  | CLI codegen (C-P1); runtime stub until C-P2          |
 | 9     | `@corpdk/create-graphql-sdk` | `engines/create-graphql-sdk`  | SDK scaffold engine; stub until SDK P1c              |
 | 10    | `@corpdk/create-graphql-cli` | `engines/create-graphql-cli`  | CLI scaffold engine; stub until CLI C-P2             |
 | 11    | `@corpdk/codegen-cli`        | `libraries/codegen-cli`       | Legacy GraphQL codegen plugin (deprecation planned)  |

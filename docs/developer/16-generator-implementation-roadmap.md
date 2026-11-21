@@ -2,7 +2,7 @@
 
 Living execution plan for the SDK, CLI, and DS-generator designs ([13](13-graphql-sdk-generator.md), [14](14-graphql-cli-generator.md), [15](15-create-ds-generator-integration.md)). **B0, design merges, and Wave 1 are complete** on `main` (`2a00576`).
 
-**Status:** **Wave 1 complete** — P1a ([#35](https://github.com/CorpDK/coding-templates/pull/35)), DS-P0b ([#36](https://github.com/CorpDK/coding-templates/pull/36)), Monorepo CI ([#37](https://github.com/CorpDK/coding-templates/pull/37)), lockstep quality + CalVer gate ([#38](https://github.com/CorpDK/coding-templates/pull/38)), OIDC-safe publish dispatch ([#39](https://github.com/CorpDK/coding-templates/pull/39)), live lockstep **`2026.10.0-alpha.16`** ([#40](https://github.com/CorpDK/coding-templates/pull/40)). **Wave 2 (current):** P1b `graphql-dsl`, C-P1 `graphql-cli-core` — four generator npm names remain scaffold/stub (`graphql-dsl`, `graphql-cli-core`, `create-graphql-sdk`, `create-graphql-cli`) until those phases land.
+**Status:** **Wave 1 complete** — P1a ([#35](https://github.com/CorpDK/coding-templates/pull/35)), DS-P0b ([#36](https://github.com/CorpDK/coding-templates/pull/36)), Monorepo CI ([#37](https://github.com/CorpDK/coding-templates/pull/37)), lockstep quality + CalVer gate ([#38](https://github.com/CorpDK/coding-templates/pull/38)), OIDC-safe publish dispatch ([#39](https://github.com/CorpDK/coding-templates/pull/39)), live lockstep **`2026.10.0-alpha.16`** ([#40](https://github.com/CorpDK/coding-templates/pull/40)). **Wave 2 (current):** P1b `graphql-dsl`, C-P1 `graphql-cli-core` (codegen in progress) — `create-graphql-sdk` and `create-graphql-cli` remain stub; `graphql-cli-core` runtime awaits C-P2.
 
 ---
 

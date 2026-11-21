@@ -31,11 +31,20 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "clean": "rm -rf dist node_modules .turbo *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@corpdk/graphql-input-zod": "workspace:^",
+    "graphql": "^16.13.2"
+  },
+  "peerDependencies": {
+    "graphql": "^16 || ^17"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
-    "typescript": "^6.0.2"
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.2"
   },
   "engines": {
     "node": ">=24.0.0"
