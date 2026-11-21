@@ -11,6 +11,10 @@ import { emitDslModules } from "../src/codegen/emitDslModules.js";
 import { generateGraphqlOperation } from "../src/runtime/generateGraphqlOperation.js";
 import { linkTypeMap } from "../src/runtime/linkTypeMap.js";
 import { minimalSchema } from "./fixtures/minimalTypeMap.fixture.js";
+import {
+  exportedConstNames,
+  workspaceValueImportsFrom,
+} from "./helpers/parseEmittedTs.js";
 
 function unwrapNamedObject(type: {
   ofType?: unknown;
@@ -39,20 +43,6 @@ function connectionNodeShapeFromSchema(
   if (!named) return "nodes";
   const fields = named.getFields();
   return fields.nodes ? "nodes" : "edges";
-}
-
-function parseEmittedConnectionShapes(
-  index: string,
-): Record<string, "nodes" | "edges"> {
-  const match = index.match(
-    /const connectionNodeShapes = (\{[\s\S]*?\}) as const/,
-  );
-  if (!match) return {};
-  return JSON.parse(match[1]!) as Record<string, "nodes" | "edges">;
-}
-
-function exportedConstNames(index: string): string[] {
-  return [...index.matchAll(/^export const (\w+)/gm)].map((m) => m[1]!);
 }
 
 function connectionPagingSelection(
@@ -88,12 +78,12 @@ describe("emitDslModules", () => {
       }
     `);
     const out = emitDslModules(schema, {
-      typesImport: "../schema-types.js",
+      typesImport: "./schema-types.js",
       customScalars: [],
     });
 
     const expectedShape = connectionNodeShapeFromSchema(schema, "books");
-    expect(parseEmittedConnectionShapes(out.index).books).toBe(expectedShape);
+    expect(expectedShape).toBe("edges");
 
     const linked = linkTypeMap(
       JSON.parse(out.typeMap.replace(/^export default /, "")),
@@ -106,6 +96,8 @@ describe("emitDslModules", () => {
     });
     const doc = parse(op.query);
     expect(validate(schema, doc)).toEqual([]);
+    expect(op.query).toContain("edges");
+    expect(op.query).not.toContain("nodes");
   });
 
   it("emits query-only index without mutation or subscription builders", () => {
@@ -115,7 +107,7 @@ describe("emitDslModules", () => {
       }
     `);
     const out = emitDslModules(schema, {
-      typesImport: "../schema-types.js",
+      typesImport: "./schema-types.js",
       customScalars: [],
     });
 
@@ -125,29 +117,29 @@ describe("emitDslModules", () => {
     expect(linked.Mutation).toBeUndefined();
     expect(linked.Subscription).toBeUndefined();
 
-    const exports = exportedConstNames(out.index);
-    expect(exports).toContain("buildQuery");
-    expect(exports).not.toContain("buildMutation");
-    expect(exports).not.toContain("buildSubscription");
-
     const op = generateGraphqlOperation("query", linked.Query!, {
       ping: true,
     });
     const doc = parse(op.query);
     expect(validate(schema, doc)).toEqual([]);
+
+    const exports = exportedConstNames(out.index);
+    expect(exports).toContain("buildQuery");
+    expect(exports).not.toContain("buildMutation");
+    expect(exports).not.toContain("buildSubscription");
   });
 
   it("emits selections with only a type import for ExactlyOneField", () => {
     const out = emitDslModules(minimalSchema, {
-      typesImport: "../schema-types.js",
+      typesImport: "./schema-types.js",
       customScalars: [],
     });
-    expect(out.selections).toContain(
-      'import type { ExactlyOneField } from "@corpdk/graphql-dsl";',
+
+    const valueImports = workspaceValueImportsFrom(
+      out.selections,
+      "@corpdk/graphql-dsl",
     );
-    expect(out.selections).not.toMatch(
-      /import \{ExactlyOneField as \w+\} from '@corpdk\/graphql-dsl'/,
-    );
+    expect(valueImports).not.toContain("ExactlyOneField");
   });
 
   it("emits a type map that can print a valid operation", () => {

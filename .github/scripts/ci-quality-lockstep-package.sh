@@ -31,3 +31,8 @@ if [[ "${FILTER}" == "@corpdk/create-ds" ]]; then
   echo "Running create-ds canonical drift check…"
   node "${ROOT}/engines/create-ds/dist/scripts/check-canonical.js"
 fi
+
+if [[ "${FILTER}" == "@corpdk/graphql-dsl" ]]; then
+  echo "Running graphql-dsl self-containment guard (R-42)…"
+  node "${ROOT}/libraries/graphql-dsl/scripts/check-self-contained.mjs"
+fi
