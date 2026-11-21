@@ -35,4 +35,6 @@ fi
 if [[ "${FILTER}" == "@corpdk/graphql-dsl" ]]; then
   echo "Running graphql-dsl self-containment guard (R-42)…"
   node "${ROOT}/libraries/graphql-dsl/scripts/check-self-contained.mjs"
+  echo "Running graphql-dsl typecheck (R-05 upstream suite)…"
+  pnpm --filter "${FILTER}" typecheck
 fi
