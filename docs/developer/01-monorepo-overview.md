@@ -23,7 +23,7 @@ coding-templates/
 │   ├── dal-core/           (@corpdk/dal-core)            DAL shared types, filters, scalars, mutation error taxonomy
 │   ├── dal-codegen/        (@corpdk/dal-codegen)         Drizzle → GraphQL SDL + repositories + resolvers codegen CLI
 │   ├── engine-kit/         (@corpdk/engine-kit)          Shared generator engine kit (doc 15; DS-P0b)
-│   ├── graphql-cli-core/   (@corpdk/graphql-cli-core)    CLI runtime + codegen (doc 14; C-P1+)
+│   ├── graphql-cli-core/   (@corpdk/graphql-cli-core)    CLI codegen (C-P1); runtime C-P2 (doc 14)
 │   ├── graphql-dsl/        (@corpdk/graphql-dsl)         Typed selection DSL (doc 13; P1b)
 │   ├── graphql-input-zod/  (@corpdk/graphql-input-zod)   Input Zod codegen runtime (doc 13; P1a)
 │   ├── pub-sub/            (@corpdk/pub-sub)             Plugin-style GraphQL pub/sub factory (memory + Redis)
@@ -48,7 +48,7 @@ coding-templates/
     ├── ds-ddb/      (@corpdk/ds-ddb)       GraphQL Yoga + DocumentDB + Zod
     ├── ds-file/     (@corpdk/ds-file)      GraphQL Yoga + JSON/YAML file storage + Zod
     ├── ds-sdk/      (@corpdk/ds-sdk)       Auto-generated TypedDocumentNode SDK
-    └── ds-cli/      (@corpdk/ds-cli)       Auto-generated CLI for LLM/automation access
+    └── ds-cli/      (@corpdk/ds-cli)       Private sample CLI (doc 14 §2.2; legacy preset until C-P3)
 ```
 
 ---
@@ -57,19 +57,19 @@ coding-templates/
 
 ### Template apps
 
-| Package       | Scope                 | Description                                                                                                               |
-| ------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `ui`          | `@corpdk/ui`          | Standard Next.js UI using Apollo Client for GraphQL                                                                       |
-| `ui-hprt`     | `@corpdk/ui-hprt`     | High-performance real-time UI using urql + Graphcache                                                                     |
-| `ui-showcase` | `@corpdk/ui-showcase` | Storybook showcase — visual testing for all 6 shared `packages/ui-*` components; `pnpm storybook`                         |
-| `ds`          | `@corpdk/ds`          | GraphQL Yoga + Drizzle (PostgreSQL / MySQL / SQLite / CockroachDB) — primary/default relational DS                        |
-| `ds-no-sql`   | `@corpdk/ds-no-sql`   | GraphQL Yoga + Prisma for databases Drizzle does not support (e.g. MongoDB, DocumentDB via Prisma connector)              |
-| `ds-cdb`      | `@corpdk/ds-cdb`      | GraphQL Yoga + Couchbase SDK + Zod                                                                                        |
-| `ds-mongo`    | `@corpdk/ds-mongo`    | GraphQL Yoga + MongoDB native driver + Zod                                                                                |
-| `ds-ddb`      | `@corpdk/ds-ddb`      | GraphQL Yoga + DocumentDB + Zod                                                                                           |
-| `ds-file`     | `@corpdk/ds-file`     | GraphQL Yoga + JSON/YAML file storage + Zod (zero external dependencies)                                                  |
-| `ds-sdk`      | `@corpdk/ds-sdk`      | Auto-generated TypedDocumentNode SDK shared by all DS variants                                                            |
-| `ds-cli`      | `@corpdk/ds-cli`      | Auto-generated CLI (queries, mutations, subscriptions) for LLM/automation access; ships with a man page and GNU info page |
+| Package       | Scope                 | Description                                                                                                                                                        |
+| ------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ui`          | `@corpdk/ui`          | Standard Next.js UI using Apollo Client for GraphQL                                                                                                                |
+| `ui-hprt`     | `@corpdk/ui-hprt`     | High-performance real-time UI using urql + Graphcache                                                                                                              |
+| `ui-showcase` | `@corpdk/ui-showcase` | Storybook showcase — visual testing for all 6 shared `packages/ui-*` components; `pnpm storybook`                                                                  |
+| `ds`          | `@corpdk/ds`          | GraphQL Yoga + Drizzle (PostgreSQL / MySQL / SQLite / CockroachDB) — primary/default relational DS                                                                 |
+| `ds-no-sql`   | `@corpdk/ds-no-sql`   | GraphQL Yoga + Prisma for databases Drizzle does not support (e.g. MongoDB, DocumentDB via Prisma connector)                                                       |
+| `ds-cdb`      | `@corpdk/ds-cdb`      | GraphQL Yoga + Couchbase SDK + Zod                                                                                                                                 |
+| `ds-mongo`    | `@corpdk/ds-mongo`    | GraphQL Yoga + MongoDB native driver + Zod                                                                                                                         |
+| `ds-ddb`      | `@corpdk/ds-ddb`      | GraphQL Yoga + DocumentDB + Zod                                                                                                                                    |
+| `ds-file`     | `@corpdk/ds-file`     | GraphQL Yoga + JSON/YAML file storage + Zod (zero external dependencies)                                                                                           |
+| `ds-sdk`      | `@corpdk/ds-sdk`      | Auto-generated TypedDocumentNode SDK shared by all DS variants                                                                                                     |
+| `ds-cli`      | `@corpdk/ds-cli`      | Private sample automation CLI ([design §2.2](14-graphql-cli-generator.md#22-monorepo-dogfood-templatesds-cli)); legacy `@corpdk/codegen-cli` preset until CLI C-P3 |
 
 ### Shared packages
 
@@ -85,21 +85,21 @@ coding-templates/
 
 ### Engines and libraries
 
-| Package              | Scope                        | Description                                                                      |
-| -------------------- | ---------------------------- | -------------------------------------------------------------------------------- |
-| `create-app`         | `@corpdk/create-app`         | Interactive CLI scaffolding tool                                                 |
-| `create-ds`          | `@corpdk/create-ds`          | DS scaffold + DAL automation upgrade CLI ([guide](ds-automation-upgrades.md))    |
-| `create-graphql-sdk` | `@corpdk/create-graphql-sdk` | SDK scaffold engine ([design](13-graphql-sdk-generator.md); stub until P1c)      |
-| `create-graphql-cli` | `@corpdk/create-graphql-cli` | CLI scaffold engine ([design](14-graphql-cli-generator.md); stub until C-P2)     |
-| `codegen-cli`        | `@corpdk/codegen-cli`        | GraphQL codegen plugin for resolver types + SDK generation                       |
-| `dal-core`           | `@corpdk/dal-core`           | DAL shared types, filters, query translation, mutation errors                    |
-| `dal-codegen`        | `@corpdk/dal-codegen`        | Drizzle → GraphQL SDL + repositories + resolvers codegen                         |
-| `engine-kit`         | `@corpdk/engine-kit`         | Shared `create-*` engine kit ([design](15-create-ds-generator-integration.md))   |
-| `graphql-cli-core`   | `@corpdk/graphql-cli-core`   | GraphQL automation CLI runtime + codegen ([design](14-graphql-cli-generator.md)) |
-| `graphql-dsl`        | `@corpdk/graphql-dsl`        | Typed selection DSL ([design](13-graphql-sdk-generator.md))                      |
-| `graphql-input-zod`  | `@corpdk/graphql-input-zod`  | GraphQL input Zod codegen runtime ([design](13-graphql-sdk-generator.md))        |
-| `pub-sub`            | `@corpdk/pub-sub`            | `createAppPubSub<T>()` — selects Redis or in-memory pub/sub                      |
-| `scalar-zod`         | `@corpdk/scalar-zod`         | Shared scalar validation rules ([design](13-graphql-sdk-generator.md))           |
+| Package              | Scope                        | Description                                                                         |
+| -------------------- | ---------------------------- | ----------------------------------------------------------------------------------- |
+| `create-app`         | `@corpdk/create-app`         | Interactive CLI scaffolding tool                                                    |
+| `create-ds`          | `@corpdk/create-ds`          | DS scaffold + DAL automation upgrade CLI ([guide](ds-automation-upgrades.md))       |
+| `create-graphql-sdk` | `@corpdk/create-graphql-sdk` | SDK scaffold engine ([design](13-graphql-sdk-generator.md); stub until P1c)         |
+| `create-graphql-cli` | `@corpdk/create-graphql-cli` | CLI scaffold engine ([design](14-graphql-cli-generator.md); stub until C-P2)        |
+| `codegen-cli`        | `@corpdk/codegen-cli`        | GraphQL codegen plugin for resolver types + SDK generation                          |
+| `dal-core`           | `@corpdk/dal-core`           | DAL shared types, filters, query translation, mutation errors                       |
+| `dal-codegen`        | `@corpdk/dal-codegen`        | Drizzle → GraphQL SDL + repositories + resolvers codegen                            |
+| `engine-kit`         | `@corpdk/engine-kit`         | Shared `create-*` engine kit ([design](15-create-ds-generator-integration.md))      |
+| `graphql-cli-core`   | `@corpdk/graphql-cli-core`   | CLI codegen (C-P1); runtime stub until C-P2 ([design](14-graphql-cli-generator.md)) |
+| `graphql-dsl`        | `@corpdk/graphql-dsl`        | Typed selection DSL ([design](13-graphql-sdk-generator.md))                         |
+| `graphql-input-zod`  | `@corpdk/graphql-input-zod`  | GraphQL input Zod codegen runtime ([design](13-graphql-sdk-generator.md))           |
+| `pub-sub`            | `@corpdk/pub-sub`            | `createAppPubSub<T>()` — selects Redis or in-memory pub/sub                         |
+| `scalar-zod`         | `@corpdk/scalar-zod`         | Shared scalar validation rules ([design](13-graphql-sdk-generator.md))              |
 
 For versioning strategy and key design decisions (module system, HTTP/WS routing, SDK strategy, repository pattern, pub/sub), see [Monorepo Design](../architecture/02-monorepo-design.md).
 

@@ -101,7 +101,9 @@ See [DS subscription transport (SSE)](../developer/11-ds-subscription-sse.md) fo
 
 ## Generated CLI (`ds-cli`)
 
-Every DS variant runs `graphql-codegen` with the `@corpdk/codegen-cli` preset alongside the standard `client` preset. This generates three files in `templates/ds-cli/src/generated/` (and the equivalent path in scaffolded projects):
+> **Target (doc 14):** Automation CLIs are scaffolded by `create-graphql-cli`, wrap the service SDK, and codegen via `@corpdk/graphql-cli-core/codegen` (relation-ids selections, `GRAPHQL_HTTP_URL`, man/texi). **`@corpdk/codegen-cli` is deprecated**; preset removal from DS `codegen.ts` is **CLI C-P3** (see [14-graphql-cli-generator.md](../developer/14-graphql-cli-generator.md)).
+
+**Legacy today (until C-P3):** every DS variant runs `graphql-codegen` with the `@corpdk/codegen-cli` preset alongside the standard `client` preset. This generates three files in `templates/ds-cli/src/generated/` (and the equivalent path in scaffolded projects):
 
 | File               | Purpose                                                                                     |
 | ------------------ | ------------------------------------------------------------------------------------------- |

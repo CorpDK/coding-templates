@@ -2,21 +2,22 @@
 
 Living execution plan for the SDK, CLI, and DS-generator designs ([13](13-graphql-sdk-generator.md), [14](14-graphql-cli-generator.md), [15](15-create-ds-generator-integration.md)). **B0, design merges, and Wave 1 are complete** on `main` (`2a00576`).
 
-**Status:** **Wave 1 complete** — P1a ([#35](https://github.com/CorpDK/coding-templates/pull/35)), DS-P0b ([#36](https://github.com/CorpDK/coding-templates/pull/36)), Monorepo CI ([#37](https://github.com/CorpDK/coding-templates/pull/37)), lockstep quality + CalVer gate ([#38](https://github.com/CorpDK/coding-templates/pull/38)), OIDC-safe publish dispatch ([#39](https://github.com/CorpDK/coding-templates/pull/39)), live lockstep **`2026.10.0-alpha.16`** ([#40](https://github.com/CorpDK/coding-templates/pull/40)). **Wave 2 (current):** P1b `graphql-dsl`, C-P1 `graphql-cli-core` — four generator npm names remain scaffold/stub (`graphql-dsl`, `graphql-cli-core`, `create-graphql-sdk`, `create-graphql-cli`) until those phases land.
+**Status:** **Wave 1 complete** — P1a ([#35](https://github.com/CorpDK/coding-templates/pull/35)), DS-P0b ([#36](https://github.com/CorpDK/coding-templates/pull/36)), Monorepo CI ([#37](https://github.com/CorpDK/coding-templates/pull/37)), lockstep quality + CalVer gate ([#38](https://github.com/CorpDK/coding-templates/pull/38)), OIDC-safe publish dispatch ([#39](https://github.com/CorpDK/coding-templates/pull/39)), live lockstep **`2026.10.0-alpha.16`** ([#40](https://github.com/CorpDK/coding-templates/pull/40)). **Wave 2 (current):** P1b `graphql-dsl`, C-P1 `graphql-cli-core` codegen — `create-graphql-sdk` and `create-graphql-cli` remain stub; `graphql-cli-core` runtime awaits C-P2.
 
 ---
 
 ## Achieved (through Wave 1 + publish train)
 
-| Milestone                                       | Evidence                                                                                                            |
-| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| Cross-design docs at rev 13 / 6 / 6             | `docs/developer/13–15` on `main`                                                                                    |
-| Seven npm placeholders + lockstep CalVer        | Workspace packages; `PUBLISH_ORDER` in [04-npm-publish-ds-automation.md](../admin/04-npm-publish-ds-automation.md)  |
-| Manual B0 bootstrap + GitHub trusted publishing | `scripts/npm-b0-bootstrap.sh`, admin doc § Generator B0                                                             |
-| **Wave 1 implementation**                       | `scalar-zod`, `graphql-input-zod`, `dal-codegen` wiring (P1a); `engine-kit` + `create-ds` refactor (DS-P0b)         |
-| **Monorepo CI**                                 | Orchestrated Monorepo quality (12 lockstep packages + `quality-templates`), Sonar, publish dispatch on the same SHA |
-| **Lockstep npm `latest`**                       | All twelve `@corpdk/*` DS automation packages at **`2026.10.0-alpha.16`** with provenance (publish run after #40)   |
-| Typed scaffolds for remaining phases            | Stub `src/` on generator packages not yet implemented (P1b, P1c, P2, C-P1–C-P3)                                     |
+| Milestone                                       | Evidence                                                                                                              |
+| ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Cross-design docs at rev 13 / 6 / 6             | `docs/developer/13–15` on `main`                                                                                      |
+| Seven npm placeholders + lockstep CalVer        | Workspace packages; `PUBLISH_ORDER` in [04-npm-publish-ds-automation.md](../admin/04-npm-publish-ds-automation.md)    |
+| Manual B0 bootstrap + GitHub trusted publishing | `scripts/npm-b0-bootstrap.sh`, admin doc § Generator B0                                                               |
+| **Wave 1 implementation**                       | `scalar-zod`, `graphql-input-zod`, `dal-codegen` wiring (P1a); `engine-kit` + `create-ds` refactor (DS-P0b)           |
+| **Monorepo CI**                                 | Orchestrated Monorepo quality (12 lockstep packages + `quality-templates`), Sonar, publish dispatch on the same SHA   |
+| **Lockstep npm `latest`**                       | All twelve `@corpdk/*` DS automation packages at **`2026.10.0-alpha.16`** with provenance (publish run after #40)     |
+| Typed scaffolds for remaining phases            | Stub `src/` on generator packages not yet implemented (P1b, P1c, P2, C-P2, C-P3)                                      |
+| **C-P1 codegen** (`graphql-cli-core`)           | Relation-ids emitter, man/texi, DAL golden tests; R-C01, R-C02, R-C17 closed in [doc 14](14-graphql-cli-generator.md) |
 
 **Still legacy until later phases:** `templates/ds-sdk` (`client-preset`), `templates/ds-cli` (`@corpdk/codegen-cli` preset). **`create-ds` uses `@corpdk/engine-kit`** after DS-P0b (#36).
 
@@ -149,4 +150,4 @@ Canonical **publish order** remains [doc 15 §4.3](15-create-ds-generator-integr
 - Coding standards: [08-coding-guidelines.md](08-coding-guidelines.md)
 - Publish: [04-npm-publish-ds-automation.md](../admin/04-npm-publish-ds-automation.md)
 
-**Last updated:** 2026-11-17
+**Last updated:** 2026-11-22
