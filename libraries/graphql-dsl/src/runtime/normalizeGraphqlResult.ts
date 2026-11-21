@@ -173,23 +173,25 @@ export function normalizeGraphqlResult<R>(
 
   if (result.data && typeof result.data === "object") {
     const payload = result.data as Record<string, unknown>;
-    for (const field of userFields) {
-      const nested = Object.values(payload).find(
-        (v) => v && typeof v === "object",
-      ) as Record<string, unknown> | undefined;
-      const container = nested ?? payload;
-      const value = container[field];
-      if (Array.isArray(value) && value.length > 0) {
-        return {
-          ok: false,
-          error: makeError("userErrors", {
-            message: `Mutation returned ${field}`,
-            field,
-            userErrors: value,
-            data: result.data,
-            operationName: options?.operationName,
-          }),
-        };
+    for (const opField of Object.keys(payload)) {
+      if (opField.startsWith("__")) continue;
+      const opPayload = payload[opField];
+      if (!opPayload || typeof opPayload !== "object") continue;
+      const root = opPayload as Record<string, unknown>;
+      for (const field of userFields) {
+        const value = root[field];
+        if (Array.isArray(value) && value.length > 0) {
+          return {
+            ok: false,
+            error: makeError("userErrors", {
+              message: `Mutation returned ${field}`,
+              field,
+              userErrors: value,
+              data: result.data,
+              operationName: options?.operationName,
+            }),
+          };
+        }
       }
     }
   }

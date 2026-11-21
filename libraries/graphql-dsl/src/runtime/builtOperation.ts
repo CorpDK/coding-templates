@@ -6,7 +6,11 @@ export type BuiltOperation<
   Result,
   Vars extends Record<string, unknown> | undefined = undefined,
 > = GraphqlOperation & {
-  document: TypedDocumentNode<Result, Vars>;
+  /** Set when the SDK binds a parsed document; ad-hoc `build*` operations omit this. */
+  document?: TypedDocumentNode<
+    Result,
+    Vars extends Record<string, unknown> ? Vars : Record<string, never>
+  >;
 };
 
 export type ResultOf<Op> =

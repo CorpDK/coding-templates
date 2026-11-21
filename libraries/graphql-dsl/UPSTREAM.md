@@ -39,6 +39,34 @@
 | ---------- | --------- | ----------------------------------------------- |
 | 2026-11-22 | `15f27b9` | Initial fork into `libraries/graphql-dsl` (P1b) |
 
+## Sonar inherited paths (R-30 / doc 13 §16.2.1)
+
+These paths are listed in the repo root `sonar-project.properties` under
+`sonar.coverage.exclusions` and `sonar.cpd.exclusions`. They track genql @ `15f27b9`
+with only mechanical ESM/import edits until rewritten. **Fork-owned** code under
+`libraries/graphql-dsl` (runtime printer/typing/helpers, `emitDslModules`,
+`renderBoundIndex`, `aliasSelection`, tests) stays in Sonar new-code scope.
+
+| Path |
+| --- |
+| `libraries/graphql-dsl/src/codegen/render/common/comment.ts` |
+| `libraries/graphql-dsl/src/codegen/render/common/excludedTypes.ts` |
+| `libraries/graphql-dsl/src/codegen/render/common/renderTyping.ts` |
+| `libraries/graphql-dsl/src/codegen/render/common/support.ts` |
+| `libraries/graphql-dsl/src/codegen/render/requestTypes/objectType.ts` |
+| `libraries/graphql-dsl/src/codegen/render/requestTypes/renderRequestTypes.ts` |
+| `libraries/graphql-dsl/src/codegen/render/requestTypes/requestTypeName.ts` |
+| `libraries/graphql-dsl/src/codegen/render/requestTypes/unionType.ts` |
+| `libraries/graphql-dsl/src/codegen/render/typeMap/objectType.ts` |
+| `libraries/graphql-dsl/src/codegen/render/typeMap/renderTypeMap.ts` |
+| `libraries/graphql-dsl/src/codegen/render/typeMap/scalarType.ts` |
+| `libraries/graphql-dsl/src/codegen/render/typeMap/support.ts` |
+| `libraries/graphql-dsl/src/codegen/render/typeMap/unionType.ts` |
+| `libraries/graphql-dsl/src/runtime/linkTypeMap.ts` |
+| `libraries/graphql-dsl/src/runtime/types.ts` |
+
+**Tests:** `libraries/graphql-dsl/test` is registered in `sonar.tests`.
+
 ## Quarterly review
 
 Reconcile new upstream commits; note applicable fixes here before cherry-picking.

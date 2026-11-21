@@ -38,4 +38,20 @@ describe("normalizeGraphqlResult", () => {
       expect(result.error.kind).toBe("userErrors");
     }
   });
+
+  it("ignores userErrors under __meta, not under operation root fields", () => {
+    const result = normalizeGraphqlResult({
+      data: {
+        __meta: { userErrors: [{ message: "ignored" }] },
+        createItem: { id: "1", userErrors: [] },
+      },
+    });
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.data).toEqual({
+        __meta: { userErrors: [{ message: "ignored" }] },
+        createItem: { id: "1", userErrors: [] },
+      });
+    }
+  });
 });
