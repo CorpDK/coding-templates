@@ -74,13 +74,13 @@ export function emitMan(
   const binGroff = groffEscape(bin);
 
   return [
-    String.raw`.TH ${binGroff.toUpperCase()} 1 "" "${bin} ${version}" "User Commands"`,
+    `.TH ${binGroff.toUpperCase()} 1 "" "${bin} ${version}" "User Commands"`,
     "",
     ".SH NAME",
-    `${binGroff} \\- Auto\\-generated CLI for a GraphQL API`,
+    String.raw`${binGroff} \- Auto\-generated CLI for a GraphQL API`,
     "",
     ".SH SYNOPSIS",
-    String.raw`.B ${binGroff}`,
+    `.B ${binGroff}`,
     ".I command",
     "[options]",
     "",

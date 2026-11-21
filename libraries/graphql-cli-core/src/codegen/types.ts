@@ -140,7 +140,7 @@ export interface ExtractedOperation {
   description?: string;
   deprecated?: string;
   destructive: boolean;
-  paginated?: CommandDescriptor["paginated"];
+  paginated: CommandDescriptor["paginated"];
   args: ArgDescriptor[];
   returnType: GraphQLOutputType;
   selection: SelectionTree;

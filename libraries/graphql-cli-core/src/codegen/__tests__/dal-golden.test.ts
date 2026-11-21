@@ -118,7 +118,6 @@ describe("DAL golden selections", () => {
             ? schema.getMutationType()
             : schema.getSubscriptionType();
       const doc = buildOperationDocument(
-        schema,
         op.kind,
         op.field,
         op.args,

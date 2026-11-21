@@ -35,7 +35,7 @@ const DEFAULT_DESTRUCTIVE = ["delete*", "bulkDelete*", "bulkUpdate*ByFilter"];
 
 export function globMatch(pattern: string, value: string): boolean {
   const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, String.raw`\$&`);
-  const re = new RegExp(`^${escaped.replace(/\*/g, ".*")}$`);
+  const re = new RegExp(`^${escaped.replaceAll("*", ".*")}$`);
   return re.test(value);
 }
 
@@ -119,6 +119,21 @@ export function resolveCommandNames(
   return result;
 }
 
+function reservedCommandPrefix(kind: OperationKind, cmd: string): string {
+  if (kind === "query") return `query-${cmd}`;
+  if (kind === "mutation") return `mutate-${cmd}`;
+  return `subscribe-${cmd}`;
+}
+
+function includeListForKind(
+  kind: OperationKind,
+  config: IncludeExcludeConfig,
+): string[] {
+  if (kind === "query") return config.queries;
+  if (kind === "mutation") return config.mutations;
+  return config.subscriptions;
+}
+
 function guardReserved(
   cmd: string,
   kind: OperationKind,
@@ -126,12 +141,7 @@ function guardReserved(
   warnings: string[],
 ): string {
   if (!RESERVED_COMMANDS.has(cmd)) return cmd;
-  const prefixed =
-    kind === "query"
-      ? `query-${cmd}`
-      : kind === "mutation"
-        ? `mutate-${cmd}`
-        : `subscribe-${cmd}`;
+  const prefixed = reservedCommandPrefix(kind, cmd);
   warnings.push(
     `Command "${cmd}" is reserved; renamed to "${prefixed}" for ${kind} field "${field}"`,
   );
@@ -148,18 +158,8 @@ export function fieldIncluded(
   include: IncludeExcludeConfig,
   exclude: IncludeExcludeConfig,
 ): boolean {
-  const incList =
-    kind === "query"
-      ? include.queries
-      : kind === "mutation"
-        ? include.mutations
-        : include.subscriptions;
-  const excList =
-    kind === "query"
-      ? exclude.queries
-      : kind === "mutation"
-        ? exclude.mutations
-        : exclude.subscriptions;
+  const incList = includeListForKind(kind, include);
+  const excList = includeListForKind(kind, exclude);
 
   if (excList.some((p) => globMatch(p, fieldName))) return false;
 

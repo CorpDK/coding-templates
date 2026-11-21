@@ -14,6 +14,7 @@ import type {
   ExtractedOperation,
   IncludeExcludeConfig,
   LookupIndex,
+  OperationKind,
   SelectionConfig,
 } from "./types.js";
 import {
@@ -22,7 +23,6 @@ import {
   operationKey,
   resolveReservedArgFlag,
 } from "./naming.js";
-import type { OperationKind } from "./types.js";
 import { isConnectionField } from "./lookup-index.js";
 import { emitSelectionForOperation } from "./selection.js";
 
@@ -39,10 +39,6 @@ function describeArg(arg: GraphQLArgument, warnings: string[]): ArgDescriptor {
   let kind: ArgDescriptor["kind"] = "scalar";
   if (isEnumType(named)) kind = "enum";
   else if (isInputObjectType(named)) kind = "input";
-
-  const list =
-    isListType(arg.type) ||
-    (isNonNullType(arg.type) && isListType(arg.type.ofType));
 
   const flag = resolveReservedArgFlag(arg.name, warnings);
 
@@ -118,7 +114,6 @@ export function extractOperations(
   const selection = options.selection ?? { policy: "relation-ids" as const };
   const destructivePatterns = options.guard?.destructive;
 
-  const warnings: string[] = [];
   const ops: ExtractedOperation[] = [];
 
   const roots: [OperationKind, ReturnType<GraphQLSchema["getQueryType"]>][] = [
@@ -177,6 +172,5 @@ export function extractOperations(
     }
   }
 
-  void warnings;
   return ops;
 }

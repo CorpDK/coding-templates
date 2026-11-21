@@ -1,6 +1,5 @@
 import {
   type GraphQLOutputType,
-  type GraphQLSchema,
   getNamedType,
   isEnumType,
   isScalarType,
@@ -37,7 +36,6 @@ export function renderSelectionSet(tree: SelectionTree): string {
 }
 
 export function buildOperationDocument(
-  schema: GraphQLSchema,
   kind: OperationKind,
   fieldName: string,
   args: ArgDescriptor[],
@@ -58,6 +56,5 @@ export function buildOperationDocument(
     : `${fieldName}${fieldArgStr}`;
 
   const opName = toPascalCase(fieldName);
-  void schema;
   return `${kind} ${opName}${varStr} { ${fieldPart} }`;
 }

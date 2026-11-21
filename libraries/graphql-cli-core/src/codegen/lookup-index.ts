@@ -8,21 +8,22 @@ import {
   getNamedType,
   isEnumType,
   isInterfaceType,
-  isListType,
   isNonNullType,
   isObjectType,
   isScalarType,
-  isUnionType,
 } from "graphql";
-import type {
-  LookupCandidate,
-  LookupIndex,
-  LookupOverride,
-  SelectionConfig,
+import {
+  type IncludeExcludeConfig,
+  type LookupCandidate,
+  type LookupIndex,
+  type OperationKind,
+  type SelectionConfig,
+  CodegenError,
 } from "./types.js";
-import { CodegenError } from "./types.js";
 import { fieldIncluded, operationKey, resolveCommandNames } from "./naming.js";
-import type { IncludeExcludeConfig, OperationKind } from "./types.js";
+import {
+  validateLookupConfig as runValidateLookupConfig,
+} from "./lookup-validate.js";
 
 function isLeafInput(type: GraphQLInputType): boolean {
   const named = getNamedType(type);
@@ -220,52 +221,6 @@ export function buildLookupIndex(
   return { byType, commandByField };
 }
 
-export function validateLookupConfig(
-  schema: GraphQLSchema,
-  lookupConfig: SelectionConfig["lookup"] = {},
-): void {
-  if (!lookupConfig) return;
-  const typeMap = schema.getTypeMap();
-  for (const [typeName, entry] of Object.entries(lookupConfig)) {
-    const gqlType = typeMap[typeName];
-    if (!gqlType) {
-      throw new CodegenError(
-        `selection.lookup.${typeName}: type "${typeName}" does not exist in the schema`,
-      );
-    }
-    if (typeof entry === "string") {
-      const query = schema.getQueryType();
-      if (!query?.getFields()[entry]) {
-        throw new CodegenError(
-          `selection.lookup.${typeName}: query field "${entry}" does not exist`,
-        );
-      }
-      const candidates = buildTypeLookups(schema).get(typeName) ?? [];
-      if (!candidates.some((c) => c.fieldName === entry)) {
-        throw new CodegenError(
-          `selection.lookup.${typeName}: "${entry}" is not a valid lookup for ${typeName}`,
-        );
-      }
-      continue;
-    }
-    if (entry && typeof entry === "object" && "fields" in entry) {
-      if (!isObjectType(gqlType) && !isInterfaceType(gqlType)) {
-        throw new CodegenError(
-          `selection.lookup.${typeName}: forced stub fields require an object or interface type`,
-        );
-      }
-      const fields = gqlType.getFields();
-      for (const fieldName of entry.fields) {
-        if (!fields[fieldName]) {
-          throw new CodegenError(
-            `selection.lookup.${typeName}: field "${fieldName}" does not exist on type ${typeName}`,
-          );
-        }
-      }
-    }
-  }
-}
-
 function buildTypeLookups(
   schema: GraphQLSchema,
 ): Map<string, LookupCandidate[]> {
@@ -280,6 +235,13 @@ function buildTypeLookups(
     byType.set(lookup.typeName, list);
   }
   return byType;
+}
+
+export function validateLookupConfig(
+  schema: GraphQLSchema,
+  lookupConfig: SelectionConfig["lookup"] = {},
+): void {
+  runValidateLookupConfig(schema, lookupConfig, buildTypeLookups(schema));
 }
 
 export function isEntityType(

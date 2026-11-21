@@ -6,7 +6,6 @@ import {
   getNamedType,
   isEnumType,
   isInterfaceType,
-  isListType,
   isNonNullType,
   isObjectType,
   isScalarType,
@@ -28,6 +27,9 @@ import {
   resolveEntityStubFields,
 } from "./lookup-index.js";
 import { toKebabCase } from "./naming.js";
+import { findFocusEntity } from "./selection-focus.js";
+
+export { findFocusEntity } from "./selection-focus.js";
 
 interface EmitCtx {
   schema: GraphQLSchema;
@@ -65,60 +67,6 @@ function fieldHasRequiredArgs(field: GraphQLField<unknown, unknown>): boolean {
   );
 }
 
-export function findFocusEntity(
-  schema: GraphQLSchema,
-  returnType: GraphQLOutputType,
-  lookupIndex: LookupIndex,
-  lookupConfig: SelectionConfig["lookup"],
-  operationField?: string,
-): string | null {
-  const named = getNamedType(returnType);
-
-  if (isUnionType(named) || isInterfaceType(named)) {
-    return null;
-  }
-
-  if (isObjectType(named)) {
-    if (isEntityType(schema, named.name, lookupIndex, lookupConfig)) {
-      return named.name;
-    }
-
-    if (isConnectionType(named.name, schema)) {
-      const nodes = named.getFields().nodes;
-      if (nodes) {
-        const item = getNamedType(nodes.type);
-        if (
-          isObjectType(item) &&
-          isEntityType(schema, item.name, lookupIndex, lookupConfig)
-        ) {
-          return item.name;
-        }
-      }
-    }
-
-    const payloadLike =
-      named.name.endsWith("Payload") ||
-      named.name.endsWith("Result") ||
-      named.name.endsWith("Connection");
-    if (payloadLike) {
-      for (const [fieldName, field] of Object.entries(named.getFields())) {
-        if (isListType(field.type)) continue;
-        const child = getNamedType(field.type);
-        if (!isObjectType(child)) continue;
-        if (!isEntityType(schema, child.name, lookupIndex, lookupConfig))
-          continue;
-
-        const typeField =
-          child.name.charAt(0).toLowerCase() + child.name.slice(1);
-        if (fieldName === typeField) return child.name;
-        if (operationField && fieldName === operationField) return child.name;
-      }
-    }
-  }
-
-  return null;
-}
-
 function pushFollowUp(
   ctx: EmitCtx,
   path: string,
@@ -150,6 +98,51 @@ function stubSelection(stubFields: string[]): SelectionTree {
   return out;
 }
 
+function skipRelayOpposite(
+  connectionRoot: boolean,
+  fieldName: string,
+  connectionMode: NonNullable<SelectionConfig["connection"]>,
+): boolean {
+  if (!connectionRoot) return false;
+  return (
+    (fieldName === "edges" && connectionMode === "nodes") ||
+    (fieldName === "nodes" && connectionMode === "edges")
+  );
+}
+
+function selectEntityReference(
+  ctx: EmitCtx,
+  childCtx: EmitCtx,
+  fieldPath: string,
+  entityType: GraphQLObjectType,
+  lookupConfig: SelectionConfig["lookup"],
+  expandOverride: boolean,
+): SelectionTree {
+  const forcedStub = forcedStubFields(entityType.name, lookupConfig);
+  const stubFields = resolveEntityStubFields(
+    ctx.schema,
+    entityType.name,
+    ctx.lookupIndex,
+    lookupConfig,
+  );
+  const reachingFocus = entityType.name === ctx.focusEntity;
+  const forceExpand =
+    expandOverride && ctx.operationField in (ctx.config.overrides ?? {});
+
+  if (reachingFocus || forceExpand) {
+    return selectObject(
+      { ...childCtx, insideFocusEntity: true, parentPath: fieldPath },
+      entityType,
+      fieldPath,
+    );
+  }
+
+  const stub =
+    forcedStub && !reachingFocus ? forcedStub : stubFields;
+  pushFollowUp(ctx, fieldPath, entityType.name, stub);
+  return stubSelection(stub);
+}
+
 function selectAbstract(
   ctx: EmitCtx,
   type: import("graphql").GraphQLAbstractType,
@@ -166,19 +159,16 @@ function selectAbstract(
   return tree;
 }
 
-function selectObject(
+function objectSelectionGuard(
   ctx: EmitCtx,
-  objectType: GraphQLObjectType,
-  parentPath: string,
-): SelectionTree {
-  const typeName = objectType.name;
-  const lookupConfig = ctx.config.lookup ?? {};
-
+  typeName: string,
+  lookupConfig: SelectionConfig["lookup"],
+): { stop: SelectionTree } | { childCtx: EmitCtx } {
   if (ctx.pathStack.includes(typeName)) {
     ctx.warnings.push(
       `Cycle at embedded type ${typeName} on operation ${ctx.operationField}; selecting __typename only`,
     );
-    return { __typename: true };
+    return { stop: { __typename: true } };
   }
 
   const isEmbedded = !isEntityType(
@@ -195,132 +185,139 @@ function selectObject(
       ctx.warnings.push(
         `maxWrapperDepth (${maxDepth}) exceeded at ${typeName} on ${ctx.operationField}; selecting __typename only`,
       );
-      return { __typename: true };
+      return { stop: { __typename: true } };
     }
   }
 
   const insideFocus = ctx.insideFocusEntity || typeName === ctx.focusEntity;
-  const childCtx: EmitCtx = {
-    ...ctx,
-    pathStack: [...ctx.pathStack, typeName],
-    wrapperDepth,
-    insideFocusEntity: insideFocus,
-    parentPath,
+  return {
+    childCtx: {
+      ...ctx,
+      pathStack: [...ctx.pathStack, typeName],
+      wrapperDepth,
+      insideFocusEntity: insideFocus,
+      parentPath: ctx.parentPath,
+    },
   };
+}
 
+function appendOneObjectField(
+  ctx: EmitCtx,
+  childCtx: EmitCtx,
+  tree: SelectionTree,
+  parentPath: string,
+  fieldName: string,
+  field: GraphQLField<unknown, unknown>,
+  atOperationRoot: boolean,
+  connectionRoot: boolean,
+  connectionMode: NonNullable<SelectionConfig["connection"]>,
+  lookupConfig: SelectionConfig["lookup"],
+): void {
+  const fieldPath = parentPath ? `${parentPath}.${fieldName}` : fieldName;
+
+  if (skipRelayOpposite(connectionRoot, fieldName, connectionMode)) return;
+  if (fieldHasRequiredArgs(field) && !atOperationRoot) return;
+
+  if (isLeafType(field.type)) {
+    tree[fieldName] = true;
+    return;
+  }
+
+  const expandOverride = ctx.expandFields.has(fieldName);
+
+  if (isConnectionField(ctx.schema, field) && parentPath !== "") {
+    if (!expandOverride) {
+      ctx.warnings.push(
+        `Nested connection "${fieldPath}" skipped on ${ctx.operationField}`,
+      );
+      return;
+    }
+  }
+
+  if (isConnectionField(ctx.schema, field)) {
+    tree[fieldName] = selectConnection(childCtx, field, fieldPath);
+    return;
+  }
+
+  const named = getNamedType(field.type);
+
+  if (isUnionType(named) || isInterfaceType(named)) {
+    tree[fieldName] = selectAbstract(
+      { ...childCtx, parentPath: fieldPath },
+      named,
+    );
+    return;
+  }
+
+  if (!isObjectType(named)) return;
+
+  if (
+    isEntityType(ctx.schema, named.name, ctx.lookupIndex, lookupConfig)
+  ) {
+    tree[fieldName] = selectEntityReference(
+      ctx,
+      childCtx,
+      fieldPath,
+      named,
+      lookupConfig,
+      expandOverride,
+    );
+    return;
+  }
+
+  tree[fieldName] = selectObject(
+    { ...childCtx, parentPath: fieldPath },
+    named,
+    fieldPath,
+  );
+}
+
+function selectObject(
+  ctx: EmitCtx,
+  objectType: GraphQLObjectType,
+  parentPath: string,
+): SelectionTree {
+  const typeName = objectType.name;
+  const lookupConfig = ctx.config.lookup ?? {};
+  const guarded = objectSelectionGuard(
+    { ...ctx, parentPath },
+    typeName,
+    lookupConfig,
+  );
+  if ("stop" in guarded) return guarded.stop;
+
+  const childCtx = { ...guarded.childCtx, parentPath };
   const tree: SelectionTree = {};
   const atOperationRoot = parentPath === "" && !ctx.insideFocusEntity;
-
   const connectionRoot =
     isConnectionType(typeName, ctx.schema) && parentPath === "";
   const connectionMode = ctx.config.connection ?? "nodes";
 
   for (const [fieldName, field] of Object.entries(objectType.getFields())) {
-    const fieldPath = parentPath ? `${parentPath}.${fieldName}` : fieldName;
-
-    if (
-      connectionRoot &&
-      ((fieldName === "edges" && connectionMode === "nodes") ||
-        (fieldName === "nodes" && connectionMode === "edges"))
-    ) {
-      continue;
-    }
-
-    if (fieldHasRequiredArgs(field) && !atOperationRoot) continue;
-
-    if (isLeafType(field.type)) {
-      tree[fieldName] = true;
-      continue;
-    }
-
-    const expandOverride = ctx.expandFields.has(fieldName);
-
-    if (isConnectionField(ctx.schema, field) && parentPath !== "") {
-      if (!expandOverride) {
-        ctx.warnings.push(
-          `Nested connection "${fieldPath}" skipped on ${ctx.operationField}`,
-        );
-        continue;
-      }
-    }
-
-    if (isConnectionField(ctx.schema, field)) {
-      tree[fieldName] = selectConnection(childCtx, field, fieldPath);
-      continue;
-    }
-
-    const named = getNamedType(field.type);
-    const list = isListType(field.type);
-
-    if (isUnionType(named) || isInterfaceType(named)) {
-      tree[fieldName] = selectAbstract(
-        { ...childCtx, parentPath: fieldPath },
-        named,
-      );
-      continue;
-    }
-
-    if (!isObjectType(named)) continue;
-
-    const entity = isEntityType(
-      ctx.schema,
-      named.name,
-      ctx.lookupIndex,
+    appendOneObjectField(
+      ctx,
+      childCtx,
+      tree,
+      parentPath,
+      fieldName,
+      field,
+      atOperationRoot,
+      connectionRoot,
+      connectionMode,
       lookupConfig,
-    );
-
-    if (entity) {
-      const forcedStub = forcedStubFields(named.name, lookupConfig);
-      const stubFields = resolveEntityStubFields(
-        ctx.schema,
-        named.name,
-        ctx.lookupIndex,
-        lookupConfig,
-      );
-
-      const reachingFocus = named.name === ctx.focusEntity;
-      const forceExpand =
-        expandOverride && ctx.operationField in (ctx.config.overrides ?? {});
-
-      if (forcedStub && !reachingFocus && !forceExpand) {
-        tree[fieldName] = stubSelection(forcedStub);
-        pushFollowUp(ctx, fieldPath, named.name, forcedStub);
-      } else if (insideFocus && !forceExpand) {
-        tree[fieldName] = stubSelection(stubFields);
-        pushFollowUp(ctx, fieldPath, named.name, stubFields);
-      } else if (reachingFocus || forceExpand) {
-        tree[fieldName] = selectObject(
-          { ...childCtx, insideFocusEntity: true, parentPath: fieldPath },
-          named,
-          fieldPath,
-        );
-      } else {
-        tree[fieldName] = stubSelection(stubFields);
-        pushFollowUp(ctx, fieldPath, named.name, stubFields);
-      }
-      void list;
-      continue;
-    }
-
-    tree[fieldName] = selectObject(
-      { ...childCtx, parentPath: fieldPath },
-      named,
-      fieldPath,
     );
   }
 
   return tree;
 }
 
-function selectConnection(
+function fillConnectionPrimary(
   ctx: EmitCtx,
-  field: GraphQLField<unknown, unknown>,
+  conn: SelectionTree,
+  connectionType: GraphQLObjectType,
   fieldPath: string,
-): SelectionTree {
-  const connectionType = getNamedType(field.type) as GraphQLObjectType;
-  const conn: SelectionTree = {};
-  const mode = ctx.config.connection ?? "nodes";
-
+  mode: NonNullable<SelectionConfig["connection"]>,
+): void {
   if (mode === "nodes" && connectionType.getFields().nodes) {
     const nodes = connectionType.getFields().nodes;
     const itemType = getNamedType(nodes.type);
@@ -335,7 +332,9 @@ function selectConnection(
         `${fieldPath}.nodes`,
       );
     }
-  } else if (mode === "edges" && connectionType.getFields().edges) {
+    return;
+  }
+  if (mode === "edges" && connectionType.getFields().edges) {
     const edges = connectionType.getFields().edges;
     const edgeType = getNamedType(edges.type);
     if (isObjectType(edgeType)) {
@@ -346,23 +345,40 @@ function selectConnection(
       );
     }
   }
+}
 
+function fillConnectionScalars(
+  ctx: EmitCtx,
+  conn: SelectionTree,
+  connectionType: GraphQLObjectType,
+  fieldPath: string,
+): void {
   for (const [name, cf] of Object.entries(connectionType.getFields())) {
     if (name === "nodes" || name === "edges") continue;
     if (isLeafType(cf.type)) {
       conn[name] = true;
-    } else {
-      const cn = getNamedType(cf.type);
-      if (isObjectType(cn)) {
-        conn[name] = selectObject(
-          { ...ctx, parentPath: `${fieldPath}.${name}` },
-          cn,
-          `${fieldPath}.${name}`,
-        );
-      }
+      continue;
     }
+    const cn = getNamedType(cf.type);
+    if (!isObjectType(cn)) continue;
+    conn[name] = selectObject(
+      { ...ctx, parentPath: `${fieldPath}.${name}` },
+      cn,
+      `${fieldPath}.${name}`,
+    );
   }
+}
 
+function selectConnection(
+  ctx: EmitCtx,
+  field: GraphQLField<unknown, unknown>,
+  fieldPath: string,
+): SelectionTree {
+  const connectionType = getNamedType(field.type) as GraphQLObjectType;
+  const conn: SelectionTree = {};
+  const mode = ctx.config.connection ?? "nodes";
+  fillConnectionPrimary(ctx, conn, connectionType, fieldPath, mode);
+  fillConnectionScalars(ctx, conn, connectionType, fieldPath);
   return conn;
 }
 

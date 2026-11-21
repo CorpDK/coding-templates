@@ -1,4 +1,4 @@
-import type { CommandDescriptor } from "./types.js";
+import type { CommandDescriptor, ExtractedOperation } from "./types.js";
 
 export function emitCommandsModule(commands: CommandDescriptor[]): string {
   const lines: string[] = ["// @generated — do not edit manually"];
@@ -17,8 +17,6 @@ export function emitCommandsModule(commands: CommandDescriptor[]): string {
   lines.push("};", "");
   return lines.join("\n");
 }
-
-import type { ExtractedOperation } from "./types.js";
 
 export function toCommandDescriptors(
   ops: ExtractedOperation[],
