@@ -134,8 +134,7 @@ function pushFollowUp(
     ctx.lookupIndex,
     ctx.config.lookup,
   );
-  const forced = forcedStubFieldsFromConfig(typeName, ctx.config.lookup);
-  if (!command && !forced) return;
+  if (!command) return;
   const flags: Record<string, string> = {};
   for (const f of stubFields) {
     flags[f] = `--${toKebabCase(f)}`;
@@ -143,7 +142,7 @@ function pushFollowUp(
   ctx.followUps.push({
     path,
     type: typeName,
-    command: command ?? "",
+    command,
     flags,
   });
 }

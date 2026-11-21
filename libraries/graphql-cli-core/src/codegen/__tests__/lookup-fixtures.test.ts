@@ -214,11 +214,7 @@ describe("lookup rule fixtures", () => {
       { policy: "relation-ids", lookup: { BadgeView: { fields: ["code"] } } },
     );
     expect(inner.selection.member).toEqual({ code: true });
-    expect(inner.followUps).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({ flags: { code: "--code" } }),
-      ]),
-    );
+    expect(inner.followUps).toHaveLength(0);
     void badgeView;
   });
 

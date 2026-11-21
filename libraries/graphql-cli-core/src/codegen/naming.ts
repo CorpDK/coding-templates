@@ -98,7 +98,7 @@ export function resolveCommandNames(
       continue;
     }
 
-    if (kinds.has("query") && kinds.size > 1) {
+    if (kinds.size > 1) {
       warnings.push(
         `Command name collision for field "${field}" across root types; applying kind prefixes`,
       );

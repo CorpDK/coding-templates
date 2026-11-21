@@ -1,15 +1,9 @@
 import type { CommandDescriptor } from "./types.js";
 
-export function emitCommandsModule(
-  commands: CommandDescriptor[],
-  snapshotSha?: string,
-): string {
+export function emitCommandsModule(commands: CommandDescriptor[]): string {
   const lines: string[] = [
     "// @generated — do not edit manually",
   ];
-  if (snapshotSha) {
-    lines.push(`// SDK snapshot SHA-256: ${snapshotSha}`);
-  }
   lines.push(
     'import type { CommandDescriptor } from "@corpdk/graphql-cli-core/codegen";',
     "",

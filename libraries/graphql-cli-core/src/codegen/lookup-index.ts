@@ -214,6 +214,22 @@ export function validateLookupConfig(
           `selection.lookup.${typeName}: "${entry}" is not a valid lookup for ${typeName}`,
         );
       }
+      continue;
+    }
+    if (entry && typeof entry === "object" && "fields" in entry) {
+      if (!isObjectType(gqlType) && !isInterfaceType(gqlType)) {
+        throw new CodegenError(
+          `selection.lookup.${typeName}: forced stub fields require an object or interface type`,
+        );
+      }
+      const fields = gqlType.getFields();
+      for (const fieldName of entry.fields) {
+        if (!fields[fieldName]) {
+          throw new CodegenError(
+            `selection.lookup.${typeName}: field "${fieldName}" does not exist on type ${typeName}`,
+          );
+        }
+      }
     }
   }
 }

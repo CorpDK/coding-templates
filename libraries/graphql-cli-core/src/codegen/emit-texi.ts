@@ -67,12 +67,9 @@ export function emitTexi(
   const queries = commands.filter((o) => o.kind === "query");
   const mutations = commands.filter((o) => o.kind === "mutation");
   const subs = commands.filter((o) => o.kind === "subscription");
-  const today = new Date().toISOString().split("T")[0];
-
   return [
     String.raw`\input texinfo`,
     "@c @generated — do not edit manually",
-    `@c Generated: ${today}`,
     `@c Compile with: makeinfo ${bin}.texi`,
     "",
     `@settitle ${texEscape(bin)}`,

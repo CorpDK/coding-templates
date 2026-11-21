@@ -68,14 +68,13 @@ export function emitMan(
     defaultUrl = "http://localhost:4000/graphql",
   } = options;
 
-  const today = new Date().toISOString().split("T")[0];
   const queries = commands.filter((o) => o.kind === "query");
   const mutations = commands.filter((o) => o.kind === "mutation");
   const subs = commands.filter((o) => o.kind === "subscription");
   const binGroff = groffEscape(bin);
 
   return [
-    String.raw`.TH ${binGroff.toUpperCase()} 1 "${today}" "${bin} ${version}" "User Commands"`,
+    String.raw`.TH ${binGroff.toUpperCase()} 1 "" "${bin} ${version}" "User Commands"`,
     "",
     ".SH NAME",
     `${binGroff} \\- Auto\\-generated CLI for a GraphQL API`,
