@@ -309,7 +309,9 @@ describe("lookup rule fixtures", () => {
     );
     expect(inner.followUps.every((f) => f.command.length > 0)).toBe(true);
     expect(
-      inner.followUps.find((f) => f.type === "BadgeView" && f.path === "member"),
+      inner.followUps.find(
+        (f) => f.type === "BadgeView" && f.path === "member",
+      ),
     ).toBeUndefined();
   });
 });

@@ -21,11 +21,7 @@ import type {
   SelectionConfig,
 } from "./types.js";
 import { CodegenError } from "./types.js";
-import {
-  fieldIncluded,
-  operationKey,
-  resolveCommandNames,
-} from "./naming.js";
+import { fieldIncluded, operationKey, resolveCommandNames } from "./naming.js";
 import type { IncludeExcludeConfig, OperationKind } from "./types.js";
 
 function isLeafInput(type: GraphQLInputType): boolean {
