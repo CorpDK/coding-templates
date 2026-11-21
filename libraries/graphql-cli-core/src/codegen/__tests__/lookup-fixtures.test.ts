@@ -136,6 +136,21 @@ describe("lookup rule fixtures", () => {
     void GraphQLObjectType;
   });
 
+  it("exclude.queries keeps stub fields aligned with emitted lookup command", () => {
+    const schema = buildSchema(TWO_LOOKUPS_SDL);
+    const { commands } = emitCliModules(schema, {
+      exclude: { queries: ["user"], mutations: [], subscriptions: [] },
+      man: { enabled: false },
+    });
+    const pair = commands.find((c) => c.field === "pair")!;
+    const followUp = pair.followUps.find((f) => f.type === "User");
+    expect(pair.selection.mate).toEqual({ email: true });
+    expect(followUp).toMatchObject({
+      command: "user-by-email",
+      flags: { email: "--email" },
+    });
+  });
+
   it("chooses lookup per selection.lookup.User", () => {
     const schema = buildSchema(TWO_LOOKUPS_SDL);
     const names = buildCommandNameMap(schema, []);

@@ -290,8 +290,11 @@ export function isEntityType(
 ): boolean {
   const forced = forcedStubFields(typeName, lookupConfig);
   if (forced) return true;
-  const candidates = lookupIndex.byType.get(typeName);
-  if (candidates && candidates.length > 0) return true;
+  const candidates = filterEmittedLookups(
+    lookupIndex.byType.get(typeName) ?? [],
+    lookupIndex.commandByField,
+  );
+  if (candidates.length > 0) return true;
   const type = schema.getType(typeName);
   if (isObjectType(type)) {
     const ifaceLookup = interfaceLookup(
@@ -299,6 +302,7 @@ export function isEntityType(
       type,
       lookupIndex.byType,
       lookupConfig,
+      lookupIndex.commandByField,
     );
     if (ifaceLookup) return true;
   }
@@ -314,7 +318,8 @@ export function resolveEntityStubFields(
   const forced = forcedStubFields(typeName, lookupConfig);
   if (forced) return forced;
 
-  let candidates = lookupIndex.byType.get(typeName) ?? [];
+  const { commandByField, byType } = lookupIndex;
+  let candidates = filterEmittedLookups(byType.get(typeName) ?? [], commandByField);
   let chosen = chooseLookup(typeName, candidates, lookupConfig);
   if (!chosen) {
     const type = schema.getType(typeName);
@@ -322,8 +327,9 @@ export function resolveEntityStubFields(
       const iface = interfaceLookup(
         schema,
         type,
-        lookupIndex.byType,
+        byType,
         lookupConfig,
+        commandByField,
       );
       if (iface) chosen = iface;
     }
