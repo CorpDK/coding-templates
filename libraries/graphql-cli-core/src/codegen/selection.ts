@@ -137,8 +137,7 @@ function selectEntityReference(
     );
   }
 
-  const stub =
-    forcedStub && !reachingFocus ? forcedStub : stubFields;
+  const stub = forcedStub && !reachingFocus ? forcedStub : stubFields;
   pushFollowUp(ctx, fieldPath, entityType.name, stub);
   return stubSelection(stub);
 }
@@ -265,9 +264,7 @@ function appendOneObjectField(input: AppendObjectFieldInput): void {
 
   if (!isObjectType(named)) return;
 
-  if (
-    isEntityType(ctx.schema, named.name, ctx.lookupIndex, lookupConfig)
-  ) {
+  if (isEntityType(ctx.schema, named.name, ctx.lookupIndex, lookupConfig)) {
     tree[fieldName] = selectEntityReference(
       ctx,
       childCtx,

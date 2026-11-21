@@ -21,9 +21,7 @@ import {
   CodegenError,
 } from "./types.js";
 import { fieldIncluded, operationKey, resolveCommandNames } from "./naming.js";
-import {
-  validateLookupConfig as runValidateLookupConfig,
-} from "./lookup-validate.js";
+import { validateLookupConfig as runValidateLookupConfig } from "./lookup-validate.js";
 
 function isLeafInput(type: GraphQLInputType): boolean {
   const named = getNamedType(type);
@@ -281,7 +279,10 @@ export function resolveEntityStubFields(
   if (forced) return forced;
 
   const { commandByField, byType } = lookupIndex;
-  let candidates = filterEmittedLookups(byType.get(typeName) ?? [], commandByField);
+  let candidates = filterEmittedLookups(
+    byType.get(typeName) ?? [],
+    commandByField,
+  );
   let chosen = chooseLookup(typeName, candidates, lookupConfig);
   if (!chosen) {
     const type = schema.getType(typeName);

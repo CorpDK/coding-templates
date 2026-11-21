@@ -48,7 +48,7 @@ coding-templates/
     ├── ds-ddb/      (@corpdk/ds-ddb)       GraphQL Yoga + DocumentDB + Zod
     ├── ds-file/     (@corpdk/ds-file)      GraphQL Yoga + JSON/YAML file storage + Zod
     ├── ds-sdk/      (@corpdk/ds-sdk)       Auto-generated TypedDocumentNode SDK
-    └── ds-cli/      (@corpdk/ds-cli)       Auto-generated CLI for LLM/automation access
+    └── ds-cli/      (@corpdk/ds-cli)       Private sample CLI (doc 14 §2.2; legacy preset until C-P3)
 ```
 
 ---
@@ -57,19 +57,19 @@ coding-templates/
 
 ### Template apps
 
-| Package       | Scope                 | Description                                                                                                               |
-| ------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| `ui`          | `@corpdk/ui`          | Standard Next.js UI using Apollo Client for GraphQL                                                                       |
-| `ui-hprt`     | `@corpdk/ui-hprt`     | High-performance real-time UI using urql + Graphcache                                                                     |
-| `ui-showcase` | `@corpdk/ui-showcase` | Storybook showcase — visual testing for all 6 shared `packages/ui-*` components; `pnpm storybook`                         |
-| `ds`          | `@corpdk/ds`          | GraphQL Yoga + Drizzle (PostgreSQL / MySQL / SQLite / CockroachDB) — primary/default relational DS                        |
-| `ds-no-sql`   | `@corpdk/ds-no-sql`   | GraphQL Yoga + Prisma for databases Drizzle does not support (e.g. MongoDB, DocumentDB via Prisma connector)              |
-| `ds-cdb`      | `@corpdk/ds-cdb`      | GraphQL Yoga + Couchbase SDK + Zod                                                                                        |
-| `ds-mongo`    | `@corpdk/ds-mongo`    | GraphQL Yoga + MongoDB native driver + Zod                                                                                |
-| `ds-ddb`      | `@corpdk/ds-ddb`      | GraphQL Yoga + DocumentDB + Zod                                                                                           |
-| `ds-file`     | `@corpdk/ds-file`     | GraphQL Yoga + JSON/YAML file storage + Zod (zero external dependencies)                                                  |
-| `ds-sdk`      | `@corpdk/ds-sdk`      | Auto-generated TypedDocumentNode SDK shared by all DS variants                                                            |
-| `ds-cli`      | `@corpdk/ds-cli`      | Auto-generated CLI (queries, mutations, subscriptions) for LLM/automation access; ships with a man page and GNU info page |
+| Package       | Scope                 | Description                                                                                                                                                        |
+| ------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `ui`          | `@corpdk/ui`          | Standard Next.js UI using Apollo Client for GraphQL                                                                                                                |
+| `ui-hprt`     | `@corpdk/ui-hprt`     | High-performance real-time UI using urql + Graphcache                                                                                                              |
+| `ui-showcase` | `@corpdk/ui-showcase` | Storybook showcase — visual testing for all 6 shared `packages/ui-*` components; `pnpm storybook`                                                                  |
+| `ds`          | `@corpdk/ds`          | GraphQL Yoga + Drizzle (PostgreSQL / MySQL / SQLite / CockroachDB) — primary/default relational DS                                                                 |
+| `ds-no-sql`   | `@corpdk/ds-no-sql`   | GraphQL Yoga + Prisma for databases Drizzle does not support (e.g. MongoDB, DocumentDB via Prisma connector)                                                       |
+| `ds-cdb`      | `@corpdk/ds-cdb`      | GraphQL Yoga + Couchbase SDK + Zod                                                                                                                                 |
+| `ds-mongo`    | `@corpdk/ds-mongo`    | GraphQL Yoga + MongoDB native driver + Zod                                                                                                                         |
+| `ds-ddb`      | `@corpdk/ds-ddb`      | GraphQL Yoga + DocumentDB + Zod                                                                                                                                    |
+| `ds-file`     | `@corpdk/ds-file`     | GraphQL Yoga + JSON/YAML file storage + Zod (zero external dependencies)                                                                                           |
+| `ds-sdk`      | `@corpdk/ds-sdk`      | Auto-generated TypedDocumentNode SDK shared by all DS variants                                                                                                     |
+| `ds-cli`      | `@corpdk/ds-cli`      | Private sample automation CLI ([design §2.2](14-graphql-cli-generator.md#22-monorepo-dogfood-templatesds-cli)); legacy `@corpdk/codegen-cli` preset until CLI C-P3 |
 
 ### Shared packages
 

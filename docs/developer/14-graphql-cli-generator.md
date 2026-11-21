@@ -118,7 +118,7 @@ The GraphQL Code Generator preset surface is **not** carried forward.
 | `gen-cli.ts` (runtime + `OPERATIONS` + `fetch` + SSE as strings)                                              | **Do not port**    | Replaced by the typed runtime entry `@corpdk/graphql-cli-core` (`runCli`)                |
 | `index.ts` (`Types.OutputPreset`)                                                                             | **Deprecate**      | No replacement export                                                                    |
 
-The codegen subpath does not import a generated CLI SDK. The npm package depends on `@corpdk/graphql-input-zod` (shared parse/issue types on the root entry; `runCli` lands in C-P2). Codegen entry: `emitCliModules(schema, { selection, include, exclude, guard, output, man }) → { commands, runtimeConfig, selections: Record<command, source>, man?, texi?, warnings }`, the inputs coming from `cli.config.yaml`. Its codegen entry emits selection objects as text; its runtime receives the SDK's `build*` and validation functions from the generated `cli.ts`.
+The codegen subpath does not import a generated CLI SDK. The npm package depends on `@corpdk/graphql-input-zod` (shared parse/issue types on the root entry; `runCli` lands in C-P2). Codegen entry: `emitCliModules(schema, { selection, include, exclude, guard, output, man }) → { commands, commandsSource, runtimeConfig, selections: Record<command, source>, man?, texi?, warnings }`, the inputs coming from `cli.config.yaml`. Its codegen entry emits selection objects as text; its runtime receives the SDK's `build*` and validation functions from the generated `cli.ts`.
 
 #### 2.5.1 `@corpdk/codegen-cli` on npm
 
