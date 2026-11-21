@@ -27,7 +27,7 @@
 | ESM              | `NodeNext` with explicit `.js` import specifiers                                                         |
 | L1 results       | `FieldsSelection<SRC,DST>` over SDK `Types.*`, not genql response interfaces                             |
 | L1 `__args`      | Codegen references `Types.<Parent><Field>Args`                                                           |
-| Aliases          | `__aliases` — one GraphQL field per entry (runtime enforced)                                             |
+| Aliases          | `__aliases` (R-01): one field per entry (`ExactlyOneField` + printer); result gains alias keys           |
 | Directives       | `@include` / `@skip` via `__include` / `__skip`; optional result fields                                  |
 | Named variables  | `define*` + `v<T>()`; **R-04:** mismatch check is **runtime** at operation build (compile-time deferred) |
 | Response helpers | §3.8 error normaliser + connection iterator (transport-free)                                             |

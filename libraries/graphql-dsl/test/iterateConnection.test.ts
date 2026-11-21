@@ -9,7 +9,10 @@ import {
   paginateConnection,
 } from "../src/runtime/iterateConnection.js";
 import { generateGraphqlOperation } from "../src/runtime/generateGraphqlOperation.js";
-import { minimalSchema, minimalTypeMap } from "./fixtures/minimalTypeMap.fixture.js";
+import {
+  minimalSchema,
+  minimalTypeMap,
+} from "./fixtures/minimalTypeMap.fixture.js";
 
 function itemConnectionBuild(variables: Record<string, unknown>) {
   return generateGraphqlOperation("query", minimalTypeMap.Query!, {

@@ -46,7 +46,7 @@ export function workspaceValueImportsFrom(
     if (!ts.isStringLiteral(spec) || spec.text !== moduleSpecifier) {
       return;
     }
-  const clause = node.importClause;
+    const clause = node.importClause;
     if (!clause?.namedBindings || !ts.isNamedImports(clause.namedBindings)) {
       return;
     }

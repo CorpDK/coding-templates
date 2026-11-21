@@ -2,7 +2,10 @@ import { parse, validate } from "graphql";
 import { describe, expect, it } from "vitest";
 import { createOperationApi } from "../src/runtime/createOperationApi.js";
 import { v } from "../src/runtime/variableRef.js";
-import { minimalSchema, minimalTypeMap } from "./fixtures/minimalTypeMap.fixture.js";
+import {
+  minimalSchema,
+  minimalTypeMap,
+} from "./fixtures/minimalTypeMap.fixture.js";
 
 import { everything } from "../src/runtime/builtOperation.js";
 

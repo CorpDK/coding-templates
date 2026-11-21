@@ -68,4 +68,6 @@ for (const file of walk(srcRoot)) {
 }
 
 if (failed) process.exit(1);
-console.log("graphql-dsl self-containment: no workspace @corpdk/* imports in src");
+console.log(
+  "graphql-dsl self-containment: no workspace @corpdk/* imports in src",
+);

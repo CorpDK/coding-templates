@@ -1,7 +1,10 @@
 import { parse, validate } from "graphql";
 import { describe, expect, it } from "vitest";
 import { generateGraphqlOperation } from "../src/runtime/generateGraphqlOperation.js";
-import { minimalSchema, minimalTypeMap } from "./fixtures/minimalTypeMap.fixture.js";
+import {
+  minimalSchema,
+  minimalTypeMap,
+} from "./fixtures/minimalTypeMap.fixture.js";
 
 describe("generateGraphqlOperation", () => {
   it("prints scalar-root field args and validates against schema", () => {
