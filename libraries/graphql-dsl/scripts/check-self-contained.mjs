@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
- * R-42: fail on real TypeScript imports from other @corpdk/* workspace packages.
- * Template-literal emitted SDK source inside .ts files is not scanned (no ImportDeclaration).
+ * R-42: fail on forbidden @corpdk/* workspace specifiers in src (see doc 13 §11).
+ * AST visit: import/export declarations, import(), require(), import = require().
+ * Template-literal emitted SDK source inside .ts files is not scanned.
  */
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
