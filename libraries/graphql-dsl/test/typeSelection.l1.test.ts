@@ -29,6 +29,7 @@ describe("FieldsSelection alias keys (R-01)", () => {
         limited: { items: { __args: { first: 10 }; id: 1 } };
         wide: { items: { __args: { first: 100 }; id: 1 } };
       };
+      items: { id: 1 };
     };
     type Result = FieldsSelection<Query, Sel>;
     type Limited = Result["limited"];
