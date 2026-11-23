@@ -217,7 +217,7 @@ export type * as Types from "./generated/schema-types.js"; // L1: the one type s
 export * from "./extensions/index.js";
 ```
 
-> **P1c target.** The binding below is not generated in **P1a**; SDKs ship it when `createInputParsers` / `createScalarParsers` land on the main entry in P1c (§7.4).
+> **P1c.** Canonical `src/validation.ts` binds `createInputParsers` / `createScalarParsers` from `@corpdk/graphql-input-zod` (§7.4).
 
 ```ts
 // src/validation.ts (canonical binding) → "@corpdk/ds-sdk/validation" — P1c
@@ -653,7 +653,7 @@ All `input` object types in the snapshot. Output types, whole variable bags, and
 
 **P1a (shipped).** The main package entry exports only validation issue types and `GraphqlInputValidationError` (see `libraries/graphql-input-zod/src/index.ts` and the package README). Emitter tests live under `@corpdk/graphql-input-zod/codegen`.
 
-**P1c (planned runtime API).** `createInputParsers` and `createScalarParsers` bind each SDK's generated registries; signatures are preserved below for typing and review continuity.
+**P1c (shipped).** `createInputParsers` and `createScalarParsers` ship on the main entry (`libraries/graphql-input-zod/src/parsers.ts`); each SDK binds them in canonical `src/validation.ts`. Signatures below match the implementation.
 
 Generated per SDK (data only):
 
