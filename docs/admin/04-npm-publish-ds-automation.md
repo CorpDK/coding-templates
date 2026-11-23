@@ -6,7 +6,7 @@ CI workflow and release process for the **lockstep CalVer** DS automation stack 
 
 ## Package set (npmjs)
 
-These **twelve** packages ship together at the same CalVer (e.g. `2026.10.0-alpha.16`). Order matches [`PUBLISH_ORDER`](../../.github/scripts/lockstep-calver.sh) and [generator publish order](../developer/15-create-ds-generator-integration.md#43-dependencies-and-publishing-canonical-publish-order).
+These **twelve** packages ship together at the same CalVer (e.g. `2026.10.0-alpha.17`). Order matches [`PUBLISH_ORDER`](../../.github/scripts/lockstep-calver.sh) and [generator publish order](../developer/15-create-ds-generator-integration.md#43-dependencies-and-publishing-canonical-publish-order).
 
 Monorepo quality runs **`create-ds`** canonical drift check (`check-canonical`) on the **`@corpdk/create-ds`** lockstep matrix job ([`.github/scripts/ci-quality-lockstep-package.sh`](../../.github/scripts/ci-quality-lockstep-package.sh)). Before npm upload, [`.github/scripts/publish-ds-automation.sh`](../../.github/scripts/publish-ds-automation.sh) runs the **`@corpdk/engine-kit`** publish-order guard (`check-ds-publish-order`) and **`check-canonical`** again.
 

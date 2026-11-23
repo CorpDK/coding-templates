@@ -1,6 +1,6 @@
 {
   "name": "@corpdk/engine-kit",
-  "version": "2026.10.0-alpha.16",
+  "version": "2026.10.0-alpha.17",
   "description": "Shared init/upgrade engine kit for create-* CLIs",
   "type": "module",
   "license": "MIT",

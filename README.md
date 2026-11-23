@@ -6,7 +6,7 @@ Run `pnpm create-app` to scaffold a full-stack project, or `pnpm create-ds init`
 
 ## Published packages
 
-These **twelve** DS automation packages ship together on [npmjs](https://www.npmjs.org/) (public, lockstep CalVer, e.g. **`2026.10.0-alpha.16`**). Order matches [`PUBLISH_ORDER`](.github/scripts/lockstep-calver.sh). See [npm publish — DS automation](docs/admin/04-npm-publish-ds-automation.md).
+These **twelve** DS automation packages ship together on [npmjs](https://www.npmjs.org/) (public, lockstep CalVer, e.g. **`2026.10.0-alpha.17`**). Order matches [`PUBLISH_ORDER`](.github/scripts/lockstep-calver.sh). See [npm publish — DS automation](docs/admin/04-npm-publish-ds-automation.md).
 
 When [Monorepo CI](.github/workflows/ci.yml) finishes Monorepo quality (twelve lockstep packages), `quality-templates`, and Sonar on a commit that matches the publish path filter, it dispatches [**Publish DS automation (npm)**](.github/workflows/publish-ds-automation.yml) via `workflow_dispatch` (`checkout_sha` = the orchestrator commit; pull-request dry-run; on `main`, live publish only when **any** lockstep package CalVer changes vs the merge parent).
 
