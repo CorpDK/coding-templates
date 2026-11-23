@@ -26,6 +26,7 @@ async function readSnapshotSdl(
 export async function runCodegen(packageDir: string): Promise<string[]> {
   const dir = path.resolve(packageDir);
   const config = await readSdkConfig(dir);
+  const snap = snapshotPath(dir, config);
   const sdl = await readSnapshotSdl(dir, config);
   const schema = buildSchemaFromSnapshot(`${SNAPSHOT_HEADER}${sdl}`);
   const customNames = listCustomScalars(schema);
@@ -34,28 +35,38 @@ export async function runCodegen(packageDir: string): Promise<string[]> {
   await fs.mkdir(dslDir, { recursive: true });
 
   const changed: string[] = [];
-  const l1Out = path.join(generatedDir, "schema-types.ts");
+  const l1Rel = "src/generated/schema-types.ts";
   const l1Scalars = l1ScalarMap(config, customNames);
-
-  const { generate } = await import("@graphql-codegen/cli");
-  await generate(
-    {
-      schema: sdl,
-      generates: {
-        [l1Out]: {
-          plugins: ["typescript"],
-          config: {
-            enumsAsTypes: true,
-            nonOptionalTypename: true,
-            scalars: l1Scalars,
-            skipTypename: false,
-          },
-        },
-      },
-    },
-    true,
+  const { codegen } = await import("@graphql-codegen/core");
+  const { plugin: typescriptPlugin } = await import(
+    "@graphql-codegen/typescript"
   );
-  changed.push(path.relative(dir, l1Out));
+  const { getCachedDocumentNodeFromSchema } = await import(
+    "@graphql-codegen/plugin-helpers"
+  );
+  const l1Config = {
+    enumsAsTypes: true,
+    nonOptionalTypename: true,
+    scalars: l1Scalars,
+    skipTypename: false,
+  };
+  const l1Body = await codegen({
+    filename: l1Rel,
+    schema: getCachedDocumentNodeFromSchema(schema),
+    documents: [],
+    config: l1Config,
+    plugins: [
+      {
+        typescript: {},
+      },
+    ],
+    pluginMap: {
+      typescript: { plugin: typescriptPlugin },
+    },
+  });
+  const l1Out = path.join(dir, l1Rel);
+  await fs.writeFile(l1Out, l1Body, "utf8");
+  changed.push(l1Rel);
 
   const leafScalars = customLeafScalars(config);
   const dsl = emitDslModules(schema, {
