@@ -56,9 +56,15 @@ function zodRefImport(zod: ScalarZodConfig): string | null {
 
 export function buildScalarRegistrySource(
   config: SdkConfig,
+  schemaScalarNames?: readonly string[],
 ): { source: string; scalarNames: string[] } {
   const entries = config.scalars ?? {};
-  const names = Object.keys(entries).sort((a, b) => a.localeCompare(b));
+  const names =
+    schemaScalarNames === undefined
+      ? Object.keys(entries)
+      : [...new Set(schemaScalarNames)]
+          .filter((name) => entries[name] != null)
+          .sort((a, b) => a.localeCompare(b));
   if (names.length === 0) {
     return {
       source: `export const scalarZodSchemas = {} as const;

@@ -149,7 +149,7 @@ export async function runCodegen(packageDir: string): Promise<string[]> {
 
   const validationEnabled = config.validation?.enabled !== false;
   if (validationEnabled) {
-    const scalarRegistry = buildScalarRegistrySource(config);
+    const scalarRegistry = buildScalarRegistrySource(config, customNames);
     const scalarRegistryPath = path.join(generatedDir, "scalar-registry.ts");
     await fs.writeFile(scalarRegistryPath, scalarRegistry.source, "utf8");
     changed.push(path.relative(dir, scalarRegistryPath));
