@@ -4,7 +4,6 @@ import {
   GraphQLOutputType,
   isListType,
   isNamedType,
-  isNonNullType,
   isScalarType,
 } from "graphql";
 

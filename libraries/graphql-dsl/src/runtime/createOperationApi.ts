@@ -6,7 +6,7 @@ import {
   type VariableTyping,
 } from "./generateGraphqlOperation.js";
 import type { BuiltOperation } from "./builtOperation.js";
-import { isVariableRef, v, type VariableRef } from "./variableRef.js";
+import { v, type VariableRef } from "./variableRef.js";
 
 export type { VariableRef };
 export { v };

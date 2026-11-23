@@ -2,7 +2,7 @@ import type { LinkedField, LinkedType } from "./types.js";
 import { isVariableRef } from "./variableRef.js";
 
 export interface Args {
-  [arg: string]: unknown | undefined;
+  [arg: string]: unknown;
 }
 
 export interface Fields {
@@ -150,40 +150,179 @@ function directiveCondition(
   return `$${varName}`;
 }
 
+function parseRequestWithArgs(
+  request: Fields & { __args: Args },
+  ctx: OperationContext,
+  path: string[],
+  alias?: string,
+): string {
+  const args = request.__args;
+  const fields: Request = { ...request };
+  delete (fields as Fields).__args;
+  const argNames = Object.keys(args);
+
+  if (argNames.length === 0) {
+    return parseRequest(fields, ctx, path, alias);
+  }
+
+  const field = getFieldFromPath(ctx.root, path);
+  const argStrings = argNames.map((argName) => {
+    const typing = field.args?.[argName];
+    if (!typing) {
+      throw new Error(
+        `no typing defined for argument \`${argName}\` in path \`${path.join(".")}\``,
+      );
+    }
+    return `${argName}:${resolveArgValue(args[argName], ctx, typing)}`;
+  });
+  const argPart = `(${argStrings.join(",")})`;
+  const tail = parseRequest(fields, ctx, path, alias);
+  if (alias) {
+    const fieldName = path.at(-1) ?? "";
+    return `${alias}:${fieldName}${argPart}${tail}`;
+  }
+  return `${argPart}${tail}`;
+}
+
+function parseRequestAliases(
+  fields: Fields,
+  ctx: OperationContext,
+  path: string[],
+): string {
+  const aliasBlocks = Object.entries(fields.__aliases!).flatMap(
+    ([aliasName, aliasFields]) => {
+      const innerKeys = Object.keys(aliasFields).filter(
+        (k) => !RESERVED.has(k) && aliasFields[k],
+      );
+      if (innerKeys.length !== 1) {
+        throw new Error(
+          `alias \`${aliasName}\` must select exactly one field, got ${innerKeys.length}`,
+        );
+      }
+      const innerField = innerKeys[0]!;
+      return parseRequest(
+        aliasFields[innerField] as Request,
+        ctx,
+        [...path, innerField],
+        aliasName,
+      );
+    },
+  );
+  const withoutAliases = { ...fields };
+  delete withoutAliases.__aliases;
+  const rest = parseRequest(withoutAliases, ctx, path);
+  if (rest.startsWith("{") && rest.endsWith("}")) {
+    const inner = rest.slice(1, -1);
+    return `{${inner}${inner && aliasBlocks.length ? "," : ""}${aliasBlocks.join(",")}}`;
+  }
+  return `{${aliasBlocks.join(",")}}`;
+}
+
+function scalarFragmentForRequest(
+  fields: Fields,
+  fieldNames: string[],
+  ctx: OperationContext,
+  type: LinkedType,
+): string | undefined {
+  if (!fieldNames.includes("__scalar") || !scalarFieldsLength(type)) {
+    return undefined;
+  }
+  const falsyFieldNames = new Set(Object.keys(fields).filter((k) => !fields[k]));
+  ctx.fragmentCounter++;
+  const scalarFieldsFragment = `f${ctx.fragmentCounter}`;
+  const scalarFields = type.scalar ?? [];
+  ctx.fragments.push(
+    `fragment ${scalarFieldsFragment} on ${type.name}{${scalarFields
+      .filter((f) => !falsyFieldNames.has(f))
+      .join(",")}}`,
+  );
+  return scalarFieldsFragment;
+}
+
+function scalarFieldsLength(type: LinkedType): boolean {
+  return Boolean(type.scalar?.length);
+}
+
+function parseFieldChild(
+  child: Request,
+  ctx: OperationContext,
+  path: string[],
+  fieldName: string,
+): { parsed: string; directives: string } {
+  if (
+    typeof child === "object" &&
+    child !== null &&
+    !Array.isArray(child)
+  ) {
+    const split = parseFieldDirectives(child as Fields, ctx);
+    return {
+      directives: split.directives,
+      parsed: parseRequest(split.body, ctx, [...path, fieldName]),
+    };
+  }
+  return { parsed: parseRequest(child, ctx, [...path, fieldName]), directives: "" };
+}
+
+function selectionForField(
+  fields: Fields,
+  f: string,
+  ctx: OperationContext,
+  path: string[],
+): string {
+  const child = fields[f] as Request;
+  const { parsed, directives } = parseFieldChild(child, ctx, path, f);
+  if (f.startsWith("on_")) {
+    ctx.fragmentCounter++;
+    const implementationFragment = `f${ctx.fragmentCounter}`;
+    const onFragment = /^on_(.+)/.exec(f);
+    const memberName = onFragment?.[1];
+    if (!memberName) throw new Error("inline fragment match failed");
+    ctx.fragments.push(
+      `fragment ${implementationFragment} on ${memberName}${parsed}`,
+    );
+    return `...${implementationFragment}`;
+  }
+  return directives ? `${f} ${directives}${parsed}` : `${f}${parsed}`;
+}
+
+function parseRequestObject(
+  fields: Fields,
+  ctx: OperationContext,
+  path: string[],
+): string {
+  const fieldNames = Object.keys(fields).filter(
+    (k) => Boolean(fields[k]) && !RESERVED.has(k),
+  );
+  if (fieldNames.length === 0) {
+    throw new Error(`field selection should not be empty: ${path.join(".")}`);
+  }
+
+  const type =
+    path.length > 0 ? getFieldFromPath(ctx.root, path).type : ctx.root;
+  const scalarFieldsFragment = scalarFragmentForRequest(
+    fields,
+    fieldNames,
+    ctx,
+    type,
+  );
+
+  const fieldsSelection = fieldNames
+    .filter((f) => f !== "__scalar")
+    .map((f) => selectionForField(fields, f, ctx, path))
+    .concat(scalarFieldsFragment ? [`...${scalarFieldsFragment}`] : [])
+    .join(",");
+
+  return `{${fieldsSelection}}`;
+}
+
 const parseRequest = (
   request: Request | undefined,
   ctx: OperationContext,
   path: string[],
   alias?: string,
 ): string => {
-  if (typeof request === "object" && "__args" in request) {
-    const args = request.__args as Args;
-    const fields: Request = { ...request };
-    delete (fields as Fields).__args;
-    const argNames = Object.keys(args);
-
-    if (argNames.length === 0) {
-      return parseRequest(fields, ctx, path, alias);
-    }
-
-    const field = getFieldFromPath(ctx.root, path);
-
-    const argStrings = argNames.map((argName) => {
-      const typing = field.args?.[argName];
-      if (!typing) {
-        throw new Error(
-          `no typing defined for argument \`${argName}\` in path \`${path.join(".")}\``,
-        );
-      }
-      return `${argName}:${resolveArgValue(args[argName], ctx, typing)}`;
-    });
-    const argPart = `(${argStrings.join(",")})`;
-    const tail = parseRequest(fields, ctx, path, alias);
-    if (alias) {
-      const fieldName = path[path.length - 1] ?? "";
-      return `${alias}:${fieldName}${argPart}${tail}`;
-    }
-    return `${argPart}${tail}`;
+  if (typeof request === "object" && request !== null && "__args" in request) {
+    return parseRequestWithArgs(request as Fields & { __args: Args }, ctx, path, alias);
   }
 
   if (
@@ -192,95 +331,10 @@ const parseRequest = (
     Object.keys(request).length > 0
   ) {
     const fields = request as Fields;
-
-    if ("__aliases" in fields && fields.__aliases) {
-      const aliasBlocks = Object.entries(fields.__aliases).flatMap(
-        ([aliasName, aliasFields]) => {
-          const innerKeys = Object.keys(aliasFields).filter(
-            (k) => !RESERVED.has(k) && aliasFields[k],
-          );
-          if (innerKeys.length !== 1) {
-            throw new Error(
-              `alias \`${aliasName}\` must select exactly one field, got ${innerKeys.length}`,
-            );
-          }
-          const innerField = innerKeys[0]!;
-          return parseRequest(
-            aliasFields[innerField] as Request,
-            ctx,
-            [...path, innerField],
-            aliasName,
-          );
-        },
-      );
-      const withoutAliases = { ...fields };
-      delete withoutAliases.__aliases;
-      const rest = parseRequest(withoutAliases, ctx, path);
-      if (rest.startsWith("{") && rest.endsWith("}")) {
-        const inner = rest.slice(1, -1);
-        return `{${inner}${inner && aliasBlocks.length ? "," : ""}${aliasBlocks.join(",")}}`;
-      }
-      return `{${aliasBlocks.join(",")}}`;
+    if (fields.__aliases) {
+      return parseRequestAliases(fields, ctx, path);
     }
-
-    const fieldNames = Object.keys(fields).filter(
-      (k) => Boolean(fields[k]) && !RESERVED.has(k),
-    );
-
-    if (fieldNames.length === 0) {
-      throw new Error(`field selection should not be empty: ${path.join(".")}`);
-    }
-
-    const type =
-      path.length > 0 ? getFieldFromPath(ctx.root, path).type : ctx.root;
-    const scalarFields = type.scalar;
-
-    let scalarFieldsFragment: string | undefined;
-
-    if (fieldNames.includes("__scalar")) {
-      const falsyFieldNames = new Set(
-        Object.keys(fields).filter((k) => !fields[k]),
-      );
-      if (scalarFields?.length) {
-        ctx.fragmentCounter++;
-        scalarFieldsFragment = `f${ctx.fragmentCounter}`;
-        ctx.fragments.push(
-          `fragment ${scalarFieldsFragment} on ${type.name}{${scalarFields
-            .filter((f) => !falsyFieldNames.has(f))
-            .join(",")}}`,
-        );
-      }
-    }
-
-    const fieldsSelection = fieldNames
-      .filter((f) => f !== "__scalar")
-      .map((f) => {
-        const child = fields[f] as Request;
-        let directives = "";
-        const parsed =
-          typeof child === "object" && child !== null && !Array.isArray(child)
-            ? (() => {
-                const split = parseFieldDirectives(child as Fields, ctx);
-                directives = split.directives;
-                return parseRequest(split.body, ctx, [...path, f]);
-              })()
-            : parseRequest(child, ctx, [...path, f]);
-        if (f.startsWith("on_")) {
-          ctx.fragmentCounter++;
-          const implementationFragment = `f${ctx.fragmentCounter}`;
-          const typeMatch = f.match(/^on_(.+)/);
-          if (!typeMatch?.[1]) throw new Error("inline fragment match failed");
-          ctx.fragments.push(
-            `fragment ${implementationFragment} on ${typeMatch[1]}${parsed}`,
-          );
-          return `...${implementationFragment}`;
-        }
-        return directives ? `${f} ${directives}${parsed}` : `${f}${parsed}`;
-      })
-      .concat(scalarFieldsFragment ? [`...${scalarFieldsFragment}`] : [])
-      .join(",");
-
-    return `{${fieldsSelection}}`;
+    return parseRequestObject(fields, ctx, path);
   }
 
   return "";

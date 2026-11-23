@@ -34,7 +34,8 @@ export const linkTypeMap = (
           scalar: Object.keys(fields).filter((f) => {
             const [type] = fields[f] || [];
 
-            const isScalar = type && typeMap.scalars.includes(type);
+            const isScalar =
+              type !== undefined && typeMap.scalars.includes(type);
             if (!isScalar) {
               return false;
             }
@@ -43,9 +44,7 @@ export const linkTypeMap = (
               .map((x) => x?.[1])
               .filter(Boolean);
 
-            const hasRequiredArgs = argTypes.some(
-              (str) => str && str.endsWith("!"),
-            );
+            const hasRequiredArgs = argTypes.some((str) => str?.endsWith("!"));
             if (hasRequiredArgs) {
               return false;
             }
@@ -67,7 +66,7 @@ export const linkTypeMap = (
                     {},
                     ...Object.keys(args || {}).map((k) => {
                       // if argTypeString == argTypeName, argTypeString is missing, need to readd it
-                      if (!args || !args[k]) {
+                      if (!args?.[k]) {
                         return;
                       }
                       const [argTypeName, argTypeString] = args[k] as any;
@@ -114,10 +113,7 @@ export const resolveConcreteTypes = (linkedTypeMap: LinkedTypeMap) => {
             const [typeName] = arg;
 
             if (typeof typeName === "string") {
-              if (!linkedTypeMap[typeName]) {
-                linkedTypeMap[typeName] = { name: typeName };
-              }
-
+              linkedTypeMap[typeName] ??= { name: typeName };
               arg[0] = linkedTypeMap[typeName]!;
             }
           }
@@ -127,10 +123,7 @@ export const resolveConcreteTypes = (linkedTypeMap: LinkedTypeMap) => {
       const typeName = field.type as LinkedType | string;
 
       if (typeof typeName === "string") {
-        if (!linkedTypeMap[typeName]) {
-          linkedTypeMap[typeName] = { name: typeName };
-        }
-
+        linkedTypeMap[typeName] ??= { name: typeName };
         field.type = linkedTypeMap[typeName]!;
       }
     });

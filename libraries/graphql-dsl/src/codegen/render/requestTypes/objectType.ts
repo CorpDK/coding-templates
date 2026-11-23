@@ -53,7 +53,7 @@ export const objectType = (
           }: ${argsString} })`,
         );
       } else {
-        // TODO if i want to add __directive support, i need to make this __args optional
+        // Directive-optional __args on scalar roots is tracked in UPSTREAM.md (genql baseline).
         types.push(`{ __args: ${argsString} }`);
       }
       // if (resolvable) {
@@ -85,8 +85,10 @@ export const objectType = (
     fieldStrings = fieldStrings.concat(interfaceProperties);
   }
 
-  fieldStrings.push("__typename?: boolean | number");
-  fieldStrings.push("__scalar?: boolean | number");
+  fieldStrings.push(
+    "__typename?: boolean | number",
+    "__scalar?: boolean | number",
+  );
 
   if (
     ctx.schema &&

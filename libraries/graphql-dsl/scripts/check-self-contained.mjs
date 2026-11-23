@@ -60,17 +60,13 @@ function collectForbiddenSpecs(source, fileName) {
       if (ts.isExternalModuleReference(ref)) {
         record(stringLiteralArg(ref.expression));
       }
-    } else if (ts.isCallExpression(node)) {
-      if (
-        node.expression.kind === ts.SyntaxKind.ImportKeyword &&
-        node.arguments.length === 1
-      ) {
-        record(stringLiteralArg(node.arguments[0]));
-      } else if (
+    } else if (ts.isCallExpression(node) && node.arguments.length === 1) {
+      const isDynamicImport =
+        node.expression.kind === ts.SyntaxKind.ImportKeyword;
+      const isRequire =
         ts.isIdentifier(node.expression) &&
-        node.expression.text === "require" &&
-        node.arguments.length === 1
-      ) {
+        node.expression.text === "require";
+      if (isDynamicImport || isRequire) {
         record(stringLiteralArg(node.arguments[0]));
       }
     }

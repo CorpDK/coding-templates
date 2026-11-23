@@ -58,7 +58,7 @@ function renderAlias({
   name: string;
 }) {
   if (type && requestTypeName(type) !== name) {
-    // TODO make the camel case or kebab case an option
+    // Alias naming (camelCase vs kebab-case) is a future emitDslModules option.
     return `export type ${name} = ${requestTypeName(type)}`;
   }
   return "";

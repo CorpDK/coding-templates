@@ -2,15 +2,13 @@ import {
   getNamedType,
   GraphQLInterfaceType,
   GraphQLObjectType,
-  isEnumType,
   isInterfaceType,
-  isScalarType,
   GraphQLInputObjectType,
   GraphQLArgument,
   GraphQLField,
 } from "graphql";
 import { RenderContext } from "../common/RenderContext.js";
-import { ArgMap, Field, FieldMap, Type } from "../../../runtime/types.js";
+import { ArgMap, Field, FieldMap } from "../../../runtime/types.js";
 import { isEmpty } from "./support.js";
 
 export const objectType = (

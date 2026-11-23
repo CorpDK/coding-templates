@@ -67,6 +67,52 @@ function isAbortError(thrown: unknown): boolean {
   );
 }
 
+function firstGraphqlErrorMessage(errors: readonly unknown[]): string {
+  const first = errors[0];
+  if (first === undefined) return "GraphQL errors";
+  if (typeof first === "object" && first !== null && "message" in first) {
+    const msg = (first as { message: unknown }).message;
+    if (typeof msg === "string") return msg;
+  }
+  if (typeof first === "string") return first;
+  try {
+    return JSON.stringify(first);
+  } catch {
+    return "GraphQL error";
+  }
+}
+
+function userErrorsFailure<R>(
+  data: R,
+  userFields: readonly string[],
+  operationName?: string,
+): { ok: false; error: GraphqlRequestError } | null {
+  if (!data || typeof data !== "object") return null;
+  const payload = data as Record<string, unknown>;
+  for (const opField of Object.keys(payload)) {
+    if (opField.startsWith("__")) continue;
+    const opPayload = payload[opField];
+    if (!opPayload || typeof opPayload !== "object") continue;
+    const root = opPayload as Record<string, unknown>;
+    for (const field of userFields) {
+      const value = root[field];
+      if (Array.isArray(value) && value.length > 0) {
+        return {
+          ok: false,
+          error: makeError("userErrors", {
+            message: `Mutation returned ${field}`,
+            field,
+            userErrors: value,
+            data,
+            operationName,
+          }),
+        };
+      }
+    }
+  }
+  return null;
+}
+
 function parseGraphqlErrors(
   errors: readonly unknown[],
 ): readonly GraphqlErrorEntry[] {
@@ -155,15 +201,7 @@ export function normalizeGraphqlResult<R>(
     return {
       ok: false,
       error: makeError("graphql", {
-        message: result.errors[0]
-          ? String(
-              typeof result.errors[0] === "object" &&
-                result.errors[0] !== null &&
-                "message" in result.errors[0]
-                ? (result.errors[0] as { message: string }).message
-                : result.errors[0],
-            )
-          : "GraphQL errors",
+        message: firstGraphqlErrorMessage(result.errors),
         errors: parseGraphqlErrors(result.errors),
         data: result.data,
         operationName: options?.operationName,
@@ -171,29 +209,13 @@ export function normalizeGraphqlResult<R>(
     };
   }
 
-  if (result.data && typeof result.data === "object") {
-    const payload = result.data as Record<string, unknown>;
-    for (const opField of Object.keys(payload)) {
-      if (opField.startsWith("__")) continue;
-      const opPayload = payload[opField];
-      if (!opPayload || typeof opPayload !== "object") continue;
-      const root = opPayload as Record<string, unknown>;
-      for (const field of userFields) {
-        const value = root[field];
-        if (Array.isArray(value) && value.length > 0) {
-          return {
-            ok: false,
-            error: makeError("userErrors", {
-              message: `Mutation returned ${field}`,
-              field,
-              userErrors: value,
-              data: result.data,
-              operationName: options?.operationName,
-            }),
-          };
-        }
-      }
-    }
+  if (result.data != null) {
+    const userErr = userErrorsFailure(
+      result.data,
+      userFields,
+      options?.operationName,
+    );
+    if (userErr) return userErr;
   }
 
   if (result.data == null) {

@@ -31,23 +31,137 @@ export interface IterateConnectionOptions<
 
 export type ConnectionExec = (op: GraphqlOperation) => Promise<unknown>;
 
-function connectionShape(
-  data: unknown,
-  field: string,
-): {
+type Direction = "forward" | "backward";
+
+type ConnectionPayload = {
   nodes?: unknown[];
   edges?: { cursor?: string; node?: unknown }[];
   pageInfo?: PageInfo;
-} | null {
+};
+
+function connectionShape(
+  data: unknown,
+  field: string,
+): ConnectionPayload | null {
   if (!data || typeof data !== "object") return null;
   const root = data as Record<string, unknown>;
   const conn = root[field];
   if (!conn || typeof conn !== "object") return null;
-  return conn as {
-    nodes?: unknown[];
-    edges?: { cursor?: string; node?: unknown }[];
-    pageInfo?: PageInfo;
+  return conn as ConnectionPayload;
+}
+
+function throwIfAborted(signal?: AbortSignal): void {
+  if (signal?.aborted) {
+    throw toGraphqlRequestError(new DOMException("Aborted", "AbortError"));
+  }
+}
+
+function pagingArgs(
+  direction: Direction,
+  pageSize: number,
+  after?: string,
+  before?: string,
+): Record<string, unknown> {
+  return direction === "forward"
+    ? { first: pageSize, after }
+    : { last: pageSize, before };
+}
+
+function connectionNodes(conn: ConnectionPayload): unknown[] {
+  return (
+    conn.nodes ??
+    conn.edges?.map((e) => e.node).filter((n) => n !== undefined) ??
+    []
+  );
+}
+
+function directionalCursor(
+  conn: ConnectionPayload,
+  direction: Direction,
+): string | null | undefined {
+  return direction === "forward"
+    ? conn.pageInfo?.endCursor
+    : conn.pageInfo?.startCursor;
+}
+
+function hasMorePages(conn: ConnectionPayload, direction: Direction): boolean {
+  return direction === "forward"
+    ? Boolean(conn.pageInfo?.hasNextPage)
+    : Boolean(conn.pageInfo?.hasPreviousPage);
+}
+
+function trackCursor(
+  cursor: string,
+  seenCursors: Set<string>,
+): string | undefined {
+  if (seenCursors.has(cursor)) {
+    throw toGraphqlRequestError(
+      new Error("Repeated connection cursor from server"),
+    );
+  }
+  seenCursors.add(cursor);
+  return cursor;
+}
+
+interface PagingState {
+  after?: string;
+  before?: string;
+}
+
+async function loadConnectionPage(
+  exec: ConnectionExec,
+  options: IterateConnectionOptions<string, Record<string, unknown>, unknown>,
+  direction: Direction,
+  paging: PagingState,
+): Promise<ConnectionPayload> {
+  const variables = {
+    ...options.args,
+    ...pagingArgs(
+      direction,
+      options.pageSize,
+      paging.after,
+      paging.before,
+    ),
   };
+  const raw = await exec(options.build(variables));
+  const conn = connectionShape(raw, options.field);
+  if (!conn?.pageInfo) {
+    throw toGraphqlRequestError(new Error("Response is not a connection"));
+  }
+  return conn;
+}
+
+function advancePaging(
+  direction: Direction,
+  cursor: string,
+  paging: PagingState,
+): void {
+  if (direction === "forward") paging.after = cursor;
+  else paging.before = cursor;
+}
+
+async function* walkConnectionPages(
+  exec: ConnectionExec,
+  options: IterateConnectionOptions<string, Record<string, unknown>, unknown>,
+): AsyncGenerator<{ conn: ConnectionPayload; pageNumber: number }> {
+  const direction = options.direction ?? "forward";
+  const maxPages = options.maxPages ?? Number.POSITIVE_INFINITY;
+  const seenCursors = new Set<string>();
+  const paging: PagingState = {};
+  let pageNumber = 0;
+
+  while (pageNumber < maxPages) {
+    throwIfAborted(options.signal);
+    const conn = await loadConnectionPage(exec, options, direction, paging);
+    pageNumber++;
+    yield { conn, pageNumber };
+
+    const cursor = directionalCursor(conn, direction);
+    if (!hasMorePages(conn, direction) || cursor == null) break;
+
+    const next = trackCursor(cursor, seenCursors);
+    if (next) advancePaging(direction, next, paging);
+  }
 }
 
 export async function* iterateConnection<
@@ -58,64 +172,10 @@ export async function* iterateConnection<
   exec: ConnectionExec,
   options: IterateConnectionOptions<Field, Args, unknown>,
 ): AsyncGenerator<Node> {
-  let after: string | undefined;
-  let before: string | undefined;
-  let pageNumber = 0;
-  const seenCursors = new Set<string>();
-  const direction = options.direction ?? "forward";
-  const maxPages = options.maxPages ?? Number.POSITIVE_INFINITY;
-
-  while (pageNumber < maxPages) {
-    if (options.signal?.aborted) {
-      throw toGraphqlRequestError(new DOMException("Aborted", "AbortError"));
-    }
-
-    const paging =
-      direction === "forward"
-        ? { first: options.pageSize, after }
-        : { last: options.pageSize, before };
-
-    const variables = { ...options.args, ...paging };
-    const op = options.build(variables);
-
-    const raw = await exec(op);
-    pageNumber++;
-
-    const conn = connectionShape(raw, options.field);
-    if (!conn?.pageInfo) {
-      throw toGraphqlRequestError(new Error("Response is not a connection"));
-    }
-
-    const items =
-      conn.nodes ??
-      conn.edges?.map((e) => e.node).filter((n) => n !== undefined) ??
-      [];
-
-    for (const item of items) {
+  for await (const { conn } of walkConnectionPages(exec, options)) {
+    for (const item of connectionNodes(conn)) {
       yield item as Node;
     }
-
-    const cursor =
-      direction === "forward"
-        ? conn.pageInfo.endCursor
-        : conn.pageInfo.startCursor;
-
-    const hasMore =
-      direction === "forward"
-        ? conn.pageInfo.hasNextPage
-        : conn.pageInfo.hasPreviousPage;
-
-    if (!hasMore || cursor == null) break;
-
-    if (seenCursors.has(cursor)) {
-      throw toGraphqlRequestError(
-        new Error("Repeated connection cursor from server"),
-      );
-    }
-    seenCursors.add(cursor);
-
-    if (direction === "forward") after = cursor;
-    else before = cursor;
   }
 }
 
@@ -127,56 +187,8 @@ export async function* paginateConnection<
   exec: ConnectionExec,
   options: IterateConnectionOptions<Field, Args, unknown>,
 ): AsyncGenerator<ConnectionPage<Node>> {
-  let after: string | undefined;
-  let before: string | undefined;
-  let pageNumber = 0;
-  const seenCursors = new Set<string>();
-  const direction = options.direction ?? "forward";
-  const maxPages = options.maxPages ?? Number.POSITIVE_INFINITY;
-
-  while (pageNumber < maxPages) {
-    if (options.signal?.aborted) {
-      throw toGraphqlRequestError(new DOMException("Aborted", "AbortError"));
-    }
-
-    const paging =
-      direction === "forward"
-        ? { first: options.pageSize, after }
-        : { last: options.pageSize, before };
-
-    const variables = { ...options.args, ...paging };
-    const op = options.build(variables);
-    const raw = await exec(op);
-    pageNumber++;
-
-    const conn = connectionShape(raw, options.field);
-    if (!conn?.pageInfo) {
-      throw toGraphqlRequestError(new Error("Response is not a connection"));
-    }
-
-    const nodes = (conn.nodes ??
-      conn.edges?.map((e) => e.node).filter((n) => n !== undefined) ??
-      []) as Node[];
-
-    yield { nodes, pageInfo: conn.pageInfo, pageNumber };
-
-    const cursor =
-      direction === "forward"
-        ? conn.pageInfo.endCursor
-        : conn.pageInfo.startCursor;
-    const hasMore =
-      direction === "forward"
-        ? conn.pageInfo.hasNextPage
-        : conn.pageInfo.hasPreviousPage;
-
-    if (!hasMore || cursor == null) break;
-    if (seenCursors.has(cursor)) {
-      throw toGraphqlRequestError(
-        new Error("Repeated connection cursor from server"),
-      );
-    }
-    seenCursors.add(cursor);
-    if (direction === "forward") after = cursor;
-    else before = cursor;
+  for await (const { conn, pageNumber } of walkConnectionPages(exec, options)) {
+    const nodes = connectionNodes(conn) as Node[];
+    yield { nodes, pageInfo: conn.pageInfo!, pageNumber };
   }
 }

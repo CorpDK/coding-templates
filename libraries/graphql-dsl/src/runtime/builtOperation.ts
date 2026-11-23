@@ -1,5 +1,4 @@
 import type { TypedDocumentNode } from "@graphql-typed-document-node/core";
-import type { FieldsSelection } from "./typeSelection.js";
 import type { GraphqlOperation } from "./generateGraphqlOperation.js";
 
 export type BuiltOperation<

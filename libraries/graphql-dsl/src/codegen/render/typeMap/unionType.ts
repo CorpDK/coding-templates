@@ -1,6 +1,6 @@
 import { GraphQLUnionType } from "graphql";
 import { RenderContext } from "../common/RenderContext.js";
-import { FieldMap, Type } from "../../../runtime/types.js";
+import { FieldMap } from "../../../runtime/types.js";
 function uniq<T>(list: T[]): T[] {
   return [...new Set(list)];
 }
@@ -12,7 +12,7 @@ export const unionType = (type: GraphQLUnionType, _: RenderContext) => {
     return r;
   }, {});
 
-  const commonInterfaces = uniq(types.map((x) => x.getInterfaces()).flat());
+  const commonInterfaces = uniq(types.flatMap((x) => x.getInterfaces()));
   commonInterfaces.forEach((t) => {
     typeObj[`on_${t.name}`] = { type: t.name };
   });
