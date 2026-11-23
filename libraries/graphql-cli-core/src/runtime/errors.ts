@@ -32,6 +32,27 @@ export function writeCliError(
   stderr.write(`${JSON.stringify(payload)}\n`);
 }
 
+function redactUnknown(
+  value: unknown,
+  redact: (text: string) => string,
+): unknown {
+  if (typeof value === "string") {
+    return redact(value);
+  }
+  if (Array.isArray(value)) {
+    return value.map((item) => redactUnknown(item, redact));
+  }
+  if (value !== null && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, nested]) => [
+        key,
+        redactUnknown(nested, redact),
+      ]),
+    );
+  }
+  return value;
+}
+
 export function reportUsageError(
   stderr: NodeJS.WritableStream,
   message: string,
@@ -51,16 +72,22 @@ export function reportRequestError(
 ): number {
   switch (error.kind) {
     case "graphql":
-      writeCliError(stderr, { error: "graphql", errors: error.errors });
+      writeCliError(stderr, {
+        error: "graphql",
+        errors: redactUnknown(error.errors, redact) as readonly unknown[],
+      });
       break;
     case "userErrors":
       writeCliError(stderr, {
         error: "userErrors",
-        userErrors: error.userErrors,
+        userErrors: redactUnknown(error.userErrors, redact) as readonly unknown[],
       });
       break;
     case "validation":
-      writeCliError(stderr, { error: "validation", issues: error.issues });
+      writeCliError(stderr, {
+        error: "validation",
+        issues: redactUnknown(error.issues, redact) as readonly unknown[],
+      });
       break;
     case "transport":
       writeCliError(stderr, {

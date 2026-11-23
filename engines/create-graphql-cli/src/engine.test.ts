@@ -1,10 +1,14 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { pathToFileURL } from "node:url";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { runEngineCli } from "@corpdk/engine-kit";
+import { emitCliModules } from "@corpdk/graphql-cli-core/codegen";
 import { runGenerate } from "./generate.js";
+import { readCliConfig, configToEmitOptions } from "./cli-config.js";
+import { resolveSdkSnapshot } from "./sdk-resolve.js";
 import { CREATE_GRAPHQL_CLI_HELP } from "./constants.js";
 import { CREATE_GRAPHQL_CLI_ENGINE_ROOT } from "./constants.js";
 
@@ -68,12 +72,26 @@ describe("create-graphql-cli engine", () => {
 
     const result = await runGenerate({ packageDir: dir });
     expect(result.exitCode).toBe(0);
-    const commands = fs.readFileSync(
-      path.join(dir, "src/generated/commands.ts"),
-      "utf8",
+
+    const config = await readCliConfig(dir);
+    const sdkPath = path.resolve(dir, config.sdk.path);
+    const { schema, sha256 } = await resolveSdkSnapshot(sdkPath);
+    const oracle = emitCliModules(
+      schema,
+      configToEmitOptions(config, "0.0.1"),
     );
-    expect(commands).toContain("item-connection");
-    expect(commands).toContain("sdk-snapshot-sha256");
+    const expectedKeys = oracle.commands.map((cmd) => cmd.command).sort();
+
+    const commandsPath = path.join(dir, "src/generated/commands.ts");
+    const header = fs.readFileSync(commandsPath, "utf8").split("\n", 3);
+    expect(header[1]).toBe(`// sdk-snapshot-sha256: ${sha256}`);
+
+    const { catalog } = (await import(
+      pathToFileURL(commandsPath).href
+    )) as {
+      catalog: Record<string, unknown>;
+    };
+    expect(Object.keys(catalog).sort()).toEqual(expectedKeys);
   });
 
   it("generate --check fails when snapshot drift would occur", async () => {

@@ -44,7 +44,6 @@
     "node": ">=24.0.0"
   },
   "dependencies": {
-    "@clack/prompts": "^1.1.0",
     "@corpdk/engine-kit": "workspace:^",
     "@corpdk/graphql-cli-core": "workspace:^",
     "graphql": "^16.13.2",

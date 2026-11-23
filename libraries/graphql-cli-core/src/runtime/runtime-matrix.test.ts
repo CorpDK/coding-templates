@@ -245,6 +245,37 @@ describe("runCli matrix (doc 14 §12)", () => {
     expect(err).toContain("<redacted>");
   });
 
+  it("redacts bearer token from graphql errors", async () => {
+    const token = "super-secret-token-value";
+    const hello: CommandDescriptor = {
+      command: "hello",
+      kind: "query",
+      field: "hello",
+      destructive: false,
+      followUps: [],
+      args: [],
+      selection: {},
+    };
+    const fetchImpl = vi.fn(async () =>
+      Response.json({ errors: [{ message: `failed auth ${token}` }] }),
+    );
+    const { streams, stderr } = captureIo();
+    const code = await runCli({
+      catalog: { hello },
+      config: harnessConfig,
+      sdk: baseSdk(),
+      argv: ["node", "cli", "hello"],
+      env: { ...process.env, GRAPHQL_TOKEN: token },
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+      ...streams,
+      isTTY: { stdin: false, stdout: false },
+    });
+    expect(code).toBe(1);
+    const err = stderr.join("");
+    expect(err).not.toContain(token);
+    expect(err).toContain("<redacted>");
+  });
+
   it("describe --json emits JSON Schema for z.lazy inputs", () => {
     type Filter = { and?: Filter[]; name?: string };
     const FilterSchema: z.ZodType<Filter> = z.lazy(() =>

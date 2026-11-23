@@ -1,5 +1,3 @@
-export const GRAPHQL_CLI_CORE_PHASE = "C-P2" as const;
-
 export type {
   GraphqlInputIssue,
   GraphqlInputParseResult,
