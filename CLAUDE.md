@@ -18,7 +18,7 @@ coding-templates/
 ├── engines/
 │   ├── create-app/         (@corpdk/create-app)          Interactive CLI scaffolding tool
 │   ├── create-ds/          (@corpdk/create-ds)             DS scaffold + DAL automation upgrade CLI
-│   ├── create-graphql-sdk/ (@corpdk/create-graphql-sdk)   SDK scaffold engine (doc 13; stub CLI until P1c)
+│   ├── create-graphql-sdk/ (@corpdk/create-graphql-sdk)   SDK scaffold engine (`init`, `sync`, `codegen`, `generate`, `upgrade`; doc 13)
 │   └── create-graphql-cli/ (@corpdk/create-graphql-cli)   CLI scaffold engine (doc 14; stub until C-P2)
 ├── libraries/
 │   ├── codegen-cli/        (@corpdk/codegen-cli)          GraphQL codegen plugin for resolver types + SDK generation

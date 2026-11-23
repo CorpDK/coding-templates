@@ -1,7 +1,7 @@
 {
   "name": "@corpdk/create-graphql-sdk",
   "version": "2026.10.0-alpha.17",
-  "description": "Scaffold and upgrade graphql-sdk packages",
+  "description": "Scaffold and upgrade GraphQL client SDK packages",
   "type": "module",
   "license": "MIT",
   "publishConfig": {
@@ -16,6 +16,7 @@
   "files": [
     "dist",
     "canonical",
+    "starter",
     "README.md"
   ],
   "types": "./dist/types-entry.d.ts",
@@ -31,11 +32,25 @@
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "clean": "rm -rf dist node_modules .turbo *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@clack/prompts": "^1.1.0",
+    "@corpdk/engine-kit": "workspace:^",
+    "@corpdk/graphql-dsl": "workspace:^",
+    "@corpdk/graphql-input-zod": "workspace:^",
+    "@graphql-codegen/cli": "^8.0.0",
+    "@graphql-codegen/typescript": "^7.0.1",
+    "@graphql-tools/merge": "^10.0.9",
+    "graphql": "^16.13.2",
+    "yaml": "^2.8.3"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
-    "typescript": "^6.0.2"
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.2",
+    "zod": "^4.3.6"
   },
   "engines": {
     "node": ">=24.0.0"

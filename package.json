@@ -14,7 +14,8 @@
     "clean": "turbo run clean",
     "storybook": "pnpm --filter @corpdk/ui-showcase dev",
     "create-app": "node engines/create-app/dist/index.js",
-    "create-ds": "node engines/create-ds/dist/index.js"
+    "create-ds": "node engines/create-ds/dist/index.js",
+    "create-graphql-sdk": "node engines/create-graphql-sdk/dist/index.js"
   },
   "devDependencies": {
     "@trunkio/launcher": "1.3.4",

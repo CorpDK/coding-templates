@@ -1,0 +1,16 @@
+apiVersion: corpdk.dev/graphql-sdk/v1
+package: "@corpdk/ds-sdk"
+
+schema:
+  sources: []
+  snapshot: schema/schema.graphqls
+
+scalars: {}
+
+dsl:
+  engine: corpdk-graphql-dsl
+
+validation:
+  enabled: true
+  strictObjects: false
+  builtinScalars: {}

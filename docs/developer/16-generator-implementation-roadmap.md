@@ -2,7 +2,7 @@
 
 Living execution plan for the SDK, CLI, and DS-generator designs ([13](13-graphql-sdk-generator.md), [14](14-graphql-cli-generator.md), [15](15-create-ds-generator-integration.md)). **B0, Wave 1, and Wave 2 are complete** on `main` (`403b77f`).
 
-**Status:** **Wave 2 complete** — P1b `graphql-dsl` ([#43](https://github.com/CorpDK/coding-templates/pull/43)), C-P1 `graphql-cli-core` codegen ([#42](https://github.com/CorpDK/coding-templates/pull/42)). Lockstep npm **`2026.10.0-alpha.17`** publishes P1b + C-P1 implementation tarballs. **Wave 3 (next):** P1c `create-graphql-sdk`, C-P2 `create-graphql-cli` + cli-core runtime; `create-*` engines remain stub until then.
+**Status:** **Wave 3 in progress** — P1c `@corpdk/create-graphql-sdk` engine (this branch). Wave 2 shipped P1b `graphql-dsl` ([#43](https://github.com/CorpDK/coding-templates/pull/43)) and C-P1 `graphql-cli-core` codegen ([#42](https://github.com/CorpDK/coding-templates/pull/42)). **Next:** C-P2 `create-graphql-cli` + cli-core runtime.
 
 ---
 
@@ -16,7 +16,7 @@ Living execution plan for the SDK, CLI, and DS-generator designs ([13](13-graphq
 | **Wave 1 implementation**                       | `scalar-zod`, `graphql-input-zod`, `dal-codegen` wiring (P1a); `engine-kit` + `create-ds` refactor (DS-P0b)           |
 | **Monorepo CI**                                 | Orchestrated Monorepo quality (12 lockstep packages + `quality-templates`), Sonar, publish dispatch on the same SHA   |
 | **Lockstep npm `latest`**                       | All twelve `@corpdk/*` DS automation packages at **`2026.10.0-alpha.17`** with provenance (after Wave 2 CalVer bump) |
-| Typed scaffolds for remaining phases            | Stub `src/` on `create-graphql-sdk` / `create-graphql-cli` until P1c / C-P2; **`graphql-dsl`** and **`graphql-cli-core`** codegen implemented |
+| Typed scaffolds for remaining phases            | **`create-graphql-sdk`** implemented (P1c); `create-graphql-cli` stub until C-P2 |
 | **Wave 2** (`graphql-dsl`, `graphql-cli-core`)  | P1b runtime + codegen; C-P1 relation-ids emitter, man/texi, DAL golden tests ([#42](https://github.com/CorpDK/coding-templates/pull/42), [#43](https://github.com/CorpDK/coding-templates/pull/43)) |
 
 **Still legacy until later phases:** `templates/ds-sdk` (`client-preset`), `templates/ds-cli` (`@corpdk/codegen-cli` preset). **`create-ds` uses `@corpdk/engine-kit`** after DS-P0b (#36).
