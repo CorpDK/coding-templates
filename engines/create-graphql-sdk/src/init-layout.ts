@@ -133,6 +133,17 @@ export async function applyScaffoldLayout(
       releaseVersion,
     },
   );
+
+  if (options.scalarPreset === "dal") {
+    const deps = { ...(merged.dependencies ?? {}) };
+    const corpdkRef =
+      deps["@corpdk/graphql-input-zod"] ??
+      deps["@corpdk/graphql-dsl"] ??
+      "workspace:^";
+    deps["@corpdk/scalar-zod"] = corpdkRef;
+    merged.dependencies = deps;
+  }
+
   await writeJson(path.join(targetDir, "package.json"), merged);
 
   const config: SdkConfig = {

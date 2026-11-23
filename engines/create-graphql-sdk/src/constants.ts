@@ -50,39 +50,39 @@ export const DAL_SCALAR_PRESET: Record<
 > = {
   DateTime: {
     type: "string",
-    zod: { from: "@corpdk/scalar-zod", name: "DateTime" },
+    zod: { from: "@corpdk/scalar-zod", name: "zDateTime" },
     wire: "string",
   },
-  Date: { type: "string", zod: { from: "@corpdk/scalar-zod", name: "Date" } },
+  Date: { type: "string", zod: { from: "@corpdk/scalar-zod", name: "zDate" } },
   TimeTz: {
     type: "string",
-    zod: { from: "@corpdk/scalar-zod", name: "TimeTz" },
+    zod: { from: "@corpdk/scalar-zod", name: "zTimeTz" },
   },
   BigInt: {
     type: "string",
-    zod: { from: "@corpdk/scalar-zod", name: "BigInt" },
+    zod: { from: "@corpdk/scalar-zod", name: "zBigInt" },
   },
   Decimal: {
     type: "string",
-    zod: { from: "@corpdk/scalar-zod", name: "Decimal" },
+    zod: { from: "@corpdk/scalar-zod", name: "zDecimal" },
   },
   IntervalMs: {
     type: "number",
-    zod: { from: "@corpdk/scalar-zod/pg", name: "IntervalMs" },
+    zod: { from: "@corpdk/scalar-zod/pg", name: "zIntervalMs" },
   },
   SmallInt: {
     type: "number",
-    zod: { from: "@corpdk/scalar-zod/pg", name: "SmallInt" },
+    zod: { from: "@corpdk/scalar-zod/pg", name: "zSmallInt" },
   },
   Double: {
     type: "number",
-    zod: { from: "@corpdk/scalar-zod/pg", name: "Double" },
+    zod: { from: "@corpdk/scalar-zod/pg", name: "zDouble" },
   },
   InsensitiveString: {
     type: "string",
-    zod: { from: "@corpdk/scalar-zod", name: "InsensitiveString" },
+    zod: { from: "@corpdk/scalar-zod", name: "zInsensitiveString" },
   },
-  IP: { type: "string", zod: { from: "@corpdk/scalar-zod", name: "IP" } },
-  CIDR: { type: "string", zod: { from: "@corpdk/scalar-zod", name: "CIDR" } },
-  MAC: { type: "string", zod: { from: "@corpdk/scalar-zod", name: "MAC" } },
+  IP: { type: "string", zod: { from: "@corpdk/scalar-zod", name: "zIP" } },
+  CIDR: { type: "string", zod: { from: "@corpdk/scalar-zod", name: "zCidr" } },
+  MAC: { type: "string", zod: { from: "@corpdk/scalar-zod", name: "zMAC" } },
 };
