@@ -116,12 +116,7 @@ async function loadConnectionPage(
 ): Promise<ConnectionPayload> {
   const variables = {
     ...options.args,
-    ...pagingArgs(
-      direction,
-      options.pageSize,
-      paging.after,
-      paging.before,
-    ),
+    ...pagingArgs(direction, options.pageSize, paging.after, paging.before),
   };
   const raw = await exec(options.build(variables));
   const conn = connectionShape(raw, options.field);

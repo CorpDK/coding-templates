@@ -3,12 +3,14 @@
  * object-union detection and directive/alias field handling.
  */
 
-export type FieldsSelection<SRC extends Anify<DST> | undefined, DST> =
-  undefined extends SRC
-    ? Exclude<SRC, undefined> extends never
-      ? Extract<SRC, undefined>
-      : FieldsSelection<Exclude<SRC, undefined>, DST> | undefined
-    : FieldsSelectionBody<SRC, DST>;
+export type FieldsSelection<
+  SRC extends Anify<DST> | undefined,
+  DST,
+> = undefined extends SRC
+  ? Exclude<SRC, undefined> extends never
+    ? Extract<SRC, undefined>
+    : FieldsSelection<Exclude<SRC, undefined>, DST> | undefined
+  : FieldsSelectionBody<SRC, DST>;
 
 type FieldsSelectionBody<SRC extends Anify<DST> | undefined, DST> = {
   scalar: SRC;

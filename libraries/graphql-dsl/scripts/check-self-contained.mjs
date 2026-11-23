@@ -64,8 +64,7 @@ function collectForbiddenSpecs(source, fileName) {
       const isDynamicImport =
         node.expression.kind === ts.SyntaxKind.ImportKeyword;
       const isRequire =
-        ts.isIdentifier(node.expression) &&
-        node.expression.text === "require";
+        ts.isIdentifier(node.expression) && node.expression.text === "require";
       if (isDynamicImport || isRequire) {
         record(stringLiteralArg(node.arguments[0]));
       }

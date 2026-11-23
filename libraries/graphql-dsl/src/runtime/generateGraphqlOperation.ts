@@ -227,7 +227,9 @@ function scalarFragmentForRequest(
   if (!fieldNames.includes("__scalar") || !scalarFieldsLength(type)) {
     return undefined;
   }
-  const falsyFieldNames = new Set(Object.keys(fields).filter((k) => !fields[k]));
+  const falsyFieldNames = new Set(
+    Object.keys(fields).filter((k) => !fields[k]),
+  );
   ctx.fragmentCounter++;
   const scalarFieldsFragment = `f${ctx.fragmentCounter}`;
   const scalarFields = type.scalar ?? [];
@@ -249,18 +251,17 @@ function parseFieldChild(
   path: string[],
   fieldName: string,
 ): { parsed: string; directives: string } {
-  if (
-    typeof child === "object" &&
-    child !== null &&
-    !Array.isArray(child)
-  ) {
+  if (typeof child === "object" && child !== null && !Array.isArray(child)) {
     const split = parseFieldDirectives(child as Fields, ctx);
     return {
       directives: split.directives,
       parsed: parseRequest(split.body, ctx, [...path, fieldName]),
     };
   }
-  return { parsed: parseRequest(child, ctx, [...path, fieldName]), directives: "" };
+  return {
+    parsed: parseRequest(child, ctx, [...path, fieldName]),
+    directives: "",
+  };
 }
 
 function selectionForField(
@@ -322,7 +323,12 @@ const parseRequest = (
   alias?: string,
 ): string => {
   if (typeof request === "object" && request !== null && "__args" in request) {
-    return parseRequestWithArgs(request as Fields & { __args: Args }, ctx, path, alias);
+    return parseRequestWithArgs(
+      request as Fields & { __args: Args },
+      ctx,
+      path,
+      alias,
+    );
   }
 
   if (
