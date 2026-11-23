@@ -1,8 +1,8 @@
 # Generator family — implementation roadmap
 
-Living execution plan for the SDK, CLI, and DS-generator designs ([13](13-graphql-sdk-generator.md), [14](14-graphql-cli-generator.md), [15](15-create-ds-generator-integration.md)). **B0, design merges, and Wave 1 are complete** on `main` (`2a00576`).
+Living execution plan for the SDK, CLI, and DS-generator designs ([13](13-graphql-sdk-generator.md), [14](14-graphql-cli-generator.md), [15](15-create-ds-generator-integration.md)). **B0, Wave 1, and Wave 2 are complete** on `main` (`403b77f`).
 
-**Status:** **Wave 1 complete** — P1a ([#35](https://github.com/CorpDK/coding-templates/pull/35)), DS-P0b ([#36](https://github.com/CorpDK/coding-templates/pull/36)), Monorepo CI ([#37](https://github.com/CorpDK/coding-templates/pull/37)), lockstep quality + CalVer gate ([#38](https://github.com/CorpDK/coding-templates/pull/38)), OIDC-safe publish dispatch ([#39](https://github.com/CorpDK/coding-templates/pull/39)), live lockstep **`2026.10.0-alpha.16`** ([#40](https://github.com/CorpDK/coding-templates/pull/40)). **Wave 2 (current):** P1b `graphql-dsl`, C-P1 `graphql-cli-core` codegen — `create-graphql-sdk` and `create-graphql-cli` remain stub; `graphql-cli-core` runtime awaits C-P2.
+**Status:** **Wave 2 complete** — P1b `graphql-dsl` ([#43](https://github.com/CorpDK/coding-templates/pull/43)), C-P1 `graphql-cli-core` codegen ([#42](https://github.com/CorpDK/coding-templates/pull/42)). Lockstep npm **`2026.10.0-alpha.17`** publishes P1b + C-P1 implementation tarballs. **Wave 3 (next):** P1c `create-graphql-sdk`, C-P2 `create-graphql-cli` + cli-core runtime; `create-*` engines remain stub until then.
 
 ---
 
@@ -15,9 +15,9 @@ Living execution plan for the SDK, CLI, and DS-generator designs ([13](13-graphq
 | Manual B0 bootstrap + GitHub trusted publishing | `scripts/npm-b0-bootstrap.sh`, admin doc § Generator B0                                                               |
 | **Wave 1 implementation**                       | `scalar-zod`, `graphql-input-zod`, `dal-codegen` wiring (P1a); `engine-kit` + `create-ds` refactor (DS-P0b)           |
 | **Monorepo CI**                                 | Orchestrated Monorepo quality (12 lockstep packages + `quality-templates`), Sonar, publish dispatch on the same SHA   |
-| **Lockstep npm `latest`**                       | All twelve `@corpdk/*` DS automation packages at **`2026.10.0-alpha.16`** with provenance (publish run after #40)     |
-| Typed scaffolds for remaining phases            | Stub `src/` on generator packages not yet implemented (P1c, P2, C-P2, C-P3); `@corpdk/graphql-dsl` implements P1b   |
-| **C-P1 codegen** (`graphql-cli-core`)           | Relation-ids emitter, man/texi, DAL golden tests; R-C01, R-C02, R-C17 closed in [doc 14](14-graphql-cli-generator.md) |
+| **Lockstep npm `latest`**                       | All twelve `@corpdk/*` DS automation packages at **`2026.10.0-alpha.17`** with provenance (after Wave 2 CalVer bump) |
+| Typed scaffolds for remaining phases            | Stub `src/` on `create-graphql-sdk` / `create-graphql-cli` until P1c / C-P2; **`graphql-dsl`** and **`graphql-cli-core`** codegen implemented |
+| **Wave 2** (`graphql-dsl`, `graphql-cli-core`)  | P1b runtime + codegen; C-P1 relation-ids emitter, man/texi, DAL golden tests ([#42](https://github.com/CorpDK/coding-templates/pull/42), [#43](https://github.com/CorpDK/coding-templates/pull/43)) |
 
 **Still legacy until later phases:** `templates/ds-sdk` (`client-preset`), `templates/ds-cli` (`@corpdk/codegen-cli` preset). **`create-ds` uses `@corpdk/engine-kit`** after DS-P0b (#36).
 
@@ -31,7 +31,7 @@ flowchart TB
     DS-P0b[DS-P0b engine-kit + create-ds refactor]
     P1a[P1a scalar-zod + graphql-input-zod + dal-codegen wire]
   end
-  subgraph wave2 [Wave 2 — current]
+  subgraph wave2 [Wave 2 — complete]
     P1b[P1b graphql-dsl fork]
     C-P1[C-P1 graphql-cli-core codegen]
   end
@@ -67,7 +67,7 @@ Canonical **publish order** remains [doc 15 §4.3](15-create-ds-generator-integr
 
 **No cross-track merge dependency** until Wave 3 (P1c needs DS-P0b).
 
-### Wave 2 (current) — after P1a on `main`
+### Wave 2 (complete) — merged #42 / #43
 
 | Phase    | Depends on | Notes                                                                                                                           |
 | -------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------- |
@@ -139,6 +139,8 @@ Canonical **publish order** remains [doc 15 §4.3](15-create-ds-generator-integr
 | [#38](https://github.com/CorpDK/coding-templates/pull/38) | Lockstep 12-package quality matrix, CalVer gate, `quality-templates` | `084931a`  |
 | [#39](https://github.com/CorpDK/coding-templates/pull/39) | Publish via `gh workflow run` + `checkout_sha` (npm OIDC fix)        | `bdb5a0d`  |
 | [#40](https://github.com/CorpDK/coding-templates/pull/40) | Lockstep **2026.10.0-alpha.16** bump + live publish                  | `2a00576`  |
+| [#42](https://github.com/CorpDK/coding-templates/pull/42) | C-P1 **`graphql-cli-core`** codegen                                  | `9e7d1c2`  |
+| [#43](https://github.com/CorpDK/coding-templates/pull/43) | P1b **`graphql-dsl`** runtime + codegen                              | `403b77f`  |
 
 **Ship policy:** run **`no-mistakes axi run`** with intent text for the phase when a branch is ready; **no-mistakes** owns push and PR creation (do not run `gh pr create` from implementation threads unless explicitly requested).
 
