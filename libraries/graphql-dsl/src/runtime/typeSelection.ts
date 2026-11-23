@@ -108,7 +108,7 @@ type HandleObject<SRC extends Anify<DST>, DST> = DST extends boolean
               : FieldsSelection<SRC[Key], NonNullable<DST[Key]>>
             : SRC[Key];
         },
-        Exclude<keyof DST, FieldsToRemove>
+        OmitFalseSelectionKeys<DST>
       > &
         AliasFields<SRC, DST>;
 
@@ -170,5 +170,14 @@ type FieldsToRemove =
   | "__aliases"
   | "__include"
   | "__skip";
+
+/** Selection values `false` or `0` omit the field from the result shape (genql upstream). */
+type OmitFalseSelectionKeys<DST> = {
+  [K in keyof DST]: K extends FieldsToRemove
+    ? never
+    : DST[K] extends false | 0
+      ? never
+      : K;
+}[keyof DST];
 
 type Nil = undefined | null;
