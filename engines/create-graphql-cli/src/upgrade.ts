@@ -89,7 +89,6 @@ export async function runUpgrade(options: UpgradeOptions): Promise<EngineResult>
   }
   await writeEngineVersion(packageDir, ENGINE_VERSION_FILE, releaseVersion);
 
-  void plan;
   return engineResult({
     exitCode: EXIT_SUCCESS,
     changedFiles: plan.changedFiles,

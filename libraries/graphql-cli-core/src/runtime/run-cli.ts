@@ -117,8 +117,8 @@ async function startInteractive(
       run: async (op, variables) => {
         try {
           return await send(options, io, op, variables, globals);
-        } catch (thrown) {
-          return reportFailure(thrown, io);
+        } catch (error_) {
+          return reportFailure(error_, io);
         }
       },
     },
@@ -256,7 +256,7 @@ export async function runCli(options: RunCliOptions): Promise<number> {
   const args = (options.argv ?? process.argv).slice(2);
   try {
     return await dispatch(options, io, args);
-  } catch (thrown) {
-    return reportFailure(thrown, io);
+  } catch (error_) {
+    return reportFailure(error_, io);
   }
 }

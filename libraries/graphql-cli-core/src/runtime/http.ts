@@ -76,8 +76,8 @@ export async function postOperation(
     status = response.status;
     statusText = response.statusText;
     text = await response.text();
-  } catch (thrown) {
-    throw wrapFetchError(thrown, transport.timeoutMs, timeout.aborted);
+  } catch (error_) {
+    throw wrapFetchError(error_, transport.timeoutMs, timeout.aborted);
   }
 
   if (status < 200 || status >= 300) {

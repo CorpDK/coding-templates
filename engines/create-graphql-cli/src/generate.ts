@@ -22,12 +22,50 @@ export type GenerateOptions = {
   check?: boolean;
 };
 
-async function generatedHeader(sha256: string): Promise<string> {
+function generatedHeader(sha256: string): string {
   return [
     "// @generated — do not edit manually",
     `// sdk-snapshot-sha256: ${sha256}`,
     "",
   ].join("\n");
+}
+
+type PlannedFile = { path: string; content: string };
+
+async function checkPlannedFiles(
+  packageDir: string,
+  planned: PlannedFile[],
+): Promise<EngineResult | undefined> {
+  const results = await Promise.all(
+    planned.map(async (file) => {
+      let existing = "";
+      try {
+        existing = await fs.readFile(file.path, "utf8");
+      } catch {
+        return engineResult({
+          exitCode: 1,
+          message: `Drift: missing ${path.relative(packageDir, file.path)}`,
+        });
+      }
+      if (existing !== file.content) {
+        return engineResult({
+          exitCode: 1,
+          message: `Drift: ${path.relative(packageDir, file.path)} would change`,
+        });
+      }
+      return undefined;
+    }),
+  );
+  return results.find((result) => result !== undefined);
+}
+
+async function writePlannedFiles(planned: PlannedFile[]): Promise<void> {
+  await Promise.all(
+    planned.map(async (file) => {
+      await fs.mkdir(path.dirname(file.path), { recursive: true });
+      await fs.writeFile(file.path, file.content, "utf8");
+    }),
+  );
 }
 
 export async function runGenerate(options: GenerateOptions): Promise<EngineResult> {
@@ -51,7 +89,7 @@ export async function runGenerate(options: GenerateOptions): Promise<EngineResul
     const genDir = path.join(packageDir, "src", "generated");
     const commandsPath = path.join(genDir, "commands.ts");
     const runtimeConfigPath = path.join(genDir, "runtime-config.ts");
-    const header = await generatedHeader(sha256);
+    const header = generatedHeader(sha256);
     const commandsSource = `${header}${emitted.commandsSource}`;
     const runtimeSource = emitRuntimeConfigModule(emitted.runtimeConfig);
 
@@ -81,30 +119,12 @@ export async function runGenerate(options: GenerateOptions): Promise<EngineResul
     }
 
     if (check) {
-      for (const file of planned) {
-        let existing = "";
-        try {
-          existing = await fs.readFile(file.path, "utf8");
-        } catch {
-          return engineResult({
-            exitCode: 1,
-            message: `Drift: missing ${path.relative(packageDir, file.path)}`,
-          });
-        }
-        if (existing !== file.content) {
-          return engineResult({
-            exitCode: 1,
-            message: `Drift: ${path.relative(packageDir, file.path)} would change`,
-          });
-        }
-      }
+      const drift = await checkPlannedFiles(packageDir, planned);
+      if (drift) return drift;
       return engineResult({ exitCode: EXIT_SUCCESS });
     }
 
-    for (const file of planned) {
-      await fs.mkdir(path.dirname(file.path), { recursive: true });
-      await fs.writeFile(file.path, file.content, "utf8");
-    }
+    await writePlannedFiles(planned);
 
     for (const warning of emitted.warnings) {
       console.warn(warning);

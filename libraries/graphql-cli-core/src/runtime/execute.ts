@@ -64,10 +64,10 @@ async function runUnary(
       transport.redact,
       operation.operationName,
     );
-  } catch (thrown) {
+  } catch (error_) {
     return reportRequestError(
       streams.stderr,
-      toGraphqlRequestError(thrown),
+      toGraphqlRequestError(error_),
       transport.redact,
     );
   }

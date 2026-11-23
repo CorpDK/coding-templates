@@ -32,9 +32,15 @@ function binFromName(name: string): string {
   return segment;
 }
 
+/** Corepack beside the running Node binary (absolute path; no PATH lookup). */
+function corepackExecutable(): string {
+  const name = process.platform === "win32" ? "corepack.cmd" : "corepack";
+  return path.join(path.dirname(process.execPath), name);
+}
+
 async function pnpmInstall(cwd: string): Promise<void> {
   await new Promise<void>((resolve, reject) => {
-    const child = spawn("pnpm", ["install"], {
+    const child = spawn(corepackExecutable(), ["pnpm", "install"], {
       cwd,
       stdio: "inherit",
     });
@@ -78,7 +84,7 @@ export async function runInit(options: InitOptions): Promise<EngineResult> {
   });
 
   const canonical = path.join(CREATE_GRAPHQL_CLI_ENGINE_ROOT, "canonical");
-  void (await readEngineRelease(CREATE_GRAPHQL_CLI_ENGINE_ROOT));
+  await readEngineRelease(CREATE_GRAPHQL_CLI_ENGINE_ROOT);
 
   const pkgTemplate = await readJson<Record<string, unknown>>(
     path.join(canonical, "package.json"),
@@ -94,7 +100,7 @@ export async function runInit(options: InitOptions): Promise<EngineResult> {
       [sdkPkg.name]: "workspace:*",
     },
     devDependencies: {
-      ...((pkgTemplate.devDependencies as Record<string, string>) ?? {}),
+      ...(pkgTemplate.devDependencies as Record<string, string>),
       "@corpdk/create-graphql-cli": "workspace:^",
     },
   };

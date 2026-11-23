@@ -33,8 +33,7 @@ export async function assertSdkValidationExport(sdkPath: string): Promise<void> 
   const pkg = JSON.parse(await fs.readFile(pkgPath, "utf8")) as {
     exports?: Record<string, unknown>;
   };
-  const hasValidation =
-    pkg.exports && Object.prototype.hasOwnProperty.call(pkg.exports, "./validation");
+  const hasValidation = pkg.exports && Object.hasOwn(pkg.exports, "./validation");
   if (!hasValidation) {
     throw new SdkResolveError(
       "SDK package.json must export ./validation (validation.enabled: true in sdk.config.yaml)",

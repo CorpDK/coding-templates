@@ -79,6 +79,56 @@ export interface SubscriptionOptions {
 
 type EventOutcome = { done: false } | { done: true; code: number };
 
+type SubscriptionState = { outcome: EventOutcome; received: number };
+
+function onSubscriptionSseEvent(
+  event: SseEvent,
+  state: SubscriptionState,
+  fail: (error: GraphqlRequestError) => number,
+  config: RuntimeConfig,
+  streams: OutputStreams,
+  format: ResultFormat,
+  redact: Transport["redact"],
+  maxEvents: number | undefined,
+): void {
+  if (state.outcome.done) return;
+  if (event.event === "complete") {
+    state.outcome = { done: true, code: EXIT_OK };
+    return;
+  }
+  if (event.event === "error") {
+    state.outcome = {
+      done: true,
+      code: fail(transportFailure(`SSE stream error: ${event.data}`)),
+    };
+    return;
+  }
+  if (event.event !== "next") return;
+
+  let body: GraphqlResponse;
+  try {
+    body = JSON.parse(event.data) as GraphqlResponse;
+  } catch {
+    state.outcome = {
+      done: true,
+      code: fail(transportFailure("SSE event carried invalid JSON")),
+    };
+    return;
+  }
+  const code = settleResponse(
+    body,
+    config,
+    streams,
+    { raw: format.raw, pretty: false },
+    redact,
+  );
+  state.received += 1;
+  if (code !== EXIT_OK) state.outcome = { done: true, code };
+  else if (maxEvents !== undefined && state.received >= maxEvents) {
+    state.outcome = { done: true, code: EXIT_OK };
+  }
+}
+
 /** Streams one subscription over SSE; every stop condition exits 0. */
 export async function streamSubscription(
   transport: Transport,
@@ -127,47 +177,18 @@ export async function streamSubscription(
       );
     }
 
-    let received = 0;
-    const state: { outcome: EventOutcome } = { outcome: { done: false } };
-
-    const handle = (event: SseEvent): void => {
-      if (state.outcome.done) return;
-      if (event.event === "complete") {
-        state.outcome = { done: true, code: EXIT_OK };
-        return;
-      }
-      if (event.event === "error") {
-        state.outcome = {
-          done: true,
-          code: fail(transportFailure(`SSE stream error: ${event.data}`)),
-        };
-        return;
-      }
-      if (event.event !== "next") return;
-
-      let body: GraphqlResponse;
-      try {
-        body = JSON.parse(event.data) as GraphqlResponse;
-      } catch {
-        state.outcome = {
-          done: true,
-          code: fail(transportFailure("SSE event carried invalid JSON")),
-        };
-        return;
-      }
-      const code = settleResponse(
-        body,
+    const state: SubscriptionState = { outcome: { done: false }, received: 0 };
+    const handle = (event: SseEvent): void =>
+      onSubscriptionSseEvent(
+        event,
+        state,
+        fail,
         config,
         streams,
-        { raw: format.raw, pretty: false },
+        format,
         transport.redact,
+        options.maxEvents,
       );
-      received += 1;
-      if (code !== EXIT_OK) state.outcome = { done: true, code };
-      else if (options.maxEvents !== undefined && received >= options.maxEvents) {
-        state.outcome = { done: true, code: EXIT_OK };
-      }
-    };
 
     const settled = (): number | undefined =>
       state.outcome.done ? state.outcome.code : undefined;
@@ -186,9 +207,9 @@ export async function streamSubscription(
     return stop.signal.aborted
       ? EXIT_OK
       : fail(transportFailure("SSE stream ended without a complete event"));
-  } catch (thrown) {
+  } catch (error_) {
     if (stop.signal.aborted) return EXIT_OK;
-    return fail(toGraphqlRequestError(thrown));
+    return fail(toGraphqlRequestError(error_));
   } finally {
     closeRequest.abort();
     stop.dispose();

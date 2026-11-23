@@ -106,11 +106,11 @@ export async function walkConnection(
       writeJson(streams.stdout, node, false);
     }
     return EXIT_OK;
-  } catch (thrown) {
+  } catch (error_) {
     if (stop.signal.aborted) return EXIT_OK;
     return reportRequestError(
       streams.stderr,
-      toGraphqlRequestError(thrown),
+      toGraphqlRequestError(error_),
       transport.redact,
     );
   } finally {

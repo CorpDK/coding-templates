@@ -2,7 +2,7 @@ import type { ArgDescriptor } from "../codegen/types.js";
 
 /** `[Item!]!` → `Item`. */
 export function baseGraphqlType(graphqlType: string): string {
-  return graphqlType.replaceAll(/[!\[\]]/g, "");
+  return graphqlType.replaceAll(/[![\]]/g, "");
 }
 
 /** Catalog flags are stored without the dashes; tolerate either spelling. */

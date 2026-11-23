@@ -90,16 +90,17 @@ async function promptBoolean(
   };
 }
 
+function textInputPlaceholder(arg: ArgDescriptor): string {
+  if (arg.kind === "input") return "JSON object, or @file.json";
+  if (arg.list) return "JSON array or a single value";
+  return arg.graphqlType;
+}
+
 async function promptText(
   prompts: PromptsModule,
   arg: ArgDescriptor,
 ): Promise<Answer<unknown>> {
-  const hint =
-    arg.kind === "input"
-      ? "JSON object, or @file.json"
-      : arg.list
-        ? "JSON array or a single value"
-        : arg.graphqlType;
+  const hint = textInputPlaceholder(arg);
   const answer = await ask<string>(
     prompts,
     prompts.text({
@@ -183,7 +184,10 @@ async function collectValidated(
 
     host.prompts.log.error(
       result.issues
-        .map((issue) => `${issue.arg}${issue.path.length ? `.${issue.path.join(".")}` : ""}: ${issue.message}`)
+        .map((issue) => {
+          const path = issue.path.length ? `.${issue.path.join(".")}` : "";
+          return `${issue.arg}${path}: ${issue.message}`;
+        })
         .join("\n"),
     );
     const retry = await ask<boolean>(

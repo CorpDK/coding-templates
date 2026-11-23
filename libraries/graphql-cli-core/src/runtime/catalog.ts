@@ -11,6 +11,10 @@ function sortedCommands(catalog: Catalog): CommandDescriptor[] {
   );
 }
 
+function commandLineSuffix(description: string | undefined): string {
+  return description ? `  ${description}` : "";
+}
+
 /** `<bin> commands --json`: the machine-readable command list (doc 14 §4.8). */
 export function commandsJson(catalog: Catalog): unknown[] {
   return sortedCommands(catalog).map((cmd) => ({
@@ -103,7 +107,7 @@ export function globalHelp(bin: string, catalog: Catalog): string {
     if (group.length === 0) continue;
     lines.push(`${kind[0]!.toUpperCase()}${kind.slice(1)}s:`);
     for (const cmd of group) {
-      lines.push(`  ${cmd.command}${cmd.description ? `  ${cmd.description}` : ""}`);
+      lines.push(`  ${cmd.command}${commandLineSuffix(cmd.description)}`);
     }
     lines.push("");
   }
@@ -122,9 +126,8 @@ export function commandHelp(bin: string, cmd: CommandDescriptor): string {
     lines.push("", "Arguments:");
     for (const arg of cmd.args) {
       const values = arg.enumValues ? ` (${arg.enumValues.join(" | ")})` : "";
-      lines.push(
-        `  ${displayFlag(arg)} <${arg.graphqlType}>${values}${arg.description ? `  ${arg.description}` : ""}`,
-      );
+      const head = `  ${displayFlag(arg)} <${arg.graphqlType}>${values}`;
+      lines.push(`${head}${commandLineSuffix(arg.description)}`);
     }
   }
   lines.push("", "Global flags:", ...GLOBAL_FLAG_HELP.map((line) => `  ${line}`));

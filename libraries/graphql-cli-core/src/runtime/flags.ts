@@ -137,6 +137,42 @@ function applyArg(
   argValues[arg.name] = value;
 }
 
+function readFlagValue(
+  argv: readonly string[],
+  name: string,
+  inline: string | undefined,
+  spec: FlagSpec,
+  negated: boolean,
+  index: number,
+): { value: string | boolean; nextIndex: number } {
+  if (negated) return { value: false, nextIndex: index };
+  if (spec.boolean) return { value: inline ?? true, nextIndex: index };
+  if (inline !== undefined) return { value: inline, nextIndex: index };
+  const next = index + 1;
+  if (next >= argv.length) {
+    throw new UsageError(`Flag --${name} requires a value`);
+  }
+  return { value: argv[next]!, nextIndex: next };
+}
+
+function applyParsedFlag(
+  globals: GlobalFlags,
+  argValues: Record<string, RawFlagValue>,
+  spec: FlagSpec,
+  value: string | boolean,
+  name: string,
+): void {
+  if (spec.target === "global") {
+    applyGlobal(globals, spec, value, `--${name}`);
+    return;
+  }
+  const boolValue =
+    spec.boolean && typeof value === "string"
+      ? parseBooleanText(value, `--${name}`)
+      : value;
+  applyArg(argValues, spec.arg, boolValue);
+}
+
 /**
  * Parses `argv` (everything after the command name) into global flags and raw
  * argument values. Supports `--flag value`, `--flag=value`, `--no-flag`,
@@ -165,31 +201,9 @@ export function parseFlags(
     const name = eq === -1 ? body : body.slice(0, eq);
     const inline = eq === -1 ? undefined : body.slice(eq + 1);
     const { spec, negated } = resolveSpec(table, name, inline !== undefined);
-
-    let value: string | boolean;
-    if (negated) {
-      value = false;
-    } else if (spec.boolean) {
-      value = inline ?? true;
-    } else if (inline === undefined) {
-      i += 1;
-      if (i >= argv.length) {
-        throw new UsageError(`Flag --${name} requires a value`);
-      }
-      value = argv[i]!;
-    } else {
-      value = inline;
-    }
-
-    if (spec.target === "global") {
-      applyGlobal(globals, spec, value, `--${name}`);
-    } else {
-      const boolValue =
-        spec.boolean && typeof value === "string"
-          ? parseBooleanText(value, `--${name}`)
-          : value;
-      applyArg(argValues, spec.arg, boolValue);
-    }
+    const read = readFlagValue(argv, name, inline, spec, negated, i);
+    i = read.nextIndex;
+    applyParsedFlag(globals, argValues, spec, read.value, name);
   }
 
   return { globals, argValues };

@@ -32,20 +32,11 @@ function fromSdkIssues(
   );
 }
 
-/** Checks one JSON value against a built-in scalar or enum (no SDK call). */
-function builtinProblem(
-  arg: ArgDescriptor,
+function scalarBuiltinProblem(
+  base: string,
   value: unknown,
 ): { message: string; code: string } | undefined {
-  if (arg.kind === "enum") {
-    return typeof value === "string" && arg.enumValues?.includes(value)
-      ? undefined
-      : {
-          message: `Expected one of: ${arg.enumValues?.join(", ") ?? ""}`,
-          code: "invalid_enum_value",
-        };
-  }
-  switch (baseGraphqlType(arg.graphqlType)) {
+  switch (base) {
     case "Int":
       return typeof value === "number" &&
         Number.isInteger(value) &&
@@ -72,6 +63,22 @@ function builtinProblem(
     default:
       return undefined;
   }
+}
+
+/** Checks one JSON value against a built-in scalar or enum (no SDK call). */
+function builtinProblem(
+  arg: ArgDescriptor,
+  value: unknown,
+): { message: string; code: string } | undefined {
+  if (arg.kind === "enum") {
+    return typeof value === "string" && arg.enumValues?.includes(value)
+      ? undefined
+      : {
+          message: `Expected one of: ${arg.enumValues?.join(", ") ?? ""}`,
+          code: "invalid_enum_value",
+        };
+  }
+  return scalarBuiltinProblem(baseGraphqlType(arg.graphqlType), value);
 }
 
 function isBuiltinOrEnum(arg: ArgDescriptor): boolean {

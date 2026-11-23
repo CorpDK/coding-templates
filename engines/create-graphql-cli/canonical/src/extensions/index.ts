@@ -1,3 +1,3 @@
-export async function headers(): Promise<Record<string, string>> {
-  return {};
+export function headers(): Promise<Record<string, string>> {
+  return Promise.resolve({});
 }
