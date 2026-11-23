@@ -71,7 +71,7 @@ describe("parseFlags", () => {
   it.each([
     [["--nope"], "Unknown flag: --nope"],
     [["stray"], "Unexpected argument: stray"],
-    [["--limit"], "--limit requires a value"],
+    [["--limit"], "Flag --limit requires a value"],
     [["--timeout-ms", "0"], "--timeout-ms must be a positive integer"],
     [["--max-events", "x"], "--max-events must be a positive integer"],
     [["--no-limit"], "Unknown flag: --no-limit"],
