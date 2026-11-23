@@ -34,7 +34,7 @@ const connectionCmd: CommandDescriptor = {
   },
 };
 
-function pagedFetch(pages: { id: string }[][]) {
+function pagedFetch(pages: { id: string; name?: string }[][]) {
   let call = 0;
   return vi.fn(async (_url, init) => {
     const body = JSON.parse(String(init?.body)) as {
