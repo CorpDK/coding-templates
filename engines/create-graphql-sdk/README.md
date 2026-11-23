@@ -18,8 +18,8 @@ Programmatic API: `runInit`, `runUpgrade`, `runSync`, `runCodegen`, `runGenerate
 
 ## Layout
 
-| Path | Role |
-| --- | --- |
-| `canonical/` | SDK package template (`init` / `upgrade`) |
-| `starter/schema/` | Demo SDL for `init --demo-schema` |
-| `src/` | Engine implementation |
+| Path              | Role                                      |
+| ----------------- | ----------------------------------------- |
+| `canonical/`      | SDK package template (`init` / `upgrade`) |
+| `starter/schema/` | Demo SDL for `init --demo-schema`         |
+| `src/`            | Engine implementation                     |

@@ -3,11 +3,7 @@ import { readJson } from "@corpdk/engine-kit";
 import { outro } from "@clack/prompts";
 import type { ParsedCli } from "./args.js";
 import { CREATE_GRAPHQL_SDK_ENGINE_ROOT } from "./constants.js";
-import {
-  runCodegenCommand,
-  runGenerate,
-  runSync,
-} from "./commands.js";
+import { runCodegenCommand, runGenerate, runSync } from "./commands.js";
 import { runInit } from "./init.js";
 import { runUpgrade } from "./upgrade.js";
 
@@ -102,7 +98,8 @@ export async function handleUpgrade(
   printError(result);
   if (result.exitCode === 0) {
     const steps =
-      result.nextSteps?.join("\n  ") ?? "pnpm install\n  pnpm sdk:codegen\n  pnpm build";
+      result.nextSteps?.join("\n  ") ??
+      "pnpm install\n  pnpm sdk:codegen\n  pnpm build";
     outro(`Upgrade complete for:\n  ${parsed.dir}\n\nNext steps:\n  ${steps}`);
   }
   return result.exitCode;

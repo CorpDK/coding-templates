@@ -109,10 +109,7 @@ export function parseInitTokens(dir: string, tokens: string[]): ParsedCli {
   };
 }
 
-export function parseSyncTokens(
-  dir: string,
-  tokens: string[],
-): ParsedCli {
+export function parseSyncTokens(dir: string, tokens: string[]): ParsedCli {
   const { values } = nodeParseArgs({
     args: tokens,
     options: SYNC_OPTIONS,

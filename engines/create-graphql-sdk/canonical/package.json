@@ -4,7 +4,10 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
     "./validation": {
       "types": "./dist/validation.d.ts",
       "import": "./dist/validation.js"
@@ -12,7 +15,11 @@
     "./schema.graphqls": "./schema/schema.graphqls",
     "./package.json": "./package.json"
   },
-  "files": ["dist", "schema", "README.md"],
+  "files": [
+    "dist",
+    "schema",
+    "README.md"
+  ],
   "scripts": {
     "sdk:sync": "create-graphql-sdk sync .",
     "sdk:check": "create-graphql-sdk sync . --check",
@@ -32,7 +39,9 @@
     "zod": "^4"
   },
   "peerDependenciesMeta": {
-    "zod": { "optional": true }
+    "zod": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@corpdk/create-graphql-sdk": "workspace:^",
@@ -44,5 +53,7 @@
     "zod": "^4.3.6"
   },
   "license": "MIT",
-  "engines": { "node": ">=24.0.0" }
+  "engines": {
+    "node": ">=24.0.0"
+  }
 }

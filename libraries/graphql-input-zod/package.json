@@ -1,7 +1,7 @@
 {
   "name": "@corpdk/graphql-input-zod",
   "version": "2026.10.0-alpha.17",
-  "description": "GraphQL input-object Zod codegen (P1a) and validation issue types; parse helpers ship in SDK P1c",
+  "description": "GraphQL input Zod codegen (P1a), parse helpers (P1c), and validation issue types",
   "type": "module",
   "license": "MIT",
   "publishConfig": {

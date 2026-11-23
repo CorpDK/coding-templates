@@ -74,7 +74,8 @@ export async function runUpgrade(
   options: UpgradeOptions,
 ): Promise<EngineResult> {
   const repoRoot =
-    options.repoRoot ?? path.resolve(CREATE_GRAPHQL_SDK_ENGINE_ROOT, "..", "..");
+    options.repoRoot ??
+    path.resolve(CREATE_GRAPHQL_SDK_ENGINE_ROOT, "..", "..");
   const packageDir = path.resolve(options.dir);
 
   let templateDir: string;
@@ -141,7 +142,9 @@ export async function runUpgrade(
     };
   }
 
-  s.stop("Canonical SDK files merged (schema/** and src/extensions/** untouched)");
+  s.stop(
+    "Canonical SDK files merged (schema/** and src/extensions/** untouched)",
+  );
 
   if (!options.dryRun) {
     try {

@@ -30,7 +30,10 @@ describe("mergeSdlUnits", () => {
   });
 
   it("merges enums by unioning values", async () => {
-    const units = await loadFixtureUnits(["enum-a.graphqls", "enum-b.graphqls"]);
+    const units = await loadFixtureUnits([
+      "enum-a.graphqls",
+      "enum-b.graphqls",
+    ]);
     const merged = mergeSdlUnits(units);
     expect(merged).toContain("ACTIVE");
     expect(merged).toContain("DRAFT");

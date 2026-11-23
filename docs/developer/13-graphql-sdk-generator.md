@@ -2,7 +2,7 @@
 
 Design specification for a **publishable GraphQL client SDK** produced from a **complete schema** (one or many SDL files, or a TypeScript `typeDefs` module), and for the **CLI** that scaffolds, regenerates, and upgrades it. This initiative covers the SDK package, the CLI, and two in-house libraries the SDK is built from. It does not cover the GraphQL server, the automation CLI ([14-graphql-cli-generator.md](14-graphql-cli-generator.md)), or HTTP transport. Apollo, urql, `graphql-sse`, and similar clients stay in consumer apps.
 
-**Status:** Design (pre-implementation). Revision 13. Open work is tracked in the §17 register.
+**Status:** Design spec; **P1c** engine implemented (`engines/create-graphql-sdk`). Revision 13. Open work is tracked in the §17 register (P2 and downstream phases remain).
 
 - Appendix A: gap review of revision 1.
 - Appendix B: dependency maintenance audit.
@@ -598,10 +598,10 @@ scalars:
 
 The library has **two entry points**, the same split as `@corpdk/graphql-dsl`:
 
-| Entry                               | Used by                                                                                                                                              | Contents                                                                                                                                                                                | Peer                   |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
-| `@corpdk/graphql-input-zod/codegen` | `dal-codegen`, `create-graphql-sdk`                                                                                                                  | The emitter (below)                                                                                                                                                                     | `graphql` ^16 \|\| ^17 |
-| `@corpdk/graphql-input-zod`         | Generated SDKs and `@corpdk/graphql-cli-core` (types); **P1a:** issue types only — **P1c:** adds `createInputParsers` / `createScalarParsers` (§7.4) | **P1a:** `GraphqlInputValidationError`, `GraphqlInputIssue`, `GraphqlInputParseResult`, `InputParserRegistry`, `zodErrorToIssues`. **P1c:** `createInputParsers`, `createScalarParsers` | `zod` ^4               |
+| Entry                               | Used by                                                                     | Contents                                                                                                                                                              | Peer                   |
+| ----------------------------------- | --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| `@corpdk/graphql-input-zod/codegen` | `dal-codegen`, `create-graphql-sdk`                                         | The emitter (below)                                                                                                                                                   | `graphql` ^16 \|\| ^17 |
+| `@corpdk/graphql-input-zod`         | Generated SDKs and `@corpdk/graphql-cli-core` (types); parse helpers (§7.4) | `GraphqlInputValidationError`, `GraphqlInputIssue`, `GraphqlInputParseResult`, `InputParserRegistry`, `zodErrorToIssues`, `createInputParsers`, `createScalarParsers` | `zod` ^4               |
 
 Peer dependencies apply to the whole package, not per entry point, so **both peers are optional** in `peerDependenciesMeta`. `dal-codegen` (codegen only) doesn't need `zod`, and SDKs (runtime only) don't need `graphql` from this package.
 
@@ -651,9 +651,9 @@ All `input` object types in the snapshot. Output types, whole variable bags, and
 
 ### 7.4 Parse helpers
 
-**P1a (shipped).** The main package entry exports only validation issue types and `GraphqlInputValidationError` (see `libraries/graphql-input-zod/src/index.ts` and the package README). Emitter tests live under `@corpdk/graphql-input-zod/codegen`.
+**P1a (shipped).** Issue types and `GraphqlInputValidationError` on the main entry; emitter tests live under `@corpdk/graphql-input-zod/codegen`.
 
-**P1c (shipped).** `createInputParsers` and `createScalarParsers` ship on the main entry (`libraries/graphql-input-zod/src/parsers.ts`); each SDK binds them in canonical `src/validation.ts`. Signatures below match the implementation.
+**P1c (shipped).** `createInputParsers` and `createScalarParsers` on the main entry (`libraries/graphql-input-zod/src/parsers.ts`); each SDK binds them in canonical `src/validation.ts`. Signatures below match the implementation.
 
 Generated per SDK (data only):
 
@@ -672,10 +672,10 @@ export const inputZodSchemas = {
 export type InputZodSchemaName = keyof typeof inputZodSchemas;
 ```
 
-Shared once, in `@corpdk/graphql-input-zod` (runtime entry **from P1c**), and bound per SDK in `src/validation.ts` (§3.5):
+Shared once, in `@corpdk/graphql-input-zod` (runtime entry), and bound per SDK in `src/validation.ts` (§3.5):
 
 ```ts
-// Planned P1c exports (issue types and error class already ship in P1a)
+// Runtime exports (issue types and error class from P1a; parsers from P1c)
 export interface GraphqlInputIssue {
   path: (string | number)[];
   message: string;

@@ -30,7 +30,9 @@ async function syncValidationPackageEntry(
   const pkg = await readJson<Record<string, unknown>>(pkgPath);
   const exportsField = pkg.exports;
   const exports =
-    exportsField && typeof exportsField === "object" && !Array.isArray(exportsField)
+    exportsField &&
+    typeof exportsField === "object" &&
+    !Array.isArray(exportsField)
       ? { ...(exportsField as Record<string, unknown>) }
       : {};
   const validationRel = "src/validation.ts";
@@ -99,12 +101,10 @@ export async function runCodegen(packageDir: string): Promise<string[]> {
   const l1Rel = "src/generated/schema-types.ts";
   const l1Scalars = l1ScalarMap(config, customNames);
   const { codegen } = await import("@graphql-codegen/core");
-  const { plugin: typescriptPlugin } = await import(
-    "@graphql-codegen/typescript"
-  );
-  const { getCachedDocumentNodeFromSchema } = await import(
-    "@graphql-codegen/plugin-helpers"
-  );
+  const { plugin: typescriptPlugin } =
+    await import("@graphql-codegen/typescript");
+  const { getCachedDocumentNodeFromSchema } =
+    await import("@graphql-codegen/plugin-helpers");
   const l1Config = {
     enumsAsTypes: true,
     nonOptionalTypename: true,

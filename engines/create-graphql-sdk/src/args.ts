@@ -30,13 +30,7 @@ export function parseCli(argv: string[]): ParsedCli {
     return { kind: "version" };
   }
 
-  const commands = new Set([
-    "init",
-    "sync",
-    "codegen",
-    "generate",
-    "upgrade",
-  ]);
+  const commands = new Set(["init", "sync", "codegen", "generate", "upgrade"]);
   if (!commands.has(first)) {
     return { kind: "usage", message: `Unknown command: ${first}` };
   }

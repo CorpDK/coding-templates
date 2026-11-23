@@ -12,10 +12,7 @@ import { exitCodeForEngineError } from "./engine-errors.js";
 import { execAsync } from "./exec.js";
 import { CREATE_GRAPHQL_SDK_ENGINE_ROOT } from "./constants.js";
 import { applyScaffoldLayout, ensureEmptyTarget } from "./init-layout.js";
-import {
-  formatUnmappedMessage,
-  runSyncPipeline,
-} from "./sync.js";
+import { formatUnmappedMessage, runSyncPipeline } from "./sync.js";
 import { resolveCanonicalSdkTemplateDir } from "./template.js";
 
 export interface InitOptions {
@@ -40,7 +37,8 @@ function initNextSteps(packageName: string, noInstall?: boolean): string[] {
 
 export async function runInit(options: InitOptions): Promise<EngineResult> {
   const repoRoot =
-    options.repoRoot ?? path.resolve(CREATE_GRAPHQL_SDK_ENGINE_ROOT, "..", "..");
+    options.repoRoot ??
+    path.resolve(CREATE_GRAPHQL_SDK_ENGINE_ROOT, "..", "..");
   const targetDir = path.resolve(options.dir);
 
   if (!options.demoSchema && options.schema.length === 0) {

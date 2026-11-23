@@ -10,20 +10,20 @@ These **twelve** packages ship together at the same CalVer (e.g. `2026.10.0-alph
 
 Monorepo quality runs **`create-ds`** canonical drift check (`check-canonical`) on the **`@corpdk/create-ds`** lockstep matrix job ([`.github/scripts/ci-quality-lockstep-package.sh`](../../.github/scripts/ci-quality-lockstep-package.sh)). Before npm upload, [`.github/scripts/publish-ds-automation.sh`](../../.github/scripts/publish-ds-automation.sh) runs the **`@corpdk/engine-kit`** publish-order guard (`check-ds-publish-order`) and **`check-canonical`** again.
 
-| Order | Package                      | Path                          | Role                                                |
-| ----- | ---------------------------- | ----------------------------- | --------------------------------------------------- |
-| 1     | `@corpdk/graphql-dsl`        | `libraries/graphql-dsl`       | Typed selection DSL (SDK L2); P1b implementation    |
-| 2     | `@corpdk/scalar-zod`         | `libraries/scalar-zod`        | Shared scalar rules (SDK P1a)                       |
-| 3     | `@corpdk/dal-core`           | `libraries/dal-core`          | DAL types, filters, scalars, error taxonomy         |
-| 4     | `@corpdk/pub-sub`            | `libraries/pub-sub`           | GraphQL pub/sub factory (DAL DS runtime)            |
-| 5     | `@corpdk/graphql-input-zod`  | `libraries/graphql-input-zod` | Input Zod codegen runtime (SDK P1a)                 |
-| 6     | `@corpdk/dal-codegen`        | `libraries/dal-codegen`       | `dal-codegen` / `dal-entity-lint` CLIs              |
-| 7     | `@corpdk/engine-kit`         | `libraries/engine-kit`        | Shared `create-*` engine kit (DS-P0b)               |
-| 8     | `@corpdk/graphql-cli-core`   | `libraries/graphql-cli-core`  | CLI codegen (C-P1); runtime stub until C-P2         |
-| 9     | `@corpdk/create-graphql-sdk` | `engines/create-graphql-sdk`  | SDK scaffold engine; stub until SDK P1c             |
-| 10    | `@corpdk/create-graphql-cli` | `engines/create-graphql-cli`  | CLI scaffold engine; stub until CLI C-P2            |
-| 11    | `@corpdk/codegen-cli`        | `libraries/codegen-cli`       | Legacy GraphQL codegen plugin (deprecation planned) |
-| 12    | `@corpdk/create-ds`          | `engines/create-ds`           | Scaffold + upgrade CLI for DAL DS apps              |
+| Order | Package                      | Path                          | Role                                                                |
+| ----- | ---------------------------- | ----------------------------- | ------------------------------------------------------------------- |
+| 1     | `@corpdk/graphql-dsl`        | `libraries/graphql-dsl`       | Typed selection DSL (SDK L2); P1b implementation                    |
+| 2     | `@corpdk/scalar-zod`         | `libraries/scalar-zod`        | Shared scalar rules (SDK P1a)                                       |
+| 3     | `@corpdk/dal-core`           | `libraries/dal-core`          | DAL types, filters, scalars, error taxonomy                         |
+| 4     | `@corpdk/pub-sub`            | `libraries/pub-sub`           | GraphQL pub/sub factory (DAL DS runtime)                            |
+| 5     | `@corpdk/graphql-input-zod`  | `libraries/graphql-input-zod` | Input Zod codegen runtime (SDK P1a)                                 |
+| 6     | `@corpdk/dal-codegen`        | `libraries/dal-codegen`       | `dal-codegen` / `dal-entity-lint` CLIs                              |
+| 7     | `@corpdk/engine-kit`         | `libraries/engine-kit`        | Shared `create-*` engine kit (DS-P0b)                               |
+| 8     | `@corpdk/graphql-cli-core`   | `libraries/graphql-cli-core`  | CLI codegen (C-P1); runtime stub until C-P2                         |
+| 9     | `@corpdk/create-graphql-sdk` | `engines/create-graphql-sdk`  | SDK scaffold engine (P1c in monorepo; first real npm release in P2) |
+| 10    | `@corpdk/create-graphql-cli` | `engines/create-graphql-cli`  | CLI scaffold engine; stub until CLI C-P2                            |
+| 11    | `@corpdk/codegen-cli`        | `libraries/codegen-cli`       | Legacy GraphQL codegen plugin (deprecation planned)                 |
+| 12    | `@corpdk/create-ds`          | `engines/create-ds`           | Scaffold + upgrade CLI for DAL DS apps                              |
 
 **Not in this pipeline:** `@corpdk/create-app`, UI packages, `eslint-config`, or any `templates/*` (Artifactory). `@corpdk/ds` in the monorepo is a template, not an npm consumer package for this release unit.
 
@@ -45,7 +45,7 @@ The [GraphQL SDK](../developer/13-graphql-sdk-generator.md), [CLI](../developer/
 | `@corpdk/create-graphql-sdk` | `engines/create-graphql-sdk`  | Same                                                                                               |
 | `@corpdk/create-graphql-cli` | `engines/create-graphql-cli`  | Same                                                                                               |
 
-Generator packages compile with `tsc` to `dist/` and declare `types` / `exports` (engines use `dist/types-entry.d.ts`; stub `bin` on `create-graphql-*` until C-P2 / P1c). B0 tarballs were placeholders; **`@corpdk/graphql-dsl`** ships the P1b fork after merge (first real release via R-20). **`graphql-cli-core`**, **`create-graphql-sdk`**, and **`create-graphql-cli`** remain phase stubs until C-P1 / P1c / C-P2. **`templates/ds-sdk` and `templates/ds-cli` are not published** and are not part of B0.
+Generator packages compile with `tsc` to `dist/` and declare `types` / `exports` (engines use `dist/types-entry.d.ts`; real `bin` on `create-graphql-sdk` from P1c; **`create-graphql-cli`** keeps a stub `bin` until C-P2). B0 tarballs were placeholders; **`@corpdk/graphql-dsl`** ships the P1b fork after merge (first real release via R-20). **`graphql-cli-core`** codegen shipped in C-P1; **`create-graphql-sdk`** is implemented in P1c (first real **npm** release still P2, R-20); **`create-graphql-cli`** remains a phase stub until C-P2. **`templates/ds-sdk` and `templates/ds-cli` are not published** and are not part of B0.
 
 **After the B0 PR merges**, a maintainer completes registry setup **from a local terminal** (npm publish + trust each trigger org 2FA / OTP; **not** OIDC):
 

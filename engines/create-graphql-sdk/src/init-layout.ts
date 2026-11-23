@@ -41,7 +41,10 @@ export async function ensureEmptyTarget(
 }
 
 function relativeSchemaPath(fromDir: string, absPath: string): string {
-  return path.relative(fromDir, path.resolve(absPath)).split(path.sep).join("/");
+  return path
+    .relative(fromDir, path.resolve(absPath))
+    .split(path.sep)
+    .join("/");
 }
 
 export function buildSchemaSources(

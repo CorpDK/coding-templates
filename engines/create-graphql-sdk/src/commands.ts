@@ -8,10 +8,7 @@ import {
   type EngineResult,
 } from "@corpdk/engine-kit";
 import { runCodegen } from "./codegen.js";
-import {
-  formatUnmappedMessage,
-  runSyncPipeline,
-} from "./sync.js";
+import { formatUnmappedMessage, runSyncPipeline } from "./sync.js";
 
 export interface SyncCommandOptions {
   dir: string;
@@ -24,7 +21,9 @@ export async function runSync(
 ): Promise<EngineResult> {
   const packageDir = path.resolve(options.dir);
   const s = spinner();
-  s.start(options.check ? "Checking schema snapshot" : "Syncing schema snapshot");
+  s.start(
+    options.check ? "Checking schema snapshot" : "Syncing schema snapshot",
+  );
   try {
     const result = await runSyncPipeline({
       packageDir,
@@ -62,7 +61,7 @@ export async function runSync(
     if (message.includes("not found") || message.includes("matched no")) {
       return { exitCode: EXIT_USAGE, changedFiles: [], message };
     }
-  if (
+    if (
       message.includes("Conflict") ||
       message.includes("Cannot extend") ||
       message.includes("Breaking")

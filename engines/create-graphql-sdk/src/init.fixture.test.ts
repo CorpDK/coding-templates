@@ -29,8 +29,8 @@ describe("runInit demo fixture", () => {
     await expect(
       pathExists(path.join(target, "schema/sources/base.graphqls")),
     ).resolves.toBe(true);
-    await expect(pathExists(path.join(target, "sdk.config.yaml"))).resolves.toBe(
-      true,
-    );
+    await expect(
+      pathExists(path.join(target, "sdk.config.yaml")),
+    ).resolves.toBe(true);
   });
 });

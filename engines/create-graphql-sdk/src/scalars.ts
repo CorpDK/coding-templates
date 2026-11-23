@@ -1,17 +1,11 @@
-import {
-  GraphQLScalarType,
-  isScalarType,
-  type GraphQLSchema,
-} from "graphql";
-import type { ScalarConfigEntry, ScalarZodConfig, SdkConfig } from "./sdk-config.js";
+import { GraphQLScalarType, isScalarType, type GraphQLSchema } from "graphql";
+import type {
+  ScalarConfigEntry,
+  ScalarZodConfig,
+  SdkConfig,
+} from "./sdk-config.js";
 
-const SPEC_BUILTIN = new Set([
-  "String",
-  "Int",
-  "Float",
-  "Boolean",
-  "ID",
-]);
+const SPEC_BUILTIN = new Set(["String", "Int", "Float", "Boolean", "ID"]);
 
 export function listCustomScalars(schema: GraphQLSchema): string[] {
   const names: string[] = [];

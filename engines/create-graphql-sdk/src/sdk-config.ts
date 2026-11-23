@@ -23,9 +23,7 @@ export interface SdkConfig {
   };
 }
 
-export type ScalarZodConfig =
-  | string
-  | { from: string; name: string };
+export type ScalarZodConfig = string | { from: string; name: string };
 
 export interface ScalarConfigEntry {
   type: string;
