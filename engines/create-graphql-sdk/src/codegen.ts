@@ -1,9 +1,11 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { pathExists, readJson, writeJson } from "@corpdk/engine-kit";
 import { emitDslModules } from "@corpdk/graphql-dsl/codegen";
 import { emitGraphqlInputZodBlocks } from "@corpdk/graphql-input-zod/codegen";
 import { buildSchemaFromSnapshot } from "./merge.js";
 import { stripSnapshotHeader } from "./diff.js";
+import { bundledCanonicalDir } from "./template.js";
 import {
   buildScalarRegistrySource,
   customLeafScalars,
@@ -13,6 +15,65 @@ import {
 } from "./scalars.js";
 import { readSdkConfig, snapshotPath, type SdkConfig } from "./sdk-config.js";
 import { SNAPSHOT_HEADER } from "./constants.js";
+
+const VALIDATION_PKG_EXPORT = {
+  types: "./dist/validation.d.ts",
+  import: "./dist/validation.js",
+};
+
+async function syncValidationPackageEntry(
+  packageDir: string,
+  validationEnabled: boolean,
+  changed: string[],
+): Promise<void> {
+  const pkgPath = path.join(packageDir, "package.json");
+  const pkg = await readJson<Record<string, unknown>>(pkgPath);
+  const exportsField = pkg.exports;
+  const exports =
+    exportsField && typeof exportsField === "object" && !Array.isArray(exportsField)
+      ? { ...(exportsField as Record<string, unknown>) }
+      : {};
+  const validationRel = "src/validation.ts";
+  const validationPath = path.join(packageDir, validationRel);
+
+  if (validationEnabled) {
+    let pkgChanged = false;
+    if (!exports["./validation"]) {
+      exports["./validation"] = VALIDATION_PKG_EXPORT;
+      pkgChanged = true;
+    }
+    if (pkgChanged) {
+      pkg.exports = exports;
+      await writeJson(pkgPath, pkg);
+      changed.push("package.json");
+    }
+    if (!(await pathExists(validationPath))) {
+      const canonicalValidation = path.join(
+        bundledCanonicalDir(),
+        "src",
+        "validation.ts",
+      );
+      await fs.copyFile(canonicalValidation, validationPath);
+      changed.push(validationRel);
+    }
+    return;
+  }
+
+  let pkgChanged = false;
+  if (exports["./validation"]) {
+    delete exports["./validation"];
+    pkgChanged = true;
+  }
+  if (pkgChanged) {
+    pkg.exports = exports;
+    await writeJson(pkgPath, pkg);
+    changed.push("package.json");
+  }
+  if (await pathExists(validationPath)) {
+    await fs.unlink(validationPath);
+    changed.push(validationRel);
+  }
+}
 
 async function readSnapshotSdl(
   packageDir: string,
@@ -90,18 +151,20 @@ export async function runCodegen(packageDir: string): Promise<string[]> {
   if (validationEnabled) {
     const scalarRegistry = buildScalarRegistrySource(config);
     const scalarRegistryPath = path.join(generatedDir, "scalar-registry.ts");
-    if (scalarRegistry) {
-      await fs.writeFile(scalarRegistryPath, scalarRegistry.source, "utf8");
-      changed.push(path.relative(dir, scalarRegistryPath));
-    }
+    await fs.writeFile(scalarRegistryPath, scalarRegistry.source, "utf8");
+    changed.push(path.relative(dir, scalarRegistryPath));
 
     const scalarMap = scalarEmitterMap(config, customNames);
     const builtinScalars = config.validation?.builtinScalars ?? {};
+    const inputSchemasPreamble = [
+      'import { z } from "zod";',
+      'import { scalarZodSchemas } from "./scalar-registry.js";',
+    ].join("\n");
     const emitted = emitGraphqlInputZodBlocks(schema, {
       scalars: scalarMap,
       builtinScalars,
       scalarReferences: "registry",
-      preamble: 'import { z } from "zod";',
+      preamble: inputSchemasPreamble,
     });
 
     const schemasPath = path.join(generatedDir, "input-schemas.ts");
@@ -131,6 +194,8 @@ export type InputZodSchemaName = keyof typeof inputZodSchemas;
     await fs.writeFile(registryPath, registrySource, "utf8");
     changed.push(path.relative(dir, registryPath));
   }
+
+  await syncValidationPackageEntry(dir, validationEnabled, changed);
 
   return changed;
 }

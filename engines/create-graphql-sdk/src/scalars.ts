@@ -56,10 +56,19 @@ function zodRefImport(zod: ScalarZodConfig): string | null {
 
 export function buildScalarRegistrySource(
   config: SdkConfig,
-): { source: string; scalarNames: string[] } | null {
+): { source: string; scalarNames: string[] } {
   const entries = config.scalars ?? {};
   const names = Object.keys(entries).sort((a, b) => a.localeCompare(b));
-  if (names.length === 0) return null;
+  if (names.length === 0) {
+    return {
+      source: `export const scalarZodSchemas = {} as const;
+export type ScalarZodSchemaName = keyof typeof scalarZodSchemas;
+
+export const scalarWireFormats = {} as const;
+`,
+      scalarNames: [],
+    };
+  }
 
   const importLines = new Set<string>();
   const schemaLines: string[] = [];

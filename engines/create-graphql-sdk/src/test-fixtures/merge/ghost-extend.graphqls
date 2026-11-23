@@ -1,3 +1,0 @@
-extend type Ghost {
-  id: ID!
-}
