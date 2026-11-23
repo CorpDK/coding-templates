@@ -236,7 +236,7 @@ npm trusted publishing can only be configured for a package that already exists 
 1. **One PR to `main`** with a **typed scaffold** at each path above (same lockstep CalVer as the other DS automation packages, e.g. `2026.10.0-alpha.14`). Each scaffold has:
    - `package.json`: final `name`; **lockstep** `version`; description noting scaffold status; `license: MIT`; monorepo `repository` (`url` → this repo, `directory` → package path); `publishConfig.access: public`; `type: "module"`; `build` / `typecheck` scripts; `files` including `dist` and `README.md`; `types` and `exports` pointing at compiled `dist/` (engines use `dist/types-entry.d.ts`; libraries use `dist/index.d.ts`); `engines.node: ">=24.0.0"`. **`@corpdk/create-graphql-sdk` and `@corpdk/create-graphql-cli`** also declare stub `bin` entries.
    - Minimal `src/` compiled by `tsc` (phase constants / empty barrels until the implementation phase).
-   - `README.md` linking to the design doc; `LICENSE` (MIT). `graphql-dsl` gets genql's notice in P1b, when upstream code arrives.
+   - `README.md` linking to the design doc; `LICENSE` (MIT). `@corpdk/graphql-dsl` also ships `UPSTREAM.md` and genql's MIT notice in `LICENSE` (P1b; see `libraries/graphql-dsl`).
 
    The same PR adds all seven to [`PUBLISH_ORDER`](../../.github/scripts/lockstep-calver.sh), [Monorepo CI `publish-paths` filters](../../.github/workflows/ci.yml) (same globs as the lockstep set), and the admin trusted-publisher table slots. CI dry-run on the PR must build all twelve packages and emit the declaration paths the publish script checks (§4.3).
 

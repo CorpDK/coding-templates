@@ -3,6 +3,7 @@
   "version": "2026.10.0-alpha.16",
   "description": "Typed GraphQL selection DSL (owned genql fork)",
   "type": "module",
+  "sideEffects": false,
   "license": "MIT",
   "publishConfig": {
     "registry": "https://registry.npmjs.org/",
@@ -15,7 +16,8 @@
   },
   "files": [
     "dist",
-    "README.md"
+    "README.md",
+    "UPSTREAM.md"
   ],
   "types": "./dist/index.d.ts",
   "exports": {
@@ -30,12 +32,23 @@
   },
   "scripts": {
     "build": "tsc",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit && tsc --noEmit -p tsconfig.test.json",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "clean": "rm -rf dist node_modules .turbo *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@graphql-typed-document-node/core": "^3.2.0"
+  },
+  "peerDependencies": {
+    "graphql": "^16 || ^17"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
-    "typescript": "^6.0.2"
+    "@vitest/coverage-v8": "4.1.2",
+    "graphql": "^16.13.2",
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.2"
   },
   "engines": {
     "node": ">=24.0.0"
