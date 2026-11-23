@@ -71,8 +71,38 @@ export function buildSchemaSources(
   });
 }
 
+function isScaffoldInsideRepo(repoRoot: string, targetDir: string): boolean {
+  const rel = path.relative(path.resolve(repoRoot), path.resolve(targetDir));
+  return rel === "" || (!rel.startsWith("..") && !path.isAbsolute(rel));
+}
+
+function tsconfigExtendsFromRepoRoot(
+  repoRoot: string,
+  targetDir: string,
+): string {
+  const relFromRoot = path.relative(repoRoot, targetDir);
+  const depth = relFromRoot
+    .split(path.sep)
+    .filter((segment) => segment && segment !== ".").length;
+  return `${"../".repeat(depth)}tsconfig.node.json`;
+}
+
+async function patchScaffoldTsconfig(
+  repoRoot: string,
+  targetDir: string,
+): Promise<void> {
+  const tsconfigPath = path.join(targetDir, "tsconfig.json");
+  if (!(await pathExists(tsconfigPath))) {
+    return;
+  }
+  const tsconfig = await readJson<{ extends?: string }>(tsconfigPath);
+  tsconfig.extends = tsconfigExtendsFromRepoRoot(repoRoot, targetDir);
+  await writeJson(tsconfigPath, tsconfig);
+}
+
 export async function applyScaffoldLayout(
   options: InitOptions,
+  repoRoot: string,
   templateDir: string,
   targetDir: string,
 ): Promise<void> {
@@ -82,9 +112,11 @@ export async function applyScaffoldLayout(
     skipIfExists: false,
   });
 
-  const releaseVersion = isBundledCanonicalTemplate(templateDir)
-    ? await readCreateGraphqlSdkReleaseVersion()
-    : undefined;
+  const releaseVersion =
+    isBundledCanonicalTemplate(templateDir) &&
+    !isScaffoldInsideRepo(repoRoot, targetDir)
+      ? await readCreateGraphqlSdkReleaseVersion()
+      : undefined;
 
   const templatePkg = await readJson<Record<string, unknown>>(
     path.join(templateDir, "package.json"),
@@ -121,4 +153,5 @@ export async function applyScaffoldLayout(
   }
 
   await writeSdkConfig(targetDir, config);
+  await patchScaffoldTsconfig(repoRoot, targetDir);
 }

@@ -1,25 +1,5 @@
-export {
-  buildQuery,
-  buildMutation,
-  buildSubscription,
-  defineQuery,
-  defineMutation,
-  defineSubscription,
-  v,
-  everything,
-  type QuerySelection,
-  type MutationSelection,
-  type SubscriptionSelection,
-  type QueryResult,
-  type MutationResult,
-  type SubscriptionResult,
-} from "./generated/dsl/index.js";
+export * from "./generated/dsl/index.js";
 export type * as Selections from "./generated/dsl/selections.js";
-export {
-  iterateConnection,
-  paginateConnection,
-  type ConnectionField,
-} from "./generated/dsl/index.js";
 export {
   normalizeGraphqlResult,
   unwrapGraphqlResult,

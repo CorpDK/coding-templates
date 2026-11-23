@@ -78,7 +78,7 @@ export function renderBoundIndex(
     ? `
 const mutationApi = createOperationApi<
   MutationSelection,
-  typeof typeMap.Mutation
+  NonNullable<typeof typeMap.Mutation>
 >(
   "mutation",
   typeMap.Mutation!,
@@ -98,7 +98,7 @@ export type MutationResult<S extends MutationSelection> = FieldsSelection<
     ? `
 const subscriptionApi = createOperationApi<
   SubscriptionSelection,
-  typeof typeMap.Subscription
+  NonNullable<typeof typeMap.Subscription>
 >(
   "subscription",
   typeMap.Subscription!,
@@ -137,11 +137,10 @@ const typeMap = linkTypeMap(typeMapJson as never);
 
 const connectionNodeShapes = ${JSON.stringify(connectionShapes)} as const;
 
-const queryApi = createOperationApi<QuerySelection, typeof typeMap.Query>(
-  "query",
-  typeMap.Query!,
-  (op) => op,
-);
+const queryApi = createOperationApi<
+  QuerySelection,
+  NonNullable<typeof typeMap.Query>
+>("query", typeMap.Query!, (op) => op);
 
 export const buildQuery = queryApi.build;
 export const defineQuery = queryApi.define;

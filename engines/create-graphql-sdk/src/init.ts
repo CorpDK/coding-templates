@@ -91,7 +91,7 @@ export async function runInit(options: InitOptions): Promise<EngineResult> {
   s.start("Scaffolding SDK package layout");
 
   try {
-    await applyScaffoldLayout(options, templateDir, targetDir);
+    await applyScaffoldLayout(options, repoRoot, templateDir, targetDir);
     s.stop("SDK package scaffolded");
 
     if (options.deferSync) {
