@@ -89,7 +89,6 @@ async function readSnapshotSdl(
 export async function runCodegen(packageDir: string): Promise<string[]> {
   const dir = path.resolve(packageDir);
   const config = await readSdkConfig(dir);
-  const snap = snapshotPath(dir, config);
   const sdl = await readSnapshotSdl(dir, config);
   const schema = buildSchemaFromSnapshot(`${SNAPSHOT_HEADER}${sdl}`);
   const customNames = listCustomScalars(schema);

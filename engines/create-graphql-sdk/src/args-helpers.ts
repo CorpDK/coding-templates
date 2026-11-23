@@ -85,11 +85,12 @@ export function parseInitTokens(dir: string, tokens: string[]): ParsedCli {
     name = "@corpdk/ds-sdk";
   }
 
-  const schema = Array.isArray(values.schema)
-    ? values.schema
-    : values.schema
-      ? [values.schema]
-      : [];
+  let schema: string[] = [];
+  if (Array.isArray(values.schema)) {
+    schema = values.schema;
+  } else if (typeof values.schema === "string") {
+    schema = [values.schema];
+  }
 
   const preset = values["scalar-preset"];
   if (typeof preset === "string" && preset !== "dal") {
@@ -109,7 +110,11 @@ export function parseInitTokens(dir: string, tokens: string[]): ParsedCli {
   };
 }
 
-export function parseSyncTokens(dir: string, tokens: string[]): ParsedCli {
+function parseSyncLikeTokens(
+  dir: string,
+  tokens: string[],
+  kind: "sync" | "generate",
+): ParsedCli {
   const { values } = nodeParseArgs({
     args: tokens,
     options: SYNC_OPTIONS,
@@ -119,11 +124,15 @@ export function parseSyncTokens(dir: string, tokens: string[]): ParsedCli {
   const globalIntent = parseGlobalIntent(values);
   if (globalIntent) return globalIntent;
   return {
-    kind: "sync",
+    kind,
     dir,
     check: values.check === true,
     failOnBreaking: values["fail-on-breaking"] === true,
   };
+}
+
+export function parseSyncTokens(dir: string, tokens: string[]): ParsedCli {
+  return parseSyncLikeTokens(dir, tokens, "sync");
 }
 
 export function parseCodegenTokens(dir: string, tokens: string[]): ParsedCli {
@@ -139,20 +148,7 @@ export function parseCodegenTokens(dir: string, tokens: string[]): ParsedCli {
 }
 
 export function parseGenerateTokens(dir: string, tokens: string[]): ParsedCli {
-  const { values } = nodeParseArgs({
-    args: tokens,
-    options: SYNC_OPTIONS,
-    strict: true,
-    allowPositionals: false,
-  });
-  const globalIntent = parseGlobalIntent(values);
-  if (globalIntent) return globalIntent;
-  return {
-    kind: "generate",
-    dir,
-    check: values.check === true,
-    failOnBreaking: values["fail-on-breaking"] === true,
-  };
+  return parseSyncLikeTokens(dir, tokens, "generate");
 }
 
 export function parseUpgradeTokens(dir: string, tokens: string[]): ParsedCli {

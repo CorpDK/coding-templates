@@ -30,8 +30,10 @@ export interface InitOptions {
 function initNextSteps(packageName: string, noInstall?: boolean): string[] {
   const steps: string[] = [];
   if (!noInstall) steps.push("pnpm install");
-  steps.push(`pnpm --filter ${packageName} sdk:codegen`);
-  steps.push(`pnpm --filter ${packageName} build`);
+  steps.push(
+    `pnpm --filter ${packageName} sdk:codegen`,
+    `pnpm --filter ${packageName} build`,
+  );
   return steps;
 }
 

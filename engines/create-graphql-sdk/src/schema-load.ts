@@ -1,5 +1,4 @@
-import fs from "node:fs/promises";
-import { glob } from "node:fs/promises";
+import fs, { glob } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { pathExists } from "@corpdk/engine-kit";
@@ -48,7 +47,7 @@ async function expandGraphqlPaths(
       const full = path.resolve(String(entry));
       if (!GRAPHQL_EXTS.has(path.extname(full).toLowerCase())) continue;
       const skip = exclude.some((ex) => {
-        const norm = ex.replace(/\*\*/g, "");
+        const norm = ex.replaceAll("**", "");
         return full.includes(norm);
       });
       if (skip) continue;

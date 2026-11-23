@@ -34,7 +34,7 @@ export function mergeScalarStubs(
   unmapped: string[],
 ): SdkConfig {
   if (unmapped.length === 0) return config;
-  const scalars = { ...(config.scalars ?? {}) };
+  const scalars = config.scalars ? { ...config.scalars } : {};
   for (const name of unmapped) {
     if (!scalars[name]) {
       scalars[name] = stubScalarEntry(name);

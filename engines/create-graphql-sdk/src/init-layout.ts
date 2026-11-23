@@ -138,7 +138,7 @@ export async function applyScaffoldLayout(
   );
 
   if (options.scalarPreset === "dal") {
-    const deps = { ...(merged.dependencies ?? {}) };
+    const deps = merged.dependencies ? { ...merged.dependencies } : {};
     const corpdkRef =
       deps["@corpdk/graphql-input-zod"] ??
       deps["@corpdk/graphql-dsl"] ??

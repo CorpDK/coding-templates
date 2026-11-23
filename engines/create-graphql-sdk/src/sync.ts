@@ -13,7 +13,6 @@ import {
   readSdkConfig,
   snapshotPath,
   writeSdkConfig,
-  type SdkConfig,
 } from "./sdk-config.js";
 
 export interface SyncOptions {
@@ -71,9 +70,8 @@ export async function runSyncPipeline(
       .filter((c) => c.type === "breaking")
       .map((c) => c.description);
     if (options.failOnBreaking && breaking.length > 0) {
-      throw new Error(
-        `Breaking schema changes detected:\n${breaking.map((b) => `  - ${b}`).join("\n")}`,
-      );
+      const lines = breaking.map((b) => `  - ${b}`).join("\n");
+      throw new Error(`Breaking schema changes detected:\n${lines}`);
     }
   }
 
@@ -93,5 +91,6 @@ export async function runSyncPipeline(
 }
 
 export function formatUnmappedMessage(names: string[]): string {
-  return `Unmapped custom scalars (add entries to sdk.config.yaml scalars.*):\n${names.map((n) => `  - ${n}`).join("\n")}`;
+  const lines = names.map((n) => `  - ${n}`).join("\n");
+  return `Unmapped custom scalars (add entries to sdk.config.yaml scalars.*):\n${lines}`;
 }
