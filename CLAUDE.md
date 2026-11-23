@@ -138,6 +138,7 @@ pnpm --filter @corpdk/ds codegen    # Run graphql-codegen for ds
 pnpm create-app                     # Run the interactive scaffolding CLI
 pnpm create-ds init [dir]           # Scaffold DS-only DAL package
 pnpm create-ds upgrade [dir]        # Merge templates/ds automation deltas
+pnpm create-graphql-sdk             # SDK engine CLI (init / sync / codegen / generate / upgrade)
 ```
 
 Each package requires its own `.env` file — copy from `.env.example` in the package directory.
