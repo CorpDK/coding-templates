@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { describe, test } from "vitest";
 import { FieldsSelection } from "../src/runtime/typeSelection.js";
 
@@ -511,10 +510,13 @@ test(
       }
     >;
     const x: X = {} as any;
+    // @ts-expect-error
     x?.edges?.[0]?.node?.x?.toLocaleLowerCase;
     // @ts-expect-error not present
     x?.edges?.[0]?.node?.y?.toLocaleLowerCase;
+    // @ts-expect-error
     x?.edges?.[0]?.nodes?.[0].x?.toLocaleLowerCase;
+    // @ts-expect-error
     x?.edges?.[0]?.nodes?.[0].y?.toLocaleLowerCase;
   }),
 );

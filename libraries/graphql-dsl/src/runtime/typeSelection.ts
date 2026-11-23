@@ -3,13 +3,20 @@
  * object-union detection and directive/alias field handling.
  */
 
-export type FieldsSelection<SRC extends Anify<DST> | undefined, DST> = {
+export type FieldsSelection<SRC extends Anify<DST> | undefined, DST> =
+  undefined extends SRC
+    ? Exclude<SRC, undefined> extends never
+      ? Extract<SRC, undefined>
+      : FieldsSelection<Exclude<SRC, undefined>, DST> | undefined
+    : FieldsSelectionBody<SRC, DST>;
+
+type FieldsSelectionBody<SRC extends Anify<DST> | undefined, DST> = {
   scalar: SRC;
   union: HandleUnion<SRC, DST>;
   object: HandleObject<SRC, DST>;
   array: SRC extends Nil
     ? never
-    : SRC extends Array<infer T | null>
+    : SRC extends (infer T)[]
       ? Array<FieldsSelection<T, DST>>
       : never;
   __scalar: Handle__scalar<SRC, DST>;
@@ -24,13 +31,19 @@ export type FieldsSelection<SRC extends Anify<DST> | undefined, DST> = {
         ? "scalar"
         : SRC extends any[]
           ? "array"
-          : SRC extends { __isUnion?: unknown }
+          : IsMarkedUnion<SRC> extends true
             ? "union"
             : DST extends { __scalar?: unknown }
               ? "__scalar"
-              : DST extends object
+              : DST extends object | boolean
                 ? "object"
                 : "never"];
+
+type IsMarkedUnion<SRC> = SRC extends { __isUnion?: infer Flag }
+  ? Extract<Flag, true> extends true
+    ? true
+    : false
+  : false;
 
 type HasOnFragments<DST> = DST extends object
   ? {
