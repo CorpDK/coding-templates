@@ -60,3 +60,4 @@ export {
 export { emitMan } from "./emit-man.js";
 export { emitTexi } from "./emit-texi.js";
 export { emitCliModules } from "./emit-cli-modules.js";
+export { emitRuntimeConfigModule } from "./emit-runtime-config.js";

@@ -1,0 +1,10 @@
+{
+  "name": "@corpdk/fixture-cli-sdk",
+  "version": "0.0.0-fixture",
+  "type": "module",
+  "private": true,
+  "exports": {
+    ".": { "import": "./dist/index.js" },
+    "./validation": { "import": "./dist/validation.js" }
+  }
+}

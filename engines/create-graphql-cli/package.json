@@ -30,14 +30,24 @@
   },
   "scripts": {
     "build": "tsc",
+    "dev": "tsc --watch --preserveWatchOutput",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
     "clean": "rm -rf dist node_modules .turbo *.tsbuildinfo"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
-    "typescript": "^6.0.2"
+    "typescript": "^6.0.2",
+    "vitest": "^4.1.2"
   },
   "engines": {
     "node": ">=24.0.0"
+  },
+  "dependencies": {
+    "@clack/prompts": "^1.1.0",
+    "@corpdk/engine-kit": "workspace:^",
+    "@corpdk/graphql-cli-core": "workspace:^",
+    "graphql": "^16.13.2",
+    "yaml": "^2.8.3"
   }
 }

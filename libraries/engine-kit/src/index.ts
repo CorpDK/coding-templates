@@ -65,5 +65,6 @@ export {
   type DefineEngineCliOptions,
   type EngineCommandDef,
   type EngineCommandHandler,
+  type EngineOptionDef,
   type ParsedEngineCli,
 } from "./cli.js";

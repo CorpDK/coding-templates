@@ -1,0 +1,45 @@
+type Query {
+  hello(name: String): String!
+  itemConnection(first: Int, after: String, last: Int, before: String): ItemConnection!
+}
+
+type ItemConnection {
+  nodes: [Item!]!
+  pageInfo: PageInfo!
+}
+
+type PageInfo {
+  hasNextPage: Boolean!
+  hasPreviousPage: Boolean!
+  startCursor: String
+  endCursor: String
+}
+
+type Item {
+  id: ID!
+  name: String!
+}
+
+type Mutation {
+  createItem(input: ItemInput!): CreateItemPayload!
+  deleteItem(id: ID!): Boolean!
+}
+
+input ItemInput {
+  name: String!
+}
+
+type CreateItemPayload {
+  item: Item
+  userErrors: [UserError!]!
+}
+
+type UserError {
+  message: String!
+  field: [String!]
+  code: String
+}
+
+type Subscription {
+  ping: String!
+}
