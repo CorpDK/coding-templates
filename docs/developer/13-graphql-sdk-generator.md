@@ -849,7 +849,7 @@ Runtime dependencies: `@corpdk/engine-kit`, `graphql`, `@graphql-tools/merge`, `
 | `sync [dir]`     | Merge sources → validate → snapshot                                   | `schema/schema.graphqls`          |
 | `codegen [dir]`  | Snapshot → L1 → L2 + L3                                               | `src/generated/**`                |
 | `generate [dir]` | `sync`, then `codegen`                                                | Both                              |
-| `upgrade [dir]`  | Overwrite canonical files; merge `package.json` and `sdk.config.yaml` | Canonical files only              |
+| `upgrade [dir]`  | Overwrite canonical template files; run `codegen` (§8.6)              | `UPGRADE_OVERWRITE_FILES` only    |
 
 ### 8.5 Flags
 
@@ -886,8 +886,8 @@ create-graphql-sdk <init|sync|codegen|generate|upgrade> [directory] [options]
 
 **`upgrade`:**
 
-- **Overwrite:** `codegen.ts`, `src/index.ts`, `src/validation.ts`, and the README outside `<!-- user -->` blocks. `tsconfig.json` is not overwritten — `init` patches `extends` for the target directory depth and `upgrade` leaves that file untouched. Merge targets below must also be listed here so `runUpgradePlan` invokes merge handlers ([doc 15 §11.2](15-create-ds-generator-integration.md#112-shared-behavior-matrix); `create-ds` includes `package.json` in its overwrite list).
-- **Merge:** `package.json` and `sdk.config.yaml`.
+- **Overwrite:** `codegen.ts`, `src/index.ts`, `src/validation.ts`, `README.md`, and `.gitignore` (`UPGRADE_OVERWRITE_FILES`). README copies preserve `<!-- user -->` blocks. `tsconfig.json` is not overwritten — `init` patches `extends` for the target directory depth and `upgrade` leaves that file untouched.
+- **Merge (P1c):** `upgrade` wires merge handlers for `package.json` and `sdk.config.yaml`, but `runUpgradePlan` calls them only when those paths are also in the overwrite list ([doc 15 §11.2](15-create-ds-generator-integration.md#112-shared-behavior-matrix); `create-ds` lists merge targets in `UPGRADE_RELATIVE_FILES`). They are absent from `UPGRADE_OVERWRITE_FILES` in P1c, so consumer `package.json` and `sdk.config.yaml` are left unchanged.
 - **Never touch:** `schema/**`, `src/extensions/**`.
 - Then run `codegen`.
 
