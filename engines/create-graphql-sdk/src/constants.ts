@@ -28,7 +28,6 @@ export const SNAPSHOT_HEADER =
 
 export const UPGRADE_OVERWRITE_FILES = [
   "codegen.ts",
-  "tsconfig.json",
   "src/index.ts",
   "src/validation.ts",
   "README.md",

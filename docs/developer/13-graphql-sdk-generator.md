@@ -886,7 +886,7 @@ create-graphql-sdk <init|sync|codegen|generate|upgrade> [directory] [options]
 
 **`upgrade`:**
 
-- **Overwrite:** `codegen.ts`, `tsconfig.json`, `src/index.ts`, `src/validation.ts`, and the README outside `<!-- user -->` blocks.
+- **Overwrite:** `codegen.ts`, `src/index.ts`, `src/validation.ts`, and the README outside `<!-- user -->` blocks. `tsconfig.json` is not overwritten — `init` patches `extends` for the target directory depth and `upgrade` leaves that file untouched.
 - **Merge:** `package.json` and `sdk.config.yaml`.
 - **Never touch:** `schema/**`, `src/extensions/**`.
 - Then run `codegen`.
