@@ -264,9 +264,9 @@ The helper logic lives once, in `@corpdk/graphql-input-zod` (§7.4). Each SDK bi
 ```text
 <sdk>/
   schema/schema.graphqls           merged snapshot           CLI-written (sync), committed
-  sdk.config.yaml                  SDK config                user-owned (merged on upgrade)
+  sdk.config.yaml                  SDK config                user-owned (unchanged on upgrade in P1c; §8.6)
   codegen.ts                       graphql-codegen config    canonical (reads sdk.config.yaml)
-  package.json                     manifest                  merged on upgrade (like create-ds)
+  package.json                     manifest                  written at init; unchanged on upgrade in P1c (§8.6)
   tsconfig.json                    NodeNext build            canonical
   README.md                        consumer guide            canonical outside <!-- user --> blocks
   src/index.ts                     root entry                canonical
@@ -835,7 +835,7 @@ Runtime dependencies: `@corpdk/engine-kit`, `graphql`, `@graphql-tools/merge`, `
 - the same command shape, help, and "Next steps" output;
 - exit codes 0/1/2/3 (§8.6);
 - `runInit` / `runUpgrade` exports;
-- the overwrite / merge / never-touch upgrade model;
+- the shared generator upgrade model; P1c is overwrite-only plus never-touch (§8.6), with merge deferred;
 - a `.create-graphql-sdk-version` record;
 - a root script, `"create-graphql-sdk": "node engines/create-graphql-sdk/dist/index.js"`.
 
