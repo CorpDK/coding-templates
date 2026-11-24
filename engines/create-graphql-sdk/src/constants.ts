@@ -34,8 +34,6 @@ export const UPGRADE_OVERWRITE_FILES = [
   ".gitignore",
 ] as const;
 
-export const UPGRADE_MERGE_FILES = new Set(["package.json", "sdk.config.yaml"]);
-
 export const NEVER_TOUCH_PREFIXES = ["schema/", "src/extensions/"] as const;
 
 /** DAL custom scalars — `init --scalar-preset dal` (doc 13 §6). */

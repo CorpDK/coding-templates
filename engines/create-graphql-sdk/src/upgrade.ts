@@ -1,15 +1,9 @@
-import fs from "node:fs/promises";
 import path from "node:path";
-import { parse as parseYaml, stringify as stringifyYaml } from "yaml";
 import { spinner } from "@clack/prompts";
 import {
-  mergePackageJson,
-  mergeYamlConfig,
   pathExists,
-  readJson,
   runUpgradePlan,
   writeEngineVersion,
-  writeJson,
   EXIT_SUCCESS,
   EXIT_TOOL,
   EXIT_USAGE,
@@ -17,10 +11,8 @@ import {
 } from "@corpdk/engine-kit";
 import { exitCodeForEngineError } from "./engine-errors.js";
 import {
-  CORP_DK_OWNED,
   CREATE_GRAPHQL_SDK_ENGINE_ROOT,
   ENGINE_VERSION_BASENAME,
-  UPGRADE_MERGE_FILES,
   UPGRADE_OVERWRITE_FILES,
 } from "./constants.js";
 import {
@@ -28,54 +20,11 @@ import {
   readCreateGraphqlSdkReleaseVersion,
   resolveCanonicalSdkTemplateDir,
 } from "./template.js";
-import { ensureScalarZodDependency } from "./init-layout.js";
-import { readSdkConfig } from "./sdk-config.js";
-import { sdkConfigNeedsScalarZodPackage } from "./scalars.js";
 
 export interface UpgradeOptions {
   dir: string;
   dryRun?: boolean;
   repoRoot?: string;
-}
-
-async function mergeUpgradePackageJson(
-  templatePath: string,
-  destPath: string,
-  releaseVersion: string | undefined,
-): Promise<void> {
-  const consumer =
-    await readJson<Parameters<typeof mergePackageJson>[0]>(destPath);
-  const template =
-    await readJson<Parameters<typeof mergePackageJson>[1]>(templatePath);
-  const merged = mergePackageJson(consumer, template, {
-    owned: CORP_DK_OWNED,
-    releaseVersion,
-  });
-  const packageDir = path.dirname(destPath);
-  if (await pathExists(path.join(packageDir, "sdk.config.yaml"))) {
-    const config = await readSdkConfig(packageDir);
-    if (sdkConfigNeedsScalarZodPackage(config)) {
-      ensureScalarZodDependency(merged);
-    }
-  }
-  await writeJson(destPath, merged);
-}
-
-async function mergeUpgradeSdkConfig(
-  templatePath: string,
-  destPath: string,
-): Promise<void> {
-  const templateRaw = await fs.readFile(templatePath, "utf8");
-  const consumerRaw = (await pathExists(destPath))
-    ? await fs.readFile(destPath, "utf8")
-    : null;
-  const template = (parseYaml(templateRaw) as Record<string, unknown>) ?? {};
-  const consumer = consumerRaw
-    ? ((parseYaml(consumerRaw) as Record<string, unknown>) ?? {})
-    : {};
-  const merged = mergeYamlConfig(template, consumer);
-  await fs.mkdir(path.dirname(destPath), { recursive: true });
-  await fs.writeFile(destPath, stringifyYaml(merged), "utf8");
 }
 
 export async function runUpgrade(
@@ -108,28 +57,15 @@ export async function runUpgrade(
   const s = spinner();
   s.start("Merging canonical SDK template");
 
-  const releaseVersion = isBundledCanonicalTemplate(templateDir)
-    ? await readCreateGraphqlSdkReleaseVersion()
-    : undefined;
-
   let changedFiles: string[] = [];
 
   try {
     const plan = await runUpgradePlan({
       overwrite: [...UPGRADE_OVERWRITE_FILES],
-      merge: [...UPGRADE_MERGE_FILES],
+      merge: [],
       templateDir,
       packageDir,
       dryRun: options.dryRun,
-      mergeFile: async (rel, templatePath, destPath) => {
-        if (rel === "package.json") {
-          await mergeUpgradePackageJson(templatePath, destPath, releaseVersion);
-          return;
-        }
-        if (rel === "sdk.config.yaml") {
-          await mergeUpgradeSdkConfig(templatePath, destPath);
-        }
-      },
     });
 
     changedFiles = plan.changedFiles;
