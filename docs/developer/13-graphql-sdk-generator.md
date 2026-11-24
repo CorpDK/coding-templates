@@ -767,7 +767,7 @@ The server does not import the SDK and wins at runtime (`userErrors` / `BAD_USER
 
 - **Package shape:** ESM with root and `/pg` entry points; wire validators in `wire-zod.ts`, shared parse helpers in `scalars.ts` and `parse-helpers.ts`, and procedural PostgreSQL interval text ↔ ms conversion in `pg-interval.ts` (no Luxon). Import `@corpdk/scalar-zod/pg` only when PG-bounded rules are needed; per-scalar tree-shaking is verified under R-37.
 - **`dal-core`:** depends on `@corpdk/scalar-zod` and re-exports `dalScalarZod`, `zPgInt32`, and `zPgReal` from `@corpdk/scalar-zod/pg`. Server code and `dal-codegen` output stay unchanged (R-10).
-- **SDKs:** the `dal` preset references it (§6). **`init --scalar-preset dal`** adds `@corpdk/scalar-zod` to `package.json` `dependencies` when scalars in the SDL snapshot use those refs. Non-DAL SDKs with expression-string `zod` rules do not install it; `{ from, name }` refs require adding the package manually. Like the other owned runtimes, rule fixes reach every SDK through a dependency update.
+- **SDKs:** the `dal` preset references it (§6). **`init --scalar-preset dal`** adds `@corpdk/scalar-zod` to `package.json` `dependencies` (the bare `canonical/` template omits it). Non-DAL SDKs with expression-string `zod` rules do not install it; `{ from, name }` refs require adding the package manually. Like the other owned runtimes, rule fixes reach every SDK through a dependency update.
 - **Dependencies:** `zod` ^4 (peer), `graphql-scalars` (needs a dependency-policy audit row, R-38).
 
 ---
