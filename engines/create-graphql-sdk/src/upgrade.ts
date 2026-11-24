@@ -28,6 +28,9 @@ import {
   readCreateGraphqlSdkReleaseVersion,
   resolveCanonicalSdkTemplateDir,
 } from "./template.js";
+import { ensureScalarZodDependency } from "./init-layout.js";
+import { readSdkConfig } from "./sdk-config.js";
+import { sdkConfigNeedsScalarZodPackage } from "./scalars.js";
 
 export interface UpgradeOptions {
   dir: string;
@@ -44,13 +47,18 @@ async function mergeUpgradePackageJson(
     await readJson<Parameters<typeof mergePackageJson>[0]>(destPath);
   const template =
     await readJson<Parameters<typeof mergePackageJson>[1]>(templatePath);
-  await writeJson(
-    destPath,
-    mergePackageJson(consumer, template, {
-      owned: CORP_DK_OWNED,
-      releaseVersion,
-    }),
-  );
+  const merged = mergePackageJson(consumer, template, {
+    owned: CORP_DK_OWNED,
+    releaseVersion,
+  });
+  const packageDir = path.dirname(destPath);
+  if (await pathExists(path.join(packageDir, "sdk.config.yaml"))) {
+    const config = await readSdkConfig(packageDir);
+    if (sdkConfigNeedsScalarZodPackage(config)) {
+      ensureScalarZodDependency(merged);
+    }
+  }
+  await writeJson(destPath, merged);
 }
 
 async function mergeUpgradeSdkConfig(

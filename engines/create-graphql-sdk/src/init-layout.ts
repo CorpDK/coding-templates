@@ -27,6 +27,18 @@ import {
 } from "./sdk-config.js";
 import type { InitOptions } from "./init.js";
 
+type PackageDeps = { dependencies?: Record<string, string> };
+
+export function ensureScalarZodDependency(pkg: PackageDeps): void {
+  const deps = pkg.dependencies ? { ...pkg.dependencies } : {};
+  const corpdkRef =
+    deps["@corpdk/graphql-input-zod"] ??
+    deps["@corpdk/graphql-dsl"] ??
+    "workspace:^";
+  deps["@corpdk/scalar-zod"] = corpdkRef;
+  pkg.dependencies = deps;
+}
+
 export async function ensureEmptyTarget(
   targetDir: string,
 ): Promise<string | null> {
@@ -138,13 +150,7 @@ export async function applyScaffoldLayout(
   );
 
   if (options.scalarPreset === "dal") {
-    const deps = merged.dependencies ? { ...merged.dependencies } : {};
-    const corpdkRef =
-      deps["@corpdk/graphql-input-zod"] ??
-      deps["@corpdk/graphql-dsl"] ??
-      "workspace:^";
-    deps["@corpdk/scalar-zod"] = corpdkRef;
-    merged.dependencies = deps;
+    ensureScalarZodDependency(merged);
   }
 
   await writeJson(path.join(targetDir, "package.json"), merged);
