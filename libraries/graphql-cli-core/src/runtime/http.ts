@@ -82,7 +82,8 @@ export async function postOperation(
 
   if (status < 200 || status >= 300) {
     throw transportFailure(
-      `HTTP ${status} ${statusText}`.trim() + (text ? `: ${snippet(text)}` : ""),
+      `HTTP ${status} ${statusText}`.trim() +
+        (text ? `: ${snippet(text)}` : ""),
       { status },
     );
   }

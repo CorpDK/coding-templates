@@ -3,11 +3,7 @@ import {
   type GraphqlRequestError,
 } from "@corpdk/graphql-dsl";
 import type { RuntimeConfig } from "../codegen/types.js";
-import {
-  createRedactor,
-  resolveHeaders,
-  type HeaderMap,
-} from "./headers.js";
+import { createRedactor, resolveHeaders, type HeaderMap } from "./headers.js";
 import type { CliExtensions } from "./types.js";
 
 /** Everything a request needs; headers are re-resolved for every request. */

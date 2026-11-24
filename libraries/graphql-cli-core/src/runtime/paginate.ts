@@ -41,10 +41,7 @@ function pagingDirection(
   return op.paginated?.direction === "backward" ? "backward" : "forward";
 }
 
-function pageSizeFor(
-  variables: ArgVariables,
-  config: RuntimeConfig,
-): number {
+function pageSizeFor(variables: ArgVariables, config: RuntimeConfig): number {
   const requested = variables.first ?? variables.last;
   return typeof requested === "number"
     ? requested
@@ -82,7 +79,9 @@ export async function walkConnection(
     return normalized.data;
   };
 
-  const buildPage = (pageVariables: Record<string, unknown>): GraphqlOperation => {
+  const buildPage = (
+    pageVariables: Record<string, unknown>,
+  ): GraphqlOperation => {
     const merged: ArgVariables = {
       ...variables,
       ...dropUndefined(pageVariables),

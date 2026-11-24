@@ -130,7 +130,11 @@ export function commandHelp(bin: string, cmd: CommandDescriptor): string {
       lines.push(`${head}${commandLineSuffix(arg.description)}`);
     }
   }
-  lines.push("", "Global flags:", ...GLOBAL_FLAG_HELP.map((line) => `  ${line}`));
+  lines.push(
+    "",
+    "Global flags:",
+    ...GLOBAL_FLAG_HELP.map((line) => `  ${line}`),
+  );
   return `${lines.join("\n")}\n`;
 }
 

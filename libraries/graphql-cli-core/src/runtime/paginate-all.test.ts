@@ -40,7 +40,9 @@ function pagedFetch(pages: { id: string; name?: string }[][]) {
     const body = JSON.parse(String(init?.body)) as {
       variables?: { after?: string };
     };
-    const index = body.variables?.after ? Number(body.variables.after.slice(1)) : 0;
+    const index = body.variables?.after
+      ? Number(body.variables.after.slice(1))
+      : 0;
     const nodes = pages[index] ?? [];
     const hasNext = index + 1 < pages.length;
     const endCursor = hasNext ? `c${index + 1}` : null;
@@ -59,7 +61,10 @@ function pagedFetch(pages: { id: string; name?: string }[][]) {
 describe("--all paging", () => {
   it("prints every node once as NDJSON across three pages", async () => {
     const fetchImpl = pagedFetch([
-      [{ id: "a", name: "A" }, { id: "b", name: "B" }],
+      [
+        { id: "a", name: "A" },
+        { id: "b", name: "B" },
+      ],
       [{ id: "c", name: "C" }],
       [],
     ]);

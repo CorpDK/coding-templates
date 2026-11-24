@@ -108,7 +108,8 @@ async function promptText(
       placeholder: hint,
       validate: (input) => {
         const text = input?.trim() ?? "";
-        if (text === "") return arg.required ? "A value is required" : undefined;
+        if (text === "")
+          return arg.required ? "A value is required" : undefined;
         return checkText(arg, text);
       },
     }),
@@ -209,7 +210,10 @@ async function confirmDestructive(
   );
   const answer = await ask<boolean>(
     host.prompts,
-    host.prompts.confirm({ message: `Run ${op.command}?`, initialValue: false }),
+    host.prompts.confirm({
+      message: `Run ${op.command}?`,
+      initialValue: false,
+    }),
   );
   return !answer.cancelled && answer.value;
 }

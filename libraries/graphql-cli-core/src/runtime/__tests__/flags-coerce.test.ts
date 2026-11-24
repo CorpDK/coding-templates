@@ -11,7 +11,10 @@ import { fixtureCatalog } from "./fixture-sdk/catalog.js";
 const items = fixtureCatalog.items!;
 const item = fixtureCatalog.item!;
 
-function arg(name: string, overrides: Partial<ArgDescriptor> = {}): ArgDescriptor {
+function arg(
+  name: string,
+  overrides: Partial<ArgDescriptor> = {},
+): ArgDescriptor {
   return {
     name,
     flag: name,
@@ -131,7 +134,7 @@ describe("coerceFlagValue (doc 14 §4.2)", () => {
     const ints = arg("ns", { graphqlType: "[Int!]", list: true });
     expect(coerceFlagValue(["1", "2"], ints)).toEqual([1, 2]);
     expect(coerceFlagValue(["[3,4]"], ints)).toEqual([3, 4]);
-    expect(() => coerceFlagValue(["[1,\"x\"]"], ints)).toThrow(UsageError);
+    expect(() => coerceFlagValue(['[1,"x"]'], ints)).toThrow(UsageError);
     expect(() => coerceFlagValue(["[{}]"], ints)).toThrow(UsageError);
   });
 
@@ -143,9 +146,9 @@ describe("coerceFlagValue (doc 14 §4.2)", () => {
     const file = join(dir, "filter.json");
     writeFileSync(file, '{"name":"from-file"}');
     expect(coerceFlagValue(`@${file}`, filter)).toEqual({ name: "from-file" });
-    expect(() => coerceFlagValue(`@${join(dir, "missing.json")}`, filter)).toThrow(
-      /Cannot read --filter file/,
-    );
+    expect(() =>
+      coerceFlagValue(`@${join(dir, "missing.json")}`, filter),
+    ).toThrow(/Cannot read --filter file/);
     expect(() => coerceFlagValue("{nope", filter)).toThrow(/Invalid JSON/);
   });
 
@@ -162,8 +165,8 @@ describe("coerceFlagValue (doc 14 §4.2)", () => {
   });
 
   it("rejects a bare flag on a non-boolean argument", () => {
-    expect(() => coerceFlagValue(true, arg("n", { graphqlType: "Int" }))).toThrow(
-      /requires a value/,
-    );
+    expect(() =>
+      coerceFlagValue(true, arg("n", { graphqlType: "Int" })),
+    ).toThrow(/requires a value/);
   });
 });

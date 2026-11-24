@@ -45,7 +45,11 @@ export function settleResponse(
   });
 
   if (normalized.ok) {
-    writeJson(streams.stdout, format.raw ? body : normalized.data, format.pretty);
+    writeJson(
+      streams.stdout,
+      format.raw ? body : normalized.data,
+      format.pretty,
+    );
     return EXIT_OK;
   }
 

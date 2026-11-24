@@ -68,7 +68,9 @@ async function writePlannedFiles(planned: PlannedFile[]): Promise<void> {
   );
 }
 
-export async function runGenerate(options: GenerateOptions): Promise<EngineResult> {
+export async function runGenerate(
+  options: GenerateOptions,
+): Promise<EngineResult> {
   const { packageDir, check } = options;
   try {
     const config = await readCliConfig(packageDir);

@@ -99,7 +99,8 @@ function validateBuiltin(arg: ArgDescriptor, value: unknown): ArgResult {
     const issues: CliValidationIssue[] = [];
     value.forEach((element, index) => {
       const problem = builtinProblem(arg, element);
-      if (problem) issues.push(issue(arg, [index], problem.message, problem.code));
+      if (problem)
+        issues.push(issue(arg, [index], problem.message, problem.code));
     });
     return issues.length > 0 ? { ok: false, issues } : { ok: true, value };
   }
@@ -175,7 +176,12 @@ function validateArgument(
       : { ok: true, value };
   }
   if (arg.scalarZodSchemaName && !isBuiltinOrEnum(arg)) {
-    return validateCustomScalar(arg, arg.scalarZodSchemaName, value, validation);
+    return validateCustomScalar(
+      arg,
+      arg.scalarZodSchemaName,
+      value,
+      validation,
+    );
   }
   if (isBuiltinOrEnum(arg)) return validateBuiltin(arg, value);
   return { ok: true, value };

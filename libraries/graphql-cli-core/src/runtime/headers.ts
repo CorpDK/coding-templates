@@ -4,7 +4,8 @@ import type { CliExtensions } from "./types.js";
 
 export type HeaderMap = Record<string, string>;
 
-const SENSITIVE_HEADER = /authorization|token|secret|api[-_]?key|cookie|password/i;
+const SENSITIVE_HEADER =
+  /authorization|token|secret|api[-_]?key|cookie|password/i;
 const AUTH_CREDENTIAL = /^(?:Bearer|Basic)\s+(\S.*)$/i;
 const REDACTED = "<redacted>";
 
@@ -108,9 +109,11 @@ export function redactHeaders(headers: HeaderMap): HeaderMap {
 function urlCredentials(endpoint: string): string[] {
   try {
     const url = new URL(endpoint);
-    return [url.username, url.password, decodeURIComponent(url.password)].filter(
-      (part) => part.length > 0,
-    );
+    return [
+      url.username,
+      url.password,
+      decodeURIComponent(url.password),
+    ].filter((part) => part.length > 0);
   } catch {
     return [];
   }
@@ -154,6 +157,7 @@ export function resolveEndpoint(
   override?: string,
 ): string | undefined {
   return (
-    override ?? (env[config.transport.httpUrlEnv] || config.transport.defaultUrl)
+    override ??
+    (env[config.transport.httpUrlEnv] || config.transport.defaultUrl)
   );
 }

@@ -80,7 +80,10 @@ export function reportRequestError(
     case "userErrors":
       writeCliError(stderr, {
         error: "userErrors",
-        userErrors: redactUnknown(error.userErrors, redact) as readonly unknown[],
+        userErrors: redactUnknown(
+          error.userErrors,
+          redact,
+        ) as readonly unknown[],
       });
       break;
     case "validation":

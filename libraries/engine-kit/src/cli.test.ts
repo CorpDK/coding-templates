@@ -51,7 +51,15 @@ describe("parseEngineCli command options", () => {
       version: "1.0.0",
       help: "help text",
       commands: withOptions,
-      argv: ["node", "test-engine", "init", "--name", "pkg", "out", "--dry-run"],
+      argv: [
+        "node",
+        "test-engine",
+        "init",
+        "--name",
+        "pkg",
+        "out",
+        "--dry-run",
+      ],
     });
     expect(parsed.kind).toBe("run");
     if (parsed.kind === "run") {

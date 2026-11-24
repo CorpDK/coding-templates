@@ -173,7 +173,9 @@ function runCatalogCommand(
 ): number {
   const [name, ...rest] = args;
   const json = rest.includes("--json");
-  const positionals = rest.filter((arg) => arg !== "--json" && arg !== "--pretty");
+  const positionals = rest.filter(
+    (arg) => arg !== "--json" && arg !== "--pretty",
+  );
   const pretty = rest.includes("--pretty");
 
   if (name === "commands") {
@@ -187,7 +189,8 @@ function runCatalogCommand(
 
   const [target, ...extra] = positionals;
   if (!target) throw new UsageError(`${name} requires a command name`);
-  if (extra.length > 0) throw new UsageError(`Unexpected argument: ${extra[0]}`);
+  if (extra.length > 0)
+    throw new UsageError(`Unexpected argument: ${extra[0]}`);
   const op = options.catalog[target];
   if (!op) throw new UsageError(`Unknown command: ${target}`);
   if (name === "describe" && json) {

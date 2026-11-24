@@ -6,8 +6,13 @@
   "bin": {
     "graphql-cli": "./dist/cli.js"
   },
-  "files": ["dist", "README.md"],
-  "engines": { "node": ">=24.0.0" },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "dependencies": {
     "@corpdk/graphql-cli-core": "workspace:*",
     "graphql": "^16.13.2",

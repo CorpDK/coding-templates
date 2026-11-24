@@ -76,19 +76,14 @@ describe("create-graphql-cli engine", () => {
     const config = await readCliConfig(dir);
     const sdkPath = path.resolve(dir, config.sdk.path);
     const { schema, sha256 } = await resolveSdkSnapshot(sdkPath);
-    const oracle = emitCliModules(
-      schema,
-      configToEmitOptions(config, "0.0.1"),
-    );
+    const oracle = emitCliModules(schema, configToEmitOptions(config, "0.0.1"));
     const expectedKeys = oracle.commands.map((cmd) => cmd.command).sort();
 
     const commandsPath = path.join(dir, "src/generated/commands.ts");
     const header = fs.readFileSync(commandsPath, "utf8").split("\n", 3);
     expect(header[1]).toBe(`// sdk-snapshot-sha256: ${sha256}`);
 
-    const { catalog } = (await import(
-      pathToFileURL(commandsPath).href
-    )) as {
+    const { catalog } = (await import(pathToFileURL(commandsPath).href)) as {
       catalog: Record<string, unknown>;
     };
     expect(Object.keys(catalog).sort()).toEqual(expectedKeys);

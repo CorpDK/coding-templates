@@ -91,7 +91,10 @@ type SubscriptionEventContext = {
   maxEvents: number | undefined;
 };
 
-function onSubscriptionSseEvent(event: SseEvent, ctx: SubscriptionEventContext): void {
+function onSubscriptionSseEvent(
+  event: SseEvent,
+  ctx: SubscriptionEventContext,
+): void {
   const { state } = ctx;
   if (state.outcome.done) return;
   if (event.event === "complete") {
@@ -243,7 +246,8 @@ export async function streamSubscription(
       redact: transport.redact,
       maxEvents: options.maxEvents,
     };
-    const handle = (event: SseEvent): void => onSubscriptionSseEvent(event, ctx);
+    const handle = (event: SseEvent): void =>
+      onSubscriptionSseEvent(event, ctx);
     const settled = (): number | undefined =>
       state.outcome.done ? state.outcome.code : undefined;
 

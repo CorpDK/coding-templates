@@ -4,7 +4,11 @@
   "type": "module",
   "private": true,
   "exports": {
-    ".": { "import": "./dist/index.js" },
-    "./validation": { "import": "./dist/validation.js" }
+    ".": {
+      "import": "./dist/index.js"
+    },
+    "./validation": {
+      "import": "./dist/validation.js"
+    }
   }
 }

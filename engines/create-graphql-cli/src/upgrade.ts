@@ -19,18 +19,16 @@ import {
 import { CLI_CONFIG_FILE } from "./cli-config.js";
 import { engineResult } from "./engine-result.js";
 
-const OVERWRITE = [
-  "src/cli.ts",
-  "tsconfig.json",
-  ".env.example",
-];
+const OVERWRITE = ["src/cli.ts", "tsconfig.json", ".env.example"];
 
 export type UpgradeOptions = {
   packageDir: string;
   dryRun?: boolean;
 };
 
-export async function runUpgrade(options: UpgradeOptions): Promise<EngineResult> {
+export async function runUpgrade(
+  options: UpgradeOptions,
+): Promise<EngineResult> {
   const { packageDir, dryRun } = options;
   if (!(await pathExists(path.join(packageDir, CLI_CONFIG_FILE)))) {
     return engineResult({
@@ -40,7 +38,9 @@ export async function runUpgrade(options: UpgradeOptions): Promise<EngineResult>
   }
 
   const templateDir = path.join(CREATE_GRAPHQL_CLI_ENGINE_ROOT, "canonical");
-  const releaseVersion = await readEngineRelease(CREATE_GRAPHQL_CLI_ENGINE_ROOT);
+  const releaseVersion = await readEngineRelease(
+    CREATE_GRAPHQL_CLI_ENGINE_ROOT,
+  );
 
   const consumerPkgPath = path.join(packageDir, "package.json");
   const templatePkgPath = path.join(templateDir, "package.json");
@@ -75,7 +75,10 @@ export async function runUpgrade(options: UpgradeOptions): Promise<EngineResult>
     requireOverwriteSources: true,
   });
 
-  await fs.writeFile(consumerPkgPath, JSON.stringify(mergedPkg, null, 2) + "\n");
+  await fs.writeFile(
+    consumerPkgPath,
+    JSON.stringify(mergedPkg, null, 2) + "\n",
+  );
   // Consumer-owned cli.config.yaml is merged, not replaced blindly.
   const existingYaml = await fs.readFile(
     path.join(packageDir, CLI_CONFIG_FILE),

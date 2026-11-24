@@ -28,12 +28,15 @@ export async function resolveSdkSnapshot(
   return { schema, snapshotPath, sha256 };
 }
 
-export async function assertSdkValidationExport(sdkPath: string): Promise<void> {
+export async function assertSdkValidationExport(
+  sdkPath: string,
+): Promise<void> {
   const pkgPath = path.join(sdkPath, "package.json");
   const pkg = JSON.parse(await fs.readFile(pkgPath, "utf8")) as {
     exports?: Record<string, unknown>;
   };
-  const hasValidation = pkg.exports && Object.hasOwn(pkg.exports, "./validation");
+  const hasValidation =
+    pkg.exports && Object.hasOwn(pkg.exports, "./validation");
   if (!hasValidation) {
     throw new SdkResolveError(
       "SDK package.json must export ./validation (validation.enabled: true in sdk.config.yaml)",

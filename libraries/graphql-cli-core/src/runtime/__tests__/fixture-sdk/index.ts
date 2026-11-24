@@ -23,7 +23,10 @@ const typeMap = linkTypeMap(
   JSON.parse(typeMapSource.replace(/^export default /, "")),
 );
 
-type Leaf = true | { __args?: Record<string, unknown> } | Record<string, unknown>;
+type Leaf =
+  | true
+  | { __args?: Record<string, unknown> }
+  | Record<string, unknown>;
 export type QuerySelection = Partial<
   Record<"hello" | "item" | "items" | "itemConnection", Leaf>
 >;
@@ -33,7 +36,11 @@ export type MutationSelection = Partial<
 export type SubscriptionSelection = Partial<Record<"itemChanged", Leaf>>;
 
 const queryApi = createOperationApi("query", typeMap.Query!, (op) => op);
-const mutationApi = createOperationApi("mutation", typeMap.Mutation!, (op) => op);
+const mutationApi = createOperationApi(
+  "mutation",
+  typeMap.Mutation!,
+  (op) => op,
+);
 const subscriptionApi = createOperationApi(
   "subscription",
   typeMap.Subscription!,
