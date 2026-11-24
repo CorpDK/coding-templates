@@ -16,50 +16,67 @@ export function inferSchemaKind(schemaPath: string): "typeDefs" | "graphqls" {
   return "graphqls";
 }
 
+function isExcluded(full: string, exclude: string[]): boolean {
+  return exclude.some((ex) => full.includes(ex.replaceAll("**", "")));
+}
+
+async function graphqlFilesAtPath(
+  raw: string,
+  configDir: string,
+  exclude: string[],
+): Promise<string[]> {
+  const resolved = path.resolve(configDir, raw);
+  if (!(await pathExists(resolved))) {
+    throw new Error(`Schema source not found: ${raw}`);
+  }
+  const stat = await fs.stat(resolved);
+  if (stat.isFile()) {
+    return GRAPHQL_EXTS.has(path.extname(resolved).toLowerCase()) ? [resolved] : [];
+  }
+
+  const pattern =
+    raw.includes("*") || raw.includes("?")
+      ? path.resolve(configDir, raw)
+      : path.join(resolved, "**/*.{graphql,graphqls}");
+
+  const matched: string[] = [];
+  for await (const entry of glob(pattern)) {
+    const full = path.resolve(String(entry));
+    if (!GRAPHQL_EXTS.has(path.extname(full).toLowerCase())) continue;
+    if (isExcluded(full, exclude)) continue;
+    matched.push(full);
+  }
+  return matched;
+}
+
 async function expandGraphqlPaths(
   paths: string[],
   configDir: string,
   exclude: string[] = [],
 ): Promise<string[]> {
-  const found = new Set<string>();
-
-  for (const raw of paths) {
-    const resolved = path.resolve(configDir, raw);
-    if (!(await pathExists(resolved))) {
-      throw new Error(`Schema source not found: ${raw}`);
-    }
-    const stat = await fs.stat(resolved);
-    if (stat.isFile()) {
-      if (GRAPHQL_EXTS.has(path.extname(resolved).toLowerCase())) {
-        found.add(resolved);
-      }
-      continue;
-    }
-
-    let pattern: string;
-    if (raw.includes("*") || raw.includes("?")) {
-      pattern = path.resolve(configDir, raw);
-    } else {
-      pattern = path.join(resolved, "**/*.{graphql,graphqls}");
-    }
-
-    for await (const entry of glob(pattern)) {
-      const full = path.resolve(String(entry));
-      if (!GRAPHQL_EXTS.has(path.extname(full).toLowerCase())) continue;
-      const skip = exclude.some((ex) => {
-        const norm = ex.replaceAll("**", "");
-        return full.includes(norm);
-      });
-      if (skip) continue;
-      found.add(full);
-    }
-  }
-
-  const list = [...found].sort((a, b) => a.localeCompare(b));
+  const nested = await Promise.all(
+    paths.map((raw) => graphqlFilesAtPath(raw, configDir, exclude)),
+  );
+  const list = [...new Set(nested.flat())].sort((a, b) => a.localeCompare(b));
   if (list.length === 0) {
     throw new Error("Schema source matched no GraphQL files");
   }
   return list;
+}
+
+function pushTypeDef(units: string[], value: unknown, print: (doc: DocumentNode) => string) {
+  if (typeof value === "string") {
+    units.push(value);
+    return;
+  }
+  if (
+    value &&
+    typeof value === "object" &&
+    "kind" in value &&
+    (value as DocumentNode).kind === "Document"
+  ) {
+    units.push(print(value as DocumentNode));
+  }
 }
 
 async function loadTypeDefsStrings(
@@ -82,25 +99,10 @@ async function loadTypeDefsStrings(
   }
 
   const units: string[] = [];
-  const push = (value: unknown) => {
-    if (typeof value === "string") {
-      units.push(value);
-      return;
-    }
-    if (
-      value &&
-      typeof value === "object" &&
-      "kind" in value &&
-      (value as DocumentNode).kind === "Document"
-    ) {
-      units.push(print(value as DocumentNode));
-    }
-  };
-
   if (Array.isArray(td)) {
-    for (const part of td) push(part);
+    for (const part of td) pushTypeDef(units, part, print);
   } else {
-    push(td);
+    pushTypeDef(units, td, print);
   }
   if (units.length === 0) {
     throw new Error(`typeDefs export was empty: ${resolved}`);
@@ -108,33 +110,50 @@ async function loadTypeDefsStrings(
   return units;
 }
 
+async function unitsFromGraphqlsSource(
+  source: Extract<SchemaSource, { kind: "graphqls" }>,
+  configDir: string,
+): Promise<SdlUnit[]> {
+  const files = await expandGraphqlPaths(
+    source.paths,
+    configDir,
+    source.exclude ?? [],
+  );
+  const bodies = await Promise.all(files.map((file) => fs.readFile(file, "utf8")));
+  return files.map((file, index) => ({
+    body: bodies[index]!,
+    label: file,
+  }));
+}
+
+async function unitsFromTypeDefsSource(
+  source: Extract<SchemaSource, { kind: "typeDefs" }>,
+  configDir: string,
+): Promise<SdlUnit[]> {
+  const strings = await loadTypeDefsStrings(source.path, configDir);
+  const resolved = path.resolve(configDir, source.path);
+  return strings.map((body, i) => ({
+    body,
+    label: `${resolved}#${i}`,
+  }));
+}
+
+async function unitsForSource(
+  source: SchemaSource,
+  configDir: string,
+): Promise<SdlUnit[]> {
+  if (source.kind === "graphqls") {
+    return unitsFromGraphqlsSource(source, configDir);
+  }
+  return unitsFromTypeDefsSource(source, configDir);
+}
+
 export async function collectSdlUnits(
   sources: SchemaSource[],
   configDir: string,
 ): Promise<SdlUnit[]> {
-  const units: SdlUnit[] = [];
-
-  for (const source of sources) {
-    if (source.kind === "graphqls") {
-      const files = await expandGraphqlPaths(
-        source.paths,
-        configDir,
-        source.exclude ?? [],
-      );
-      for (const file of files) {
-        const body = await fs.readFile(file, "utf8");
-        units.push({ body, label: file });
-      }
-      continue;
-    }
-    const strings = await loadTypeDefsStrings(source.path, configDir);
-    for (let i = 0; i < strings.length; i++) {
-      units.push({
-        body: strings[i]!,
-        label: `${path.resolve(configDir, source.path)}#${i}`,
-      });
-    }
-  }
-
-  return units;
+  const groups = await Promise.all(
+    sources.map((source) => unitsForSource(source, configDir)),
+  );
+  return groups.flat();
 }

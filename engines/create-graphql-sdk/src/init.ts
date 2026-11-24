@@ -37,6 +37,82 @@ function initNextSteps(packageName: string, noInstall?: boolean): string[] {
   return steps;
 }
 
+async function resolveInitTemplateDir(repoRoot: string): Promise<
+  { ok: true; templateDir: string } | { ok: false; result: EngineResult }
+> {
+  try {
+    const templateDir = await resolveCanonicalSdkTemplateDir(repoRoot);
+    if (!(await pathExists(templateDir))) {
+      return {
+        ok: false,
+        result: {
+          exitCode: EXIT_USAGE,
+          changedFiles: [],
+          message: `Canonical SDK template not found (looked under ${templateDir}).`,
+        },
+      };
+    }
+    return { ok: true, templateDir };
+  } catch (err: unknown) {
+    return {
+      ok: false,
+      result: {
+        exitCode: EXIT_TOOL,
+        changedFiles: [],
+        message: err instanceof Error ? err.message : String(err),
+      },
+    };
+  }
+}
+
+async function installDependencies(repoRoot: string): Promise<EngineResult | null> {
+  const install = spinner();
+  install.start("Installing dependencies");
+  try {
+    await execAsync("pnpm install", { cwd: repoRoot });
+    install.stop("Dependencies installed");
+    return null;
+  } catch (err: unknown) {
+    install.stop("pnpm install failed");
+    return {
+      exitCode: EXIT_TOOL,
+      changedFiles: [],
+      message: err instanceof Error ? err.message : String(err),
+    };
+  }
+}
+
+async function runInitCodegen(targetDir: string): Promise<EngineResult> {
+  const codegenSpinner = spinner();
+  codegenSpinner.start("Running SDK codegen");
+  try {
+    const { runCodegen } = await import("./codegen.js");
+    const files = await runCodegen(targetDir);
+    codegenSpinner.stop("Codegen complete");
+    return { exitCode: EXIT_SUCCESS, changedFiles: files };
+  } catch (err: unknown) {
+    codegenSpinner.stop("Codegen failed");
+    return {
+      exitCode: EXIT_TOOL,
+      changedFiles: [],
+      message: err instanceof Error ? err.message : String(err),
+    };
+  }
+}
+
+async function syncAfterScaffold(targetDir: string): Promise<EngineResult | null> {
+  const sync = await runSyncPipeline({ packageDir: targetDir, writeStubs: true });
+  if (sync.unmappedScalars.length === 0) return null;
+  return {
+    exitCode: EXIT_VALIDATION,
+    changedFiles: [sync.snapshotRel],
+    message: formatUnmappedMessage(sync.unmappedScalars),
+    nextSteps: [
+      "Review stub scalar entries in sdk.config.yaml, then re-run sdk:sync",
+    ],
+  };
+}
+
 export async function runInit(options: InitOptions): Promise<EngineResult> {
   const repoRoot =
     options.repoRoot ??
@@ -51,24 +127,8 @@ export async function runInit(options: InitOptions): Promise<EngineResult> {
     };
   }
 
-  let templateDir: string;
-  try {
-    templateDir = await resolveCanonicalSdkTemplateDir(repoRoot);
-  } catch (err: unknown) {
-    return {
-      exitCode: EXIT_TOOL,
-      changedFiles: [],
-      message: err instanceof Error ? err.message : String(err),
-    };
-  }
-
-  if (!(await pathExists(templateDir))) {
-    return {
-      exitCode: EXIT_USAGE,
-      changedFiles: [],
-      message: `Canonical SDK template not found (looked under ${templateDir}).`,
-    };
-  }
+  const template = await resolveInitTemplateDir(repoRoot);
+  if (!template.ok) return template.result;
 
   const emptyError = await ensureEmptyTarget(targetDir);
   if (emptyError) {
@@ -91,7 +151,7 @@ export async function runInit(options: InitOptions): Promise<EngineResult> {
   s.start("Scaffolding SDK package layout");
 
   try {
-    await applyScaffoldLayout(options, repoRoot, templateDir, targetDir);
+    await applyScaffoldLayout(options, repoRoot, template.templateDir, targetDir);
     s.stop("SDK package scaffolded");
 
     if (options.deferSync) {
@@ -106,56 +166,20 @@ export async function runInit(options: InitOptions): Promise<EngineResult> {
       };
     }
 
-    const sync = await runSyncPipeline({
-      packageDir: targetDir,
-      writeStubs: true,
-    });
-    if (sync.unmappedScalars.length > 0) {
-      return {
-        exitCode: EXIT_VALIDATION,
-        changedFiles: [sync.snapshotRel],
-        message: formatUnmappedMessage(sync.unmappedScalars),
-        nextSteps: [
-          "Review stub scalar entries in sdk.config.yaml, then re-run sdk:sync",
-        ],
-      };
-    }
+    const syncError = await syncAfterScaffold(targetDir);
+    if (syncError) return syncError;
 
     if (!options.noInstall) {
-      const install = spinner();
-      install.start("Installing dependencies");
-      try {
-        await execAsync("pnpm install", { cwd: repoRoot });
-        install.stop("Dependencies installed");
-      } catch (err: unknown) {
-        install.stop("pnpm install failed");
-        return {
-          exitCode: EXIT_TOOL,
-          changedFiles: [],
-          message: err instanceof Error ? err.message : String(err),
-        };
-      }
+      const installError = await installDependencies(repoRoot);
+      if (installError) return installError;
     }
 
-    const codegenSpinner = spinner();
-    codegenSpinner.start("Running SDK codegen");
-    try {
-      const { runCodegen } = await import("./codegen.js");
-      const files = await runCodegen(targetDir);
-      codegenSpinner.stop("Codegen complete");
-      return {
-        exitCode: EXIT_SUCCESS,
-        changedFiles: files,
-        nextSteps: initNextSteps(options.name, options.noInstall),
-      };
-    } catch (err: unknown) {
-      codegenSpinner.stop("Codegen failed");
-      return {
-        exitCode: EXIT_TOOL,
-        changedFiles: [],
-        message: err instanceof Error ? err.message : String(err),
-      };
-    }
+    const codegen = await runInitCodegen(targetDir);
+    if (codegen.exitCode !== EXIT_SUCCESS) return codegen;
+    return {
+      ...codegen,
+      nextSteps: initNextSteps(options.name, options.noInstall),
+    };
   } catch (err: unknown) {
     s.stop("Scaffold failed");
     return {
