@@ -141,17 +141,3 @@ export function customLeafScalars(config: SdkConfig): string[] {
   }
   return out;
 }
-
-export function sdkConfigNeedsScalarZodPackage(config: SdkConfig): boolean {
-  for (const entry of Object.values(config.scalars ?? {})) {
-    if (typeof entry.zod !== "object") continue;
-    const from = entry.zod.from;
-    if (
-      from === "@corpdk/scalar-zod" ||
-      from.startsWith("@corpdk/scalar-zod/")
-    ) {
-      return true;
-    }
-  }
-  return false;
-}

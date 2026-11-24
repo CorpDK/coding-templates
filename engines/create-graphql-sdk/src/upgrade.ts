@@ -16,7 +16,6 @@ import {
   UPGRADE_OVERWRITE_FILES,
 } from "./constants.js";
 import {
-  isBundledCanonicalTemplate,
   readCreateGraphqlSdkReleaseVersion,
   resolveCanonicalSdkTemplateDir,
 } from "./template.js";

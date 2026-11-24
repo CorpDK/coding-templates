@@ -887,7 +887,7 @@ create-graphql-sdk <init|sync|codegen|generate|upgrade> [directory] [options]
 **`upgrade`:**
 
 - **Overwrite:** `codegen.ts`, `src/index.ts`, `src/validation.ts`, `README.md`, and `.gitignore` (`UPGRADE_OVERWRITE_FILES`). README copies preserve `<!-- user -->` blocks. `tsconfig.json` is not overwritten — `init` patches `extends` for the target directory depth and `upgrade` leaves that file untouched.
-- **Merge (P1c):** `upgrade` wires merge handlers for `package.json` and `sdk.config.yaml`, but `runUpgradePlan` calls them only when those paths are also in the overwrite list ([doc 15 §11.2](15-create-ds-generator-integration.md#112-shared-behavior-matrix); `create-ds` lists merge targets in `UPGRADE_RELATIVE_FILES`). They are absent from `UPGRADE_OVERWRITE_FILES` in P1c, so consumer `package.json` and `sdk.config.yaml` are left unchanged.
+- **Merge (P1c):** `upgrade` is overwrite-only: `runUpgradePlan` passes an empty `merge` list and does not wire handlers for `package.json` or `sdk.config.yaml`. Consumer `package.json` and `sdk.config.yaml` stay unchanged until a later phase adds merge targets to the plan (same pattern as doc 15 §11.2 for `create-ds` `UPGRADE_RELATIVE_FILES`).
 - **Never touch:** `schema/**`, `src/extensions/**`.
 - Then run `codegen`.
 
