@@ -11,9 +11,16 @@ export type EngineCommandHandler = (
   values: Record<string, string | boolean | undefined>,
 ) => Promise<EngineResult>;
 
+export type EngineOptionDef = {
+  type: "boolean" | "string";
+  short?: string;
+};
+
 export type EngineCommandDef = {
   name: string;
   handler: EngineCommandHandler;
+  /** Command-specific flags merged with the global `--help` / `--version`. */
+  options?: Record<string, EngineOptionDef>;
 };
 
 export type DefineEngineCliOptions = {
@@ -26,6 +33,7 @@ export type DefineEngineCliOptions = {
 
 export type ParsedEngineCli =
   | { kind: "help"; exitCode: typeof EXIT_SUCCESS }
+  | { kind: "version"; exitCode: typeof EXIT_SUCCESS; version: string }
   | { kind: "usage"; exitCode: typeof EXIT_USAGE; message: string }
   | {
       kind: "run";
@@ -58,8 +66,11 @@ export function parseEngineCli(
     return { kind: "help", exitCode: EXIT_SUCCESS };
   }
   if (first === "--version") {
-    console.log(options.version);
-    return { kind: "help", exitCode: EXIT_SUCCESS };
+    return {
+      kind: "version",
+      exitCode: EXIT_SUCCESS,
+      version: options.version,
+    };
   }
 
   const command = options.commands.find((c) => c.name === first);
@@ -72,23 +83,11 @@ export function parseEngineCli(
   }
 
   const rest = args.slice(1);
-  const positional: string[] = [];
-  const tokens: string[] = [];
-
-  for (const token of rest) {
-    if (token.startsWith("-")) {
-      tokens.push(token);
-    } else if (positional.length === 0) {
-      positional.push(token);
-    } else {
-      tokens.push(token);
-    }
-  }
 
   try {
     const { values, positionals } = nodeParseArgs({
-      args: tokens,
-      options: GLOBAL_OPTIONS,
+      args: rest,
+      options: { ...GLOBAL_OPTIONS, ...command.options },
       strict: true,
       allowPositionals: true,
     });
@@ -96,13 +95,16 @@ export function parseEngineCli(
       return { kind: "help", exitCode: EXIT_SUCCESS };
     }
     if (values.version) {
-      console.log(options.version);
-      return { kind: "help", exitCode: EXIT_SUCCESS };
+      return {
+        kind: "version",
+        exitCode: EXIT_SUCCESS,
+        version: options.version,
+      };
     }
     return {
       kind: "run",
       command,
-      positional: [...positional, ...positionals],
+      positional: positionals,
       values: values as Record<string, string | boolean | undefined>,
     };
   } catch (err: unknown) {
@@ -122,6 +124,10 @@ export async function runEngineCli(
 
   if (parsed.kind === "help") {
     hooks?.onHelp?.() ?? console.log(options.help);
+    return parsed.exitCode;
+  }
+  if (parsed.kind === "version") {
+    console.log(parsed.version);
     return parsed.exitCode;
   }
   if (parsed.kind === "usage") {

@@ -19,13 +19,13 @@ coding-templates/
 │   ├── create-app/         (@corpdk/create-app)          Interactive CLI scaffolding tool
 │   ├── create-ds/          (@corpdk/create-ds)             DS scaffold + DAL automation upgrade CLI
 │   ├── create-graphql-sdk/ (@corpdk/create-graphql-sdk)   SDK scaffold engine (doc 13; stub CLI until P1c)
-│   └── create-graphql-cli/ (@corpdk/create-graphql-cli)   CLI scaffold engine (doc 14; stub until C-P2)
+│   └── create-graphql-cli/ (@corpdk/create-graphql-cli)   CLI scaffold engine (doc 14; C-P2)
 ├── libraries/
 │   ├── codegen-cli/        (@corpdk/codegen-cli)          GraphQL codegen plugin for resolver types + SDK generation
 │   ├── dal-core/           (@corpdk/dal-core)             DAL shared types, filters, scalars, mutation error taxonomy
 │   ├── dal-codegen/        (@corpdk/dal-codegen)          Drizzle → GraphQL SDL + repositories + resolvers codegen CLI
 │   ├── engine-kit/         (@corpdk/engine-kit)           Shared generator engine kit (doc 15; DS-P0b)
-│   ├── graphql-cli-core/   (@corpdk/graphql-cli-core)     CLI codegen (C-P1); runtime C-P2 (doc 14)
+│   ├── graphql-cli-core/   (@corpdk/graphql-cli-core)     CLI codegen (C-P1) + `runCli` runtime (C-P2; doc 14)
 │   ├── graphql-dsl/        (@corpdk/graphql-dsl)          Typed selection DSL (doc 13; P1b)
 │   ├── graphql-input-zod/  (@corpdk/graphql-input-zod)    Input Zod codegen runtime (doc 13; P1a)
 │   ├── pub-sub/            (@corpdk/pub-sub)              Plugin-style GraphQL pub/sub factory (memory + Redis)
@@ -81,7 +81,7 @@ coding-templates/
 | `graphql-input-zod`  | `@corpdk/graphql-input-zod`  | GraphQL input Zod codegen runtime (doc 13; SDK P1a)                                                            |
 | `graphql-dsl`        | `@corpdk/graphql-dsl`        | Typed selection DSL / genql fork (doc 13; SDK P1b)                                                             |
 | `engine-kit`         | `@corpdk/engine-kit`         | Shared `init`/`upgrade` engine plumbing (doc 15; DS-P0b)                                                       |
-| `graphql-cli-core`   | `@corpdk/graphql-cli-core`   | CLI codegen (C-P1); runtime stub until C-P2 (doc 14)                                                           |
+| `graphql-cli-core`   | `@corpdk/graphql-cli-core`   | CLI codegen (C-P1) + `runCli` runtime (C-P2; doc 14)                                                           |
 | `eslint-config`      | `@corpdk/eslint-config`      | Shared ESLint flat config (base + Next.js) for all packages                                                    |
 | `create-app`         | `@corpdk/create-app`         | Interactive CLI scaffolding tool for full-stack, DS-only, or UI-only projects                                  |
 | `create-ds`          | `@corpdk/create-ds`          | Scaffold and upgrade DAL-automated DS packages (`init` / `upgrade`; schema dir stays team-owned)               |

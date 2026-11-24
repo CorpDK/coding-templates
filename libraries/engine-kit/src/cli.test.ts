@@ -36,6 +36,53 @@ describe("parseEngineCli", () => {
   });
 });
 
+describe("parseEngineCli command options", () => {
+  const withOptions: EngineCommandDef[] = [
+    {
+      name: "init",
+      handler: async () => ({ exitCode: EXIT_SUCCESS, changedFiles: [] }),
+      options: { name: { type: "string" }, "dry-run": { type: "boolean" } },
+    },
+  ];
+
+  it("parses string flags before and after the positional directory", () => {
+    const parsed = parseEngineCli({
+      name: "test-engine",
+      version: "1.0.0",
+      help: "help text",
+      commands: withOptions,
+      argv: [
+        "node",
+        "test-engine",
+        "init",
+        "--name",
+        "pkg",
+        "out",
+        "--dry-run",
+      ],
+    });
+    expect(parsed.kind).toBe("run");
+    if (parsed.kind === "run") {
+      expect(parsed.positional).toEqual(["out"]);
+      expect(parsed.values).toMatchObject({ name: "pkg", "dry-run": true });
+    }
+  });
+
+  it("returns version without printing help", async () => {
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    const code = await runEngineCli({
+      name: "test-engine",
+      version: "1.2.3",
+      help: "help text",
+      commands: withOptions,
+      argv: ["node", "test-engine", "--version"],
+    });
+    expect(code).toBe(EXIT_SUCCESS);
+    expect(log.mock.calls).toEqual([["1.2.3"]]);
+    log.mockRestore();
+  });
+});
+
 describe("runEngineCli", () => {
   it("maps handler failure to tool exit", async () => {
     const failing: EngineCommandDef[] = [

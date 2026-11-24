@@ -1,0 +1,52 @@
+apiVersion: corpdk.dev/graphql-cli/v1
+package: "@corpdk/graphql-cli-stub"
+bin: graphql-cli
+
+sdk:
+  package: "@corpdk/example-sdk"
+  path: ../example-sdk
+
+transport:
+  httpUrlEnv: GRAPHQL_HTTP_URL
+  defaultUrl: http://localhost:4000/graphql
+  tokenEnv: GRAPHQL_TOKEN
+  headersEnv: GRAPHQL_HEADERS_JSON
+  timeoutMs: 30000
+
+selection:
+  policy: relation-ids
+  connection: nodes
+  maxWrapperDepth: 4
+  lookup: {}
+  overrides: {}
+
+pagination:
+  defaultPageSize: 50
+
+include:
+  queries: []
+  mutations: []
+  subscriptions: []
+
+exclude:
+  queries: []
+  mutations: []
+  subscriptions: []
+
+commands:
+  warnAbove: 200
+
+guard:
+  destructive:
+    - delete*
+    - bulkDelete*
+    - bulkUpdate*ByFilter
+
+output:
+  userErrorsFields:
+    - userErrors
+  failOnUserErrors: true
+
+man:
+  enabled: true
+  section: "1"

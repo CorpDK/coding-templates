@@ -19,9 +19,9 @@ Monorepo quality runs **`create-ds`** canonical drift check (`check-canonical`) 
 | 5     | `@corpdk/graphql-input-zod`  | `libraries/graphql-input-zod` | Input Zod codegen runtime (SDK P1a)                 |
 | 6     | `@corpdk/dal-codegen`        | `libraries/dal-codegen`       | `dal-codegen` / `dal-entity-lint` CLIs              |
 | 7     | `@corpdk/engine-kit`         | `libraries/engine-kit`        | Shared `create-*` engine kit (DS-P0b)               |
-| 8     | `@corpdk/graphql-cli-core`   | `libraries/graphql-cli-core`  | CLI codegen (C-P1); runtime stub until C-P2         |
+| 8     | `@corpdk/graphql-cli-core`   | `libraries/graphql-cli-core`  | CLI codegen (C-P1) + `runCli` runtime (C-P2)        |
 | 9     | `@corpdk/create-graphql-sdk` | `engines/create-graphql-sdk`  | SDK scaffold engine; stub until SDK P1c             |
-| 10    | `@corpdk/create-graphql-cli` | `engines/create-graphql-cli`  | CLI scaffold engine; stub until CLI C-P2            |
+| 10    | `@corpdk/create-graphql-cli` | `engines/create-graphql-cli`  | CLI scaffold engine (C-P2 on `engine-kit`)          |
 | 11    | `@corpdk/codegen-cli`        | `libraries/codegen-cli`       | Legacy GraphQL codegen plugin (deprecation planned) |
 | 12    | `@corpdk/create-ds`          | `engines/create-ds`           | Scaffold + upgrade CLI for DAL DS apps              |
 
@@ -45,7 +45,7 @@ The [GraphQL SDK](../developer/13-graphql-sdk-generator.md), [CLI](../developer/
 | `@corpdk/create-graphql-sdk` | `engines/create-graphql-sdk`  | Same                                                                                               |
 | `@corpdk/create-graphql-cli` | `engines/create-graphql-cli`  | Same                                                                                               |
 
-Generator packages compile with `tsc` to `dist/` and declare `types` / `exports` (engines use `dist/types-entry.d.ts`; stub `bin` on `create-graphql-*` until C-P2 / P1c). B0 tarballs were placeholders; **`@corpdk/graphql-dsl`** ships the P1b fork after merge (first real release via R-20). **`graphql-cli-core`**, **`create-graphql-sdk`**, and **`create-graphql-cli`** remain phase stubs until C-P1 / P1c / C-P2. **`templates/ds-sdk` and `templates/ds-cli` are not published** and are not part of B0.
+Generator packages compile with `tsc` to `dist/` and declare `types` / `exports` (engines use `dist/types-entry.d.ts`; **`create-graphql-sdk`** keeps a stub `bin` until P1c). B0 tarballs were placeholders; **`@corpdk/graphql-dsl`** ships the P1b fork after merge (first real release via R-20). **`graphql-cli-core`** (C-P1 codegen + C-P2 runtime) and **`create-graphql-cli`** (C-P2) are implemented in the monorepo; **`create-graphql-sdk`** remains a stub until P1c. Lockstep npm `latest` advances on the next CalVer bump after those phases merge. **`templates/ds-sdk` and `templates/ds-cli` are not published** and are not part of B0.
 
 **After the B0 PR merges**, a maintainer completes registry setup **from a local terminal** (npm publish + trust each trigger org 2FA / OTP; **not** OIDC):
 

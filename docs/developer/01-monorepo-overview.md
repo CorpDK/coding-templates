@@ -17,13 +17,13 @@ coding-templates/
 │   ├── create-app/          (@corpdk/create-app)          Interactive CLI scaffolding tool
 │   ├── create-ds/           (@corpdk/create-ds)           DS scaffold + DAL automation upgrade CLI
 │   ├── create-graphql-sdk/  (@corpdk/create-graphql-sdk)   SDK scaffold engine (doc 13; stub until P1c)
-│   └── create-graphql-cli/  (@corpdk/create-graphql-cli)   CLI scaffold engine (doc 14; stub until C-P2)
+│   └── create-graphql-cli/  (@corpdk/create-graphql-cli)   CLI scaffold engine (doc 14; C-P2)
 ├── libraries/
 │   ├── codegen-cli/        (@corpdk/codegen-cli)         GraphQL codegen plugin for resolver types + SDK generation
 │   ├── dal-core/           (@corpdk/dal-core)            DAL shared types, filters, scalars, mutation error taxonomy
 │   ├── dal-codegen/        (@corpdk/dal-codegen)         Drizzle → GraphQL SDL + repositories + resolvers codegen CLI
 │   ├── engine-kit/         (@corpdk/engine-kit)          Shared generator engine kit (doc 15; DS-P0b)
-│   ├── graphql-cli-core/   (@corpdk/graphql-cli-core)    CLI codegen (C-P1); runtime C-P2 (doc 14)
+│   ├── graphql-cli-core/   (@corpdk/graphql-cli-core)    CLI codegen (C-P1) + runCli runtime (C-P2; doc 14)
 │   ├── graphql-dsl/        (@corpdk/graphql-dsl)         Typed selection DSL (doc 13; P1b)
 │   ├── graphql-input-zod/  (@corpdk/graphql-input-zod)   Input Zod codegen runtime (doc 13; P1a)
 │   ├── pub-sub/            (@corpdk/pub-sub)             Plugin-style GraphQL pub/sub factory (memory + Redis)
@@ -90,12 +90,12 @@ coding-templates/
 | `create-app`         | `@corpdk/create-app`         | Interactive CLI scaffolding tool                                                    |
 | `create-ds`          | `@corpdk/create-ds`          | DS scaffold + DAL automation upgrade CLI ([guide](ds-automation-upgrades.md))       |
 | `create-graphql-sdk` | `@corpdk/create-graphql-sdk` | SDK scaffold engine ([design](13-graphql-sdk-generator.md); stub until P1c)         |
-| `create-graphql-cli` | `@corpdk/create-graphql-cli` | CLI scaffold engine ([design](14-graphql-cli-generator.md); stub until C-P2)        |
+| `create-graphql-cli` | `@corpdk/create-graphql-cli` | CLI scaffold engine ([design](14-graphql-cli-generator.md); C-P2 on `engine-kit`)   |
 | `codegen-cli`        | `@corpdk/codegen-cli`        | GraphQL codegen plugin for resolver types + SDK generation                          |
 | `dal-core`           | `@corpdk/dal-core`           | DAL shared types, filters, query translation, mutation errors                       |
 | `dal-codegen`        | `@corpdk/dal-codegen`        | Drizzle → GraphQL SDL + repositories + resolvers codegen                            |
 | `engine-kit`         | `@corpdk/engine-kit`         | Shared `create-*` engine kit ([design](15-create-ds-generator-integration.md))      |
-| `graphql-cli-core`   | `@corpdk/graphql-cli-core`   | CLI codegen (C-P1); runtime stub until C-P2 ([design](14-graphql-cli-generator.md)) |
+| `graphql-cli-core`   | `@corpdk/graphql-cli-core`   | CLI codegen (C-P1) + `runCli` runtime (C-P2) ([design](14-graphql-cli-generator.md)) |
 | `graphql-dsl`        | `@corpdk/graphql-dsl`        | Typed selection DSL ([design](13-graphql-sdk-generator.md))                         |
 | `graphql-input-zod`  | `@corpdk/graphql-input-zod`  | GraphQL input Zod codegen runtime ([design](13-graphql-sdk-generator.md))           |
 | `pub-sub`            | `@corpdk/pub-sub`            | `createAppPubSub<T>()` — selects Redis or in-memory pub/sub                         |

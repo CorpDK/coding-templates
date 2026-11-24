@@ -1,0 +1,31 @@
+{
+  "name": "@corpdk/graphql-cli-stub",
+  "version": "0.1.0",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "graphql-cli": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "dependencies": {
+    "@corpdk/graphql-cli-core": "workspace:*",
+    "graphql": "^16.13.2",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@corpdk/create-graphql-cli": "workspace:*",
+    "typescript": "^6.0.2"
+  },
+  "scripts": {
+    "cli:codegen": "create-graphql-cli generate .",
+    "cli:check": "create-graphql-cli generate . --check",
+    "build": "pnpm cli:codegen && tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit"
+  }
+}

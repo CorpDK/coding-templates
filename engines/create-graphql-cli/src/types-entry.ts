@@ -1,5 +1,3 @@
-export type EngineResult = {
-  exitCode: 0 | 1 | 2 | 3;
-  nextSteps?: string[];
-  changedFiles: string[];
-};
+export { runInit, type InitOptions } from "./init.js";
+export { runGenerate, type GenerateOptions } from "./generate.js";
+export { runUpgrade, type UpgradeOptions } from "./upgrade.js";
