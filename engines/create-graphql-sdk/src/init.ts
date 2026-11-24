@@ -113,6 +113,56 @@ async function syncAfterScaffold(targetDir: string): Promise<EngineResult | null
   };
 }
 
+function missingSchemaUsage(): EngineResult {
+  return {
+    exitCode: EXIT_USAGE,
+    changedFiles: [],
+    message: "init requires --schema, or use --demo-schema",
+  };
+}
+
+function deferSyncResult(options: InitOptions): EngineResult {
+  return {
+    exitCode: EXIT_SUCCESS,
+    changedFiles: [],
+    nextSteps: [
+      ...(options.noInstall ? [] : ["pnpm install"]),
+      `pnpm --filter ${options.name} sdk:sync`,
+      `pnpm --filter ${options.name} sdk:codegen`,
+    ],
+  };
+}
+
+async function finalizeScaffoldedPackage(
+  options: InitOptions,
+  repoRoot: string,
+  targetDir: string,
+): Promise<EngineResult> {
+  const syncError = await syncAfterScaffold(targetDir);
+  if (syncError) return syncError;
+
+  if (!options.noInstall) {
+    const installError = await installDependencies(repoRoot);
+    if (installError) return installError;
+  }
+
+  const codegen = await runInitCodegen(targetDir);
+  if (codegen.exitCode !== EXIT_SUCCESS) return codegen;
+  return {
+    ...codegen,
+    nextSteps: initNextSteps(options.name, options.noInstall),
+  };
+}
+
+async function runInitAfterScaffold(
+  options: InitOptions,
+  repoRoot: string,
+  targetDir: string,
+): Promise<EngineResult> {
+  if (options.deferSync) return deferSyncResult(options);
+  return finalizeScaffoldedPackage(options, repoRoot, targetDir);
+}
+
 export async function runInit(options: InitOptions): Promise<EngineResult> {
   const repoRoot =
     options.repoRoot ??
@@ -120,11 +170,7 @@ export async function runInit(options: InitOptions): Promise<EngineResult> {
   const targetDir = path.resolve(options.dir);
 
   if (!options.demoSchema && options.schema.length === 0) {
-    return {
-      exitCode: EXIT_USAGE,
-      changedFiles: [],
-      message: "init requires --schema, or use --demo-schema",
-    };
+    return missingSchemaUsage();
   }
 
   const template = await resolveInitTemplateDir(repoRoot);
@@ -153,33 +199,7 @@ export async function runInit(options: InitOptions): Promise<EngineResult> {
   try {
     await applyScaffoldLayout(options, repoRoot, template.templateDir, targetDir);
     s.stop("SDK package scaffolded");
-
-    if (options.deferSync) {
-      return {
-        exitCode: EXIT_SUCCESS,
-        changedFiles: [],
-        nextSteps: [
-          ...(options.noInstall ? [] : ["pnpm install"]),
-          `pnpm --filter ${options.name} sdk:sync`,
-          `pnpm --filter ${options.name} sdk:codegen`,
-        ],
-      };
-    }
-
-    const syncError = await syncAfterScaffold(targetDir);
-    if (syncError) return syncError;
-
-    if (!options.noInstall) {
-      const installError = await installDependencies(repoRoot);
-      if (installError) return installError;
-    }
-
-    const codegen = await runInitCodegen(targetDir);
-    if (codegen.exitCode !== EXIT_SUCCESS) return codegen;
-    return {
-      ...codegen,
-      nextSteps: initNextSteps(options.name, options.noInstall),
-    };
+    return runInitAfterScaffold(options, repoRoot, targetDir);
   } catch (err: unknown) {
     s.stop("Scaffold failed");
     return {

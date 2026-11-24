@@ -20,6 +20,32 @@ function isExcluded(full: string, exclude: string[]): boolean {
   return exclude.some((ex) => full.includes(ex.replaceAll("**", "")));
 }
 
+function isGraphqlFile(filePath: string): boolean {
+  return GRAPHQL_EXTS.has(path.extname(filePath).toLowerCase());
+}
+
+function globPatternForSource(
+  raw: string,
+  configDir: string,
+  resolvedDir: string,
+): string {
+  return raw.includes("*") || raw.includes("?")
+    ? path.resolve(configDir, raw)
+    : path.join(resolvedDir, "**/*.{graphql,graphqls}");
+}
+
+async function matchedGraphqlPaths(
+  pattern: string,
+  exclude: string[],
+): Promise<string[]> {
+  const entries = await Array.fromAsync(glob(pattern), (entry) =>
+    path.resolve(String(entry)),
+  );
+  return entries.filter(
+    (full) => isGraphqlFile(full) && !isExcluded(full, exclude),
+  );
+}
+
 async function graphqlFilesAtPath(
   raw: string,
   configDir: string,
@@ -31,22 +57,10 @@ async function graphqlFilesAtPath(
   }
   const stat = await fs.stat(resolved);
   if (stat.isFile()) {
-    return GRAPHQL_EXTS.has(path.extname(resolved).toLowerCase()) ? [resolved] : [];
+    return isGraphqlFile(resolved) ? [resolved] : [];
   }
-
-  const pattern =
-    raw.includes("*") || raw.includes("?")
-      ? path.resolve(configDir, raw)
-      : path.join(resolved, "**/*.{graphql,graphqls}");
-
-  const matched: string[] = [];
-  for await (const entry of glob(pattern)) {
-    const full = path.resolve(String(entry));
-    if (!GRAPHQL_EXTS.has(path.extname(full).toLowerCase())) continue;
-    if (isExcluded(full, exclude)) continue;
-    matched.push(full);
-  }
-  return matched;
+  const pattern = globPatternForSource(raw, configDir, resolved);
+  return matchedGraphqlPaths(pattern, exclude);
 }
 
 async function expandGraphqlPaths(
@@ -64,7 +78,11 @@ async function expandGraphqlPaths(
   return list;
 }
 
-function pushTypeDef(units: string[], value: unknown, print: (doc: DocumentNode) => string) {
+function pushTypeDef(
+  units: string[],
+  value: unknown,
+  print: (doc: DocumentNode) => string,
+) {
   if (typeof value === "string") {
     units.push(value);
     return;
