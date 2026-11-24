@@ -1,0 +1,59 @@
+{
+  "name": "@corpdk/ds-sdk",
+  "version": "2026.1.0",
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./validation": {
+      "types": "./dist/validation.d.ts",
+      "import": "./dist/validation.js"
+    },
+    "./schema.graphqls": "./schema/schema.graphqls",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "schema",
+    "README.md"
+  ],
+  "scripts": {
+    "sdk:sync": "create-graphql-sdk sync .",
+    "sdk:check": "create-graphql-sdk sync . --check",
+    "sdk:codegen": "create-graphql-sdk codegen .",
+    "build": "pnpm sdk:codegen && tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "pnpm sdk:check && pnpm build",
+    "clean": "rm -rf dist node_modules .turbo src/generated *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@corpdk/graphql-dsl": "workspace:^",
+    "@corpdk/graphql-input-zod": "workspace:^",
+    "@graphql-typed-document-node/core": "^3.2.0"
+  },
+  "peerDependencies": {
+    "graphql": "^16 || ^17",
+    "zod": "^4"
+  },
+  "peerDependenciesMeta": {
+    "zod": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@corpdk/create-graphql-sdk": "workspace:^",
+    "@graphql-codegen/cli": "^6.2.1",
+    "@graphql-codegen/typescript": "^5.0.9",
+    "@types/node": "^24.0.0",
+    "graphql": "^16.13.2",
+    "typescript": "^6.0.2",
+    "zod": "^4.3.6"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=24.0.0"
+  }
+}

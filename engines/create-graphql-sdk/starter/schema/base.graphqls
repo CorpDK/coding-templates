@@ -1,0 +1,29 @@
+type Query {
+  items: [Item!]!
+  item(id: ID!): Item
+}
+
+type Mutation {
+  createItem(input: ItemCreateInput!): Item!
+}
+
+enum ItemStatus {
+  ACTIVE
+  ARCHIVED
+}
+
+type Item {
+  id: ID!
+  name: String!
+  status: ItemStatus!
+}
+
+input ItemCreateInput {
+  name: String!
+  status: ItemStatus
+}
+
+input ItemFilter {
+  name: String
+  and: [ItemFilter!]
+}

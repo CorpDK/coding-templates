@@ -60,9 +60,9 @@ function int64MsSchema(): ZodType<string | number | bigint> {
     });
 }
 
-const zIntervalMs = int64MsSchema();
+export const zIntervalMs = int64MsSchema();
 
-const zSmallInt = z
+export const zSmallInt = z
   .number()
   .int()
   .min(PG_SMALLINT_MIN)
@@ -75,7 +75,7 @@ const zSmallInt = z
     }
   });
 
-const zDouble = zFiniteNumber().superRefine((val, ctx) => {
+export const zDouble = zFiniteNumber().superRefine((val, ctx) => {
   try {
     parseDouble(val);
   } catch (error) {

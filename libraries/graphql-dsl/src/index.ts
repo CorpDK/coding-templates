@@ -16,6 +16,10 @@ export { everything } from "./runtime/builtOperation.js";
 export { v, isVariableRef, type VariableRef } from "./runtime/variableRef.js";
 export type { ExactlyOneField } from "./runtime/aliasSelection.js";
 export { createOperationApi } from "./runtime/createOperationApi.js";
+export type {
+  DefineOperationOptions,
+  OperationApi,
+} from "./runtime/createOperationApi.js";
 export {
   normalizeGraphqlResult,
   unwrapGraphqlResult,

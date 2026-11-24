@@ -2,7 +2,7 @@
 
 Design specification for a **publishable GraphQL client SDK** produced from a **complete schema** (one or many SDL files, or a TypeScript `typeDefs` module), and for the **CLI** that scaffolds, regenerates, and upgrades it. This initiative covers the SDK package, the CLI, and two in-house libraries the SDK is built from. It does not cover the GraphQL server, the automation CLI ([14-graphql-cli-generator.md](14-graphql-cli-generator.md)), or HTTP transport. Apollo, urql, `graphql-sse`, and similar clients stay in consumer apps.
 
-**Status:** Design (pre-implementation). Revision 13. Open work is tracked in the §17 register.
+**Status:** Design spec; **P1c** engine implemented (`engines/create-graphql-sdk`). Revision 13. Open work is tracked in the §17 register (P2 and downstream phases remain).
 
 - Appendix A: gap review of revision 1.
 - Appendix B: dependency maintenance audit.
@@ -217,7 +217,7 @@ export type * as Types from "./generated/schema-types.js"; // L1: the one type s
 export * from "./extensions/index.js";
 ```
 
-> **P1c target.** The binding below is not generated in **P1a**; SDKs ship it when `createInputParsers` / `createScalarParsers` land on the main entry in P1c (§7.4).
+> **P1c.** Canonical `src/validation.ts` binds `createInputParsers` / `createScalarParsers` from `@corpdk/graphql-input-zod` (§7.4).
 
 ```ts
 // src/validation.ts (canonical binding) → "@corpdk/ds-sdk/validation" — P1c
@@ -264,9 +264,9 @@ The helper logic lives once, in `@corpdk/graphql-input-zod` (§7.4). Each SDK bi
 ```text
 <sdk>/
   schema/schema.graphqls           merged snapshot           CLI-written (sync), committed
-  sdk.config.yaml                  SDK config                user-owned (merged on upgrade)
+  sdk.config.yaml                  SDK config                user-owned (unchanged on upgrade in P1c; §8.6)
   codegen.ts                       graphql-codegen config    canonical (reads sdk.config.yaml)
-  package.json                     manifest                  merged on upgrade (like create-ds)
+  package.json                     manifest                  written at init; unchanged on upgrade in P1c (§8.6)
   tsconfig.json                    NodeNext build            canonical
   README.md                        consumer guide            canonical outside <!-- user --> blocks
   src/index.ts                     root entry                canonical
@@ -306,12 +306,12 @@ The SDK builds with **`tsconfig.node.json` (NodeNext)**. The fork's generator em
 
 The script is `sdk:codegen`, not `codegen`: the repo's generic Turbo `codegen` task (`turbo.json`) has DS-specific `dependsOn` and `outputs`, and scaffolded roots run `turbo run codegen` unfiltered. A separate name keeps the SDK out of that task.
 
-| Kind                 | Packages                                                                                                             | Reason                                                                                                                                                                                                             |
-| -------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **dependencies**     | `@corpdk/graphql-dsl` (runtime), `@corpdk/graphql-input-zod` (runtime entry), `@graphql-typed-document-node/core` ^3 | Both runtimes are owned, so they are normal dependencies. DSL and validation-helper fixes reach SDKs through a dependency update without regenerating. The typed-document package is types-only (§16.1 exemption). |
-| **peerDependencies** | `graphql` ^16 \|\| ^17; `zod` ^4 (optional)                                                                          | `graphql` for `parse` in the runtime. Zod is shared with the app and optional for consumers that never import `./validation`.                                                                                      |
-| **devDependencies**  | `@corpdk/create-graphql-sdk`, `@graphql-codegen/cli`, `@graphql-codegen/typescript`, `typescript`                    | Build time only                                                                                                                                                                                                    |
-| **Forbidden**        | `@genql/*`, Apollo, urql, `graphql-request`, `graphql-sse`, `graphql-ws`, `typescript-resolvers`, `@corpdk/dal-core` | No upstream DSL packages; the SDK stays transport-free                                                                                                                                                             |
+| Kind                 | Packages                                                                                                                                                                                                        | Reason                                                                                                                                                                                                                                                                                                                   |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **dependencies**     | `@corpdk/graphql-dsl` (runtime), `@corpdk/graphql-input-zod` (runtime entry), `@graphql-typed-document-node/core` ^3; **`@corpdk/scalar-zod`** when the `dal` preset or `{ from, name }` scalar refs are in use | Both runtimes are owned, so they are normal dependencies. DSL and validation-helper fixes reach SDKs through a dependency update without regenerating. The typed-document package is types-only (§16.1 exemption). `init --scalar-preset dal` adds `@corpdk/scalar-zod` (§7.7); the bare `canonical/` template does not. |
+| **peerDependencies** | `graphql` ^16 \|\| ^17; `zod` ^4 (optional)                                                                                                                                                                     | `graphql` for `parse` in the runtime. Zod is shared with the app and optional for consumers that never import `./validation`.                                                                                                                                                                                            |
+| **devDependencies**  | `@corpdk/create-graphql-sdk`, `@graphql-codegen/cli`, `@graphql-codegen/typescript`, `typescript`                                                                                                               | Build time only                                                                                                                                                                                                                                                                                                          |
+| **Forbidden**        | `@genql/*`, Apollo, urql, `graphql-request`, `graphql-sse`, `graphql-ws`, `typescript-resolvers`, `@corpdk/dal-core`                                                                                            | No upstream DSL packages; the SDK stays transport-free                                                                                                                                                                                                                                                                   |
 
 **Publishing is the SDK owner's choice.** The canonical `package.json` carries no `publishConfig` and no `private` flag. A team that generates an SDK for its own service adds its registry, or marks the package private. The manifest above shows the shape every generated SDK has. For the in-repo sample `templates/ds-sdk`, §9.1 overrides this: it is `private: true`.
 
@@ -565,16 +565,16 @@ validation:
 
 `scalars.<Name>.wire` is emitted into `scalar-registry.ts` as `scalarWireFormats` (`{ DateTime: "string", JSON: "json" }`) and exported from `./validation`. Consumers that read raw text, such as the CLI's flag parser, use it to decide whether a value is a plain string or JSON. They don't need `sdk.config.yaml`, which is not part of the published package.
 
-`validation.enabled: false` turns L3 off: no `input-schemas.ts`, `input-registry.ts`, or `scalar-registry.ts`, and the `./validation` export is omitted from `package.json`. Consumers that need L3, such as the CLI generator, check for the export and fail clearly when it is missing.
+`validation.enabled: false` turns L3 off: no `input-schemas.ts`, `input-registry.ts`, or `scalar-registry.ts`, and the `./validation` export is omitted from `package.json`. `sdk:codegen` (and `init` when sync/codegen run) enforces this via `syncValidationPackageEntry`: it removes `src/validation.ts` and strips the export when L3 is disabled. The bundled canonical template defaults to `validation.enabled: true`. Consumers that need L3, such as the CLI generator, check for the export and fail clearly when it is missing.
 
 **DAL scalar entries.** The custom scalars are `DateTime`, `Date`, `TimeTz`, `BigInt`, `Decimal`, `IntervalMs`, `SmallInt`, `Double`, `InsensitiveString`, `IP`, `CIDR`, `MAC`. Their entries **reference** `@corpdk/scalar-zod` (§7.7) instead of repeating the rules as expression strings, so SDK and server validate with the same code:
 
 ```yaml
 scalars:
   DateTime:
-    { type: string, zod: { from: "@corpdk/scalar-zod", name: "DateTime" } }
+    { type: string, zod: { from: "@corpdk/scalar-zod", name: "zDateTime" } }
   SmallInt:
-    { type: number, zod: { from: "@corpdk/scalar-zod/pg", name: "SmallInt" } }
+    { type: number, zod: { from: "@corpdk/scalar-zod/pg", name: "zSmallInt" } }
 ```
 
 `zod` accepts either an expression string (`z.string()`) or an `{ from, name }` reference. The emitter turns references into imports in `scalar-registry.ts`. The `dal` preset (`--scalar-preset dal`) writes the 12 references.
@@ -598,10 +598,10 @@ scalars:
 
 The library has **two entry points**, the same split as `@corpdk/graphql-dsl`:
 
-| Entry                               | Used by                                                                                                                                              | Contents                                                                                                                                                                                | Peer                   |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
-| `@corpdk/graphql-input-zod/codegen` | `dal-codegen`, `create-graphql-sdk`                                                                                                                  | The emitter (below)                                                                                                                                                                     | `graphql` ^16 \|\| ^17 |
-| `@corpdk/graphql-input-zod`         | Generated SDKs and `@corpdk/graphql-cli-core` (types); **P1a:** issue types only — **P1c:** adds `createInputParsers` / `createScalarParsers` (§7.4) | **P1a:** `GraphqlInputValidationError`, `GraphqlInputIssue`, `GraphqlInputParseResult`, `InputParserRegistry`, `zodErrorToIssues`. **P1c:** `createInputParsers`, `createScalarParsers` | `zod` ^4               |
+| Entry                               | Used by                                                                     | Contents                                                                                                                                                              | Peer                   |
+| ----------------------------------- | --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------- |
+| `@corpdk/graphql-input-zod/codegen` | `dal-codegen`, `create-graphql-sdk`                                         | The emitter (below)                                                                                                                                                   | `graphql` ^16 \|\| ^17 |
+| `@corpdk/graphql-input-zod`         | Generated SDKs and `@corpdk/graphql-cli-core` (types); parse helpers (§7.4) | `GraphqlInputValidationError`, `GraphqlInputIssue`, `GraphqlInputParseResult`, `InputParserRegistry`, `zodErrorToIssues`, `createInputParsers`, `createScalarParsers` | `zod` ^4               |
 
 Peer dependencies apply to the whole package, not per entry point, so **both peers are optional** in `peerDependenciesMeta`. `dal-codegen` (codegen only) doesn't need `zod`, and SDKs (runtime only) don't need `graphql` from this package.
 
@@ -651,9 +651,9 @@ All `input` object types in the snapshot. Output types, whole variable bags, and
 
 ### 7.4 Parse helpers
 
-**P1a (shipped).** The main package entry exports only validation issue types and `GraphqlInputValidationError` (see `libraries/graphql-input-zod/src/index.ts` and the package README). Emitter tests live under `@corpdk/graphql-input-zod/codegen`.
+**P1a (shipped).** Issue types and `GraphqlInputValidationError` on the main entry; emitter tests live under `@corpdk/graphql-input-zod/codegen`.
 
-**P1c (planned runtime API).** `createInputParsers` and `createScalarParsers` bind each SDK's generated registries; signatures are preserved below for typing and review continuity.
+**P1c (shipped).** `createInputParsers` and `createScalarParsers` on the main entry (`libraries/graphql-input-zod/src/parsers.ts`); each SDK binds them in canonical `src/validation.ts`. Signatures below match the implementation.
 
 Generated per SDK (data only):
 
@@ -672,10 +672,10 @@ export const inputZodSchemas = {
 export type InputZodSchemaName = keyof typeof inputZodSchemas;
 ```
 
-Shared once, in `@corpdk/graphql-input-zod` (runtime entry **from P1c**), and bound per SDK in `src/validation.ts` (§3.5):
+Shared once, in `@corpdk/graphql-input-zod` (runtime entry), and bound per SDK in `src/validation.ts` (§3.5):
 
 ```ts
-// Planned P1c exports (issue types and error class already ship in P1a)
+// Runtime exports (issue types and error class from P1a; parsers from P1c)
 export interface GraphqlInputIssue {
   path: (string | number)[];
   message: string;
@@ -767,7 +767,7 @@ The server does not import the SDK and wins at runtime (`userErrors` / `BAD_USER
 
 - **Package shape:** ESM with root and `/pg` entry points; wire validators in `wire-zod.ts`, shared parse helpers in `scalars.ts` and `parse-helpers.ts`, and procedural PostgreSQL interval text ↔ ms conversion in `pg-interval.ts` (no Luxon). Import `@corpdk/scalar-zod/pg` only when PG-bounded rules are needed; per-scalar tree-shaking is verified under R-37.
 - **`dal-core`:** depends on `@corpdk/scalar-zod` and re-exports `dalScalarZod`, `zPgInt32`, and `zPgReal` from `@corpdk/scalar-zod/pg`. Server code and `dal-codegen` output stay unchanged (R-10).
-- **SDKs:** the `dal` preset references it (§6), so DAL SDKs depend on `@corpdk/scalar-zod`. Non-DAL SDKs with their own scalars keep expression strings and don't install it. Like the other owned runtimes, rule fixes reach every SDK through a dependency update.
+- **SDKs:** the `dal` preset references it (§6). **`init --scalar-preset dal`** adds `@corpdk/scalar-zod` to `package.json` `dependencies` (the bare `canonical/` template omits it). Non-DAL SDKs with expression-string `zod` rules do not install it; `{ from, name }` refs require adding the package manually. Like the other owned runtimes, rule fixes reach every SDK through a dependency update.
 - **Dependencies:** `zod` ^4 (peer), `graphql-scalars` (needs a dependency-policy audit row, R-38).
 
 ---
@@ -828,14 +828,14 @@ engines/create-graphql-sdk/
   package.json  bin: create-graphql-sdk; build: tsc (not tsup — see Appendix B.4)
 ```
 
-Runtime dependencies: `@corpdk/engine-kit`, `graphql`, `@graphql-tools/merge`, `@graphql-codegen/cli`, `@graphql-codegen/typescript`, `@corpdk/graphql-dsl` (`/codegen`), `@corpdk/graphql-input-zod`.
+Runtime dependencies: `@corpdk/engine-kit`, `graphql`, `@graphql-tools/merge`, `@graphql-codegen/core`, `@graphql-codegen/plugin-helpers`, `@graphql-codegen/typescript`, `@corpdk/graphql-dsl` (`/codegen`), `@corpdk/graphql-input-zod`.
 
 **Engine family.** The engine is built on `@corpdk/engine-kit` and follows the shared contract in [doc 15 §11](15-create-ds-generator-integration.md#11-generator-engine-family-and-corpdkengine-kit), like `create-ds`:
 
 - the same command shape, help, and "Next steps" output;
 - exit codes 0/1/2/3 (§8.6);
 - `runInit` / `runUpgrade` exports;
-- the overwrite / merge / never-touch upgrade model;
+- the shared generator upgrade model; P1c is overwrite-only plus never-touch (§8.6), with merge deferred;
 - a `.create-graphql-sdk-version` record;
 - a root script, `"create-graphql-sdk": "node engines/create-graphql-sdk/dist/index.js"`.
 
@@ -849,7 +849,7 @@ Runtime dependencies: `@corpdk/engine-kit`, `graphql`, `@graphql-tools/merge`, `
 | `sync [dir]`     | Merge sources → validate → snapshot                                   | `schema/schema.graphqls`          |
 | `codegen [dir]`  | Snapshot → L1 → L2 + L3                                               | `src/generated/**`                |
 | `generate [dir]` | `sync`, then `codegen`                                                | Both                              |
-| `upgrade [dir]`  | Overwrite canonical files; merge `package.json` and `sdk.config.yaml` | Canonical files only              |
+| `upgrade [dir]`  | Overwrite canonical template files; run `codegen` (§8.6)              | `UPGRADE_OVERWRITE_FILES` only    |
 
 ### 8.5 Flags
 
@@ -886,8 +886,8 @@ create-graphql-sdk <init|sync|codegen|generate|upgrade> [directory] [options]
 
 **`upgrade`:**
 
-- **Overwrite:** `codegen.ts`, `tsconfig.json`, `src/index.ts`, `src/validation.ts`, and the README outside `<!-- user -->` blocks.
-- **Merge:** `package.json` and `sdk.config.yaml`.
+- **Overwrite:** `codegen.ts`, `src/index.ts`, `src/validation.ts`, `README.md`, and `.gitignore` (`UPGRADE_OVERWRITE_FILES`). README copies preserve `<!-- user -->` blocks. `tsconfig.json` is not overwritten — `init` patches `extends` for the target directory depth and `upgrade` leaves that file untouched.
+- **Merge (P1c):** `upgrade` is overwrite-only: `runUpgradePlan` passes an empty `merge` list and does not wire handlers for `package.json` or `sdk.config.yaml`. Consumer `package.json` and `sdk.config.yaml` stay unchanged until a later phase adds merge targets to the plan (same pattern as doc 15 §11.2 for `create-ds` `UPGRADE_RELATIVE_FILES`).
 - **Never touch:** `schema/**`, `src/extensions/**`.
 - Then run `codegen`.
 

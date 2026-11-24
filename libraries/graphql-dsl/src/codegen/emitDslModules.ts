@@ -17,7 +17,10 @@ export function emitDslModules(
 
   const selectionCtx = new RenderContext(schema, config);
   if (config.typesImport) {
-    selectionCtx.addImport(config.typesImport, false, config.typesNamespace);
+    selectionCtx.addTypeNamespaceImport(
+      config.typesImport,
+      config.typesNamespace ?? "Types",
+    );
   }
   renderRequestTypes(schema, selectionCtx);
 

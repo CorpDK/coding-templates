@@ -1,0 +1,7 @@
+extend type Query {
+  hello: String!
+}
+
+type Item {
+  status: String!
+}

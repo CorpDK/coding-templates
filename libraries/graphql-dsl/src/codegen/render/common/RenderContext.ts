@@ -11,9 +11,15 @@ interface ImportMap {
   [from: string]: Import[];
 }
 
+interface TypeNamespaceImport {
+  from: string;
+  namespace: string;
+}
+
 export class RenderContext {
   protected codeBlocks: string[] = [];
   protected imports: ImportMap = {};
+  protected typeNamespaceImports: TypeNamespaceImport[] = [];
   protected importAliasCounter = 0;
 
   constructor(
@@ -51,6 +57,15 @@ export class RenderContext {
     return alias;
   }
 
+  addTypeNamespaceImport(from: string, namespace: string) {
+    const exists = this.typeNamespaceImports.some(
+      (entry) => entry.from === from && entry.namespace === namespace,
+    );
+    if (!exists) {
+      this.typeNamespaceImports.push({ from, namespace });
+    }
+  }
+
   protected getImportBlock() {
     const imports: string[] = [];
 
@@ -81,8 +96,15 @@ export class RenderContext {
     const blocks = [...this.codeBlocks];
 
     if (parser === "typescript") {
+      const namespaceBlock = this.typeNamespaceImports
+        .map(
+          ({ from, namespace }) =>
+            `import type * as ${namespace} from '${from}';`,
+        )
+        .join("\n");
       const importBlock = this.getImportBlock();
-      if (importBlock) blocks.unshift(importBlock);
+      const combined = [namespaceBlock, importBlock].filter(Boolean).join("\n");
+      if (combined) blocks.unshift(combined);
     }
     if (parser) {
       return blocks.join("\n\n");

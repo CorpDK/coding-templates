@@ -1,5 +1,9 @@
-export type EngineResult = {
-  exitCode: 0 | 1 | 2 | 3;
-  nextSteps?: string[];
-  changedFiles: string[];
-};
+export { runInit, type InitOptions } from "./init.js";
+export { runUpgrade, type UpgradeOptions } from "./upgrade.js";
+export {
+  runSync,
+  runCodegenCommand as runCodegen,
+  runGenerate,
+} from "./commands.js";
+export type { SyncCommandOptions } from "./commands.js";
+export type { EngineResult } from "@corpdk/engine-kit";

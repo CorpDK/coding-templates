@@ -16,7 +16,7 @@ coding-templates/
 ├── engines/
 │   ├── create-app/          (@corpdk/create-app)          Interactive CLI scaffolding tool
 │   ├── create-ds/           (@corpdk/create-ds)           DS scaffold + DAL automation upgrade CLI
-│   ├── create-graphql-sdk/  (@corpdk/create-graphql-sdk)   SDK scaffold engine (doc 13; stub until P1c)
+│   ├── create-graphql-sdk/  (@corpdk/create-graphql-sdk)   SDK scaffold engine (doc 13; P1c)
 │   └── create-graphql-cli/  (@corpdk/create-graphql-cli)   CLI scaffold engine (doc 14; stub until C-P2)
 ├── libraries/
 │   ├── codegen-cli/        (@corpdk/codegen-cli)         GraphQL codegen plugin for resolver types + SDK generation
@@ -89,7 +89,7 @@ coding-templates/
 | -------------------- | ---------------------------- | ----------------------------------------------------------------------------------- |
 | `create-app`         | `@corpdk/create-app`         | Interactive CLI scaffolding tool                                                    |
 | `create-ds`          | `@corpdk/create-ds`          | DS scaffold + DAL automation upgrade CLI ([guide](ds-automation-upgrades.md))       |
-| `create-graphql-sdk` | `@corpdk/create-graphql-sdk` | SDK scaffold engine ([design](13-graphql-sdk-generator.md); stub until P1c)         |
+| `create-graphql-sdk` | `@corpdk/create-graphql-sdk` | SDK scaffold engine ([design](13-graphql-sdk-generator.md); P1c implemented)        |
 | `create-graphql-cli` | `@corpdk/create-graphql-cli` | CLI scaffold engine ([design](14-graphql-cli-generator.md); stub until C-P2)        |
 | `codegen-cli`        | `@corpdk/codegen-cli`        | GraphQL codegen plugin for resolver types + SDK generation                          |
 | `dal-core`           | `@corpdk/dal-core`           | DAL shared types, filters, query translation, mutation errors                       |

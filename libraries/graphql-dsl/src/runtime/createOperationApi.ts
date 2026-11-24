@@ -25,9 +25,7 @@ type VarMap<V extends Record<string, VariableRef<unknown>>> = {
 };
 
 export interface OperationApi<RootSel, Root extends LinkedType> {
-  build(
-    fields: RootSel & { __name?: string; __aliases?: Record<string, Fields> },
-  ): GraphqlOperation;
+  build(fields: RootSel): GraphqlOperation;
   define<V extends Record<string, VariableRef<unknown>>, S extends Fields>(
     options: DefineOperationOptions<V, S>,
   ): BuiltOperation<unknown, VariablesMap<V>>;
@@ -45,9 +43,8 @@ export function createOperationApi<RootSel, Root extends LinkedType>(
     selection: S,
   ) => BuiltOperation<unknown, undefined>,
 ): OperationApi<RootSel, Root> {
-  const build = (
-    fields: RootSel & { __name?: string; __aliases?: Record<string, Fields> },
-  ) => generateGraphqlOperation(operation, root, fields as Fields);
+  const build = (fields: RootSel) =>
+    generateGraphqlOperation(operation, root, fields as Fields);
 
   const define = <
     V extends Record<string, VariableRef<unknown>>,

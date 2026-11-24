@@ -1,6 +1,11 @@
 /**
- * Intentionally empty placeholder. The workspace root overrides `graphql-ws`
- * to this package so optional peer dependencies resolve without pulling the
- * real WebSocket implementation.
+ * Placeholder for root `pnpm.overrides.graphql-ws`. This monorepo uses SSE only.
+ * Exports the symbols optional tooling (e.g. graphql-codegen) may import at load time.
  */
-export default {};
+export function createClient() {
+  throw new Error(
+    "graphql-ws is stubbed in this monorepo; use GraphQL over SSE instead.",
+  );
+}
+
+export default { createClient };

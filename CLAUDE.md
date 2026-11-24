@@ -18,7 +18,7 @@ coding-templates/
 ├── engines/
 │   ├── create-app/         (@corpdk/create-app)          Interactive CLI scaffolding tool
 │   ├── create-ds/          (@corpdk/create-ds)             DS scaffold + DAL automation upgrade CLI
-│   ├── create-graphql-sdk/ (@corpdk/create-graphql-sdk)   SDK scaffold engine (doc 13; stub CLI until P1c)
+│   ├── create-graphql-sdk/ (@corpdk/create-graphql-sdk)   SDK scaffold engine (`init`, `sync`, `codegen`, `generate`, `upgrade`; doc 13)
 │   └── create-graphql-cli/ (@corpdk/create-graphql-cli)   CLI scaffold engine (doc 14; stub until C-P2)
 ├── libraries/
 │   ├── codegen-cli/        (@corpdk/codegen-cli)          GraphQL codegen plugin for resolver types + SDK generation
@@ -138,6 +138,7 @@ pnpm --filter @corpdk/ds codegen    # Run graphql-codegen for ds
 pnpm create-app                     # Run the interactive scaffolding CLI
 pnpm create-ds init [dir]           # Scaffold DS-only DAL package
 pnpm create-ds upgrade [dir]        # Merge templates/ds automation deltas
+pnpm create-graphql-sdk             # SDK engine CLI (init / sync / codegen / generate / upgrade)
 ```
 
 Each package requires its own `.env` file — copy from `.env.example` in the package directory.
