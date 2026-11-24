@@ -40,7 +40,6 @@
     "@corpdk/engine-kit": "workspace:^",
     "@corpdk/graphql-dsl": "workspace:^",
     "@corpdk/graphql-input-zod": "workspace:^",
-    "@graphql-codegen/cli": "^8.0.0",
     "@graphql-codegen/core": "^7.0.0",
     "@graphql-codegen/plugin-helpers": "^8.0.0",
     "@graphql-codegen/typescript": "^7.0.1",
