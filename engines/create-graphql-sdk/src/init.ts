@@ -142,6 +142,84 @@ function deferSyncResult(options: InitOptions): EngineResult {
   };
 }
 
+function initUsageResult(message: string): EngineResult {
+  return { exitCode: EXIT_USAGE, changedFiles: [], message };
+}
+
+function initDryRunResult(options: InitOptions): EngineResult {
+  return {
+    exitCode: EXIT_SUCCESS,
+    changedFiles: ["<scaffold layout>"],
+    nextSteps: initNextSteps(options.name, options.noInstall),
+  };
+}
+
+type InitScaffoldPlan =
+  | { kind: "result"; result: EngineResult }
+  | {
+      kind: "scaffold";
+      repoRoot: string;
+      targetDir: string;
+      templateDir: string;
+    };
+
+async function planInitScaffold(
+  options: InitOptions,
+): Promise<InitScaffoldPlan> {
+  const repoRoot =
+    options.repoRoot ??
+    path.resolve(CREATE_GRAPHQL_SDK_ENGINE_ROOT, "..", "..");
+  const targetDir = path.resolve(options.dir);
+
+  if (!options.demoSchema && options.schema.length === 0) {
+    return { kind: "result", result: missingSchemaUsage() };
+  }
+
+  const template = await resolveInitTemplateDir(repoRoot);
+  if (!template.ok) return { kind: "result", result: template.result };
+
+  const emptyError = await ensureEmptyTarget(targetDir);
+  if (emptyError) {
+    return { kind: "result", result: initUsageResult(emptyError) };
+  }
+
+  if (options.dryRun) {
+    return { kind: "result", result: initDryRunResult(options) };
+  }
+
+  return {
+    kind: "scaffold",
+    repoRoot,
+    targetDir,
+    templateDir: template.templateDir,
+  };
+}
+
+async function scaffoldSdkPackage(
+  options: InitOptions,
+  plan: Extract<InitScaffoldPlan, { kind: "scaffold" }>,
+): Promise<EngineResult> {
+  const s = spinner();
+  s.start("Scaffolding SDK package layout");
+  try {
+    await applyScaffoldLayout(
+      options,
+      plan.repoRoot,
+      plan.templateDir,
+      plan.targetDir,
+    );
+    s.stop("SDK package scaffolded");
+    return runInitAfterScaffold(options, plan.repoRoot, plan.targetDir);
+  } catch (err: unknown) {
+    s.stop("Scaffold failed");
+    return {
+      exitCode: exitCodeForEngineError(err),
+      changedFiles: [],
+      message: err instanceof Error ? err.message : String(err),
+    };
+  }
+}
+
 async function finalizeScaffoldedPackage(
   options: InitOptions,
   repoRoot: string,
@@ -173,53 +251,7 @@ async function runInitAfterScaffold(
 }
 
 export async function runInit(options: InitOptions): Promise<EngineResult> {
-  const repoRoot =
-    options.repoRoot ??
-    path.resolve(CREATE_GRAPHQL_SDK_ENGINE_ROOT, "..", "..");
-  const targetDir = path.resolve(options.dir);
-
-  if (!options.demoSchema && options.schema.length === 0) {
-    return missingSchemaUsage();
-  }
-
-  const template = await resolveInitTemplateDir(repoRoot);
-  if (!template.ok) return template.result;
-
-  const emptyError = await ensureEmptyTarget(targetDir);
-  if (emptyError) {
-    return {
-      exitCode: EXIT_USAGE,
-      changedFiles: [],
-      message: emptyError,
-    };
-  }
-
-  if (options.dryRun) {
-    return {
-      exitCode: EXIT_SUCCESS,
-      changedFiles: ["<scaffold layout>"],
-      nextSteps: initNextSteps(options.name, options.noInstall),
-    };
-  }
-
-  const s = spinner();
-  s.start("Scaffolding SDK package layout");
-
-  try {
-    await applyScaffoldLayout(
-      options,
-      repoRoot,
-      template.templateDir,
-      targetDir,
-    );
-    s.stop("SDK package scaffolded");
-    return runInitAfterScaffold(options, repoRoot, targetDir);
-  } catch (err: unknown) {
-    s.stop("Scaffold failed");
-    return {
-      exitCode: exitCodeForEngineError(err),
-      changedFiles: [],
-      message: err instanceof Error ? err.message : String(err),
-    };
-  }
+  const plan = await planInitScaffold(options);
+  if (plan.kind === "result") return plan.result;
+  return scaffoldSdkPackage(options, plan);
 }
