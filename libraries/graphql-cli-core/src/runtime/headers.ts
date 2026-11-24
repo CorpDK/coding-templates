@@ -126,7 +126,8 @@ export function createRedactor(endpoint: string): Redactor {
       for (const [name, value] of Object.entries(headers)) {
         if (!SENSITIVE_HEADER.test(name) || value.length === 0) continue;
         secrets.add(value);
-        const credential = value.match(/^(?:Bearer|Basic)\s+(\S.*)$/i)?.[1];
+        const authMatch = /^(?:Bearer|Basic)\s+(\S.*)$/i.exec(value);
+        const credential = authMatch?.[1];
         if (credential) secrets.add(credential);
       }
     },

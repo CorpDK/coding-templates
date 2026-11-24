@@ -81,16 +81,18 @@ type EventOutcome = { done: false } | { done: true; code: number };
 
 type SubscriptionState = { outcome: EventOutcome; received: number };
 
-function onSubscriptionSseEvent(
-  event: SseEvent,
-  state: SubscriptionState,
-  fail: (error: GraphqlRequestError) => number,
-  config: RuntimeConfig,
-  streams: OutputStreams,
-  format: ResultFormat,
-  redact: Transport["redact"],
-  maxEvents: number | undefined,
-): void {
+type SubscriptionEventContext = {
+  state: SubscriptionState;
+  fail: (error: GraphqlRequestError) => number;
+  config: RuntimeConfig;
+  streams: OutputStreams;
+  format: ResultFormat;
+  redact: Transport["redact"];
+  maxEvents: number | undefined;
+};
+
+function onSubscriptionSseEvent(event: SseEvent, ctx: SubscriptionEventContext): void {
+  const { state } = ctx;
   if (state.outcome.done) return;
   if (event.event === "complete") {
     state.outcome = { done: true, code: EXIT_OK };
@@ -99,7 +101,7 @@ function onSubscriptionSseEvent(
   if (event.event === "error") {
     state.outcome = {
       done: true,
-      code: fail(transportFailure(`SSE stream error: ${event.data}`)),
+      code: ctx.fail(transportFailure(`SSE stream error: ${event.data}`)),
     };
     return;
   }
@@ -111,22 +113,82 @@ function onSubscriptionSseEvent(
   } catch {
     state.outcome = {
       done: true,
-      code: fail(transportFailure("SSE event carried invalid JSON")),
+      code: ctx.fail(transportFailure("SSE event carried invalid JSON")),
     };
     return;
   }
   const code = settleResponse(
     body,
-    config,
-    streams,
-    { raw: format.raw, pretty: false },
-    redact,
+    ctx.config,
+    ctx.streams,
+    { raw: ctx.format.raw, pretty: false },
+    ctx.redact,
   );
   state.received += 1;
   if (code !== EXIT_OK) state.outcome = { done: true, code };
-  else if (maxEvents !== undefined && state.received >= maxEvents) {
+  else if (ctx.maxEvents !== undefined && state.received >= ctx.maxEvents) {
     state.outcome = { done: true, code: EXIT_OK };
   }
+}
+
+async function openSubscriptionResponse(
+  transport: Transport,
+  operation: GraphqlOperation,
+  signal: AbortSignal,
+  fail: (error: GraphqlRequestError) => number,
+): Promise<Response | number> {
+  const headers = withHeader(
+    await transport.headers(),
+    "Accept",
+    "text/event-stream",
+  );
+  const response = await transport.fetchImpl(transport.endpoint, {
+    method: "POST",
+    headers,
+    body: requestBody(operation),
+    signal,
+  });
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => "");
+    return fail(
+      transportFailure(
+        `HTTP ${response.status} ${response.statusText}`.trim() +
+          (text ? `: ${text.slice(0, 200)}` : ""),
+        { status: response.status },
+      ),
+    );
+  }
+  const contentType = response.headers.get("content-type") ?? "";
+  if (!contentType.includes("text/event-stream") || !response.body) {
+    return fail(
+      transportFailure(
+        `Expected text/event-stream, received ${contentType || "no content type"}`,
+        { status: response.status },
+      ),
+    );
+  }
+  return response;
+}
+
+async function readSseUntilSettled(
+  body: ReadableStream<Uint8Array>,
+  handle: (event: SseEvent) => void,
+  settled: () => number | undefined,
+): Promise<number | undefined> {
+  const parser = createSseParser(handle);
+  const decoder = new TextDecoder();
+  const reader = body.getReader();
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (value) parser.push(decoder.decode(value, { stream: true }));
+    const code = settled();
+    if (code !== undefined) return code;
+    if (done) break;
+  }
+  parser.push(decoder.decode());
+  parser.end();
+  return settled();
 }
 
 /** Streams one subscription over SSE; every stop condition exits 0. */
@@ -145,65 +207,30 @@ export async function streamSubscription(
     reportRequestError(streams.stderr, error, transport.redact);
 
   try {
-    const headers = withHeader(
-      await transport.headers(),
-      "Accept",
-      "text/event-stream",
-    );
-    const response = await transport.fetchImpl(transport.endpoint, {
-      method: "POST",
-      headers,
-      body: requestBody(operation),
+    const opened = await openSubscriptionResponse(
+      transport,
+      operation,
       signal,
-    });
-
-    if (!response.ok) {
-      const text = await response.text().catch(() => "");
-      return fail(
-        transportFailure(
-          `HTTP ${response.status} ${response.statusText}`.trim() +
-            (text ? `: ${text.slice(0, 200)}` : ""),
-          { status: response.status },
-        ),
-      );
-    }
-    const contentType = response.headers.get("content-type") ?? "";
-    if (!contentType.includes("text/event-stream") || !response.body) {
-      return fail(
-        transportFailure(
-          `Expected text/event-stream, received ${contentType || "no content type"}`,
-          { status: response.status },
-        ),
-      );
-    }
+      fail,
+    );
+    if (typeof opened === "number") return opened;
 
     const state: SubscriptionState = { outcome: { done: false }, received: 0 };
-    const handle = (event: SseEvent): void =>
-      onSubscriptionSseEvent(
-        event,
-        state,
-        fail,
-        config,
-        streams,
-        format,
-        transport.redact,
-        options.maxEvents,
-      );
-
+    const ctx: SubscriptionEventContext = {
+      state,
+      fail,
+      config,
+      streams,
+      format,
+      redact: transport.redact,
+      maxEvents: options.maxEvents,
+    };
+    const handle = (event: SseEvent): void => onSubscriptionSseEvent(event, ctx);
     const settled = (): number | undefined =>
       state.outcome.done ? state.outcome.code : undefined;
-    const parser = createSseParser(handle);
-    const decoder = new TextDecoder();
-    const reader = response.body.getReader();
-    for (;;) {
-      const { value, done } = await reader.read();
-      if (value) parser.push(decoder.decode(value, { stream: true }));
-      if (settled() !== undefined) return settled()!;
-      if (done) break;
-    }
-    parser.push(decoder.decode());
-    parser.end();
-    if (settled() !== undefined) return settled()!;
+
+    const code = await readSseUntilSettled(opened.body!, handle, settled);
+    if (code !== undefined) return code;
     return stop.signal.aborted
       ? EXIT_OK
       : fail(transportFailure("SSE stream ended without a complete event"));
