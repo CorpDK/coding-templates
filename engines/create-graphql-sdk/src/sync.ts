@@ -9,11 +9,7 @@ import {
 } from "./merge.js";
 import { collectSdlUnits } from "./schema-load.js";
 import { listCustomScalars, mergeScalarStubs } from "./scalars.js";
-import {
-  readSdkConfig,
-  snapshotPath,
-  writeSdkConfig,
-} from "./sdk-config.js";
+import { readSdkConfig, snapshotPath, writeSdkConfig } from "./sdk-config.js";
 
 export interface SyncOptions {
   packageDir: string;

@@ -139,7 +139,9 @@ async function unitsFromGraphqlsSource(
     configDir,
     source.exclude ?? [],
   );
-  const bodies = await Promise.all(files.map((file) => fs.readFile(file, "utf8")));
+  const bodies = await Promise.all(
+    files.map((file) => fs.readFile(file, "utf8")),
+  );
   return files.map((file, index) => ({
     body: bodies[index]!,
     label: file,

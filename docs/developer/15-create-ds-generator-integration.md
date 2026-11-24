@@ -234,7 +234,7 @@ npm trusted publishing can only be configured for a package that already exists 
 **Steps:**
 
 1. **One PR to `main`** with a **typed scaffold** at each path above (same lockstep CalVer as the other DS automation packages, e.g. `2026.10.0-alpha.14`). Each scaffold has:
-   - `package.json`: final `name`; **lockstep** `version`; description noting scaffold status; `license: MIT`; monorepo `repository` (`url` → this repo, `directory` → package path); `publishConfig.access: public`; `type: "module"`; `build` / `typecheck` scripts; `files` including `dist` and `README.md`; `types` and `exports` pointing at compiled `dist/` (engines use `dist/types-entry.d.ts`; libraries use `dist/index.d.ts`); `engines.node: ">=24.0.0"`. **`@corpdk/create-graphql-sdk` and `@corpdk/create-graphql-cli`** also declare stub `bin` entries.
+   - `package.json`: final `name`; **lockstep** `version`; description noting scaffold status; `license: MIT`; monorepo `repository` (`url` → this repo, `directory` → package path); `publishConfig.access: public`; `type: "module"`; `build` / `typecheck` scripts; `files` including `dist` and `README.md`; `types` and `exports` pointing at compiled `dist/` (engines use `dist/types-entry.d.ts`; libraries use `dist/index.d.ts`); `engines.node: ">=24.0.0"`. B0 engine scaffolds declared stub `bin` entries; **`@corpdk/create-graphql-sdk`** ships a real `bin` from P1c; **`@corpdk/create-graphql-cli`** still uses a stub `bin` until C-P2.
    - Minimal `src/` compiled by `tsc` (phase constants / empty barrels until the implementation phase).
    - `README.md` linking to the design doc; `LICENSE` (MIT). `@corpdk/graphql-dsl` also ships `UPSTREAM.md` and genql's MIT notice in `LICENSE` (P1b; see `libraries/graphql-dsl`).
 

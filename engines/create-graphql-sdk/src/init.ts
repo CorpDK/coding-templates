@@ -37,7 +37,9 @@ function initNextSteps(packageName: string, noInstall?: boolean): string[] {
   return steps;
 }
 
-async function resolveInitTemplateDir(repoRoot: string): Promise<
+async function resolveInitTemplateDir(
+  repoRoot: string,
+): Promise<
   { ok: true; templateDir: string } | { ok: false; result: EngineResult }
 > {
   try {
@@ -65,7 +67,9 @@ async function resolveInitTemplateDir(repoRoot: string): Promise<
   }
 }
 
-async function installDependencies(repoRoot: string): Promise<EngineResult | null> {
+async function installDependencies(
+  repoRoot: string,
+): Promise<EngineResult | null> {
   const install = spinner();
   install.start("Installing dependencies");
   try {
@@ -100,8 +104,13 @@ async function runInitCodegen(targetDir: string): Promise<EngineResult> {
   }
 }
 
-async function syncAfterScaffold(targetDir: string): Promise<EngineResult | null> {
-  const sync = await runSyncPipeline({ packageDir: targetDir, writeStubs: true });
+async function syncAfterScaffold(
+  targetDir: string,
+): Promise<EngineResult | null> {
+  const sync = await runSyncPipeline({
+    packageDir: targetDir,
+    writeStubs: true,
+  });
   if (sync.unmappedScalars.length === 0) return null;
   return {
     exitCode: EXIT_VALIDATION,
@@ -197,7 +206,12 @@ export async function runInit(options: InitOptions): Promise<EngineResult> {
   s.start("Scaffolding SDK package layout");
 
   try {
-    await applyScaffoldLayout(options, repoRoot, template.templateDir, targetDir);
+    await applyScaffoldLayout(
+      options,
+      repoRoot,
+      template.templateDir,
+      targetDir,
+    );
     s.stop("SDK package scaffolded");
     return runInitAfterScaffold(options, repoRoot, targetDir);
   } catch (err: unknown) {

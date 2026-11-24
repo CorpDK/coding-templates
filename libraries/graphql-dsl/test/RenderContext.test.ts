@@ -8,9 +8,7 @@ describe("RenderContext", () => {
     ctx.addTypeNamespaceImport("../schema-types.js", "Types");
     ctx.addCodeBlock("export const marker = true;");
     const code = ctx.toCode("typescript");
-    expect(code).toContain(
-      "import type * as Types from '../schema-types.js';",
-    );
+    expect(code).toContain("import type * as Types from '../schema-types.js';");
     expect(code?.match(/import type \* as Types/g)?.length).toBe(1);
     expect(code).toContain("export const marker = true;");
   });

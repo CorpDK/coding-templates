@@ -828,7 +828,7 @@ engines/create-graphql-sdk/
   package.json  bin: create-graphql-sdk; build: tsc (not tsup — see Appendix B.4)
 ```
 
-Runtime dependencies: `@corpdk/engine-kit`, `graphql`, `@graphql-tools/merge`, `@graphql-codegen/cli`, `@graphql-codegen/typescript`, `@corpdk/graphql-dsl` (`/codegen`), `@corpdk/graphql-input-zod`.
+Runtime dependencies: `@corpdk/engine-kit`, `graphql`, `@graphql-tools/merge`, `@graphql-codegen/core`, `@graphql-codegen/plugin-helpers`, `@graphql-codegen/typescript`, `@corpdk/graphql-dsl` (`/codegen`), `@corpdk/graphql-input-zod`.
 
 **Engine family.** The engine is built on `@corpdk/engine-kit` and follows the shared contract in [doc 15 §11](15-create-ds-generator-integration.md#11-generator-engine-family-and-corpdkengine-kit), like `create-ds`:
 
@@ -886,7 +886,7 @@ create-graphql-sdk <init|sync|codegen|generate|upgrade> [directory] [options]
 
 **`upgrade`:**
 
-- **Overwrite:** `codegen.ts`, `src/index.ts`, `src/validation.ts`, and the README outside `<!-- user -->` blocks. `tsconfig.json` is not overwritten — `init` patches `extends` for the target directory depth and `upgrade` leaves that file untouched.
+- **Overwrite:** `codegen.ts`, `src/index.ts`, `src/validation.ts`, and the README outside `<!-- user -->` blocks. `tsconfig.json` is not overwritten — `init` patches `extends` for the target directory depth and `upgrade` leaves that file untouched. Merge targets below must also be listed here so `runUpgradePlan` invokes merge handlers ([doc 15 §11.2](15-create-ds-generator-integration.md#112-shared-behavior-matrix); `create-ds` includes `package.json` in its overwrite list).
 - **Merge:** `package.json` and `sdk.config.yaml`.
 - **Never touch:** `schema/**`, `src/extensions/**`.
 - Then run `codegen`.
