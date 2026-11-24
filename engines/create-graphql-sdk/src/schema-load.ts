@@ -38,12 +38,14 @@ async function matchedGraphqlPaths(
   pattern: string,
   exclude: string[],
 ): Promise<string[]> {
-  const entries = await Array.fromAsync(glob(pattern), (entry) =>
-    path.resolve(String(entry)),
-  );
-  return entries.filter(
-    (full) => isGraphqlFile(full) && !isExcluded(full, exclude),
-  );
+  const matched: string[] = [];
+  for await (const entry of glob(pattern)) {
+    const full = path.resolve(String(entry));
+    if (!isGraphqlFile(full)) continue;
+    if (isExcluded(full, exclude)) continue;
+    matched.push(full);
+  }
+  return matched;
 }
 
 async function graphqlFilesAtPath(
