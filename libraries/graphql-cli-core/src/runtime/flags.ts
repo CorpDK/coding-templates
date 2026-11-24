@@ -186,8 +186,7 @@ export function parseFlags(
   const globals = defaultGlobals();
   const argValues: Record<string, RawFlagValue> = {};
 
-  let index = 0;
-  while (index < argv.length) {
+  for (let index = 0; index < argv.length; ) {
     const token = argv[index]!;
     if (token === "-h") {
       globals.help = true;
@@ -205,7 +204,7 @@ export function parseFlags(
     const { spec, negated } = resolveSpec(table, name, inline !== undefined);
     const read = readFlagValue(argv, name, inline, spec, negated, index);
     applyParsedFlag(globals, argValues, spec, read.value, name);
-    index = read.nextIndex === index ? index + 1 : read.nextIndex + 1;
+    index += read.nextIndex === index ? 1 : 2;
   }
 
   return { globals, argValues };

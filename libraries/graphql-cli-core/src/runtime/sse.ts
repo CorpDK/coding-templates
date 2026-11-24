@@ -131,11 +131,40 @@ function onSubscriptionSseEvent(event: SseEvent, ctx: SubscriptionEventContext):
   }
 }
 
+type FailHandler = (error: GraphqlRequestError) => number;
+
+function failHttpResponse(
+  response: Response,
+  detail: string,
+  fail: FailHandler,
+): number {
+  return fail(
+    transportFailure(
+      `HTTP ${response.status} ${response.statusText}`.trim() +
+        (detail ? `: ${detail}` : ""),
+      { status: response.status },
+    ),
+  );
+}
+
+function failInvalidSseResponse(
+  response: Response,
+  contentType: string,
+  fail: FailHandler,
+): number {
+  return fail(
+    transportFailure(
+      `Expected text/event-stream, received ${contentType || "no content type"}`,
+      { status: response.status },
+    ),
+  );
+}
+
 async function openSubscriptionResponse(
   transport: Transport,
   operation: GraphqlOperation,
   signal: AbortSignal,
-  fail: (error: GraphqlRequestError) => number,
+  fail: FailHandler,
 ): Promise<Response | number> {
   const headers = withHeader(
     await transport.headers(),
@@ -151,22 +180,11 @@ async function openSubscriptionResponse(
 
   if (!response.ok) {
     const text = await response.text().catch(() => "");
-    return fail(
-      transportFailure(
-        `HTTP ${response.status} ${response.statusText}`.trim() +
-          (text ? `: ${text.slice(0, 200)}` : ""),
-        { status: response.status },
-      ),
-    );
+    return failHttpResponse(response, text.slice(0, 200), fail);
   }
   const contentType = response.headers.get("content-type") ?? "";
   if (!contentType.includes("text/event-stream") || !response.body) {
-    return fail(
-      transportFailure(
-        `Expected text/event-stream, received ${contentType || "no content type"}`,
-        { status: response.status },
-      ),
-    );
+    return failInvalidSseResponse(response, contentType, fail);
   }
   return response;
 }

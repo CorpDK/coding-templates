@@ -5,7 +5,16 @@ import type { CliExtensions } from "./types.js";
 export type HeaderMap = Record<string, string>;
 
 const SENSITIVE_HEADER = /authorization|token|secret|api[-_]?key|cookie|password/i;
+const AUTH_CREDENTIAL = /^(?:Bearer|Basic)\s+(\S.*)$/i;
 const REDACTED = "<redacted>";
+
+function isSensitiveHeaderName(name: string): boolean {
+  return SENSITIVE_HEADER.exec(name) !== null;
+}
+
+function authorizationCredential(value: string): string | undefined {
+  return AUTH_CREDENTIAL.exec(value)?.[1];
+}
 
 /** Sets a header, replacing any existing one that differs only by case. */
 function setHeader(headers: HeaderMap, name: string, value: string): void {
@@ -91,7 +100,7 @@ export function redactHeaders(headers: HeaderMap): HeaderMap {
   return Object.fromEntries(
     Object.entries(headers).map(([name, value]) => [
       name,
-      SENSITIVE_HEADER.test(name) ? REDACTED : value,
+      isSensitiveHeaderName(name) ? REDACTED : value,
     ]),
   );
 }
@@ -124,10 +133,9 @@ export function createRedactor(endpoint: string): Redactor {
   return {
     learn(headers) {
       for (const [name, value] of Object.entries(headers)) {
-        if (!SENSITIVE_HEADER.test(name) || value.length === 0) continue;
+        if (!isSensitiveHeaderName(name) || value.length === 0) continue;
         secrets.add(value);
-        const authMatch = /^(?:Bearer|Basic)\s+(\S.*)$/i.exec(value);
-        const credential = authMatch?.[1];
+        const credential = authorizationCredential(value);
         if (credential) secrets.add(credential);
       }
     },
